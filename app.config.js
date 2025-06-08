@@ -11,13 +11,51 @@ export default ({ config }) => {
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
         "ios": {
-            "supportsTablet": true
+            supportsTablet: true,
+            bundleIdentifier: 'com.muganwas.BIMmobile',
+            googleServicesFile: './GoogleService-Info.plist',
+            infoPlist: {
+                NSCameraUsageDescription: "This app needs access to your camera to let you take photos.",
+                NSPhotoLibraryUsageDescription: "This app needs access to your photo library to let you select photos.",
+                NSPhotoLibraryAddUsageDescription: "This app needs access to save photos to your library.",
+                "NSAppTransportSecurity": {
+                    "NSAllowsArbitraryLoads": false,
+                    "NSAllowsLocalNetworking": true,
+                    NSExceptionDomains: {
+                        "192.168.100.6": {
+                            NSIncludesSubdomains: true,
+                            NSTemporaryExceptionAllowsInsecureHTTPLoads: true,
+                        },
+                        "192.168.5.11": {
+                            NSIncludesSubdomains: true,
+                            NSTemporaryExceptionAllowsInsecureHTTPLoads: true,
+                        },
+                        "localhost": {
+                            NSIncludesSubdomains: true,
+                            NSTemporaryExceptionAllowsInsecureHTTPLoads: true,
+                        },
+                    },
+                },
+                "UIBackgroundModes": [
+                    "fetch",
+                    "processing",
+                    "remote-notification",
+                ]
+            },
         },
         "android": {
+            icon: './assets/images/icon.png',
+            "package": "com.muganwas.BIMmobile",
             "adaptiveIcon": {
-                "foregroundImage": "./assets/images/logo.png",
+                "foregroundImage": "./assets/images/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
             },
+            permissions: [
+                "CAMERA",
+                "READ_EXTERNAL_STORAGE",
+                "WRITE_EXTERNAL_STORAGE",
+                "READ_MEDIA_IMAGES",
+            ],
             "edgeToEdgeEnabled": true
         },
         "web": {

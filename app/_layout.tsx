@@ -79,9 +79,12 @@ export default function RootLayout() {
 					</View>
 				)}
 				<Stack>
-					<Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-					<Stack.Screen name='(onboarding)' options={{ headerShown: false }} />
 					<Stack.Screen name='(auth)' options={{ headerShown: false }} />
+					<Stack.Screen name='(onboarding)' options={{ headerShown: false }} />
+					<Stack.Screen
+						name='(authenticated)'
+						options={{ headerShown: false }}
+					/>
 					<Stack.Screen name='+not-found' />
 				</Stack>
 				<StatusBar style='auto' />
