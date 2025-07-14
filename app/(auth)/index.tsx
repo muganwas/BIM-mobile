@@ -8,9 +8,10 @@ import { Colors } from '@/constants/Colors';
 import { formatPhoneNumber } from '@/helpers';
 import { verifyToken } from '@/helpers/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
+	BackHandler,
 	Dimensions,
 	Image,
 	KeyboardAvoidingView,
@@ -23,6 +24,7 @@ const devWidth = Dimensions.get('window').width;
 
 export default function RegisterScreen() {
 	const router = useRouter();
+	const navigation = useNavigation();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [fullName, setFullName] = useState('');
 	const [phoneNumber, setPhoneNumber] = useState('');
@@ -31,13 +33,35 @@ export default function RegisterScreen() {
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [focusedInput, setFocusedInput] = useState<string | null>(null);
 	const [errors, setErrors] = useState({
-		phone: false,
-		fullname: false,
+		phoneNumber: false,
+		fullName: false,
 		email: false,
 		password: false,
 		confirmPassword: false,
 		signup: false,
 	});
+
+	useFocusEffect(() => {
+		const onPressBack = () => {
+			if (navigation.canGoBack()) {
+				handleResetAll();
+				navigation.goBack();
+				return true;
+			}
+		};
+		const subscription = BackHandler.addEventListener(
+			'hardwareBackPress',
+			onPressBack
+		);
+		return () => subscription.remove();
+	});
+
+	useEffect(() => {
+		const subscription = navigation.addListener('blur', () => {
+			handleResetAll();
+		});
+		return subscription;
+	}, [navigation]);
 
 	useEffect(() => {
 		const verify = async () => {
@@ -53,11 +77,17 @@ export default function RegisterScreen() {
 		verify();
 	}, [router]);
 
+	useEffect(() => {
+		if (focusedInput) {
+			setErrors((prev) => ({ ...prev, [focusedInput]: false }));
+		}
+	}, [focusedInput]);
+
 	const handleSetFullName = (value: string): void => {
 		if (value.length >= 3) {
-			setErrors((prev) => ({ ...prev, fullname: false }));
+			setErrors((prev) => ({ ...prev, fullName: false }));
 		} else {
-			setErrors((prev) => ({ ...prev, fullname: true }));
+			setErrors((prev) => ({ ...prev, fullName: true }));
 		}
 		setFullName(value);
 	};
@@ -65,9 +95,9 @@ export default function RegisterScreen() {
 	const handleSetPhone = (value: string): void => {
 		const phoneNumber = formatPhoneNumber(value);
 		if (!phoneNumber || !phoneRegexWithSpaces.test(phoneNumber)) {
-			setErrors((prev) => ({ ...prev, phone: true }));
+			setErrors((prev) => ({ ...prev, phoneNumber: true }));
 		} else {
-			setErrors((prev) => ({ ...prev, phone: false }));
+			setErrors((prev) => ({ ...prev, phoneNumber: false }));
 		}
 		setPhoneNumber(phoneNumber);
 	};
@@ -104,8 +134,8 @@ export default function RegisterScreen() {
 			confirmPassword !== password
 		) {
 			setErrors({
-				fullname: fullName.length < 3,
-				phone: !phoneRegexWithSpaces.test(phoneNumber),
+				fullName: fullName.length < 3,
+				phoneNumber: !phoneRegexWithSpaces.test(phoneNumber),
 				email: !emailRegex.test(email),
 				password: !passwordRegex.test(password),
 				confirmPassword: !confirmPassword || confirmPassword !== password,
@@ -121,6 +151,23 @@ export default function RegisterScreen() {
 			setErrors((prev) => ({ ...prev, signup: true }));
 			console.error('Signup error:', error);
 		}
+	};
+
+	const handleResetAll = () => {
+		setFullName('');
+		setPhoneNumber('');
+		setEmail('');
+		setPassword('');
+		setConfirmPassword('');
+		setFocusedInput(null);
+		setErrors({
+			phoneNumber: false,
+			fullName: false,
+			email: false,
+			password: false,
+			confirmPassword: false,
+			signup: false,
+		});
 	};
 
 	return (
@@ -183,7 +230,7 @@ export default function RegisterScreen() {
 								style={[
 									styles.formInput,
 									{
-										borderColor: errors.fullname
+										borderColor: errors.fullName
 											? Colors[colorScheme].error
 											: Colors[colorScheme].inputBorder,
 									},
@@ -202,7 +249,7 @@ export default function RegisterScreen() {
 								style={[
 									styles.formInput,
 									{
-										borderColor: errors.phone
+										borderColor: errors.phoneNumber
 											? Colors[colorScheme].error
 											: Colors[colorScheme].inputBorder,
 									},
@@ -364,7 +411,7 @@ const styles = StyleSheet.create({
 	formInputs: {
 		flexDirection: 'column',
 		width: '100%',
-		marginVertical: 20,
+		marginVertical: 50,
 		backgroundColor: Colors.light.inputContainerBackground,
 		gap: 15,
 	},
