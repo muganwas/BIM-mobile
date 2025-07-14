@@ -8,7 +8,11 @@ const tintColorDark = '#fff';
 
 export const Colors = {
 	light: {
-		text: '#11181C',
+		text: '#828393',
+		error: '#FF3B30',
+		focusedInput: '#0a7ea4',
+		inputBackground: '#fff',
+		inputBorder: '#E0E0E0',
 		background: '#fff',
 		tint: tintColorLight,
 		icon: '#687076',
@@ -17,7 +21,10 @@ export const Colors = {
 		headers: '#636578',
 	},
 	dark: {
-		text: '#ECEDEE',
+		text: '#828393',
+		error: '#FF3B30',
+		inputBackground: '#fff',
+		inputBorder: '#E0E0E0',
 		background: '#151718',
 		tint: tintColorDark,
 		icon: '#9BA1A6',

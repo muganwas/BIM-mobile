@@ -1,13 +1,34 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { emailRegex, passwordRegex, phoneRegexWithSpaces } from '@/constants';
 import { Colors } from '@/constants/Colors';
+import { formatPhoneNumber } from '@/helpers';
 import { verifyToken } from '@/helpers/auth';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Image, StyleSheet } from 'react-native';
 
 export default function RegisterScreen() {
 	const router = useRouter();
+	const colorScheme = useColorScheme() ?? 'light';
+	const [fullName, setFullName] = useState('');
+	const [phoneNumber, setPhoneNumber] = useState('');
+	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
+	const [focusedInput, setFocusedInput] = useState<string | null>(null);
+	const [errors, setErrors] = useState({
+		phone: false,
+		fullname: false,
+		email: false,
+		password: false,
+		confirmPassword: false,
+		signup: false,
+	});
+
 	useEffect(() => {
 		const verify = async () => {
 			const token = localStorage.getItem('bim-token');
@@ -21,20 +42,236 @@ export default function RegisterScreen() {
 		};
 		verify();
 	}, [router]);
+
+	const handleSetFullName = (value: string): void => {
+		if (value.length >= 3) {
+			setErrors((prev) => ({ ...prev, fullname: false }));
+		} else {
+			setErrors((prev) => ({ ...prev, fullname: true }));
+		}
+		setFullName(value);
+	};
+
+	const handleSetPhone = (value: string): void => {
+		const phoneNumber = formatPhoneNumber(value);
+		if (!phoneNumber || !phoneRegexWithSpaces.test(phoneNumber)) {
+			setErrors((prev) => ({ ...prev, phone: true }));
+		} else {
+			setErrors((prev) => ({ ...prev, phone: false }));
+		}
+		setPhoneNumber(phoneNumber);
+	};
+
+	const handleSetEmail = (value: string): void => {
+		if ((emailRegex.test(email) && email) || !email) {
+			setErrors((prev) => ({ ...prev, email: false }));
+		}
+		setEmail(value);
+	};
+
+	const handleSetPassword = (value: string): void => {
+		if ((passwordRegex.test(password) && password) || !password) {
+			setErrors((prev) => ({ ...prev, password: false }));
+		}
+		setPassword(value);
+	};
+
+	const handleSetConfirmPassword = (value: string): void => {
+		if (value === password) {
+			setErrors((prev) => ({ ...prev, confirmPassword: false }));
+		} else {
+			setErrors((prev) => ({ ...prev, confirmPassword: true }));
+		}
+		setConfirmPassword(value);
+	};
+
 	return (
 		<ParallaxScrollView headerBackgroundColor={{ light: '#fff', dark: '#fff' }}>
-			<ThemedView
-				style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-				lightColor='#fff'
-				darkColor='#fff'
-			>
-				<ThemedText
-					lightColor={Colors.light.headers}
-					darkColor={Colors.dark.headers}
-				>
-					Adventure starts here
-				</ThemedText>
+			<ThemedView style={styles.container} lightColor='#fff' darkColor='#fff'>
+				<ThemedView style={styles.header} lightColor='#fff' darkColor='#fff'>
+					<Image
+						source={require('@/assets/images/bim-text-img.png')}
+						style={{ height: 35, resizeMode: 'contain' }}
+					/>
+				</ThemedView>
+				<ThemedView style={styles.form} lightColor='#fff' darkColor='#fff'>
+					<ThemedView
+						style={styles.formHeader}
+						lightColor='#fff'
+						darkColor='#fff'
+					>
+						<ThemedText
+							style={{
+								fontWeight: 500,
+								fontSize: 22,
+								color: Colors[colorScheme].headers,
+							}}
+							lightColor={Colors.light.headers}
+							darkColor={Colors.dark.headers}
+						>
+							Adventure starts here 🚀
+						</ThemedText>
+						<ThemedText
+							style={{
+								fontWeight: 400,
+								fontSize: 16,
+								color: Colors.light.text,
+								marginTop: 10,
+							}}
+							lightColor={Colors.light.text}
+							darkColor={Colors.dark.text}
+						>
+							Make your hotspot management easy and fun!
+						</ThemedText>
+					</ThemedView>
+					<ThemedView
+						style={styles.formInputs}
+						lightColor='#fff'
+						darkColor='#fff'
+					>
+						<ThemedInput
+							style={[
+								styles.formInput,
+								{
+									borderColor: errors.fullname
+										? Colors[colorScheme].error
+										: Colors[colorScheme].inputBorder,
+								},
+							]}
+							lightColor={Colors.light.text}
+							darkColor={Colors.light.text}
+							value={fullName}
+							setValue={handleSetFullName}
+							placeholder='Full Name'
+							placeholderTextColor={Colors[colorScheme].text}
+							keyboardType='default'
+							onFocus={() => setFocusedInput('fullName')}
+							onBlur={() => setFocusedInput(null)}
+						/>
+						<ThemedInput
+							style={[
+								styles.formInput,
+								{
+									borderColor: errors.phone
+										? Colors[colorScheme].error
+										: Colors[colorScheme].inputBorder,
+								},
+							]}
+							lightColor={Colors.light.text}
+							darkColor={Colors.light.text}
+							value={phoneNumber}
+							setValue={handleSetPhone}
+							placeholder='Phone Number'
+							placeholderTextColor={Colors[colorScheme].text}
+							keyboardType='number-pad'
+							onFocus={() => setFocusedInput('phoneNumber')}
+							onBlur={() => setFocusedInput(null)}
+						/>
+						<ThemedInput
+							style={[
+								styles.formInput,
+								{
+									borderColor: errors.email
+										? Colors[colorScheme].error
+										: Colors[colorScheme].inputBorder,
+								},
+							]}
+							lightColor={Colors.light.text}
+							darkColor={Colors.light.text}
+							value={email}
+							setValue={handleSetEmail}
+							placeholder='Email'
+							placeholderTextColor={Colors[colorScheme].text}
+							keyboardType='email-address'
+							onFocus={() => setFocusedInput('email')}
+							onBlur={() => setFocusedInput(null)}
+						/>
+						<ThemedInput
+							style={[
+								styles.formInput,
+								{
+									borderColor: errors.password
+										? Colors[colorScheme].error
+										: Colors[colorScheme].inputBorder,
+								},
+							]}
+							lightColor={Colors.light.text}
+							darkColor={Colors.light.text}
+							value={password}
+							secureTextEntry={true}
+							setValue={handleSetPassword}
+							placeholder='Password'
+							placeholderTextColor={Colors[colorScheme].text}
+							keyboardType='default'
+							onFocus={() => setFocusedInput('password')}
+							onBlur={() => setFocusedInput(null)}
+						/>
+						<ThemedInput
+							style={[
+								styles.formInput,
+								{
+									borderColor:
+										focusedInput === 'confirmPassword'
+											? Colors[colorScheme].tint
+											: errors.confirmPassword
+											? Colors[colorScheme].error
+											: Colors[colorScheme].inputBorder,
+								},
+							]}
+							lightColor={Colors.light.text}
+							darkColor={Colors.light.text}
+							value={confirmPassword}
+							secureTextEntry={true}
+							setValue={handleSetConfirmPassword}
+							placeholder='Confirm Password'
+							placeholderTextColor={Colors[colorScheme].text}
+							keyboardType='default'
+							onFocus={() => setFocusedInput('confirmPassword')}
+							onBlur={() => setFocusedInput(null)}
+						/>
+					</ThemedView>
+				</ThemedView>
 			</ThemedView>
 		</ParallaxScrollView>
 	);
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		flexDirection: 'column',
+		justifyContent: 'flex-start',
+		alignItems: 'center',
+	},
+	header: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
+		paddingVertical: 20,
+	},
+	form: {
+		flex: 1,
+		flexDirection: 'column',
+		width: '100%',
+		alignItems: 'flex-start',
+		paddingVertical: 20,
+	},
+	formHeader: {
+		flexDirection: 'column',
+	},
+	formInputs: {
+		flexDirection: 'column',
+		width: '100%',
+		marginVertical: 20,
+		gap: 15,
+	},
+	formInput: {
+		width: '100%',
+		fontSize: 16,
+		backgroundColor: Colors.light.inputBackground,
+		borderRadius: 8,
+		borderColor: Colors.light.inputBorder,
+		borderWidth: 1,
+		color: Colors.light.text,
+	},
+});
