@@ -12,7 +12,52 @@
           "package_name": "com.muganwas.BIMmobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1034621445262-455kkhtrhmvt9n3p2nm1ssb8u1pja4t7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.muganwas.BIMmobile",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "1034621445262-87pp4lqeb6sqdqd7cek77264s8oqpca9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.muganwas.BIMmobile",
+            "certificate_hash": "d2d91091d6f35bbc2c93313aab9b3636382c724e"
+          }
+        },
+        {
+          "client_id": "1034621445262-ful5pp99daehdd32seq539g201amk124.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.muganwas.BIMmobile",
+            "certificate_hash": "74deea80c4500fca8a8ef1933eba06af20ade63f"
+          }
+        },
+        {
+          "client_id": "1034621445262-ippuhno8cicptusin3q5350rfv8faue3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.muganwas.BIMmobile",
+            "certificate_hash": "313691ff5fe51846944f9a9e5fb26d5e6c20fd00"
+          }
+        },
+        {
+          "client_id": "1034621445262-oueg8lhnrqdb18tu6q9e8tn64r63tfir.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.muganwas.BIMmobile",
+            "certificate_hash": "787ab2699a97b4315f47ea3d62b30780791b8fe3"
+          }
+        },
+        {
+          "client_id": "1034621445262-ubibivj422srk1ieedjbcf63v305060d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCFV5qI-mgpgOWu0XBHvDqJ_RBB0B5CDzU"
@@ -20,7 +65,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1034621445262-ubibivj422srk1ieedjbcf63v305060d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1034621445262-ami1t5gsd0706kkoqaaqorhln9vsds4b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.muganwas.BIMmobile"
+              }
+            }
+          ]
         }
       }
     }
