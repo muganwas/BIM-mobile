@@ -140,3 +140,5 @@ dist
 expo-env.d.ts
 # @end expo-cli
 release.keystore
+google-services.json
+GoogleServices-Info.plist
