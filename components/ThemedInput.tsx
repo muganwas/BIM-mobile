@@ -9,6 +9,7 @@ import {
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { HiddenIcon } from './PasswordIcon';
 
 export type ThemedInputProps = TextInputProps & {
 	lightColor?: string;
@@ -39,6 +40,7 @@ export function ThemedInput({
 	countStyle,
 	numberInWordsStyle,
 	containerStyle,
+	secureTextEntry,
 	...rest
 }: ThemedInputProps) {
 	const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
@@ -53,6 +55,9 @@ export function ThemedInput({
 			<TextInput
 				style={[
 					styles.input,
+					secureTextEntry && {
+						paddingRight: 40, // Adjust padding for the icon
+					},
 					{ color },
 					fontFamily ? { fontFamily } : undefined,
 					style,
@@ -60,10 +65,23 @@ export function ThemedInput({
 				onChangeText={setValue}
 				value={value} // Use 'text' for normal input, 'password' for secure input
 				placeholder={placeholder}
+				secureTextEntry={secureTextEntry}
 				keyboardType={keyboardType}
 				placeholderTextColor={'#333333'}
 				{...rest}
 			/>
+			<View
+				style={{
+					display: secureTextEntry ? 'flex' : 'none',
+					position: 'absolute',
+					right: 10,
+					top: 15,
+					zIndex: 1,
+					backgroundColor: 'transparent',
+				}}
+			>
+				<HiddenIcon height={20} width={20} color='#828393' />
+			</View>
 			<ThemedView
 				style={[
 					{

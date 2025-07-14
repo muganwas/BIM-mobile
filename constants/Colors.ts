@@ -8,10 +8,14 @@ const tintColorDark = '#fff';
 
 export const Colors = {
 	light: {
+		bim: '#EE8438',
+		buttonError: '#5A5FE0',
 		text: '#828393',
 		error: '#FF3B30',
+		authButtonText: '#fff',
 		focusedInput: '#0a7ea4',
-		inputBackground: '#fff',
+		inputBackground: '#ffffff',
+		inputContainerBackground: '#ffffff',
 		inputBorder: '#E0E0E0',
 		background: '#fff',
 		tint: tintColorLight,
@@ -21,10 +25,15 @@ export const Colors = {
 		headers: '#636578',
 	},
 	dark: {
+		bim: '#EE8438',
+		buttonError: '#5A5FE0',
 		text: '#828393',
 		error: '#FF3B30',
+		authButtonText: '#fff',
+		focusedInput: '#0a7ea4',
 		inputBackground: '#fff',
 		inputBorder: '#E0E0E0',
+		inputContainerBackground: '#ffffff',
 		background: '#151718',
 		tint: tintColorDark,
 		icon: '#9BA1A6',

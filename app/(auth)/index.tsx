@@ -1,4 +1,5 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -9,7 +10,16 @@ import { verifyToken } from '@/helpers/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet } from 'react-native';
+import {
+	Dimensions,
+	Image,
+	KeyboardAvoidingView,
+	Platform,
+	StyleSheet,
+	TouchableOpacity,
+} from 'react-native';
+
+const devWidth = Dimensions.get('window').width;
 
 export default function RegisterScreen() {
 	const router = useRouter();
@@ -85,154 +95,246 @@ export default function RegisterScreen() {
 		setConfirmPassword(value);
 	};
 
+	const handleOnSignUp = async () => {
+		if (
+			fullName.length < 3 ||
+			!phoneRegexWithSpaces.test(phoneNumber) ||
+			!emailRegex.test(email) ||
+			!passwordRegex.test(password) ||
+			confirmPassword !== password
+		) {
+			setErrors({
+				fullname: fullName.length < 3,
+				phone: !phoneRegexWithSpaces.test(phoneNumber),
+				email: !emailRegex.test(email),
+				password: !passwordRegex.test(password),
+				confirmPassword: !confirmPassword || confirmPassword !== password,
+				signup: true,
+			});
+			return;
+		}
+		try {
+			// Call your signup API here
+			// If successful, redirect to the home screen
+			router.replace('/(authenticated)/home');
+		} catch (error) {
+			setErrors((prev) => ({ ...prev, signup: true }));
+			console.error('Signup error:', error);
+		}
+	};
+
 	return (
-		<ParallaxScrollView headerBackgroundColor={{ light: '#fff', dark: '#fff' }}>
-			<ThemedView style={styles.container} lightColor='#fff' darkColor='#fff'>
-				<ThemedView style={styles.header} lightColor='#fff' darkColor='#fff'>
-					<Image
-						source={require('@/assets/images/bim-text-img.png')}
-						style={{ height: 35, resizeMode: 'contain' }}
-					/>
-				</ThemedView>
-				<ThemedView style={styles.form} lightColor='#fff' darkColor='#fff'>
-					<ThemedView
-						style={styles.formHeader}
-						lightColor='#fff'
-						darkColor='#fff'
-					>
-						<ThemedText
-							style={{
-								fontWeight: 500,
-								fontSize: 22,
-								color: Colors[colorScheme].headers,
-							}}
-							lightColor={Colors.light.headers}
-							darkColor={Colors.dark.headers}
-						>
-							Adventure starts here 🚀
-						</ThemedText>
-						<ThemedText
-							style={{
-								fontWeight: 400,
-								fontSize: 16,
-								color: Colors.light.text,
-								marginTop: 10,
-							}}
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
-						>
-							Make your hotspot management easy and fun!
-						</ThemedText>
+		<KeyboardAvoidingView
+			style={{
+				flex: 1,
+				minWidth: devWidth,
+				minHeight: '100%',
+				padding: 0,
+				margin: 0,
+			}}
+			behavior={Platform.OS === 'ios' ? 'position' : 'padding'}
+		>
+			<ParallaxScrollView
+				headerBackgroundColor={{ light: '#fff', dark: '#fff' }}
+			>
+				<ThemedView style={styles.container} lightColor='#fff' darkColor='#fff'>
+					<ThemedView style={styles.header} lightColor='#fff' darkColor='#fff'>
+						<Image
+							source={require('@/assets/images/bim-text-img.png')}
+							style={{ height: 35, resizeMode: 'contain' }}
+						/>
 					</ThemedView>
-					<ThemedView
-						style={styles.formInputs}
-						lightColor='#fff'
-						darkColor='#fff'
-					>
-						<ThemedInput
-							style={[
-								styles.formInput,
-								{
-									borderColor: errors.fullname
-										? Colors[colorScheme].error
-										: Colors[colorScheme].inputBorder,
-								},
-							]}
-							lightColor={Colors.light.text}
-							darkColor={Colors.light.text}
-							value={fullName}
-							setValue={handleSetFullName}
-							placeholder='Full Name'
-							placeholderTextColor={Colors[colorScheme].text}
-							keyboardType='default'
-							onFocus={() => setFocusedInput('fullName')}
-							onBlur={() => setFocusedInput(null)}
-						/>
-						<ThemedInput
-							style={[
-								styles.formInput,
-								{
-									borderColor: errors.phone
-										? Colors[colorScheme].error
-										: Colors[colorScheme].inputBorder,
-								},
-							]}
-							lightColor={Colors.light.text}
-							darkColor={Colors.light.text}
-							value={phoneNumber}
-							setValue={handleSetPhone}
-							placeholder='Phone Number'
-							placeholderTextColor={Colors[colorScheme].text}
-							keyboardType='number-pad'
-							onFocus={() => setFocusedInput('phoneNumber')}
-							onBlur={() => setFocusedInput(null)}
-						/>
-						<ThemedInput
-							style={[
-								styles.formInput,
-								{
-									borderColor: errors.email
-										? Colors[colorScheme].error
-										: Colors[colorScheme].inputBorder,
-								},
-							]}
-							lightColor={Colors.light.text}
-							darkColor={Colors.light.text}
-							value={email}
-							setValue={handleSetEmail}
-							placeholder='Email'
-							placeholderTextColor={Colors[colorScheme].text}
-							keyboardType='email-address'
-							onFocus={() => setFocusedInput('email')}
-							onBlur={() => setFocusedInput(null)}
-						/>
-						<ThemedInput
-							style={[
-								styles.formInput,
-								{
-									borderColor: errors.password
-										? Colors[colorScheme].error
-										: Colors[colorScheme].inputBorder,
-								},
-							]}
-							lightColor={Colors.light.text}
-							darkColor={Colors.light.text}
-							value={password}
-							secureTextEntry={true}
-							setValue={handleSetPassword}
-							placeholder='Password'
-							placeholderTextColor={Colors[colorScheme].text}
-							keyboardType='default'
-							onFocus={() => setFocusedInput('password')}
-							onBlur={() => setFocusedInput(null)}
-						/>
-						<ThemedInput
-							style={[
-								styles.formInput,
-								{
-									borderColor:
-										focusedInput === 'confirmPassword'
-											? Colors[colorScheme].tint
-											: errors.confirmPassword
+					<ThemedView style={styles.form} lightColor='#fff' darkColor='#fff'>
+						<ThemedView
+							style={styles.formHeader}
+							lightColor='#fff'
+							darkColor='#fff'
+						>
+							<ThemedText
+								style={{
+									fontWeight: 500,
+									fontSize: 22,
+									color: Colors[colorScheme].headers,
+								}}
+								lightColor={Colors.light.headers}
+								darkColor={Colors.dark.headers}
+							>
+								Adventure starts here 🚀
+							</ThemedText>
+							<ThemedText
+								style={{
+									fontWeight: 400,
+									fontSize: 16,
+									color: Colors.light.text,
+									marginTop: 10,
+								}}
+								lightColor={Colors.light.text}
+								darkColor={Colors.dark.text}
+							>
+								Make your hotspot management easy and fun!
+							</ThemedText>
+						</ThemedView>
+						<ThemedView
+							style={styles.formInputs}
+							lightColor='#fff'
+							darkColor='#fff'
+						>
+							<ThemedInput
+								style={[
+									styles.formInput,
+									{
+										borderColor: errors.fullname
 											? Colors[colorScheme].error
 											: Colors[colorScheme].inputBorder,
-								},
-							]}
-							lightColor={Colors.light.text}
-							darkColor={Colors.light.text}
-							value={confirmPassword}
-							secureTextEntry={true}
-							setValue={handleSetConfirmPassword}
-							placeholder='Confirm Password'
-							placeholderTextColor={Colors[colorScheme].text}
-							keyboardType='default'
-							onFocus={() => setFocusedInput('confirmPassword')}
-							onBlur={() => setFocusedInput(null)}
-						/>
+									},
+								]}
+								lightColor={Colors.light.text}
+								darkColor={Colors.light.text}
+								value={fullName}
+								setValue={handleSetFullName}
+								placeholder='Full Name'
+								placeholderTextColor={Colors[colorScheme].text}
+								keyboardType='default'
+								onFocus={() => setFocusedInput('fullName')}
+								onBlur={() => setFocusedInput(null)}
+							/>
+							<ThemedInput
+								style={[
+									styles.formInput,
+									{
+										borderColor: errors.phone
+											? Colors[colorScheme].error
+											: Colors[colorScheme].inputBorder,
+									},
+								]}
+								lightColor={Colors.light.text}
+								darkColor={Colors.light.text}
+								value={phoneNumber}
+								setValue={handleSetPhone}
+								placeholder='Phone Number'
+								placeholderTextColor={Colors[colorScheme].text}
+								keyboardType='number-pad'
+								onFocus={() => setFocusedInput('phoneNumber')}
+								onBlur={() => setFocusedInput(null)}
+							/>
+							<ThemedInput
+								style={[
+									styles.formInput,
+									{
+										borderColor: errors.email
+											? Colors[colorScheme].error
+											: Colors[colorScheme].inputBorder,
+									},
+								]}
+								lightColor={Colors.light.text}
+								darkColor={Colors.light.text}
+								value={email}
+								setValue={handleSetEmail}
+								placeholder='Email'
+								placeholderTextColor={Colors[colorScheme].text}
+								keyboardType='email-address'
+								onFocus={() => setFocusedInput('email')}
+								onBlur={() => setFocusedInput(null)}
+							/>
+							<ThemedInput
+								style={[
+									styles.formInput,
+									{
+										borderColor: errors.password
+											? Colors[colorScheme].error
+											: Colors[colorScheme].inputBorder,
+									},
+								]}
+								lightColor={Colors.light.text}
+								darkColor={Colors.light.text}
+								value={password}
+								secureTextEntry={true}
+								setValue={handleSetPassword}
+								placeholder='Password'
+								placeholderTextColor={Colors[colorScheme].text}
+								keyboardType='default'
+								onFocus={() => setFocusedInput('password')}
+								onBlur={() => setFocusedInput(null)}
+							/>
+							<ThemedInput
+								style={[
+									styles.formInput,
+									{
+										borderColor:
+											focusedInput === 'confirmPassword'
+												? Colors[colorScheme].tint
+												: errors.confirmPassword
+												? Colors[colorScheme].error
+												: Colors[colorScheme].inputBorder,
+									},
+								]}
+								lightColor={Colors.light.text}
+								darkColor={Colors.light.text}
+								value={confirmPassword}
+								secureTextEntry={true}
+								setValue={handleSetConfirmPassword}
+								placeholder='Confirm Password'
+								placeholderTextColor={Colors[colorScheme].text}
+								keyboardType='default'
+								onFocus={() => setFocusedInput('confirmPassword')}
+								onBlur={() => setFocusedInput(null)}
+							/>
+							<ThemedButton
+								title='SIGN UP'
+								onPress={handleOnSignUp}
+								style={{
+									borderRadius: 8,
+								}}
+								darkColor={
+									errors['signup']
+										? Colors['dark'].buttonError
+										: Colors['dark'].bim
+								}
+								lightColor={
+									errors['signup']
+										? Colors['light'].buttonError
+										: Colors['light'].bim
+								}
+								darkTextColor={Colors['dark'].authButtonText}
+								lightTextColor={Colors['light'].authButtonText}
+							/>
+							<ThemedView
+								style={{
+									flexDirection: 'row',
+									marginTop: 10,
+									alignItems: 'center',
+									justifyContent: 'center',
+								}}
+							>
+								<ThemedText
+									style={{
+										fontSize: 16,
+										color: Colors[colorScheme].text,
+										textAlign: 'center',
+									}}
+									lightColor={Colors.light.text}
+									darkColor={Colors.dark.text}
+								>
+									Already have an account?{' '}
+								</ThemedText>
+								<TouchableOpacity
+									style={{
+										flexDirection: 'row',
+										backgroundColor: 'transparent',
+										alignItems: 'center',
+									}}
+									onPress={() => router.push('/(auth)/login')}
+								>
+									<ThemedText style={{ color: Colors[colorScheme].bim }}>
+										Sign in instead
+									</ThemedText>
+								</TouchableOpacity>
+							</ThemedView>
+						</ThemedView>
 					</ThemedView>
 				</ThemedView>
-			</ThemedView>
-		</ParallaxScrollView>
+			</ParallaxScrollView>
+		</KeyboardAvoidingView>
 	);
 }
 
@@ -263,6 +365,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'column',
 		width: '100%',
 		marginVertical: 20,
+		backgroundColor: Colors.light.inputContainerBackground,
 		gap: 15,
 	},
 	formInput: {
