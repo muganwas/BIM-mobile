@@ -1,41 +1,43 @@
-import { Tabs } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
 import React from 'react';
-import { Platform } from 'react-native';
 
-import { HapticTab } from '@/components/HapticTab';
+import Header from '@/components/Header';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
+import { useGeneral } from '@/context/GeneralContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function TabLayout() {
+export default function DrawerLayout() {
+	const { user, notifications, online } = useGeneral(); // Get user from context
 	const colorScheme = useColorScheme();
 
 	return (
-		<Tabs
+		<Drawer
 			screenOptions={{
-				tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-				headerShown: false,
-				tabBarButton: HapticTab,
-				tabBarBackground: TabBarBackground,
-				tabBarStyle: Platform.select({
-					ios: {
-						// Use a transparent background on iOS to show the blur effect
-						position: 'absolute',
-					},
-					default: {},
-				}),
+				headerShown: true,
+				drawerActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+				header: () => (
+					<Header
+						dp={user?.avatarUrl}
+						notifications={notifications}
+						online={online}
+					/>
+				),
+				drawerStyle: {
+					backgroundColor: Colors[colorScheme ?? 'light'].background,
+				},
 			}}
 		>
-			<Tabs.Screen
+			<Drawer.Screen
 				name='home'
 				options={{
 					title: 'Home',
-					tabBarIcon: ({ color }) => (
+					drawerIcon: ({ color }: { color: string }) => (
 						<IconSymbol size={28} name='house.fill' color={color} />
 					),
 				}}
 			/>
-		</Tabs>
+			{/* Add more drawer screens as needed */}
+		</Drawer>
 	);
 }

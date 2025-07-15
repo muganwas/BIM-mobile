@@ -1,4 +1,3 @@
-import { useNetInfo } from '@react-native-community/netinfo';
 import {
 	DarkTheme,
 	DefaultTheme,
@@ -8,41 +7,37 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import 'react-native-reanimated';
 
+import { GeneralProvider, useGeneral } from '@/context/GeneralContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Text, View } from 'react-native';
+import { Animated, Text, useAnimatedValue } from 'react-native';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayoutContent() {
 	const colorScheme = useColorScheme();
-	const netInfo = useNetInfo();
-	const [online, setOnline] = useState<boolean>(true);
+	const Anim = useAnimatedValue(0); // Example of using an animated value
+	const { online } = useGeneral(); // Get online status from context
 	const [loaded] = useFonts({
 		SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
 	});
 
 	useEffect(() => {
-		const check = async () => {
-			if (
-				netInfo.isConnected === true &&
-				netInfo.isInternetReachable !== false
-			) {
-				try {
-					const res = await fetch('https://clients3.google.com/generate_204');
-					setOnline(res.status === 204);
-				} catch {
-					setOnline(false);
-				}
-			} else {
-				setOnline(false);
-			}
-		};
-		check();
-	}, [netInfo]);
+		if (online)
+			Animated.timing(Anim, {
+				toValue: 0,
+				duration: 150,
+				useNativeDriver: true,
+			}).start();
+		else
+			Animated.timing(Anim, {
+				toValue: 1,
+				duration: 150,
+				useNativeDriver: true,
+			}).start();
+	}, [online, Anim]); // Example effect using animated value
 
 	useEffect(() => {
 		if (loaded) {
@@ -51,44 +46,49 @@ export default function RootLayout() {
 	}, [loaded]);
 
 	if (!loaded) {
-		// Async font loading only occurs in development.
 		return null;
 	}
 
 	return (
+		<ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+			{!online && (
+				<Animated.View
+					style={{
+						position: 'absolute',
+						top: 0,
+						left: 0,
+						right: 0,
+						height: 70,
+						backgroundColor: '#ff3333',
+						transform: [{ scaleY: Anim }],
+						paddingTop: 20,
+						alignItems: 'center',
+						justifyContent: 'center',
+						zIndex: 999,
+					}}
+				>
+					<Text style={{ color: '#fff', fontWeight: 'bold' }}>
+						You are offline
+					</Text>
+				</Animated.View>
+			)}
+			<Stack>
+				<Stack.Screen name='(auth)' options={{ headerShown: false }} />
+				<Stack.Screen name='(onboarding)' options={{ headerShown: false }} />
+				<Stack.Screen name='(authenticated)' options={{ headerShown: false }} />
+				<Stack.Screen name='+not-found' />
+			</Stack>
+			<StatusBar style='auto' />
+		</ThemeProvider>
+	);
+}
+
+export default function RootLayout() {
+	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
-			<ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-				{!online && (
-					<View
-						style={{
-							position: 'absolute',
-							top: 0,
-							left: 0,
-							right: 0,
-							backgroundColor: '#ff3333',
-							height: 70,
-							paddingTop: 20,
-							alignItems: 'center',
-							justifyContent: 'center',
-							zIndex: 999,
-						}}
-					>
-						<Text style={{ color: '#fff', fontWeight: 'bold' }}>
-							You are offline
-						</Text>
-					</View>
-				)}
-				<Stack>
-					<Stack.Screen name='(auth)' options={{ headerShown: false }} />
-					<Stack.Screen name='(onboarding)' options={{ headerShown: false }} />
-					<Stack.Screen
-						name='(authenticated)'
-						options={{ headerShown: false }}
-					/>
-					<Stack.Screen name='+not-found' />
-				</Stack>
-				<StatusBar style='auto' />
-			</ThemeProvider>
+			<GeneralProvider>
+				<RootLayoutContent />
+			</GeneralProvider>
 		</GestureHandlerRootView>
 	);
 }
