@@ -50,6 +50,14 @@ const MAPPING: IconMapping = {
 		type: 'material-community',
 		name: 'file-document-multiple-outline',
 	},
+	'password.outline': {
+		type: 'material-community',
+		name: 'eye-off-outline',
+	},
+	'password.off.outline': {
+		type: 'material-community',
+		name: 'eye-outline',
+	},
 	menu: { type: 'material-community', name: 'menu' },
 	account: { type: 'material-community', name: 'account-outline' },
 	logout: { type: 'material-community', name: 'logout' },

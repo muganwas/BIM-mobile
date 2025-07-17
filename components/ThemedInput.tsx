@@ -11,7 +11,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useState } from 'react';
-import { HiddenIcon } from './PasswordIcon';
+import { IconSymbol } from './ui/IconSymbol';
 
 export type ThemedInputProps = TextInputProps & {
 	lightColor?: string;
@@ -84,7 +84,12 @@ export function ThemedInput({
 				activeOpacity={0.7}
 				onPress={() => setShowPassword((prev) => !prev)} // Clear input on icon press
 			>
-				<HiddenIcon height={20} width={20} color='#828393' />
+				<IconSymbol
+					name={showPassword ? 'password.off.outline' : 'password.outline'}
+					size={20}
+					color={color}
+					style={{ marginRight: 10 }}
+				/>
 			</TouchableOpacity>
 			<ThemedView
 				style={[

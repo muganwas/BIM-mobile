@@ -14,6 +14,7 @@ import {
 	View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ThemedInput } from './ThemedInput';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 import { IconSymbol } from './ui/IconSymbol';
@@ -30,9 +31,11 @@ export default function Header({
 	const insets = useSafeAreaInsets();
 	const colorScheme = useColorScheme() ?? 'light';
 	const router = useRouter();
-	const AnimValue = useAnimatedValue(0);
+	const profileAnimValue = useAnimatedValue(0);
+	const searchAnimValue = useAnimatedValue(0);
 	const { user, handleLogout } = useGeneral(); // Get user from context
 	const navigation = useNavigation<DrawerNavigationProp<any>>();
+	const [searchValue, setSearchValue] = useState('');
 	const [showSearchInput, setShowSearchInput] = useState(false);
 	const [showLanguageSelection, setShowLanguageSelection] = useState(false);
 	const [showNotifications, setShowNotifications] = useState(false);
@@ -43,8 +46,22 @@ export default function Header({
 	};
 
 	const toggleSearchInput = () => {
-		// Implement search input toggle logic here
-		console.log('Search input toggled');
+		setShowSearchInput((prev) => {
+			if (!prev) {
+				Animated.timing(searchAnimValue, {
+					toValue: 1, // Example animation value change
+					duration: 200,
+					useNativeDriver: true,
+				}).start();
+			} else {
+				Animated.timing(searchAnimValue, {
+					toValue: 0, // Reset animation value
+					duration: 150,
+					useNativeDriver: true,
+				}).start();
+			}
+			return !prev;
+		});
 	};
 
 	const toggleLanguageSelection = () => {
@@ -58,13 +75,13 @@ export default function Header({
 	const toggleProfile = () => {
 		setShowProfile((prev) => {
 			if (!prev) {
-				Animated.timing(AnimValue, {
+				Animated.timing(profileAnimValue, {
 					toValue: 1, // Example animation value change
 					duration: 200,
 					useNativeDriver: true,
 				}).start();
 			} else {
-				Animated.timing(AnimValue, {
+				Animated.timing(profileAnimValue, {
 					toValue: 0, // Reset animation value
 					duration: 150,
 					useNativeDriver: true,
@@ -80,9 +97,7 @@ export default function Header({
 			darkColor='#fff'
 			style={[styles.container, { paddingTop: insets.top + 10 }]}
 		>
-			<ThemedView
-				lightColor='#fff'
-				darkColor='#fff'
+			<Animated.View
 				style={{
 					flexDirection: 'row',
 					alignItems: 'center',
@@ -93,7 +108,7 @@ export default function Header({
 				<TouchableOpacity onPress={toggleDrawer}>
 					<IconSymbol
 						name='menu'
-						size={28}
+						size={24}
 						color={Colors[colorScheme].text}
 						style={{ marginRight: 10 }}
 					/>
@@ -101,12 +116,37 @@ export default function Header({
 				<TouchableOpacity onPress={toggleSearchInput}>
 					<IconSymbol
 						name='search.outline'
-						size={28}
+						size={24}
 						color={Colors[colorScheme].headerIcons}
 						style={{ marginRight: 10 }}
 					/>
 				</TouchableOpacity>
-			</ThemedView>
+			</Animated.View>
+			<Animated.View
+				id='test-id-header-search'
+				style={{
+					opacity: searchAnimValue,
+					transform: [{ scaleX: searchAnimValue }],
+					flexDirection: 'row',
+					alignItems: 'center',
+					justifyContent: 'center',
+					flex: 2,
+				}}
+			>
+				<ThemedInput
+					lightColor={Colors[colorScheme].text}
+					darkColor={Colors[colorScheme].text}
+					containerStyle={{ height: 40, flex: 1, marginLeft: 10 }}
+					style={{
+						fontSize: 14,
+						height: 40,
+						paddingVertical: 0,
+						backgroundColor: Colors[colorScheme].inputBackground,
+					}}
+					value={searchValue}
+					setValue={setSearchValue}
+				/>
+			</Animated.View>
 			<ThemedView
 				lightColor='#fff'
 				darkColor='#fff'
@@ -122,7 +162,7 @@ export default function Header({
 				<TouchableOpacity onPress={toggleLanguageSelection}>
 					<IconSymbol
 						name='translate'
-						size={28}
+						size={24}
 						color={Colors[colorScheme].headerIcons}
 						style={{ marginRight: 10 }}
 					/>
@@ -131,14 +171,14 @@ export default function Header({
 					{notifications && notifications.length > 0 ? (
 						<IconSymbol
 							name='notifications.outline.badge'
-							size={28}
+							size={24}
 							color={Colors[colorScheme].headerIcons}
 							style={{ marginRight: 10 }}
 						/>
 					) : (
 						<IconSymbol
 							name='notifications.outline'
-							size={28}
+							size={24}
 							color={Colors[colorScheme].headerIcons}
 							style={{ marginRight: 10 }}
 						/>
@@ -178,7 +218,7 @@ export default function Header({
 					position: 'absolute',
 					flexDirection: 'column',
 					display: showProfile ? 'flex' : 'none',
-					transform: [{ scaleY: AnimValue }],
+					transform: [{ scaleY: profileAnimValue }],
 					left: 10,
 					right: 10,
 					top: 60 + insets.top,
