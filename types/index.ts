@@ -4,6 +4,7 @@ export interface User {
 	email: string;
 	phone?: string; // Optional, can be used for login or registration
 	avatarUrl?: string;
+	userLanguage?: languages; // Optional, can be used to store user's preferred language
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -26,3 +27,26 @@ export interface notifications {
 	createdAt: Date;
 	updatedAt: Date;
 }
+
+export type Translations = {
+	[key in languages]: {
+		name: string;
+		categories: {
+			[categoryKey: string]: {
+				[translationKey: string]: string;
+			};
+		};
+	};
+};
+
+export type languages =
+	| 'en'
+	| 'fr'
+	| 'es'
+	| 'de'
+	| 'it'
+	| 'ru'
+	| 'pt'
+	| 'zh'
+	| 'ja'
+	| 'ar';

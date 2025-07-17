@@ -5,6 +5,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { emailRegex, passwordRegex, phoneRegexWithSpaces } from '@/constants';
 import { Colors } from '@/constants/Colors';
+import translations from '@/constants/Trans';
+import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
 import { verifyToken } from '@/helpers/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -26,6 +28,7 @@ export default function RegisterScreen() {
 	const router = useRouter();
 	const navigation = useNavigation();
 	const colorScheme = useColorScheme() ?? 'light';
+	const { language } = useGeneral();
 	const [fullName, setFullName] = useState('');
 	const [phoneNumber, setPhoneNumber] = useState('');
 	const [email, setEmail] = useState('');
@@ -206,7 +209,7 @@ export default function RegisterScreen() {
 								lightColor={Colors.light.headers}
 								darkColor={Colors.dark.headers}
 							>
-								Adventure starts here 🚀
+								{translations[language].categories.auth['signUp.title']}
 							</ThemedText>
 							<ThemedText
 								style={{
@@ -218,7 +221,7 @@ export default function RegisterScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								Make your hotspot management easy and fun!
+								{translations[language].categories.auth['signUp.subtitle']}
 							</ThemedText>
 						</ThemedView>
 						<ThemedView
@@ -239,7 +242,7 @@ export default function RegisterScreen() {
 								darkColor={Colors.light.text}
 								value={fullName}
 								setValue={handleSetFullName}
-								placeholder='Full Name'
+								placeholder={translations[language].categories.auth['fullName']}
 								placeholderTextColor={Colors[colorScheme].text}
 								keyboardType='default'
 								onFocus={() => setFocusedInput('fullName')}
@@ -258,7 +261,9 @@ export default function RegisterScreen() {
 								darkColor={Colors.light.text}
 								value={phoneNumber}
 								setValue={handleSetPhone}
-								placeholder='Phone Number'
+								placeholder={
+									translations[language].categories.auth['phoneNumber']
+								}
 								placeholderTextColor={Colors[colorScheme].text}
 								keyboardType='number-pad'
 								onFocus={() => setFocusedInput('phoneNumber')}
@@ -277,7 +282,7 @@ export default function RegisterScreen() {
 								darkColor={Colors.light.text}
 								value={email}
 								setValue={handleSetEmail}
-								placeholder='Email'
+								placeholder={translations[language].categories.auth['email']}
 								placeholderTextColor={Colors[colorScheme].text}
 								keyboardType='email-address'
 								onFocus={() => setFocusedInput('email')}
@@ -297,7 +302,7 @@ export default function RegisterScreen() {
 								value={password}
 								secureTextEntry={true}
 								setValue={handleSetPassword}
-								placeholder='Password'
+								placeholder={translations[language].categories.auth['password']}
 								placeholderTextColor={Colors[colorScheme].text}
 								keyboardType='default'
 								onFocus={() => setFocusedInput('password')}
@@ -320,14 +325,18 @@ export default function RegisterScreen() {
 								value={confirmPassword}
 								secureTextEntry={true}
 								setValue={handleSetConfirmPassword}
-								placeholder='Confirm Password'
+								placeholder={
+									translations[language].categories.auth['confirmPassword']
+								}
 								placeholderTextColor={Colors[colorScheme].text}
 								keyboardType='default'
 								onFocus={() => setFocusedInput('confirmPassword')}
 								onBlur={() => setFocusedInput(null)}
 							/>
 							<ThemedButton
-								title='SIGN UP'
+								title={translations[language].categories.auth[
+									'signUp.button'
+								]?.toUpperCase()}
 								onPress={handleOnSignUp}
 								style={{
 									borderRadius: 8,
@@ -362,7 +371,7 @@ export default function RegisterScreen() {
 									lightColor={Colors.light.text}
 									darkColor={Colors.dark.text}
 								>
-									Already have an account?{' '}
+									{translations[language].categories.auth['haveAnAccount']}{' '}
 								</ThemedText>
 								<TouchableOpacity
 									style={{
@@ -373,7 +382,7 @@ export default function RegisterScreen() {
 									onPress={() => router.push('/(auth)/login')}
 								>
 									<ThemedText style={{ color: Colors[colorScheme].bim }}>
-										Sign in instead
+										{translations[language].categories.auth['signIn']}
 									</ThemedText>
 								</TouchableOpacity>
 							</ThemedView>

@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { notifications } from '@/types';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
@@ -33,7 +34,7 @@ export default function Header({
 	const router = useRouter();
 	const profileAnimValue = useAnimatedValue(0);
 	const searchAnimValue = useAnimatedValue(0);
-	const { user, handleLogout } = useGeneral(); // Get user from context
+	const { user, handleLogout, language } = useGeneral(); // Get user from context
 	const navigation = useNavigation<DrawerNavigationProp<any>>();
 	const [searchValue, setSearchValue] = useState('');
 	const [showSearchInput, setShowSearchInput] = useState(false);
@@ -277,7 +278,7 @@ export default function Header({
 						<ThemedText
 							style={{ fontSize: 16, color: Colors[colorScheme].text }}
 						>
-							{user?.name || 'User Name'}
+							{user?.name || 'John Doe'}
 						</ThemedText>
 						<ThemedText
 							style={{ fontSize: 14, color: Colors[colorScheme].text }}
@@ -316,7 +317,7 @@ export default function Header({
 								fontSize: 14,
 							}}
 						>
-							My Profile
+							{translations[language].categories.navigation['profile']}
 						</ThemedText>
 					</TouchableOpacity>
 					<TouchableOpacity
@@ -339,7 +340,7 @@ export default function Header({
 								fontSize: 14,
 							}}
 						>
-							Logout
+							{translations[language].categories.navigation['logout']}
 						</ThemedText>
 					</TouchableOpacity>
 				</ThemedView>

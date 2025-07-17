@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { passwordRegex, phoneRegexWithSpaces } from '@/constants';
 import { Colors } from '@/constants/Colors';
+import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
@@ -26,7 +27,7 @@ export default function LoginsScreen() {
 	const router = useRouter();
 	const navigation = useNavigation();
 	const colorScheme = useColorScheme() ?? 'light';
-	const { handleAuthentication } = useGeneral(); // Get authenticate function from context
+	const { handleAuthentication, language } = useGeneral(); // Get authenticate function from context
 	const [phoneNumber, setPhoneNumber] = useState('');
 	const [password, setPassword] = useState('');
 	const [focusedInput, setFocusedInput] = useState<string | null>(null);
@@ -149,7 +150,7 @@ export default function LoginsScreen() {
 								lightColor={Colors.light.headers}
 								darkColor={Colors.dark.headers}
 							>
-								Welcome to BIM Networks!👋
+								{translations[language].categories.auth['signIn.title']}
 							</ThemedText>
 							<ThemedText
 								style={{
@@ -161,7 +162,7 @@ export default function LoginsScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								Please sign-in to your account and start the adventure
+								{translations[language].categories.auth['signIn.subtitle']}
 							</ThemedText>
 						</ThemedView>
 						<ThemedView
@@ -182,7 +183,9 @@ export default function LoginsScreen() {
 								darkColor={Colors.light.text}
 								value={phoneNumber}
 								setValue={handleSetPhone}
-								placeholder='Phone Number'
+								placeholder={
+									translations[language].categories.auth['phoneNumber']
+								}
 								placeholderTextColor={Colors[colorScheme].text}
 								keyboardType='number-pad'
 								onFocus={() => setFocusedInput('phoneNumber')}
@@ -202,14 +205,16 @@ export default function LoginsScreen() {
 								value={password}
 								secureTextEntry={true}
 								setValue={handleSetPassword}
-								placeholder='Password'
+								placeholder={translations[language].categories.auth['password']}
 								placeholderTextColor={Colors[colorScheme].text}
 								keyboardType='default'
 								onFocus={() => setFocusedInput('password')}
 								onBlur={() => setFocusedInput(null)}
 							/>
 							<ThemedButton
-								title='SIGN IN'
+								title={translations[language].categories.auth[
+									'signIn.button'
+								]?.toUpperCase()}
 								onPress={handleOnLogin}
 								style={{
 									borderRadius: 8,
@@ -244,7 +249,7 @@ export default function LoginsScreen() {
 									onPress={() => router.push('/(auth)/login')}
 								>
 									<ThemedText style={{ color: Colors[colorScheme].bim }}>
-										Forgot Password?
+										{translations[language].categories.auth['forgotPassword']}
 									</ThemedText>
 								</TouchableOpacity>
 								<TouchableOpacity
@@ -256,7 +261,7 @@ export default function LoginsScreen() {
 									onPress={() => router.push('/(auth)')}
 								>
 									<ThemedText style={{ color: Colors[colorScheme].bim }}>
-										Sign up instead
+										{translations[language].categories.auth['signUp']}
 									</ThemedText>
 								</TouchableOpacity>
 							</ThemedView>
