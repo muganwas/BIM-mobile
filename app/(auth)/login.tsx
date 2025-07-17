@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { passwordRegex, phoneRegexWithSpaces } from '@/constants';
 import { Colors } from '@/constants/Colors';
+import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -25,6 +26,7 @@ export default function LoginsScreen() {
 	const router = useRouter();
 	const navigation = useNavigation();
 	const colorScheme = useColorScheme() ?? 'light';
+	const { handleAuthentication } = useGeneral(); // Get authenticate function from context
 	const [phoneNumber, setPhoneNumber] = useState('');
 	const [password, setPassword] = useState('');
 	const [focusedInput, setFocusedInput] = useState<string | null>(null);
@@ -75,7 +77,7 @@ export default function LoginsScreen() {
 		setPassword(value);
 	};
 
-	const handleOnLogin = (): void => {
+	const handleOnLogin = () => {
 		if (
 			!phoneRegexWithSpaces.test(phoneNumber) ||
 			!passwordRegex.test(password)
@@ -90,7 +92,10 @@ export default function LoginsScreen() {
 		try {
 			// Call your signup API here
 			// If successful, redirect to the home screen
-			router.replace('/(authenticated)/home');
+			handleAuthentication({
+				number: phoneNumber,
+				password,
+			});
 		} catch (error) {
 			setErrors((prev) => ({ ...prev, signup: true }));
 			console.error('Login error:', error);

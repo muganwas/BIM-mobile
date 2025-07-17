@@ -6,4 +6,4 @@ export const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export const phoneRegexWithSpaces = /^\d{4} \d{3} \d{3}$/;
 // password regex that requires a capital letter, a number, and a special character
 export const passwordRegex =
-	/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+	/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#^-_+=~`|\\/:;"'<>(){}[\]])[A-Za-z\d@$!%*?&.#^-_+=~`|\\/:;"'<>(){}[\]]{8,}$/;

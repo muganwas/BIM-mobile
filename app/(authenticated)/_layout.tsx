@@ -18,9 +18,9 @@ export default function DrawerLayout() {
 				drawerActiveTintColor: Colors[colorScheme ?? 'light'].tint,
 				header: () => (
 					<Header
+						online={online}
 						dp={user?.avatarUrl}
 						notifications={notifications}
-						online={online}
 					/>
 				),
 				drawerStyle: {

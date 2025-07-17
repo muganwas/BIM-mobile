@@ -82,8 +82,21 @@ export const GeneralProvider = ({
 				updatedAt: new Date(),
 			});
 			console.log('User authenticated:', number);
+			router.replace('/(authenticated)/home');
 		} catch (error: any) {
 			console.error('Authentication error:', error);
+		}
+	};
+
+	const handleLogout = async () => {
+		try {
+			// Simulate logout process
+			setUser(null);
+			setNotifications([]);
+			console.log('User logged out');
+			router.replace('/(auth)/login');
+		} catch (error: any) {
+			console.error('Logout error:', error);
 		}
 	};
 
@@ -107,10 +120,6 @@ export const GeneralProvider = ({
 		} catch (error: any) {
 			console.error('Error fetching notifications:', error);
 		}
-	};
-
-	const handleLogout = async () => {
-		console.log('Logging out...');
 	};
 
 	return (

@@ -10,8 +10,10 @@ export const Colors = {
 	light: {
 		bim: '#EE8438',
 		buttonError: '#5A5FE0',
+		headerIcons: '#636578',
 		text: '#828393',
 		error: '#FF3B30',
+		border: 'rgba(76, 78, 100, 0.05)',
 		authButtonText: '#fff',
 		focusedInput: '#0a7ea4',
 		inputBackground: '#ffffff',
@@ -27,8 +29,10 @@ export const Colors = {
 	dark: {
 		bim: '#EE8438',
 		buttonError: '#5A5FE0',
+		headerIcons: '#636578',
 		text: '#828393',
 		error: '#FF3B30',
+		border: 'rgba(76, 78, 100, 0.05)',
 		authButtonText: '#fff',
 		focusedInput: '#0a7ea4',
 		inputBackground: '#fff',

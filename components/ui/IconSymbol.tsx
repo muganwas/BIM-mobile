@@ -51,6 +51,8 @@ const MAPPING: IconMapping = {
 		name: 'file-document-multiple-outline',
 	},
 	menu: { type: 'material-community', name: 'menu' },
+	account: { type: 'material-community', name: 'account-outline' },
+	logout: { type: 'material-community', name: 'logout' },
 	widthdrawal: { type: 'material-community', name: 'credit-card' },
 	tickets: { type: 'material-community', name: 'ticket-account' },
 	transactions: { type: 'material-community', name: 'handshake' },
