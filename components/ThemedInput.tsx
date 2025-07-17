@@ -1,6 +1,7 @@
 import {
 	StyleSheet,
 	TextInput,
+	TouchableOpacity,
 	View,
 	ViewStyle,
 	type TextInputProps,
@@ -9,6 +10,7 @@ import {
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { useState } from 'react';
 import { HiddenIcon } from './PasswordIcon';
 
 export type ThemedInputProps = TextInputProps & {
@@ -44,7 +46,7 @@ export function ThemedInput({
 	...rest
 }: ThemedInputProps) {
 	const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
-
+	const [showPassword, setShowPassword] = useState(false);
 	return (
 		<View
 			style={[
@@ -65,12 +67,12 @@ export function ThemedInput({
 				onChangeText={setValue}
 				value={value} // Use 'text' for normal input, 'password' for secure input
 				placeholder={placeholder}
-				secureTextEntry={secureTextEntry}
+				secureTextEntry={secureTextEntry && !showPassword}
 				keyboardType={keyboardType}
 				placeholderTextColor={'#333333'}
 				{...rest}
 			/>
-			<View
+			<TouchableOpacity
 				style={{
 					display: secureTextEntry ? 'flex' : 'none',
 					position: 'absolute',
@@ -79,9 +81,11 @@ export function ThemedInput({
 					zIndex: 1,
 					backgroundColor: 'transparent',
 				}}
+				activeOpacity={0.7}
+				onPress={() => setShowPassword((prev) => !prev)} // Clear input on icon press
 			>
 				<HiddenIcon height={20} width={20} color='#828393' />
-			</View>
+			</TouchableOpacity>
 			<ThemedView
 				style={[
 					{
