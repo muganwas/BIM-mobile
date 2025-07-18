@@ -10,6 +10,8 @@ const translations: Translations = {
 				'signIn.title': 'Welcome to BIM Networks!👋',
 				'signIn.subtitle':
 					'Please sign-in to your account and start the adventure',
+				'verify.title': 'Login Verification 👋',
+				'verify.subtitle': 'Please enter the OTP code sent to your phone',
 				fullName: 'Full Name',
 				phoneNumber: 'Phone Number',
 				password: 'Password',
@@ -17,6 +19,8 @@ const translations: Translations = {
 				confirmPassword: 'Confirm Password',
 				signIn: 'Sign In instead',
 				signUp: 'Sign Up instead',
+				enterOTP: 'Enter OTP',
+				'verify.button': 'Verify OTP',
 				'signIn.button': 'Sign In',
 				'signUp.button': 'Sign Up',
 				haveAnAccount: 'Already have an account?',

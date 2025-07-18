@@ -92,7 +92,6 @@ export default function LoginsScreen() {
 		}
 		try {
 			// Call your signup API here
-			// If successful, redirect to the home screen
 			handleAuthentication({
 				number: phoneNumber,
 				password,

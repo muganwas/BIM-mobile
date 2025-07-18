@@ -40,6 +40,15 @@ export default function AuthLayout() {
 					),
 				}}
 			/>
+			<Tabs.Screen
+				name='verify'
+				options={{
+					title: 'Verify',
+					tabBarIcon: ({ color }) => (
+						<IconSymbol size={28} name='paperplane.fill' color={color} />
+					),
+				}}
+			/>
 		</Tabs>
 	);
 }

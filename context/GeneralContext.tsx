@@ -11,6 +11,8 @@ export interface AuthContextType {
 	handleLogout: () => Promise<void>;
 	fetchNotifications: () => Promise<void>;
 	notifications: notifications[];
+	history: string[]; // Optional, can be used for navigation history
+	handleUpdateHistory: (current: string) => void;
 	handleAuthentication: (credentials: {
 		number: string;
 		password: string;
@@ -34,6 +36,7 @@ export const GeneralProvider = ({
 	const [language, setLanguage] = React.useState<languages>('en'); // Default language
 	const [online, setOnline] = React.useState<boolean>(true);
 	const [mounted, setMounted] = React.useState<boolean>(false);
+	const [history, setHistory] = React.useState<string[]>([]);
 
 	useEffect(() => {
 		const delay = setTimeout(() => {
@@ -47,6 +50,7 @@ export const GeneralProvider = ({
 			(async () => await fetchNotifications())();
 		}
 	}, [mounted]);
+
 	useEffect(() => {
 		const check = async () => {
 			if (
@@ -65,6 +69,16 @@ export const GeneralProvider = ({
 		};
 		mounted && check();
 	}, [netInfo, mounted]);
+
+	const handleUpdateHistory = (current: string) => {
+		setHistory((prev) => {
+			const newHistory = [...prev, current];
+			if (newHistory.length > 10) {
+				newHistory.shift(); // Keep the history length manageable
+			}
+			return newHistory;
+		});
+	};
 
 	const handleAuthentication = async ({
 		number,
@@ -85,8 +99,7 @@ export const GeneralProvider = ({
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			});
-			console.log('User authenticated:', number);
-			router.replace('/(authenticated)/home');
+			router.replace('/(auth)/verify');
 		} catch (error: any) {
 			console.error('Authentication error:', error);
 		}
@@ -97,7 +110,6 @@ export const GeneralProvider = ({
 			// Simulate logout process
 			setUser(null);
 			setNotifications([]);
-			console.log('User logged out');
 			router.replace('/(auth)/login');
 		} catch (error: any) {
 			console.error('Logout error:', error);
@@ -133,6 +145,8 @@ export const GeneralProvider = ({
 				handleLogout,
 				router,
 				language,
+				history,
+				handleUpdateHistory,
 				setLanguage,
 				notifications,
 				fetchNotifications,
