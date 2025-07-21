@@ -46,6 +46,7 @@ export default function VerifyTokenScreen() {
 	}, []);
 
 	const handleSetCode = (value: string) => {
+		if (value.length > 6) return; // Limit input to 6 characters
 		if (value.length === 6) {
 			setErrors((prev) => ({ ...prev, code: false }));
 		} else {

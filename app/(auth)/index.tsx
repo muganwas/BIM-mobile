@@ -1,3 +1,4 @@
+import Loader from '@/components/Loader';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
@@ -11,8 +12,9 @@ import { formatPhoneNumber } from '@/helpers';
 import { verifyToken } from '@/helpers/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+	Animated,
 	BackHandler,
 	Dimensions,
 	Image,
@@ -20,6 +22,7 @@ import {
 	Platform,
 	StyleSheet,
 	TouchableOpacity,
+	useAnimatedValue,
 } from 'react-native';
 
 const devWidth = Dimensions.get('window').width;
@@ -27,6 +30,9 @@ const devWidth = Dimensions.get('window').width;
 export default function RegisterScreen() {
 	const router = useRouter();
 	const navigation = useNavigation();
+	// timeout ref
+	const signupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const loaderFadeAnim = useAnimatedValue(0);
 	const colorScheme = useColorScheme() ?? 'light';
 	const { language } = useGeneral();
 	const [fullName, setFullName] = useState('');
@@ -34,7 +40,9 @@ export default function RegisterScreen() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
+	const [loading, setLoading] = useState(false);
 	const [focusedInput, setFocusedInput] = useState<string | null>(null);
+
 	const [errors, setErrors] = useState({
 		phoneNumber: false,
 		fullName: false,
@@ -48,6 +56,9 @@ export default function RegisterScreen() {
 		const onPressBack = () => {
 			if (navigation.canGoBack()) {
 				handleResetAll();
+				if (signupTimeoutRef.current) {
+					clearTimeout(signupTimeoutRef.current);
+				}
 				navigation.goBack();
 				return true;
 			}
@@ -61,6 +72,9 @@ export default function RegisterScreen() {
 
 	useEffect(() => {
 		const subscription = navigation.addListener('blur', () => {
+			if (signupTimeoutRef.current) {
+				clearTimeout(signupTimeoutRef.current);
+			}
 			handleResetAll();
 		});
 		return subscription;
@@ -147,12 +161,37 @@ export default function RegisterScreen() {
 			return;
 		}
 		try {
+			handleToggleLoader(true);
 			// Call your signup API here
 			// If successful, redirect to the home screen
-			router.replace('/(authenticated)/home');
+			if (signupTimeoutRef.current) {
+				clearTimeout(signupTimeoutRef.current);
+			}
+			signupTimeoutRef.current = setTimeout(() => {
+				handleToggleLoader(false);
+				router.replace('/(authenticated)/home');
+			}, 1000);
 		} catch (error) {
 			setErrors((prev) => ({ ...prev, signup: true }));
 			console.error('Signup error:', error);
+		}
+	};
+
+	const handleToggleLoader = (show?: boolean) => {
+		const toValue = show ?? !loading;
+		setLoading(toValue);
+		if (toValue) {
+			Animated.timing(loaderFadeAnim, {
+				toValue: 1,
+				duration: 300,
+				useNativeDriver: true,
+			}).start();
+		} else {
+			Animated.timing(loaderFadeAnim, {
+				toValue: 0,
+				duration: 300,
+				useNativeDriver: true,
+			}).start();
 		}
 	};
 
@@ -174,223 +213,242 @@ export default function RegisterScreen() {
 	};
 
 	return (
-		<KeyboardAvoidingView
-			style={{
-				flex: 1,
-				minWidth: devWidth,
-				minHeight: '100%',
-				padding: 0,
-				margin: 0,
-			}}
-			behavior={Platform.OS === 'ios' ? 'position' : 'padding'}
-		>
-			<ParallaxScrollView
-				headerBackgroundColor={{ light: '#fff', dark: '#fff' }}
+		<>
+			<KeyboardAvoidingView
+				style={{
+					flex: 1,
+					minWidth: devWidth,
+					minHeight: '100%',
+					padding: 0,
+					margin: 0,
+				}}
+				behavior={Platform.OS === 'ios' ? 'position' : 'padding'}
 			>
-				<ThemedView style={styles.container} lightColor='#fff' darkColor='#fff'>
-					<ThemedView style={styles.header} lightColor='#fff' darkColor='#fff'>
-						<Image
-							source={require('@/assets/images/bim-text-img.png')}
-							style={{ height: 35, resizeMode: 'contain' }}
-						/>
-					</ThemedView>
-					<ThemedView style={styles.form} lightColor='#fff' darkColor='#fff'>
+				<ParallaxScrollView
+					headerBackgroundColor={{ light: '#fff', dark: '#fff' }}
+				>
+					<ThemedView
+						style={styles.container}
+						lightColor='#fff'
+						darkColor='#fff'
+					>
 						<ThemedView
-							style={styles.formHeader}
+							style={styles.header}
 							lightColor='#fff'
 							darkColor='#fff'
 						>
-							<ThemedText
-								style={{
-									fontWeight: 500,
-									fontSize: 22,
-									color: Colors[colorScheme].headers,
-								}}
-								lightColor={Colors.light.headers}
-								darkColor={Colors.dark.headers}
-							>
-								{translations[language].categories.auth['signUp.title']}
-							</ThemedText>
-							<ThemedText
-								style={{
-									fontWeight: 400,
-									fontSize: 16,
-									color: Colors.light.text,
-									marginTop: 10,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.auth['signUp.subtitle']}
-							</ThemedText>
+							<Image
+								source={require('@/assets/images/bim-text-img.png')}
+								style={{ height: 35, resizeMode: 'contain' }}
+							/>
 						</ThemedView>
-						<ThemedView
-							style={styles.formInputs}
-							lightColor='#fff'
-							darkColor='#fff'
-						>
-							<ThemedInput
-								style={[
-									styles.formInput,
-									{
-										borderColor: errors.fullName
-											? Colors[colorScheme].error
-											: Colors[colorScheme].inputBorder,
-									},
-								]}
-								lightColor={Colors.light.text}
-								darkColor={Colors.light.text}
-								value={fullName}
-								setValue={handleSetFullName}
-								placeholder={translations[language].categories.auth['fullName']}
-								placeholderTextColor={Colors[colorScheme].text}
-								keyboardType='default'
-								onFocus={() => setFocusedInput('fullName')}
-								onBlur={() => setFocusedInput(null)}
-							/>
-							<ThemedInput
-								style={[
-									styles.formInput,
-									{
-										borderColor: errors.phoneNumber
-											? Colors[colorScheme].error
-											: Colors[colorScheme].inputBorder,
-									},
-								]}
-								lightColor={Colors.light.text}
-								darkColor={Colors.light.text}
-								value={phoneNumber}
-								setValue={handleSetPhone}
-								placeholder={
-									translations[language].categories.auth['phoneNumber']
-								}
-								placeholderTextColor={Colors[colorScheme].text}
-								keyboardType='number-pad'
-								onFocus={() => setFocusedInput('phoneNumber')}
-								onBlur={() => setFocusedInput(null)}
-							/>
-							<ThemedInput
-								style={[
-									styles.formInput,
-									{
-										borderColor: errors.email
-											? Colors[colorScheme].error
-											: Colors[colorScheme].inputBorder,
-									},
-								]}
-								lightColor={Colors.light.text}
-								darkColor={Colors.light.text}
-								value={email}
-								setValue={handleSetEmail}
-								placeholder={translations[language].categories.auth['email']}
-								placeholderTextColor={Colors[colorScheme].text}
-								keyboardType='email-address'
-								onFocus={() => setFocusedInput('email')}
-								onBlur={() => setFocusedInput(null)}
-							/>
-							<ThemedInput
-								style={[
-									styles.formInput,
-									{
-										borderColor: errors.password
-											? Colors[colorScheme].error
-											: Colors[colorScheme].inputBorder,
-									},
-								]}
-								lightColor={Colors.light.text}
-								darkColor={Colors.light.text}
-								value={password}
-								secureTextEntry={true}
-								setValue={handleSetPassword}
-								placeholder={translations[language].categories.auth['password']}
-								placeholderTextColor={Colors[colorScheme].text}
-								keyboardType='default'
-								onFocus={() => setFocusedInput('password')}
-								onBlur={() => setFocusedInput(null)}
-							/>
-							<ThemedInput
-								style={[
-									styles.formInput,
-									{
-										borderColor:
-											focusedInput === 'confirmPassword'
-												? Colors[colorScheme].tint
-												: errors.confirmPassword
-												? Colors[colorScheme].error
-												: Colors[colorScheme].inputBorder,
-									},
-								]}
-								lightColor={Colors.light.text}
-								darkColor={Colors.light.text}
-								value={confirmPassword}
-								secureTextEntry={true}
-								setValue={handleSetConfirmPassword}
-								placeholder={
-									translations[language].categories.auth['confirmPassword']
-								}
-								placeholderTextColor={Colors[colorScheme].text}
-								keyboardType='default'
-								onFocus={() => setFocusedInput('confirmPassword')}
-								onBlur={() => setFocusedInput(null)}
-							/>
-							<ThemedButton
-								title={translations[language].categories.auth[
-									'signUp.button'
-								]?.toUpperCase()}
-								onPress={handleOnSignUp}
-								style={{
-									borderRadius: 8,
-								}}
-								darkColor={
-									errors['signup']
-										? Colors['dark'].buttonError
-										: Colors['dark'].bim
-								}
-								lightColor={
-									errors['signup']
-										? Colors['light'].buttonError
-										: Colors['light'].bim
-								}
-								darkTextColor={Colors['dark'].authButtonText}
-								lightTextColor={Colors['light'].authButtonText}
-							/>
+						<ThemedView style={styles.form} lightColor='#fff' darkColor='#fff'>
 							<ThemedView
-								style={{
-									flexDirection: 'row',
-									marginTop: 10,
-									alignItems: 'center',
-									justifyContent: 'center',
-								}}
+								style={styles.formHeader}
+								lightColor='#fff'
+								darkColor='#fff'
 							>
 								<ThemedText
 									style={{
+										fontWeight: 500,
+										fontSize: 22,
+										color: Colors[colorScheme].headers,
+									}}
+									lightColor={Colors.light.headers}
+									darkColor={Colors.dark.headers}
+								>
+									{translations[language].categories.auth['signUp.title']}
+								</ThemedText>
+								<ThemedText
+									style={{
+										fontWeight: 400,
 										fontSize: 16,
-										color: Colors[colorScheme].text,
-										textAlign: 'center',
+										color: Colors.light.text,
+										marginTop: 10,
 									}}
 									lightColor={Colors.light.text}
 									darkColor={Colors.dark.text}
 								>
-									{translations[language].categories.auth['haveAnAccount']}{' '}
+									{translations[language].categories.auth['signUp.subtitle']}
 								</ThemedText>
-								<TouchableOpacity
+							</ThemedView>
+							<ThemedView
+								style={styles.formInputs}
+								lightColor='#fff'
+								darkColor='#fff'
+							>
+								<ThemedInput
+									style={[
+										styles.formInput,
+										{
+											borderColor: errors.fullName
+												? Colors[colorScheme].error
+												: Colors[colorScheme].inputBorder,
+										},
+									]}
+									lightColor={Colors.light.text}
+									darkColor={Colors.light.text}
+									value={fullName}
+									setValue={handleSetFullName}
+									placeholder={
+										translations[language].categories.auth['fullName']
+									}
+									placeholderTextColor={Colors[colorScheme].text}
+									keyboardType='default'
+									onFocus={() => setFocusedInput('fullName')}
+									onBlur={() => setFocusedInput(null)}
+								/>
+								<ThemedInput
+									style={[
+										styles.formInput,
+										{
+											borderColor: errors.phoneNumber
+												? Colors[colorScheme].error
+												: Colors[colorScheme].inputBorder,
+										},
+									]}
+									lightColor={Colors.light.text}
+									darkColor={Colors.light.text}
+									value={phoneNumber}
+									setValue={handleSetPhone}
+									placeholder={
+										translations[language].categories.auth['phoneNumber']
+									}
+									placeholderTextColor={Colors[colorScheme].text}
+									keyboardType='number-pad'
+									onFocus={() => setFocusedInput('phoneNumber')}
+									onBlur={() => setFocusedInput(null)}
+								/>
+								<ThemedInput
+									style={[
+										styles.formInput,
+										{
+											borderColor: errors.email
+												? Colors[colorScheme].error
+												: Colors[colorScheme].inputBorder,
+										},
+									]}
+									lightColor={Colors.light.text}
+									darkColor={Colors.light.text}
+									value={email}
+									setValue={handleSetEmail}
+									placeholder={translations[language].categories.auth['email']}
+									placeholderTextColor={Colors[colorScheme].text}
+									keyboardType='email-address'
+									onFocus={() => setFocusedInput('email')}
+									onBlur={() => setFocusedInput(null)}
+								/>
+								<ThemedInput
+									style={[
+										styles.formInput,
+										{
+											borderColor: errors.password
+												? Colors[colorScheme].error
+												: Colors[colorScheme].inputBorder,
+										},
+									]}
+									lightColor={Colors.light.text}
+									darkColor={Colors.light.text}
+									value={password}
+									secureTextEntry={true}
+									setValue={handleSetPassword}
+									placeholder={
+										translations[language].categories.auth['password']
+									}
+									placeholderTextColor={Colors[colorScheme].text}
+									keyboardType='default'
+									onFocus={() => setFocusedInput('password')}
+									onBlur={() => setFocusedInput(null)}
+								/>
+								<ThemedInput
+									style={[
+										styles.formInput,
+										{
+											borderColor:
+												focusedInput === 'confirmPassword'
+													? Colors[colorScheme].tint
+													: errors.confirmPassword
+													? Colors[colorScheme].error
+													: Colors[colorScheme].inputBorder,
+										},
+									]}
+									lightColor={Colors.light.text}
+									darkColor={Colors.light.text}
+									value={confirmPassword}
+									secureTextEntry={true}
+									setValue={handleSetConfirmPassword}
+									placeholder={
+										translations[language].categories.auth['confirmPassword']
+									}
+									placeholderTextColor={Colors[colorScheme].text}
+									keyboardType='default'
+									onFocus={() => setFocusedInput('confirmPassword')}
+									onBlur={() => setFocusedInput(null)}
+								/>
+								<ThemedButton
+									title={translations[language].categories.auth[
+										'signUp.button'
+									]?.toUpperCase()}
+									onPress={handleOnSignUp}
+									style={{
+										borderRadius: 8,
+									}}
+									darkColor={
+										errors['signup']
+											? Colors['dark'].buttonError
+											: Colors['dark'].bim
+									}
+									lightColor={
+										errors['signup']
+											? Colors['light'].buttonError
+											: Colors['light'].bim
+									}
+									darkTextColor={Colors['dark'].authButtonText}
+									lightTextColor={Colors['light'].authButtonText}
+								/>
+								<ThemedView
 									style={{
 										flexDirection: 'row',
-										backgroundColor: 'transparent',
+										marginTop: 10,
 										alignItems: 'center',
+										justifyContent: 'center',
 									}}
-									onPress={() => router.push('/(auth)/login')}
 								>
-									<ThemedText style={{ color: Colors[colorScheme].bim }}>
-										{translations[language].categories.auth['signIn']}
+									<ThemedText
+										style={{
+											fontSize: 16,
+											color: Colors[colorScheme].text,
+											textAlign: 'center',
+										}}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
+									>
+										{translations[language].categories.auth['haveAnAccount']}{' '}
 									</ThemedText>
-								</TouchableOpacity>
+									<TouchableOpacity
+										style={{
+											flexDirection: 'row',
+											backgroundColor: 'transparent',
+											alignItems: 'center',
+										}}
+										onPress={() => router.push('/(auth)/login')}
+									>
+										<ThemedText style={{ color: Colors[colorScheme].bim }}>
+											{translations[language].categories.auth['signIn']}
+										</ThemedText>
+									</TouchableOpacity>
+								</ThemedView>
 							</ThemedView>
 						</ThemedView>
 					</ThemedView>
-				</ThemedView>
-			</ParallaxScrollView>
-		</KeyboardAvoidingView>
+				</ParallaxScrollView>
+			</KeyboardAvoidingView>
+			<Loader
+				showOverlay={loading}
+				fadeAnim={loaderFadeAnim}
+				toggleShowOverlay={handleToggleLoader}
+			/>
+		</>
 	);
 }
 
