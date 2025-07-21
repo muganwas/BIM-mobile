@@ -35,6 +35,12 @@ const translations: Translations = {
 				help: 'Help',
 				logout: 'Logout',
 			},
+			notifications: {
+				'notifications.title': 'Notifications',
+				new: 'New',
+				'no.notifications': 'No new notifications available',
+				seeAll: 'View All Notifications',
+			},
 		},
 	},
 	fr: {

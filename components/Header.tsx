@@ -15,6 +15,7 @@ import {
 	View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import HeaderDropDownContainer from './HeaderDropDownContainer';
 import { ThemedInput } from './ThemedInput';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
@@ -34,6 +35,7 @@ export default function Header({
 	const router = useRouter();
 	const profileAnimValue = useAnimatedValue(0);
 	const searchAnimValue = useAnimatedValue(0);
+	const notificationsAnimValue = useAnimatedValue(0);
 	const { user, handleLogout, language } = useGeneral(); // Get user from context
 	const navigation = useNavigation<DrawerNavigationProp<any>>();
 	const [searchValue, setSearchValue] = useState('');
@@ -70,7 +72,22 @@ export default function Header({
 	};
 
 	const toggleNotifications = () => {
-		console.log('Notifications toggled');
+		setShowNotifications((prev) => {
+			if (!prev) {
+				Animated.timing(notificationsAnimValue, {
+					toValue: 1, // Example animation value change
+					duration: 200,
+					useNativeDriver: true,
+				}).start();
+			} else {
+				Animated.timing(notificationsAnimValue, {
+					toValue: 0, // Reset animation value
+					duration: 150,
+					useNativeDriver: true,
+				}).start();
+			}
+			return !prev;
+		});
 	};
 
 	const toggleProfile = () => {
@@ -94,8 +111,8 @@ export default function Header({
 
 	return (
 		<ThemedView
-			lightColor='#fff'
-			darkColor='#fff'
+			lightColor={Colors[colorScheme].headerBackgroung}
+			darkColor={Colors[colorScheme].headerBackgroung}
 			style={[styles.container, { paddingTop: insets.top + 10 }]}
 		>
 			<Animated.View
@@ -149,8 +166,8 @@ export default function Header({
 				/>
 			</Animated.View>
 			<ThemedView
-				lightColor='#fff'
-				darkColor='#fff'
+				lightColor={Colors[colorScheme].headerBackgroung}
+				darkColor={Colors[colorScheme].headerBackgroung}
 				style={{
 					flexDirection: 'row',
 					alignItems: 'center',
@@ -213,28 +230,28 @@ export default function Header({
 					/>
 				</TouchableOpacity>
 			</ThemedView>
-			<Animated.View
-				id='test-id-header-profile'
-				style={{
-					position: 'absolute',
-					flexDirection: 'column',
-					display: showProfile ? 'flex' : 'none',
-					transform: [{ scaleY: profileAnimValue }],
-					left: 10,
-					right: 10,
-					top: 60 + insets.top,
-					backgroundColor: Colors[colorScheme].background,
-					padding: 10,
-					borderRadius: 10,
-					shadowColor: '#000',
-					shadowOffset: { width: 0, height: 2 },
-					shadowOpacity: 0.25,
-					shadowRadius: 3.84,
-					elevation: 5,
-					zIndex: 1000, // Ensure it appears above other content
-					maxHeight: 300, // Limit height for better UX
-					overflow: 'hidden',
-				}}
+			<HeaderDropDownContainer
+				visible={showNotifications}
+				fadeAnim={notificationsAnimValue}
+			>
+				<ThemedView
+					lightColor={Colors[colorScheme].headerDropdownBackground}
+					darkColor={Colors[colorScheme].headerDropdownBackground}
+				>
+					<ThemedText
+						lightColor={Colors.light.text}
+						darkColor={Colors.dark.text}
+						style={{
+							fontSize: 14,
+						}}
+					>
+						{translations[language].categories.navigation['notifications']}
+					</ThemedText>
+				</ThemedView>
+			</HeaderDropDownContainer>
+			<HeaderDropDownContainer
+				visible={showProfile}
+				fadeAnim={profileAnimValue}
 			>
 				<ThemedView
 					style={{
@@ -344,14 +361,13 @@ export default function Header({
 						</ThemedText>
 					</TouchableOpacity>
 				</ThemedView>
-			</Animated.View>
+			</HeaderDropDownContainer>
 		</ThemedView>
 	);
 }
 
 const styles = StyleSheet.create({
 	container: {
-		backgroundColor: 'white',
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center', // Add this for vertical centering
