@@ -36,7 +36,7 @@ const translations: Translations = {
 				logout: 'Logout',
 			},
 			notifications: {
-				'notifications.title': 'Notifications',
+				title: 'Notifications',
 				new: 'New',
 				'no.notifications': 'No new notifications available',
 				seeAll: 'View All Notifications',

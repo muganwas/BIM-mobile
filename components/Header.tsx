@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { fontSize } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { notifications } from '@/types';
@@ -156,7 +157,7 @@ export default function Header({
 					darkColor={Colors[colorScheme].text}
 					containerStyle={{ height: 40, flex: 1, marginLeft: 10 }}
 					style={{
-						fontSize: 14,
+						fontSize: fontSize['text.medium'],
 						height: 40,
 						paddingVertical: 0,
 						backgroundColor: Colors[colorScheme].inputBackground,
@@ -235,18 +236,52 @@ export default function Header({
 				fadeAnim={notificationsAnimValue}
 			>
 				<ThemedView
+					style={{
+						flexDirection: 'row',
+						justifyContent: 'space-between',
+						alignItems: 'center',
+					}}
 					lightColor={Colors[colorScheme].headerDropdownBackground}
 					darkColor={Colors[colorScheme].headerDropdownBackground}
 				>
 					<ThemedText
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={Colors.light['heading.one']}
+						darkColor={Colors.dark['heading.one']}
 						style={{
-							fontSize: 14,
+							fontSize: fontSize['text.medium'],
 						}}
 					>
-						{translations[language].categories.navigation['notifications']}
+						{translations[language].categories.notifications.title}
 					</ThemedText>
+					<View
+						style={{
+							boxSizing: 'border-box',
+							flexDirection: 'row',
+							paddingHorizontal: 6.5,
+							alignItems: 'center',
+							justifyContent: 'center',
+							borderRadius: 80,
+							backgroundColor: Colors[colorScheme].notificationsCountBackground,
+						}}
+					>
+						<ThemedText
+							style={{
+								fontSize: fontSize['text.xsmall'],
+								fontWeight: 500,
+								padding: 0,
+								margin: 0,
+							}}
+							lightColor={Colors[colorScheme].notificationsCount}
+							darkColor={Colors[colorScheme].notificationsCount}
+						>
+							{notifications &&
+							notifications.length > 0 &&
+							notifications.filter((n) => !n.isRead).length > 0
+								? notifications.filter((n) => !n.isRead).length
+								: '0'}{' '}
+							New
+						</ThemedText>
+					</View>
 				</ThemedView>
 			</HeaderDropDownContainer>
 			<HeaderDropDownContainer
@@ -293,12 +328,18 @@ export default function Header({
 						}}
 					>
 						<ThemedText
-							style={{ fontSize: 16, color: Colors[colorScheme].text }}
+							style={{
+								fontSize: fontSize['text.large'],
+								color: Colors[colorScheme].text,
+							}}
 						>
 							{user?.name || 'John Doe'}
 						</ThemedText>
 						<ThemedText
-							style={{ fontSize: 14, color: Colors[colorScheme].text }}
+							style={{
+								fontSize: fontSize['text.medium'],
+								color: Colors[colorScheme].text,
+							}}
 						>
 							{user?.email || 'jd@mail.com'}
 						</ThemedText>
@@ -331,7 +372,7 @@ export default function Header({
 						<ThemedText
 							style={{
 								color: Colors[colorScheme].text,
-								fontSize: 14,
+								fontSize: fontSize['text.medium'],
 							}}
 						>
 							{translations[language].categories.navigation['profile']}
@@ -354,7 +395,7 @@ export default function Header({
 						<ThemedText
 							style={{
 								color: Colors[colorScheme].text,
-								fontSize: 14,
+								fontSize: fontSize['text.medium'],
 							}}
 						>
 							{translations[language].categories.navigation['logout']}

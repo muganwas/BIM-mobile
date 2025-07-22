@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { passwordRegex, phoneRegexWithSpaces } from '@/constants';
 import { Colors } from '@/constants/Colors';
+import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
@@ -183,8 +184,8 @@ export default function LoginsScreen() {
 							>
 								<ThemedText
 									style={{
-										fontWeight: 500,
-										fontSize: 22,
+										fontWeight: fontWeight['heading.one'],
+										fontSize: fontSize['heading.one'],
 										color: Colors[colorScheme].headers,
 									}}
 									lightColor={Colors.light.headers}
@@ -194,8 +195,8 @@ export default function LoginsScreen() {
 								</ThemedText>
 								<ThemedText
 									style={{
-										fontWeight: 400,
-										fontSize: 16,
+										fontWeight: fontWeight['heading.three'],
+										fontSize: fontSize['heading.three'],
 										color: Colors.light.text,
 										marginTop: 10,
 									}}
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
 	},
 	formInput: {
 		width: '100%',
-		fontSize: 16,
+		fontSize: fontSize['input.large'],
 		backgroundColor: Colors.light.inputBackground,
 		borderRadius: 8,
 		borderColor: Colors.light.inputBorder,
