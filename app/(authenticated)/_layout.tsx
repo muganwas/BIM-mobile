@@ -9,7 +9,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function DrawerLayout() {
-	const { user, notifications, online, language } = useGeneral(); // Get user from context
+	const { language } = useGeneral(); // Get user from context
 	const colorScheme = useColorScheme();
 
 	return (
@@ -17,13 +17,7 @@ export default function DrawerLayout() {
 			screenOptions={{
 				headerShown: true,
 				drawerActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-				header: () => (
-					<Header
-						online={online}
-						dp={user?.avatarUrl}
-						notifications={notifications}
-					/>
-				),
+				header: () => <Header />,
 				drawerStyle: {
 					backgroundColor: Colors[colorScheme ?? 'light'].background,
 				},
@@ -42,6 +36,15 @@ export default function DrawerLayout() {
 				name='profile'
 				options={{
 					title: translations[language].categories.navigation['profile'],
+					drawerItemStyle: {
+						display: 'none',
+					},
+				}}
+			/>
+			<Drawer.Screen
+				name='notifications'
+				options={{
+					title: translations[language].categories.navigation['notifications'],
 					drawerItemStyle: {
 						display: 'none',
 					},

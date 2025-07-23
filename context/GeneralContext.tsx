@@ -11,6 +11,18 @@ export interface AuthContextType {
 	handleLogout: () => Promise<void>;
 	fetchNotifications: () => Promise<void>;
 	notifications: notifications[];
+	setNotifications: React.Dispatch<React.SetStateAction<notifications[]>>;
+	selectedOption:
+		| 'notifications'
+		| 'profile'
+		| 'language'
+		| 'search'
+		| undefined; // Optional, can be used for dropdown state
+	setSelectedOption: React.Dispatch<
+		React.SetStateAction<
+			'notifications' | 'profile' | 'language' | 'search' | undefined
+		>
+	>;
 	history: string[]; // Optional, can be used for navigation history
 	handleUpdateHistory: (current: string) => void;
 	handleAuthentication: (credentials: {
@@ -35,6 +47,9 @@ export const GeneralProvider = ({
 	const [notifications, setNotifications] = React.useState<notifications[]>([]);
 	const [language, setLanguage] = React.useState<languages>('en'); // Default language
 	const [online, setOnline] = React.useState<boolean>(true);
+	const [selectedOption, setSelectedOption] = React.useState<
+		'notifications' | 'profile' | 'language' | 'search'
+	>();
 	const [mounted, setMounted] = React.useState<boolean>(false);
 	const [history, setHistory] = React.useState<string[]>([]);
 
@@ -150,6 +165,9 @@ export const GeneralProvider = ({
 				setLanguage,
 				notifications,
 				fetchNotifications,
+				selectedOption,
+				setSelectedOption,
+				setNotifications,
 				handleAuthentication,
 				online,
 			}}

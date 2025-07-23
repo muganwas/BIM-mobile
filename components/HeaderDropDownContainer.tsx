@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,14 +13,27 @@ export default function DropdownContainer({
 	fadeAnim: Animated.Value;
 }) {
 	const insets = useSafeAreaInsets();
+	const visibilityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const colorScheme = useColorScheme() ?? 'light';
+	const [localVisible, setLocalVisible] = useState(false);
+	useEffect(() => {
+		visibilityTimeoutRef.current = setTimeout(() => {
+			setLocalVisible(visible);
+		}, 100);
+		return () => {
+			if (visibilityTimeoutRef.current) {
+				clearTimeout(visibilityTimeoutRef.current);
+			}
+		};
+	}, [visible]);
+
 	return (
 		<Animated.View
 			id='test-id-header-profile'
 			style={{
 				position: 'absolute',
 				flexDirection: 'column',
-				display: visible ? 'flex' : 'none',
+				display: localVisible ? 'flex' : 'none',
 				transform: [{ scaleY: fadeAnim }],
 				left: 10,
 				right: 10,
