@@ -4,7 +4,7 @@ export interface User {
 	email: string;
 	phone?: string; // Optional, can be used for login or registration
 	avatarUrl?: string;
-	userLanguage?: languages; // Optional, can be used to store user's preferred language
+	userLanguage?: langCode; // Optional, can be used to store user's preferred language
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -29,8 +29,9 @@ export interface notifications {
 }
 
 export type Translations = {
-	[key in languages]: {
-		name: string;
+	[key in langCode]: {
+		name: lang;
+		active: boolean; // Indicates if the language is fully translated and active
 		categories: {
 			[categoryKey: string]: {
 				[translationKey: string]: string;
@@ -39,7 +40,19 @@ export type Translations = {
 	};
 };
 
-export type languages =
+export type lang =
+	| 'English'
+	| 'Français'
+	| 'Español'
+	| 'Deutsch'
+	| 'Italiano'
+	| 'Русский'
+	| 'Português'
+	| '中文'
+	| '日本語'
+	| 'العربية';
+
+export type langCode =
 	| 'en'
 	| 'fr'
 	| 'es'

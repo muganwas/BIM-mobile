@@ -1,16 +1,18 @@
 import { Colors } from '@/constants/Colors';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, useColorScheme } from 'react-native';
+import { Animated, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function DropdownContainer({
 	children,
 	visible,
 	fadeAnim,
+	id,
 }: {
-	children: React.ReactNode;
+	children: React.ReactElement;
 	visible: boolean;
 	fadeAnim: Animated.Value;
+	id?: string;
 }) {
 	const insets = useSafeAreaInsets();
 	const visibilityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -27,14 +29,19 @@ export default function DropdownContainer({
 		};
 	}, [visible]);
 
+	if (!localVisible) {
+		return null; // Return null if not visible
+	}
+
 	return (
-		<Animated.View
-			id='test-id-header-profile'
+		<View
+			id={id}
+			testID={'testId-' + id}
 			style={{
 				position: 'absolute',
 				flexDirection: 'column',
-				display: localVisible ? 'flex' : 'none',
-				transform: [{ scaleY: fadeAnim }],
+				//opacity: fadeAnim,
+				//transform: [{ scaleY: fadeAnim }],
 				left: 10,
 				right: 10,
 				top: 60 + insets.top,
@@ -48,10 +55,10 @@ export default function DropdownContainer({
 				elevation: 5,
 				zIndex: 1000, // Ensure it appears above other content
 				maxHeight: 300, // Limit height for better UX
-				overflow: 'hidden',
+				//overflow: 'hidden',
 			}}
 		>
 			{children}
-		</Animated.View>
+		</View>
 	);
 }

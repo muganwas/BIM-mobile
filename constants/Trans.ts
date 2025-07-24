@@ -3,6 +3,7 @@ import { Translations } from '@/types';
 const translations: Translations = {
 	en: {
 		name: 'English',
+		active: true, // Set to true only if fully translated
 		categories: {
 			auth: {
 				'signUp.title': 'Adventure starts here 🚀',
@@ -45,24 +46,28 @@ const translations: Translations = {
 	},
 	fr: {
 		name: 'Français',
+		active: false,
 		categories: {
 			auth: {},
 		},
 	},
 	es: {
 		name: 'Español',
+		active: false,
 		categories: {
 			auth: {},
 		},
 	},
 	de: {
 		name: 'Deutsch',
+		active: false,
 		categories: {
 			auth: {},
 		},
 	},
 	it: {
 		name: 'Italiano',
+		active: false,
 		categories: {
 			auth: {},
 		},
@@ -70,30 +75,35 @@ const translations: Translations = {
 	// Add other required languages with minimal structure
 	pt: {
 		name: 'Português',
+		active: false,
 		categories: {
 			auth: {},
 		},
 	},
 	ru: {
 		name: 'Русский',
+		active: false,
 		categories: {
 			auth: {},
 		},
 	},
 	zh: {
 		name: '中文',
+		active: false,
 		categories: {
 			auth: {},
 		},
 	},
 	ar: {
 		name: 'العربية',
+		active: false,
 		categories: {
 			auth: {},
 		},
 	},
 	ja: {
 		name: '日本語',
+		active: false,
 		categories: {
 			auth: {},
 		},

@@ -1,4 +1,4 @@
-import { User as UserProps, languages, notifications } from '@/types';
+import { User as UserProps, langCode, notifications } from '@/types';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { Router, useRouter } from 'expo-router';
 import React, { createContext, useContext, useEffect } from 'react';
@@ -6,8 +6,8 @@ import React, { createContext, useContext, useEffect } from 'react';
 // Define the type for the context
 export interface AuthContextType {
 	user: UserProps | null;
-	language: languages;
-	setLanguage: (lang: languages) => void;
+	language: langCode;
+	setLanguage: (lang: langCode) => void;
 	handleLogout: () => Promise<void>;
 	fetchNotifications: () => Promise<void>;
 	notifications: notifications[];
@@ -45,7 +45,7 @@ export const GeneralProvider = ({
 	const netInfo = useNetInfo();
 	const [user, setUser] = React.useState<UserProps | null>(null);
 	const [notifications, setNotifications] = React.useState<notifications[]>([]);
-	const [language, setLanguage] = React.useState<languages>('en'); // Default language
+	const [language, setLanguage] = React.useState<langCode>('en'); // Default language
 	const [online, setOnline] = React.useState<boolean>(true);
 	const [selectedOption, setSelectedOption] = React.useState<
 		'notifications' | 'profile' | 'language' | 'search'

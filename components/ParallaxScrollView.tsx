@@ -57,6 +57,7 @@ export default function ParallaxScrollView({
 				scrollEventThrottle={16}
 				scrollIndicatorInsets={{ bottom }}
 				contentContainerStyle={{ paddingBottom: bottom }}
+				nestedScrollEnabled={true}
 			>
 				<Animated.View
 					style={[
