@@ -28,7 +28,7 @@ const translations: Translations = {
 				forgotPassword: 'Forgot Password?',
 			},
 			navigation: {
-				home: 'Home',
+				home: 'Dashboard',
 				settings: 'Settings',
 				profile: 'My Profile',
 				notifications: 'Notifications',

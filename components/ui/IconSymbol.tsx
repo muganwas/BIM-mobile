@@ -40,7 +40,7 @@ const MAPPING: IconMapping = {
 		type: 'material-community',
 		name: 'bell-badge-outline',
 	},
-	'home.outline': { type: 'material', name: 'home-outline' },
+	'home.outline': { type: 'ionicon', name: 'home-outline' },
 	'routers.ouline': {
 		type: 'material-community',
 		name: 'google-circles-extended',
@@ -62,6 +62,8 @@ const MAPPING: IconMapping = {
 	account: { type: 'material-community', name: 'account-outline' },
 	logout: { type: 'material-community', name: 'logout' },
 	widthdrawal: { type: 'material-community', name: 'credit-card' },
+	doubleLeft: { type: 'material', name: 'keyboard-double-arrow-left' },
+	doubleRight: { type: 'material', name: 'keyboard-double-arrow-right' },
 	tickets: { type: 'material-community', name: 'ticket-account' },
 	transactions: { type: 'material-community', name: 'handshake' },
 	packages: { type: 'material-community', name: 'package-variant' },

@@ -241,6 +241,7 @@ export default function Header() {
 						paddingVertical: 0,
 						backgroundColor: Colors[colorScheme].inputBackground,
 					}}
+					placeholder='Search...'
 					value={searchValue}
 					setValue={setSearchValue}
 				/>
