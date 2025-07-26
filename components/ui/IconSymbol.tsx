@@ -58,6 +58,11 @@ const MAPPING: IconMapping = {
 		type: 'material-community',
 		name: 'eye-outline',
 	},
+	calendar: { type: 'material-community', name: 'calendar-blank-outline' },
+	monthlyCalendar: {
+		type: 'material-community',
+		name: 'calendar-month-outline',
+	},
 	menu: { type: 'material-community', name: 'menu' },
 	account: { type: 'material-community', name: 'account-outline' },
 	cash: { type: 'material-community', name: 'cash-multiple' },
