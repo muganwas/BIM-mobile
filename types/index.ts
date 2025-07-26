@@ -9,6 +9,88 @@ export interface User {
 	updatedAt: Date;
 }
 
+export interface Transaction {
+	id: string;
+	amount: number;
+	type: 'credit' | 'debit';
+	date: Date;
+	description?: string; // Optional description for the transaction
+	method: TransactionMethod; // Reference to the transaction method used
+}
+
+export interface NetRouter {
+	id?: string;
+	ip: string; // IP address of the router
+	mac: string; // MAC address of the router
+	name?: string; // Name of the router
+	model?: string; // Model of the router
+	location: string; // Location of the router
+	firmwareVersion?: string; // Firmware version of the router
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+export type InternetPackageName = 'half-day' | 'daily' | 'weekly' | 'monthly';
+
+export interface InternetPackage {
+	id?: string;
+	name: InternetPackageName; // Name of the internet package
+	price: number; // Price of the package
+	duration: number; // Duration in hours
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+export interface DocumentProps {
+	id?: string;
+	name: string; // Name of the document
+	type: 'pdf' | 'image' | 'text'; // Type of the document
+	url: string; // URL to access the document
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+export interface Bank {
+	id?: string;
+	name: string; // Name of the bank
+	accountNumber: string; // Account number of the bank
+	accountHolderName: string; // Name of the account holder
+	SWIFTCode?: string; // Optional, can be used for international transactions
+	currency?: string; // Optional, can be used to specify the currency of the bank account
+	branch?: string; // Optional branch name
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+export interface VoucherUser {
+	name: string;
+	comment: string;
+	date?: Date;
+}
+
+export interface MicroTransaction {
+	id: string;
+	amount: number;
+	status: 'pending' | 'completed' | 'failed'; // Status of the micro transaction
+	date: Date;
+	description?: string; // Optional description for the micro transaction
+	method: TransactionMethod; // Reference to the transaction method used
+}
+
+export interface TransactionMethod {
+	id?: string;
+	name?: string;
+	type: 'bank' | 'card' | 'cash' | 'mobile-money'; // Type of transaction method
+	phoneNumber?: string; // Optional, can be used for phone transactions
+	accountNumber?: string; // Optional, can be used for bank accounts
+	cardNumber?: string; // Optional, can be used for card transactions
+	accountHolderName?: string; // Optional, can be used for bank accounts or cards
+	csv?: string; // Optional, can be used for card transactions
+	expiryDate?: Date; // Optional, can be used for card transactions
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
 export interface AuthRequest {
 	name?: string; // Required for registration, optional for login
 	email: string;

@@ -1,4 +1,5 @@
 import { phoneNumberLength } from '@/constants';
+import { Alert, AlertButton, Platform, ToastAndroid } from 'react-native';
 
 export function filterCharacters(
 	input: string,
@@ -13,6 +14,15 @@ export function filterCharacters(
 	else if (type === 'password')
 		return input?.replaceAll(' ', ''); // Return anything that has been input
 	else return ''; // Return anything that has been input
+}
+
+export function translateWithVariables(
+	text: string,
+	variables: Record<string, string | number>
+): string {
+	return text.replace(/{(\w+)}/g, (match, key) => {
+		return variables[key]?.toString() || match;
+	});
 }
 
 export function formatPhoneNumber(phoneNumber: string, len?: number): string {
@@ -45,4 +55,28 @@ export function formatPhoneNumber(phoneNumber: string, len?: number): string {
 	}
 
 	return interimValue;
+}
+
+export function ShowAlert(
+	message: string,
+	type: 'Success' | 'Error',
+	options?: AlertButton[]
+): void {
+	if (Platform.OS === 'android' && !options)
+		ToastAndroid.show(
+			message,
+			type === 'Error' ? ToastAndroid.LONG : ToastAndroid.SHORT
+		);
+	else if (options) Alert.alert(type, message, options);
+	else Alert.alert(type, message, [{ text: 'OK' }]);
+}
+
+export function generateRandomNumbers(length: number): string {
+	let result = '';
+	const characters = '0123456789';
+	const charactersLength = characters.length;
+	for (let i = 0; i < length; i++) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	}
+	return result;
 }
