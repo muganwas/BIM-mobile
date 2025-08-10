@@ -1,4 +1,4 @@
-import { generateRandomNumbers, ShowAlert } from '@/helpers';
+import { generateRandomNumbers, ShowAlert, toLocalISOString } from '@/helpers';
 import {
 	Bank,
 	DocumentProps,
@@ -217,12 +217,13 @@ export const TransactionProvider = ({
 		if (!user) return;
 		try {
 			// Fetch voucher users from the server
+			const today = new Date();
 			const data: VoucherUser[] = Array(5)
 				.fill(null)
 				.map((_, index) => ({
 					name: generateRandomNumbers(5),
-					comment: new Date().toTimeString() + '-' + index,
-					date: new Date(),
+					comment: toLocalISOString(today) + '-' + index,
+					date: today.toDateString(),
 				}));
 			setVoucherUsers(data);
 		} catch (error: any) {

@@ -65,7 +65,7 @@ export interface Bank {
 export interface VoucherUser {
 	name: string;
 	comment: string;
-	date?: Date;
+	date?: string;
 }
 
 export interface MicroTransaction {

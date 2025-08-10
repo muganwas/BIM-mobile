@@ -8,6 +8,7 @@ import { StyleSheet, useColorScheme } from 'react-native';
 export default function DashboardTile({
 	id,
 	amount,
+	amountType = 'double',
 	title,
 	iconName,
 	iconColor,
@@ -21,10 +22,11 @@ export default function DashboardTile({
 	backgroundColor?: string;
 	title: string;
 	titleColor?: string;
-	iconName: string;
+	iconName?: string;
 	iconBackgroundColor?: string;
 	iconColor?: string;
 	iconSize?: number;
+	amountType?: 'double' | 'number';
 	language: string;
 }) {
 	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
@@ -41,6 +43,7 @@ export default function DashboardTile({
 		>
 			<ThemedView
 				style={{
+					display: !!iconName ? 'flex' : 'none',
 					position: 'relative',
 					borderRadius: 50,
 					width: 40,
@@ -51,16 +54,18 @@ export default function DashboardTile({
 				lightColor={iconBackgroundColor || Colors.light.dayIconBackground}
 				darkColor={iconBackgroundColor || Colors.dark.dayIconBackground}
 			>
-				<IconSymbol
-					style={{
-						position: 'absolute',
-						right: 0,
-						bottom: -5,
-					}}
-					name={iconName}
-					size={iconSize}
-					color={iconColor || '#ffffff'}
-				/>
+				{iconName && (
+					<IconSymbol
+						style={{
+							position: 'absolute',
+							right: 0,
+							bottom: -5,
+						}}
+						name={iconName}
+						size={iconSize}
+						color={iconColor || '#ffffff'}
+					/>
+				)}
 			</ThemedView>
 			<ThemedView lightColor='transparent' darkColor='transparent'>
 				<ThemedText
@@ -81,7 +86,7 @@ export default function DashboardTile({
 					lightColor={Colors.light.valueText}
 					darkColor={Colors.dark.valueText}
 				>
-					{amount}
+					{amountType === 'double' ? amount.toFixed(2) : amount}
 				</ThemedText>
 			</ThemedView>
 		</ThemedView>

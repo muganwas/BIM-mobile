@@ -17,11 +17,15 @@ import { useEffect, useState } from 'react';
 export default function HomeScreen() {
 	const { setSelectedOption, language } = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
-	const { purchases } = useTransaction();
+	const { purchases, voucherUsers } = useTransaction();
 	const [purchaseTotal, setPurchaseTotal] = useState(0);
 	const [dailyPurchasesTotal, setDailyPurchasesTotal] = useState(0);
 	const [weeklyPurchasesTotal, setWeeklyPurchasesTotal] = useState(0);
 	const [monthlyPurchasesTotal, setMonthlyPurchasesTotal] = useState(0);
+	const [voucherUsersTotal, setVoucherUsersTotal] = useState(0);
+	const [dailyVoucherUsersTotal, setDailyVoucherUsersTotal] = useState(0);
+	const [weeklyVoucherUsersTotal, setWeeklyVoucherUsersTotal] = useState(0);
+	const [monthlyVoucherUsersTotal, setMonthlyVoucherUsersTotal] = useState(0);
 
 	useEffect(() => {
 		if (!purchases || purchases.length === 0) {
@@ -71,9 +75,50 @@ export default function HomeScreen() {
 		setPurchaseTotal(total);
 	}, [purchases]);
 
+	useEffect(() => {
+		if (!voucherUsers || voucherUsers.length === 0) {
+			setVoucherUsersTotal(0);
+			return;
+		}
+		// Calculate the total of today's voucher users
+		const today = new Date();
+		const todayVoucherUsers = voucherUsers.filter((user) => {
+			const userDate = new Date(user.date as string);
+			return (
+				userDate.getDate() === today.getDate() &&
+				userDate.getMonth() === today.getMonth() &&
+				userDate.getFullYear() === today.getFullYear()
+			);
+		});
+		const dailyTotal = todayVoucherUsers.length;
+		// calculate the total of this week's voucher users
+		const startOfWeek = new Date(today);
+		startOfWeek.setDate(today.getDate() - today.getDay()); // Set to the start of the week (Sunday)
+		const weekVoucherUsers = voucherUsers.filter((user) => {
+			const userDate = new Date(user.date as string);
+			return userDate >= startOfWeek && userDate <= today;
+		});
+		const weekTotal = weekVoucherUsers.length;
+		// calculate the total of this month's voucher users
+		const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+		const monthVoucherUsers = voucherUsers.filter((user) => {
+			const userDate = new Date(user.date as string);
+			return userDate >= startOfMonth && userDate <= today;
+		});
+		const monthTotal = monthVoucherUsers.length;
+
+		setWeeklyVoucherUsersTotal(weekTotal);
+		setMonthlyVoucherUsersTotal(monthTotal);
+		setDailyVoucherUsersTotal(dailyTotal);
+		setVoucherUsersTotal(voucherUsers.length ?? 0);
+	}, [voucherUsers]);
+
 	return (
 		<ParallaxScrollView
-			headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+			headerBackgroundColor={{
+				light: Colors.light.background,
+				dark: Colors.dark.background,
+			}}
 			onTouchStart={(e: GestureResponderEvent) => {
 				e.stopPropagation(); // Prevent touch events from propagating to the drawer
 				setSelectedOption(undefined);
@@ -93,7 +138,7 @@ export default function HomeScreen() {
 				amount={dailyPurchasesTotal}
 				title={translations[language].categories.dashboard.todaysTransactions}
 				iconName='cash'
-				iconColor={'#ffffff'}
+				iconColor={Colors[colorScheme].iconTint}
 				titleColor={Colors[colorScheme].dayText}
 				iconBackgroundColor={Colors[colorScheme].dayIconBackground}
 				backgroundColor={Colors[colorScheme].dayTransactionsBackground}
@@ -105,7 +150,7 @@ export default function HomeScreen() {
 				amount={weeklyPurchasesTotal}
 				title={translations[language].categories.dashboard.weeksTransactions}
 				iconName='calendar'
-				iconColor={'#ffffff'}
+				iconColor={Colors[colorScheme].iconTint}
 				titleColor={Colors[colorScheme].weekText}
 				iconBackgroundColor={Colors[colorScheme].weekIconBackground}
 				backgroundColor={Colors[colorScheme].weekTransactionsBackground}
@@ -117,11 +162,38 @@ export default function HomeScreen() {
 				amount={monthlyPurchasesTotal}
 				title={translations[language].categories.dashboard.monthsTransactions}
 				iconName='monthlyCalendar'
-				iconColor={'#ffffff'}
+				iconColor={Colors[colorScheme].iconTint}
 				titleColor={Colors[colorScheme].monthText}
 				iconBackgroundColor={Colors[colorScheme].monthIconBackground}
 				backgroundColor={Colors[colorScheme].monthTransactionsBackground}
 				iconSize={30}
+				language={language}
+			/>
+			<DashboardTile
+				id='days-voucher-users'
+				amount={dailyVoucherUsersTotal}
+				amountType='number'
+				titleColor={Colors[colorScheme].dayText}
+				title={translations[language].categories.dashboard.todaysVouchers}
+				backgroundColor={Colors[colorScheme].background}
+				language={language}
+			/>
+			<DashboardTile
+				id='weeks-voucher-users'
+				amount={weeklyVoucherUsersTotal}
+				amountType='number'
+				titleColor={Colors[colorScheme].weekText}
+				title={translations[language].categories.dashboard.weeksVouchers}
+				backgroundColor={Colors[colorScheme].background}
+				language={language}
+			/>
+			<DashboardTile
+				id='months-voucher-users'
+				amount={monthlyVoucherUsersTotal}
+				amountType='number'
+				titleColor={Colors[colorScheme].monthText}
+				title={translations[language].categories.dashboard.monthsVouchers}
+				backgroundColor={Colors[colorScheme].background}
 				language={language}
 			/>
 		</ParallaxScrollView>

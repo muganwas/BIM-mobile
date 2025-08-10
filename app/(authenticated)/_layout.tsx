@@ -70,7 +70,6 @@ function CustomDrawerContent(props: any) {
 						}}
 						onPress={() => navigation.navigate(route.name)}
 					>
-						{/* You can use DrawerItem from @react-navigation/drawer if you want */}
 						<ThemedView
 							style={{
 								flexDirection: 'row',
@@ -86,7 +85,6 @@ function CustomDrawerContent(props: any) {
 								lightColor='transparent'
 								darkColor='transparent'
 							>
-								{/* Replace with your ThemedText if needed */}
 								{typeof label === 'string' ? (
 									<ThemedText
 										style={{
@@ -131,7 +129,7 @@ function CustomDrawerContent(props: any) {
 }
 
 export default function DrawerLayout() {
-	const { language } = useGeneral(); // Get user from context
+	const { language } = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
 
 	return (
