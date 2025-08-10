@@ -51,7 +51,12 @@ export default function ParallaxScrollView({
 	});
 
 	return (
-		<ThemedView onTouchStart={onTouchStart} style={styles.container}>
+		<ThemedView
+			onTouchStart={onTouchStart}
+			style={styles.container}
+			lightColor={headerBackgroundColor.light}
+			darkColor={headerBackgroundColor.dark}
+		>
 			<Animated.ScrollView
 				ref={scrollRef}
 				scrollEventThrottle={16}

@@ -3,6 +3,8 @@ import React from 'react';
 
 import DrawerHeader from '@/components/DrawerHeader';
 import Header from '@/components/Header';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
@@ -10,41 +12,120 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { TransactionProvider } from '@/context/TransactionContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import {
-	DrawerContentScrollView,
-	DrawerItemList,
-} from '@react-navigation/drawer';
-import { View } from 'react-native';
+import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { TouchableOpacity, View } from 'react-native';
 
-// Custom drawer content with header
 function CustomDrawerContent(props: any) {
+	const colorScheme = useColorScheme() ?? 'light';
+	const { state, descriptors, navigation } = props;
+	const activeIndex = state.index;
+
 	return (
 		<DrawerContentScrollView
-			contentContainerStyle={{
-				padding: 0,
-			}}
-			style={{
-				padding: 0,
-			}}
+			contentContainerStyle={{ padding: 0 }}
+			style={{ padding: 0 }}
 			{...props}
 		>
-			{/* Add your custom header here */}
 			<View
 				style={{
 					paddingVertical: 5,
+					backgroundColor: Colors[colorScheme].drawerBackground,
 				}}
 			>
-				<DrawerHeader navigation={props.navigation} />
+				<DrawerHeader navigation={navigation} />
 			</View>
 
-			{/* Default drawer items */}
-			<DrawerItemList
-				itemStyle={{
-					margin: 0,
-					padding: 0,
-				}}
-				{...props}
-			/>
+			{state.routes.map((route: any, i: number) => {
+				const { options } = descriptors[route.key];
+				const showItem = options.drawerItemStyle?.display !== 'none';
+				const label = options.drawerLabel ?? options.title ?? route.name;
+				const isActive = i === activeIndex;
+				const activeBg =
+					options.drawerActiveBackgroundColor ??
+					Colors[colorScheme].drawerActiveBackground;
+				const inactiveBg =
+					options.drawerInactiveBackgroundColor ??
+					Colors[colorScheme].drawerButtonBackground;
+				const icon = options.drawerIcon
+					? options.drawerIcon({
+							focused: isActive,
+							color: isActive
+								? options.drawerActiveTintColor ??
+								  Colors[colorScheme].drawerItem
+								: options.drawerInactiveTintColor ??
+								  Colors[colorScheme].drawerInactiveItem,
+					  })
+					: null;
+				if (!showItem) {
+					return null;
+				}
+				return (
+					<TouchableOpacity
+						key={route.key}
+						style={{
+							backgroundColor: isActive ? activeBg : inactiveBg,
+							borderRadius: 5,
+							margin: 0,
+							padding: 0,
+						}}
+						onPress={() => navigation.navigate(route.name)}
+					>
+						{/* You can use DrawerItem from @react-navigation/drawer if you want */}
+						<ThemedView
+							style={{
+								flexDirection: 'row',
+								alignItems: 'center',
+								padding: 16,
+							}}
+							lightColor='transparent'
+							darkColor='transparent'
+						>
+							{icon}
+							<ThemedView
+								style={{ marginLeft: 16 }}
+								lightColor='transparent'
+								darkColor='transparent'
+							>
+								{/* Replace with your ThemedText if needed */}
+								{typeof label === 'string' ? (
+									<ThemedText
+										style={{
+											color: isActive
+												? options.drawerActiveTintColor ??
+												  Colors[colorScheme].drawerItem
+												: options.drawerInactiveTintColor ??
+												  Colors[colorScheme].drawerInactiveItem,
+											fontWeight: isActive
+												? options.drawerActiveFontWeight ??
+												  fontWeight['heading.one']
+												: options.drawerInactiveFontWeight ??
+												  fontWeight['heading.three'],
+										}}
+										lightColor={
+											isActive
+												? options.drawerActiveTintColor ??
+												  Colors[colorScheme].drawerItem
+												: options.drawerInactiveTintColor ??
+												  Colors[colorScheme].drawerInactiveItem
+										}
+										darkColor={
+											isActive
+												? options.drawerActiveTintColor ??
+												  Colors[colorScheme].drawerItem
+												: options.drawerInactiveTintColor ??
+												  Colors[colorScheme].drawerInactiveItem
+										}
+									>
+										{label}
+									</ThemedText>
+								) : (
+									label
+								)}
+							</ThemedView>
+						</ThemedView>
+					</TouchableOpacity>
+				);
+			})}
 		</DrawerContentScrollView>
 	);
 }
@@ -60,6 +141,7 @@ export default function DrawerLayout() {
 				screenOptions={{
 					headerShown: true,
 					drawerActiveTintColor: Colors[colorScheme].drawerItem,
+					drawerInactiveTintColor: Colors[colorScheme].drawerInactiveItem,
 					drawerActiveBackgroundColor:
 						Colors[colorScheme].drawerActiveBackground,
 					header: () => <Header />,

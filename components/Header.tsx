@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
 	Animated,
 	Image,
+	Platform,
 	ScrollView,
 	StyleSheet,
 	TouchableOpacity,
@@ -16,7 +17,6 @@ import {
 	useColorScheme,
 	View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HeaderDropDownContainer from './HeaderDropDownContainer';
 import { ThemedButton } from './ThemedButton';
 import { ThemedInput } from './ThemedInput';
@@ -25,7 +25,6 @@ import { ThemedView } from './ThemedView';
 import { IconSymbol } from './ui/IconSymbol';
 
 export default function Header() {
-	const insets = useSafeAreaInsets();
 	const colorScheme = useColorScheme() ?? 'light';
 	const router = useRouter();
 	const profileAnimValue = useAnimatedValue(0);
@@ -186,7 +185,7 @@ export default function Header() {
 		<ThemedView
 			lightColor={Colors[colorScheme].headerBackground}
 			darkColor={Colors[colorScheme].headerBackground}
-			style={[styles.container, { paddingTop: insets.top + 10 }]}
+			style={[styles.container]}
 		>
 			<Animated.View
 				style={{
@@ -676,6 +675,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		alignItems: 'center', // Add this for vertical centering
 		height: 70,
+		marginTop: Platform.OS === 'ios' ? 50 : 40,
 		width: '100%',
 		paddingHorizontal: 16,
 		zIndex: 10, // Ensure it's above other content

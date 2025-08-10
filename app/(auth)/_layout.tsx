@@ -6,6 +6,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { Platform } from 'react-native';
 
 export default function AuthLayout() {
 	const colorScheme = useColorScheme();
@@ -14,9 +15,12 @@ export default function AuthLayout() {
 		<Tabs
 			screenOptions={{
 				tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-				headerShown: false,
+				headerShown: true,
 				tabBarButton: HapticTab,
 				tabBarBackground: TabBarBackground,
+				headerStyle: {
+					height: Platform.OS === 'ios' ? 50 : 40,
+				},
 				tabBarStyle: {
 					display: 'none',
 				},
@@ -26,6 +30,7 @@ export default function AuthLayout() {
 				name='index'
 				options={{
 					title: 'Register',
+					headerTitle: '',
 					tabBarIcon: ({ color }) => (
 						<IconSymbol size={28} name='house.fill' color={color} />
 					),
@@ -35,6 +40,7 @@ export default function AuthLayout() {
 				name='login'
 				options={{
 					title: 'Login',
+					headerTitle: '',
 					tabBarIcon: ({ color }) => (
 						<IconSymbol size={28} name='paperplane.fill' color={color} />
 					),
@@ -44,6 +50,7 @@ export default function AuthLayout() {
 				name='verify'
 				options={{
 					title: 'Verify',
+					headerTitle: '',
 					tabBarIcon: ({ color }) => (
 						<IconSymbol size={28} name='paperplane.fill' color={color} />
 					),
