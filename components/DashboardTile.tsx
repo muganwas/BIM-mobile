@@ -3,7 +3,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
-import { StyleSheet, useColorScheme } from 'react-native';
+import TileContainer from './TileContainer';
 
 export default function DashboardTile({
 	id,
@@ -29,18 +29,8 @@ export default function DashboardTile({
 	amountType?: 'double' | 'number';
 	language: string;
 }) {
-	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
 	return (
-		<ThemedView
-			id={id}
-			style={styles.transactionContainer}
-			lightColor={
-				backgroundColor || Colors[colorScheme].dayTransactionsBackground
-			}
-			darkColor={
-				backgroundColor || Colors[colorScheme].dayTransactionsBackground
-			}
-		>
+		<TileContainer id={id} backgroundColor={backgroundColor}>
 			<ThemedView
 				style={{
 					display: !!iconName ? 'flex' : 'none',
@@ -89,41 +79,6 @@ export default function DashboardTile({
 					{amountType === 'double' ? amount.toFixed(2) : amount}
 				</ThemedText>
 			</ThemedView>
-		</ThemedView>
+		</TileContainer>
 	);
 }
-
-const styles = StyleSheet.create({
-	transactionItem: {
-		padding: 12,
-		borderRadius: 8,
-		marginBottom: 8,
-		borderWidth: 1,
-		borderColor: '#ddd',
-	},
-	container: {
-		flex: 1,
-		padding: 16,
-		borderRadius: 8,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
-		elevation: 2, // For Android shadow
-	},
-	transactionContainer: {
-		flexDirection: 'row',
-		alignItems: 'flex-start',
-		justifyContent: 'flex-start',
-		padding: 12,
-		gap: 15,
-		borderRadius: 8,
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
-		elevation: 2,
-		borderWidth: 1,
-		borderColor: '#ddd',
-	},
-});

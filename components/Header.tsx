@@ -253,7 +253,6 @@ export default function Header() {
 					alignItems: 'center',
 					justifyContent: 'flex-end',
 					gap: 10,
-					paddingRight: 10,
 					flex: 3,
 				}}
 			>
@@ -645,7 +644,10 @@ export default function Header() {
 								alignItems: 'center',
 								justifyContent: 'flex-start',
 							}}
-							onPress={handleLogout}
+							onPress={() => {
+								setSelectedOption(undefined);
+								handleLogout();
+							}}
 						>
 							<IconSymbol
 								name='logout'
@@ -674,10 +676,10 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center', // Add this for vertical centering
-		height: 70,
+		height: 60,
 		marginTop: Platform.OS === 'ios' ? 50 : 40,
 		width: '100%',
-		paddingHorizontal: 16,
+		paddingHorizontal: 10,
 		zIndex: 10, // Ensure it's above other content
 	},
 });

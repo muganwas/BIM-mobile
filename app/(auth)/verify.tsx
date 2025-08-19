@@ -135,7 +135,7 @@ export default function VerifyTokenScreen() {
 									lightColor={Colors.light.headers}
 									darkColor={Colors.dark.headers}
 								>
-									{translations[language].categories.auth['verify.title']}
+									{translations[language].categories.buttons['verifyOTP']}
 								</ThemedText>
 								<ThemedText
 									style={{

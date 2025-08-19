@@ -1,3 +1,4 @@
+import { packages as defaultPackages } from '@/constants';
 import { generateRandomNumbers, ShowAlert, toLocalISOString } from '@/helpers';
 import {
 	Bank,
@@ -180,34 +181,7 @@ export const TransactionProvider = ({
 		if (!user) return;
 		try {
 			// Fetch internet packages from the server
-			const data: InternetPackage[] = [
-				{
-					id: '1',
-					name: 'daily',
-					price: 1000,
-					duration: 24,
-				},
-				{
-					id: '2',
-					name: 'weekly',
-					price: 5000,
-					duration: 168,
-				},
-				{
-					id: '3',
-					name: 'monthly',
-					price: 20000,
-					duration: 720,
-				},
-				{
-					id: '4',
-					name: 'half-day',
-					price: 500,
-					duration: 12,
-				},
-			]; // Example data, replace with actual API call
-
-			setPackages(data);
+			setPackages(defaultPackages);
 		} catch (error: any) {
 			ShowAlert(`Failed to fetch internet packages: ${error.message}`, 'Error');
 		}
@@ -218,12 +192,20 @@ export const TransactionProvider = ({
 		try {
 			// Fetch voucher users from the server
 			const today = new Date();
-			const data: VoucherUser[] = Array(5)
+			const data: VoucherUser[] = Array(10)
 				.fill(null)
 				.map((_, index) => ({
-					name: generateRandomNumbers(5),
+					voucherCode: generateRandomNumbers(6),
+					package:
+						defaultPackages[Math.floor(Math.random() * defaultPackages.length)]
+							.tag,
+					status: 'active',
+					macAddress: `00:1A:2B:3C:4D:${index + 1}`,
+					uptime: Math.floor(Math.random() * 1000),
+					bytesIn: Math.floor(Math.random() * 1000000),
+					bytesOut: Math.floor(Math.random() * 1000000),
 					comment: toLocalISOString(today) + '-' + index,
-					date: today.toDateString(),
+					createdAt: today.toDateString(),
 				}));
 			setVoucherUsers(data);
 		} catch (error: any) {
@@ -241,6 +223,8 @@ export const TransactionProvider = ({
 					amount: 1000,
 					date: new Date(),
 					status: 'completed',
+					reason: 'wifi',
+					routerName: 'Kisa-1',
 					method: {
 						type: 'mobile-money',
 						name: 'Mobile Payment',
@@ -252,10 +236,25 @@ export const TransactionProvider = ({
 					amount: 5000,
 					date: new Date(),
 					status: 'pending',
+					reason: 'wifi',
+					routerName: 'Najjeera-1',
 					method: {
-						type: 'bank',
+						type: 'bank-transfer',
 						name: 'Bank Transfer',
 						accountNumber: '1234567890',
+					}, // Example method
+				},
+				{
+					id: generateRandomNumbers(10),
+					amount: 20000,
+					date: new Date(),
+					status: 'completed',
+					reason: 'wifi',
+					routerName: 'Najjeera-1',
+					method: {
+						type: 'mobile-money',
+						name: 'Mobile Payment',
+						phoneNumber: '0750941137',
 					}, // Example method
 				},
 			];

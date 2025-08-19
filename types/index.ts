@@ -30,10 +30,11 @@ export interface NetRouter {
 	updatedAt?: Date;
 }
 
-export type InternetPackageName = 'half-day' | 'daily' | 'weekly' | 'monthly';
+export type InternetPackageName = 'short' | 'daily' | 'weekly' | 'monthly';
 
 export interface InternetPackage {
 	id?: string;
+	tag: string;
 	name: InternetPackageName; // Name of the internet package
 	price: number; // Price of the package
 	duration: number; // Duration in hours
@@ -63,16 +64,30 @@ export interface Bank {
 }
 
 export interface VoucherUser {
-	name: string;
-	comment: string;
-	date?: string;
+	voucherCode: string;
+	package: string;
+	status: 'active' | 'inactive';
+	macAddress: string; // MAC address of the user
+	uptime: number; // Uptime of the user in minutes
+	bytesIn: number; // Data usage in bytes
+	bytesOut: number; // Data usage in bytes
+	createdAt: string;
 }
+
+export type transactionType =
+	| 'credit'
+	| 'debit'
+	| 'bank-transfer'
+	| 'cash'
+	| 'mobile-money';
 
 export interface MicroTransaction {
 	id: string;
 	amount: number;
 	status: 'pending' | 'completed' | 'failed'; // Status of the micro transaction
+	routerName: string; // Name of the router associated with the micro transaction
 	date: Date;
+	reason: 'wifi' | 'subscription' | 'other'; // Reason for the micro transaction
 	description?: string; // Optional description for the micro transaction
 	method: TransactionMethod; // Reference to the transaction method used
 }
@@ -80,7 +95,7 @@ export interface MicroTransaction {
 export interface TransactionMethod {
 	id?: string;
 	name?: string;
-	type: 'bank' | 'card' | 'cash' | 'mobile-money'; // Type of transaction method
+	type: transactionType; // Type of transaction method
 	phoneNumber?: string; // Optional, can be used for phone transactions
 	accountNumber?: string; // Optional, can be used for bank accounts
 	cardNumber?: string; // Optional, can be used for card transactions

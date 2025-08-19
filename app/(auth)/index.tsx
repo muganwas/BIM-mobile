@@ -394,8 +394,8 @@ export default function RegisterScreen() {
 									onBlur={() => setFocusedInput(null)}
 								/>
 								<ThemedButton
-									title={translations[language].categories.auth[
-										'signUp.button'
+									title={translations[language].categories.buttons[
+										'signUp'
 									]?.toUpperCase()}
 									onPress={handleOnSignUp}
 									style={{

@@ -13,7 +13,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { TransactionProvider } from '@/context/TransactionContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
-import { TouchableOpacity, View } from 'react-native';
+import { Platform, TouchableOpacity, View } from 'react-native';
 
 function CustomDrawerContent(props: any) {
 	const colorScheme = useColorScheme() ?? 'light';
@@ -150,6 +150,9 @@ export default function DrawerLayout() {
 						backgroundColor: Colors[colorScheme].drawerButtonBackground,
 						borderRadius: 0,
 						marginLeft: -10,
+					},
+					sceneStyle: {
+						marginBottom: Platform.OS === 'android' ? 50 : 5,
 					},
 					drawerLabelStyle: {
 						fontSize: fontSize['text.large'],

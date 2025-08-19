@@ -55,6 +55,7 @@ export function ThemedInput({
 			]}
 		>
 			<TextInput
+				allowFontScaling={false}
 				style={[
 					styles.input,
 					secureTextEntry && {
@@ -105,6 +106,7 @@ export function ThemedInput({
 				darkColor='transparent'
 			>
 				<ThemedText
+					allowFontScaling={false}
 					style={[{ fontSize: 12 }]}
 					lightColor={'#333333B2'}
 					darkColor={'#333333B2'}
@@ -126,6 +128,7 @@ export function ThemedInput({
 				darkColor='transparent'
 			>
 				<ThemedText
+					allowFontScaling={false}
 					style={[{ fontSize: 12 }]}
 					lightColor={'#333333B2'}
 					darkColor={'#333333B2'}

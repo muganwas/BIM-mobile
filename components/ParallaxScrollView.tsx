@@ -1,5 +1,10 @@
 import type { PropsWithChildren, ReactElement } from 'react';
-import { GestureResponderEvent, StyleSheet } from 'react-native';
+import {
+	GestureResponderEvent,
+	StyleProp,
+	StyleSheet,
+	ViewStyle,
+} from 'react-native';
 import Animated, {
 	interpolate,
 	useAnimatedRef,
@@ -15,6 +20,8 @@ const HEADER_HEIGHT = 250;
 
 type Props = PropsWithChildren<{
 	headerImage?: ReactElement;
+	containerStyle?: StyleProp<ViewStyle>;
+	contentStyle?: StyleProp<ViewStyle>;
 	headerBackgroundColor: { dark: string; light: string };
 	onTouchStart?: (e: GestureResponderEvent) => void; // Optional callback for touch start events
 }>;
@@ -22,6 +29,8 @@ type Props = PropsWithChildren<{
 export default function ParallaxScrollView({
 	children,
 	headerImage,
+	containerStyle,
+	contentStyle,
 	onTouchStart,
 	headerBackgroundColor,
 }: Props) {
@@ -53,7 +62,7 @@ export default function ParallaxScrollView({
 	return (
 		<ThemedView
 			onTouchStart={onTouchStart}
-			style={styles.container}
+			style={[styles.container, containerStyle]}
 			lightColor={headerBackgroundColor.light}
 			darkColor={headerBackgroundColor.dark}
 		>
@@ -76,7 +85,9 @@ export default function ParallaxScrollView({
 				>
 					{headerImage}
 				</Animated.View>
-				<ThemedView style={styles.content}>{children}</ThemedView>
+				<ThemedView style={[styles.content, contentStyle]}>
+					{children}
+				</ThemedView>
 			</Animated.ScrollView>
 		</ThemedView>
 	);

@@ -21,6 +21,9 @@ export default function AuthLayout() {
 				headerStyle: {
 					height: Platform.OS === 'ios' ? 50 : 40,
 				},
+				sceneStyle: {
+					marginBottom: Platform.OS === 'android' ? 50 : 5,
+				},
 				tabBarStyle: {
 					display: 'none',
 				},

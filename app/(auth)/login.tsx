@@ -255,8 +255,8 @@ export default function LoginsScreen() {
 									onBlur={() => setFocusedInput(null)}
 								/>
 								<ThemedButton
-									title={translations[language].categories.auth[
-										'signIn.button'
+									title={translations[language].categories.buttons[
+										'signIn'
 									]?.toUpperCase()}
 									onPress={handleOnLogin}
 									style={{
