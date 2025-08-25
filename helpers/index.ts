@@ -81,6 +81,16 @@ export function generateRandomNumbers(length: number): string {
 	return result;
 }
 
+export function randomDateBetweenDaysAgo(daysAgo = 6): Date {
+	const now = new Date();
+	const start = new Date();
+	start.setHours(0, 0, 0, 0);
+	start.setDate(start.getDate() - daysAgo);
+	const randomTs =
+		start.getTime() + Math.random() * (now.getTime() - start.getTime());
+	return new Date(randomTs);
+}
+
 export function toLocalISOString(date: Date) {
 	const pad = (n: number) => n.toString().padStart(2, '0');
 	return (
@@ -96,4 +106,10 @@ export function toLocalISOString(date: Date) {
 		':' +
 		pad(date.getSeconds())
 	);
+}
+
+export function formatMMDD(date: Date) {
+	const m = String(date.getMonth() + 1).padStart(2, '0');
+	const d = String(date.getDate()).padStart(2, '0');
+	return `${m}-${d}`;
 }

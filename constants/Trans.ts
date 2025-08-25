@@ -61,6 +61,7 @@ const translations: Translations = {
 				weeksVouchers: "This Week's Voucher Users",
 				monthsVouchers: "This Month's Voucher Users",
 				lastTransactions: 'last {number} transactions',
+				transVolume: 'Transaction Volume (Last {number} days)',
 				lastVouchers: 'Vouchers Users Created (Last {number} days)',
 				amount: 'Amount',
 				type: 'Type',

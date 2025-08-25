@@ -103,28 +103,35 @@ export default function VerifyTokenScreen() {
 				behavior={Platform.OS === 'ios' ? 'position' : 'padding'}
 			>
 				<ParallaxScrollView
-					headerBackgroundColor={{ light: '#fff', dark: '#fff' }}
+					headerBackgroundColor={{
+						light: Colors[colorScheme].background,
+						dark: Colors[colorScheme].background,
+					}}
 				>
 					<ThemedView
 						style={styles.container}
-						lightColor='#fff'
-						darkColor='#fff'
+						lightColor={Colors.light.background}
+						darkColor={Colors.dark.background}
 					>
 						<ThemedView
 							style={styles.header}
-							lightColor='#fff'
-							darkColor='#fff'
+							lightColor={Colors.light.background}
+							darkColor={Colors.dark.background}
 						>
 							<Image
 								source={require('@/assets/images/bim-text-img.png')}
 								style={{ height: 35, resizeMode: 'contain' }}
 							/>
 						</ThemedView>
-						<ThemedView style={styles.form} lightColor='#fff' darkColor='#fff'>
+						<ThemedView
+							style={styles.form}
+							lightColor={Colors.light.background}
+							darkColor={Colors.dark.background}
+						>
 							<ThemedView
 								style={styles.formHeader}
-								lightColor='#fff'
-								darkColor='#fff'
+								lightColor={Colors.light.background}
+								darkColor={Colors.dark.background}
 							>
 								<ThemedText
 									style={{
@@ -152,8 +159,8 @@ export default function VerifyTokenScreen() {
 							</ThemedView>
 							<ThemedView
 								style={styles.formInputs}
-								lightColor='#fff'
-								darkColor='#fff'
+								lightColor={Colors.light.background}
+								darkColor={Colors.dark.background}
 							>
 								<ThemedInput
 									style={[
@@ -175,8 +182,8 @@ export default function VerifyTokenScreen() {
 									keyboardType='number-pad'
 								/>
 								<ThemedButton
-									title={translations[language].categories.auth[
-										'verify.button'
+									title={translations[language].categories.buttons[
+										'verifyOTP'
 									]?.toUpperCase()}
 									onPress={handleVerifyCode}
 									style={{

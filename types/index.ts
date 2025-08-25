@@ -71,20 +71,22 @@ export interface VoucherUser {
 	uptime: number; // Uptime of the user in minutes
 	bytesIn: number; // Data usage in bytes
 	bytesOut: number; // Data usage in bytes
+	comment: string;
 	createdAt: string;
 }
 
-export type transactionType =
+export type TransactionType =
 	| 'credit'
 	| 'debit'
 	| 'bank-transfer'
 	| 'cash'
 	| 'mobile-money';
 
+export type TransactionStatus = 'pending' | 'completed' | 'failed';
 export interface MicroTransaction {
 	id: string;
 	amount: number;
-	status: 'pending' | 'completed' | 'failed'; // Status of the micro transaction
+	status: TransactionStatus; // Status of the micro transaction
 	routerName: string; // Name of the router associated with the micro transaction
 	date: Date;
 	reason: 'wifi' | 'subscription' | 'other'; // Reason for the micro transaction
@@ -95,7 +97,7 @@ export interface MicroTransaction {
 export interface TransactionMethod {
 	id?: string;
 	name?: string;
-	type: transactionType; // Type of transaction method
+	type: TransactionType; // Type of transaction method
 	phoneNumber?: string; // Optional, can be used for phone transactions
 	accountNumber?: string; // Optional, can be used for bank accounts
 	cardNumber?: string; // Optional, can be used for card transactions
@@ -123,6 +125,12 @@ export interface notifications {
 	isRead: boolean;
 	createdAt: Date;
 	updatedAt: Date;
+}
+
+export interface dayPurchase {
+	date: Date;
+	day: string;
+	amount: number;
 }
 
 export type Translations = {

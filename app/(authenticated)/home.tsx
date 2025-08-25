@@ -1,4 +1,5 @@
 import {
+	Dimensions,
 	GestureResponderEvent,
 	StyleSheet,
 	useColorScheme,
@@ -15,17 +16,22 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
-import { translateWithVariables } from '@/helpers';
-import { MicroTransaction, VoucherUser } from '@/types';
+import { formatMMDD, translateWithVariables } from '@/helpers';
+import { dayPurchase, MicroTransaction, VoucherUser } from '@/types';
 import { useEffect, useState } from 'react';
+import { BarChart } from 'react-native-chart-kit';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function HomeScreen() {
 	const { setSelectedOption, language } = useGeneral();
+	const width = Dimensions.get('window').width;
 	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
 	const { purchases, voucherUsers } = useTransaction();
 	const [dailyPurchasesTotal, setDailyPurchasesTotal] = useState(0);
 	const [weeklyPurchasesTotal, setWeeklyPurchasesTotal] = useState(0);
+	const [weeklyPurchasesPerDay, setWeeklyPurchasesPerDay] = useState<
+		dayPurchase[]
+	>([]);
 	const [monthlyPurchasesTotal, setMonthlyPurchasesTotal] = useState(0);
 	const [dailyVoucherUsersTotal, setDailyVoucherUsersTotal] = useState(0);
 	const [weeklyVoucherUsersTotal, setWeeklyVoucherUsersTotal] = useState(0);
@@ -63,9 +69,54 @@ export default function HomeScreen() {
 		const startOfWeek = new Date(today);
 		startOfWeek.setDate(today.getDate() - today.getDay()); // Set to the start of the week (Sunday)
 		const weekPurchases = purchases.filter((purchase) => {
-			const purchaseDate = new Date(purchase.date);
-			return purchaseDate >= startOfWeek && purchaseDate <= today;
+			const purchaseDate = new Date(purchase.date).getDate();
+			return (
+				purchaseDate >= startOfWeek.getDate() && purchaseDate <= today.getDate()
+			);
 		});
+		console.log({ weekPurchases });
+		const sortedWeekPurchases = weekPurchases.sort((a, b) => {
+			return new Date(a.date).getTime() - new Date(b.date).getTime();
+		});
+		const lastSevenDates = Array.from({ length: 7 }, (_, i) => {
+			const date = new Date();
+			date.setDate(date.getDate() - i);
+			return date;
+		}).reverse();
+		const weekPurchasesPerDayTemp: dayPurchase[] = [];
+		lastSevenDates.forEach((date) => {
+			const key = date;
+			const purchase = sortedWeekPurchases.find((p, k) => {
+				return (
+					new Date(p.date).toLocaleDateString() === key.toLocaleDateString()
+				);
+			});
+			if (!purchase) {
+				weekPurchasesPerDayTemp.push({
+					date: new Date(key),
+					day: new Date(key).toLocaleDateString('en-US', {
+						weekday: 'long',
+					}),
+					amount: 0,
+				});
+				return;
+			}
+			const existing = weekPurchasesPerDayTemp.find(
+				(p) => p.date.getDate() === key.getDate()
+			);
+			if (existing) {
+				existing.amount += purchase.amount;
+			} else {
+				weekPurchasesPerDayTemp.push({
+					date: purchase?.date as Date,
+					day: new Date(purchase?.date).toLocaleDateString('en-US', {
+						weekday: 'long',
+					}),
+					amount: purchase?.amount as number,
+				});
+			}
+		});
+		setWeeklyPurchasesPerDay(weekPurchasesPerDayTemp);
 		const weekTotal = weekPurchases.reduce(
 			(acc, purchase) => acc + purchase.amount,
 			0
@@ -774,6 +825,61 @@ export default function HomeScreen() {
 						lightColor={Colors['light'].bim}
 						darkTextColor={Colors['dark'].authButtonText}
 						lightTextColor={Colors['light'].authButtonText}
+					/>
+				</ThemedView>
+			</TileContainer>
+			<TileContainer
+				id='transaction-volume-chart'
+				backgroundColor={Colors[colorScheme].background}
+				style={{ flexDirection: 'column', overflow: 'hidden' }}
+			>
+				<ThemedView
+					style={{ flex: 1 }}
+					lightColor={Colors.light.background}
+					darkColor={Colors.dark.background}
+				>
+					<ThemedText
+						lightColor={Colors.light.screenTitleText}
+						darkColor={Colors.dark.screenTitleText}
+						style={{
+							width: '100%',
+							textTransform: 'capitalize',
+							fontSize: fontSize['heading.three'],
+							fontWeight: fontWeight['heading.three'],
+						}}
+					>
+						{translateWithVariables(
+							translations[language].categories.dashboard.transVolume,
+							{ number: 7 }
+						)}
+					</ThemedText>
+				</ThemedView>
+				<ThemedView
+					lightColor={Colors.light.background}
+					darkColor={Colors.dark.background}
+					style={{
+						position: 'relative',
+					}}
+				>
+					<BarChart
+						data={{
+							labels: [...weeklyPurchasesPerDay.map((p) => formatMMDD(p.date))],
+							datasets: [
+								{ data: [...weeklyPurchasesPerDay.map((p) => p.amount)] },
+							],
+						}}
+						width={width - 30}
+						height={220}
+						yAxisSuffix=''
+						yAxisLabel=''
+						chartConfig={{
+							backgroundGradientFrom: Colors[colorScheme].background,
+							backgroundGradientTo: Colors[colorScheme].background,
+							decimalPlaces: 0,
+							color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+							labelColor: (opacity = 1) => `rgba(0,0,0, ${opacity})`,
+						}}
+						style={{ marginVertical: 8, borderRadius: 8, left: -20 }}
 					/>
 				</ThemedView>
 			</TileContainer>

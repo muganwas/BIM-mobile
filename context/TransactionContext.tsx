@@ -1,5 +1,10 @@
 import { packages as defaultPackages } from '@/constants';
-import { generateRandomNumbers, ShowAlert, toLocalISOString } from '@/helpers';
+import {
+	generateRandomNumbers,
+	randomDateBetweenDaysAgo,
+	ShowAlert,
+	toLocalISOString,
+} from '@/helpers';
 import {
 	Bank,
 	DocumentProps,
@@ -7,6 +12,8 @@ import {
 	MicroTransaction,
 	NetRouter,
 	Transaction,
+	TransactionMethod,
+	TransactionStatus,
 	User,
 	VoucherUser,
 } from '@/types';
@@ -34,7 +41,6 @@ export interface TransactionContextType {
 	fetchBanks: (user: User | null) => Promise<void>;
 	fetchRouters: (user: User | null) => Promise<void>;
 	fetchPackages: (user: User | null) => Promise<void>;
-	fetchVoucherUsers: (user: User | null) => Promise<void>;
 	fetchPurchases: (user: User | null) => Promise<void>;
 }
 
@@ -67,7 +73,6 @@ export const TransactionProvider = ({
 							name: 'Micro Transactions',
 							fn: fetchPurchases(user),
 						},
-						{ name: 'Voucher Users', fn: fetchVoucherUsers(user) },
 						{ name: 'Packages', fn: fetchPackages(user) },
 						{ name: 'Routers', fn: fetchRouters(user) },
 						{ name: 'Banks', fn: fetchBanks(user) },
@@ -187,77 +192,51 @@ export const TransactionProvider = ({
 		}
 	};
 
-	const fetchVoucherUsers = async (user: User | null) => {
+	const fetchPurchases = async (user: User | null) => {
 		if (!user) return;
 		try {
-			// Fetch voucher users from the server
-			const today = new Date();
-			const data: VoucherUser[] = Array(10)
+			const statuses: TransactionStatus[] = ['completed', 'pending', 'failed'];
+			const routerNames = ['Kisa-1', 'Najjeera-1', 'Bugujju-1'];
+			const methods: TransactionMethod[] = Array(10)
 				.fill(null)
 				.map((_, index) => ({
+					type: index % 2 === 0 ? 'mobile-money' : 'bank-transfer',
+					name: index % 2 === 0 ? 'Mobile Payment' : 'Bank Transfer',
+					phoneNumber: index % 2 === 0 ? generateRandomNumbers(10) : undefined,
+					accountNumber:
+						index % 2 === 0 ? undefined : generateRandomNumbers(10),
+				}));
+			// Fetch micro transactions from the server
+			const data: MicroTransaction[] = Array(20)
+				.fill(null)
+				.map((_, index) => ({
+					id: generateRandomNumbers(10),
+					amount: Math.floor(Math.random() * 10000) + 1000,
+					date: randomDateBetweenDaysAgo(6),
+					status: statuses[index % statuses.length],
+					reason: 'wifi',
+					routerName: routerNames[index % routerNames.length],
+					method: methods[index % methods.length],
+				}));
+			// Fetch voucher users from the server
+			const vocherUsers: VoucherUser[] = [];
+
+			data.forEach((data) => {
+				vocherUsers.push({
 					voucherCode: generateRandomNumbers(6),
 					package:
 						defaultPackages[Math.floor(Math.random() * defaultPackages.length)]
 							.tag,
 					status: 'active',
-					macAddress: `00:1A:2B:3C:4D:${index + 1}`,
+					macAddress: `00:1A:2B:3C:4D:${data.id}`,
 					uptime: Math.floor(Math.random() * 1000),
 					bytesIn: Math.floor(Math.random() * 1000000),
 					bytesOut: Math.floor(Math.random() * 1000000),
-					comment: toLocalISOString(today) + '-' + index,
-					createdAt: today.toDateString(),
-				}));
-			setVoucherUsers(data);
-		} catch (error: any) {
-			ShowAlert(`Failed to fetch voucher users: ${error.message}`, 'Error');
-		}
-	};
-
-	const fetchPurchases = async (user: User | null) => {
-		if (!user) return;
-		try {
-			// Fetch micro transactions from the server
-			const data: MicroTransaction[] = [
-				{
-					id: generateRandomNumbers(10),
-					amount: 1000,
-					date: new Date(),
-					status: 'completed',
-					reason: 'wifi',
-					routerName: 'Kisa-1',
-					method: {
-						type: 'mobile-money',
-						name: 'Mobile Payment',
-						phoneNumber: '0750941137',
-					}, // Example method
-				},
-				{
-					id: generateRandomNumbers(10),
-					amount: 5000,
-					date: new Date(),
-					status: 'pending',
-					reason: 'wifi',
-					routerName: 'Najjeera-1',
-					method: {
-						type: 'bank-transfer',
-						name: 'Bank Transfer',
-						accountNumber: '1234567890',
-					}, // Example method
-				},
-				{
-					id: generateRandomNumbers(10),
-					amount: 20000,
-					date: new Date(),
-					status: 'completed',
-					reason: 'wifi',
-					routerName: 'Najjeera-1',
-					method: {
-						type: 'mobile-money',
-						name: 'Mobile Payment',
-						phoneNumber: '0750941137',
-					}, // Example method
-				},
-			];
+					comment: toLocalISOString(data.date) + '-' + data.id,
+					createdAt: data.date.toDateString(),
+				});
+			});
+			setVoucherUsers(vocherUsers);
 			setPurchases(data);
 		} catch (error: any) {
 			ShowAlert(
@@ -289,7 +268,6 @@ export const TransactionProvider = ({
 				fetchDocuments,
 				fetchRouters,
 				fetchPackages,
-				fetchVoucherUsers,
 				fetchPurchases,
 			}}
 		>
