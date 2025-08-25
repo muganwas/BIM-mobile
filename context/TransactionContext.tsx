@@ -69,12 +69,12 @@ export const TransactionProvider = ({
 				setLoading(true);
 				try {
 					const fetchOperations = [
+						{ name: 'Packages', fn: fetchPackages(user) },
+						{ name: 'Routers', fn: fetchRouters(user) },
 						{
 							name: 'Micro Transactions',
 							fn: fetchPurchases(user),
 						},
-						{ name: 'Packages', fn: fetchPackages(user) },
-						{ name: 'Routers', fn: fetchRouters(user) },
 						{ name: 'Banks', fn: fetchBanks(user) },
 						{ name: 'Documents', fn: fetchDocuments(user) },
 					];
@@ -167,15 +167,17 @@ export const TransactionProvider = ({
 		if (!user) return;
 		try {
 			// Fetch routers from the server
-			const location = ['Mukono', 'Najjera', 'Kampala', 'Entebbe', 'Jinja'];
-			const data: NetRouter[] = Array(5)
-				.fill(null)
-				.map((_, index) => ({
-					ip: `192.168.1.${index + 1}`,
-					mac: `00:1A:2B:3C:4D:${index + 1}`,
-					name: `Router ${index + 1}`,
-					location: location[index % location.length],
-				}));
+			const location = [
+				{ name: 'Kisa-1', loc: 'Kisa Hostel' },
+				{ name: 'Najjeera-1', loc: 'Ares Gaming Hub' },
+				{ name: 'Bugujju-1', loc: 'Bugujju Electronics' },
+			];
+			const data: NetRouter[] = location.map((item, index) => ({
+				ip: `192.168.5.${index + 1}`,
+				mac: `00:1A:2B:3C:4D:${index + 1}`,
+				name: item.name,
+				location: item.loc,
+			}));
 			setRouters(data);
 		} catch (error: any) {
 			ShowAlert(`Failed to fetch routers: ${error.message}`, 'Error');

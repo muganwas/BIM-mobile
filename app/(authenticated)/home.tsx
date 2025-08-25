@@ -26,10 +26,10 @@ export default function HomeScreen() {
 	const { setSelectedOption, language } = useGeneral();
 	const width = Dimensions.get('window').width;
 	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
-	const { purchases, voucherUsers } = useTransaction();
+	const { purchases, voucherUsers, routers } = useTransaction();
 	const [dailyPurchasesTotal, setDailyPurchasesTotal] = useState(0);
 	const [weeklyPurchasesTotal, setWeeklyPurchasesTotal] = useState(0);
-	const [weeklyPurchasesPerDay, setWeeklyPurchasesPerDay] = useState<
+	const [lastSevenDaysPurchases, setLastSevenDaysPurchases] = useState<
 		dayPurchase[]
 	>([]);
 	const [monthlyPurchasesTotal, setMonthlyPurchasesTotal] = useState(0);
@@ -39,9 +39,32 @@ export default function HomeScreen() {
 	const [lastSevenVoucherUsers, setLastSevenVoucherUsers] = useState<
 		VoucherUser[]
 	>([]);
+	const [purchasesPerRouter, setPurchasesPerRouter] = useState<
+		{ name: string; location: string; amount: number }[]
+	>([]);
 	const [lastFiveTransactions, setLastFiveTransactions] = useState<
 		MicroTransaction[]
 	>([]);
+
+	useEffect(() => {
+		if (purchases && routers) {
+			const purchasesMap: Record<string, number> = {};
+			purchases.forEach((purchase) => {
+				const router = routers.find((r) => r.name === purchase.routerName);
+				if (router) {
+					const key = `${router.name}_${router.location}`;
+					purchasesMap[key] = (purchasesMap[key] || 0) + purchase.amount;
+				}
+			});
+			const formattedData = Object.entries(purchasesMap).map(
+				([key, amount]) => {
+					const [name, location] = key.split('_');
+					return { name, location, amount };
+				}
+			);
+			setPurchasesPerRouter(formattedData);
+		}
+	}, [purchases, routers]);
 
 	useEffect(() => {
 		if (!purchases || purchases.length === 0) {
@@ -74,7 +97,6 @@ export default function HomeScreen() {
 				purchaseDate >= startOfWeek.getDate() && purchaseDate <= today.getDate()
 			);
 		});
-		console.log({ weekPurchases });
 		const sortedWeekPurchases = weekPurchases.sort((a, b) => {
 			return new Date(a.date).getTime() - new Date(b.date).getTime();
 		});
@@ -116,7 +138,7 @@ export default function HomeScreen() {
 				});
 			}
 		});
-		setWeeklyPurchasesPerDay(weekPurchasesPerDayTemp);
+		setLastSevenDaysPurchases(weekPurchasesPerDayTemp);
 		const weekTotal = weekPurchases.reduce(
 			(acc, purchase) => acc + purchase.amount,
 			0
@@ -863,9 +885,11 @@ export default function HomeScreen() {
 				>
 					<BarChart
 						data={{
-							labels: [...weeklyPurchasesPerDay.map((p) => formatMMDD(p.date))],
+							labels: [
+								...lastSevenDaysPurchases.map((p) => formatMMDD(p.date)),
+							],
 							datasets: [
-								{ data: [...weeklyPurchasesPerDay.map((p) => p.amount)] },
+								{ data: [...lastSevenDaysPurchases.map((p) => p.amount)] },
 							],
 						}}
 						width={width - 30}
@@ -881,6 +905,76 @@ export default function HomeScreen() {
 						}}
 						style={{ marginVertical: 8, borderRadius: 8, left: -20 }}
 					/>
+				</ThemedView>
+			</TileContainer>
+			<TileContainer
+				id='router-balances'
+				backgroundColor={Colors[colorScheme].background}
+				style={{ flexDirection: 'column', overflow: 'hidden' }}
+			>
+				<ThemedView
+					style={{ flex: 1 }}
+					lightColor={Colors.light.background}
+					darkColor={Colors.dark.background}
+				>
+					<ThemedText
+						lightColor={Colors.light.screenTitleText}
+						darkColor={Colors.dark.screenTitleText}
+						style={{
+							width: '100%',
+							textTransform: 'capitalize',
+							fontSize: fontSize['heading.three'],
+							fontWeight: fontWeight['heading.three'],
+						}}
+					>
+						{translations[language].categories.dashboard.routerBalances}
+					</ThemedText>
+				</ThemedView>
+				<ThemedView
+					style={{
+						flexDirection: 'column',
+						borderWidth: 2,
+						borderColor: Colors[colorScheme].borderDark,
+						borderRadius: 5,
+					}}
+					lightColor={Colors.light.background}
+					darkColor={Colors.dark.background}
+				>
+					{purchasesPerRouter.map((router, index) => (
+						<ThemedView
+							key={index}
+							style={{
+								flexDirection: 'row',
+								width: '100%',
+								padding: 12,
+								justifyContent: 'space-between',
+								borderBottomWidth:
+									index < purchasesPerRouter.length - 1 ? 1 : 0,
+								borderBottomColor: Colors[colorScheme].borderDark,
+							}}
+							lightColor={Colors.light.background}
+							darkColor={Colors.dark.background}
+						>
+							<ThemedText
+								style={{ width: 150 }}
+								lightColor={Colors.light.text}
+								darkColor={Colors.dark.text}
+							>
+								{router.location}
+							</ThemedText>
+							<ThemedText
+								style={{
+									paddingHorizontal: 10,
+									backgroundColor: Colors[colorScheme].bim,
+									borderRadius: 50,
+								}}
+								lightColor={Colors.light.white}
+								darkColor={Colors.dark.white}
+							>
+								{router.amount}
+							</ThemedText>
+						</ThemedView>
+					))}
 				</ThemedView>
 			</TileContainer>
 		</ParallaxScrollView>
