@@ -23,6 +23,8 @@ export interface NetRouter {
 	ip: string; // IP address of the router
 	mac: string; // MAC address of the router
 	name?: string; // Name of the router
+	type: string;
+	transactionBalance: number; // Balance of the router's transactions
 	model?: string; // Model of the router
 	location: string; // Location of the router
 	firmwareVersion?: string; // Firmware version of the router

@@ -50,7 +50,7 @@ export default function HomeScreen() {
 		if (purchases && routers) {
 			const purchasesMap: Record<string, number> = {};
 			purchases.forEach((purchase) => {
-				const router = routers.find((r) => r.name === purchase.routerName);
+				const router = routers.find((r) => r.id === purchase.routerName);
 				if (router) {
 					const key = `${router.name}_${router.location}`;
 					purchasesMap[key] = (purchasesMap[key] || 0) + purchase.amount;
@@ -956,11 +956,12 @@ export default function HomeScreen() {
 							darkColor={Colors.dark.background}
 						>
 							<ThemedText
-								style={{ width: 150 }}
+								numberOfLines={1}
+								style={{ width: 150, overflow: 'hidden' }}
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{router.location}
+								{router.name}
 							</ThemedText>
 							<ThemedText
 								style={{

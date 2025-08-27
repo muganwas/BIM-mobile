@@ -168,13 +168,24 @@ export const TransactionProvider = ({
 		try {
 			// Fetch routers from the server
 			const location = [
-				{ name: 'Kisa-1', loc: 'Kisa Hostel' },
-				{ name: 'Najjeera-1', loc: 'Ares Gaming Hub' },
-				{ name: 'Bugujju-1', loc: 'Bugujju Electronics' },
+				{ id: 'Kisa-1', name: 'Kisa Hostel', loc: 'UCU Mukono' },
+				{
+					id: 'Najjeera-1',
+					name: 'Ares Gaming Hub',
+					loc: 'Mbogo road, Najjeera II',
+				},
+				{
+					id: 'Bugujju-1',
+					name: 'Bugujju Electronics',
+					loc: 'Turker Road, Bugujju',
+				},
 			];
 			const data: NetRouter[] = location.map((item, index) => ({
 				ip: `192.168.5.${index + 1}`,
 				mac: `00:1A:2B:3C:4D:${index + 1}`,
+				type: 'Mikrotik',
+				transactionBalance: Math.floor(Math.random() * 1000000) + 10000,
+				id: item.id,
 				name: item.name,
 				location: item.loc,
 			}));

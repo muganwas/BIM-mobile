@@ -30,6 +30,9 @@ const translations: Translations = {
 				signUp: 'Sign Up',
 				allTransactions: 'View All Transactions',
 				allVoucherUsers: 'View All Voucher Users',
+				addRouter: 'Add Router',
+				editRouter: 'Edit Router',
+				deleteRouter: 'Delete Router',
 			},
 			navigation: {
 				home: 'Dashboard',
@@ -52,6 +55,9 @@ const translations: Translations = {
 				'no.notifications': 'No new notifications available',
 				seeAll: 'View All Notifications',
 			},
+			routers: {
+				title: 'Routers',
+			},
 			dashboard: {
 				title: 'Dashboard',
 				todaysTransactions: "Today's Transactions",
@@ -72,7 +78,11 @@ const translations: Translations = {
 				voucher: 'Voucher',
 				package: 'Package',
 				status: 'Status',
+				ipAddress: 'IP Address',
 				macAddress: 'MAC Address',
+				location: 'Location',
+				actions: 'Actions',
+				balance: 'Balance',
 				uptime: 'Uptime',
 				bytesIn: 'Bytes In',
 				bytesOut: 'Bytes Out',

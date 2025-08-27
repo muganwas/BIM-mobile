@@ -9,7 +9,10 @@ const tintColorDark = '#ffffff';
 export const Colors = {
 	light: {
 		bim: '#EE8438',
+		yellow: '#FDB529',
+		lime: '#72E128',
 		screenTitleText: '#636578',
+		actionButton: '#F59E0C',
 		buttonError: '#5A5FE0',
 		headerIcons: '#636578',
 		drawerItem: '#636578',
@@ -53,7 +56,10 @@ export const Colors = {
 	},
 	dark: {
 		bim: '#EE8438',
+		yellow: '#FDB529',
+		lime: '#72E128',
 		screenTitleText: '#636578',
+		actionButton: '#F59E0C',
 		buttonError: '#5A5FE0',
 		headerIcons: '#636578',
 		drawerItem: '#636578',
