@@ -131,7 +131,7 @@ export default function RoutersScreen() {
 								ellipsizeMode='tail'
 								style={{
 									fontSize: fontSize['text.medium'],
-									width: 80,
+									width: 120,
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
@@ -145,7 +145,7 @@ export default function RoutersScreen() {
 								ellipsizeMode='tail'
 								style={{
 									fontSize: fontSize['text.medium'],
-									width: 80,
+									width: 120,
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
@@ -159,7 +159,7 @@ export default function RoutersScreen() {
 								ellipsizeMode='tail'
 								style={{
 									fontSize: fontSize['text.medium'],
-									width: 80,
+									width: 120,
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
@@ -173,7 +173,7 @@ export default function RoutersScreen() {
 								ellipsizeMode='tail'
 								style={{
 									fontSize: fontSize['text.medium'],
-									width: 80,
+									width: 120,
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
@@ -187,7 +187,7 @@ export default function RoutersScreen() {
 								ellipsizeMode='tail'
 								style={{
 									fontSize: fontSize['text.medium'],
-									width: 80,
+									width: 120,
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
@@ -201,9 +201,9 @@ export default function RoutersScreen() {
 								ellipsizeMode='tail'
 								style={{
 									fontSize: fontSize['text.medium'],
-									width: 80,
+									width: 120,
 									textTransform: 'uppercase',
-									paddingRight: 8,
+									textAlign: 'center',
 								}}
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
@@ -215,7 +215,6 @@ export default function RoutersScreen() {
 							id='router-list-details'
 							style={{
 								flexDirection: 'column',
-								borderRadius: 5,
 								backgroundColor: Colors[colorScheme].background,
 							}}
 						>
@@ -226,6 +225,8 @@ export default function RoutersScreen() {
 										flexDirection: 'row',
 										width: '100%',
 										paddingVertical: 12,
+										gap: 10,
+										paddingHorizontal: 5,
 										justifyContent: 'space-between',
 										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
 										borderBottomColor: Colors[colorScheme].borderDark,
@@ -244,7 +245,7 @@ export default function RoutersScreen() {
 									<ThemedText
 										numberOfLines={1}
 										style={{
-											width: 80,
+											width: 120,
 											paddingRight: 8,
 											overflow: 'hidden',
 										}}
@@ -257,8 +258,7 @@ export default function RoutersScreen() {
 										numberOfLines={1}
 										style={{
 											paddingRight: 8,
-											width: 80,
-											borderRadius: 50,
+											width: 120,
 										}}
 										lightColor={Colors.light.text}
 										darkColor={Colors.dark.text}
@@ -269,8 +269,7 @@ export default function RoutersScreen() {
 										numberOfLines={1}
 										style={{
 											paddingRight: 8,
-											width: 80,
-											borderRadius: 50,
+											width: 120,
 										}}
 										lightColor={Colors.light.text}
 										darkColor={Colors.dark.text}
@@ -281,8 +280,7 @@ export default function RoutersScreen() {
 										numberOfLines={1}
 										style={{
 											paddingRight: 8,
-											width: 80,
-											borderRadius: 50,
+											width: 120,
 										}}
 										lightColor={Colors.light.text}
 										darkColor={Colors.dark.text}
@@ -293,8 +291,7 @@ export default function RoutersScreen() {
 										numberOfLines={1}
 										style={{
 											paddingRight: 8,
-											width: 80,
-											borderRadius: 50,
+											width: 120,
 										}}
 										lightColor={Colors.light.text}
 										darkColor={Colors.dark.text}
@@ -304,9 +301,9 @@ export default function RoutersScreen() {
 									<ThemedView
 										style={{
 											flexDirection: 'row',
-											paddingRight: 8,
-											borderRadius: 50,
-											width: 80,
+											justifyContent: 'space-between',
+											gap: 5,
+											width: 120,
 										}}
 										lightColor={Colors.light.background}
 										darkColor={Colors.dark.background}
