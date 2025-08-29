@@ -1,6 +1,7 @@
 import {
 	StyleSheet,
 	TextInput,
+	TextStyle,
 	TouchableOpacity,
 	View,
 	ViewStyle,
@@ -9,6 +10,7 @@ import {
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useState } from 'react';
 import { IconSymbol } from './ui/IconSymbol';
@@ -17,6 +19,8 @@ export type ThemedInputProps = TextInputProps & {
 	lightColor?: string;
 	darkColor?: string;
 	fontFamily?: string;
+	label?: string;
+	labelStyle?: TextStyle;
 	lines?: number;
 	showCount?: boolean;
 	numberInWords?: string;
@@ -40,6 +44,8 @@ export function ThemedInput({
 	numberInWords,
 	keyboardType,
 	countStyle,
+	labelStyle,
+	label,
 	numberInWordsStyle,
 	containerStyle,
 	secureTextEntry,
@@ -54,6 +60,15 @@ export function ThemedInput({
 				containerStyle,
 			]}
 		>
+			{label && (
+				<ThemedText
+					lightColor={Colors.light.text}
+					darkColor={Colors.dark.text}
+					style={[{ marginBottom: 8, textAlign: 'left' }, labelStyle]}
+				>
+					{label}
+				</ThemedText>
+			)}
 			<TextInput
 				allowFontScaling={false}
 				style={[

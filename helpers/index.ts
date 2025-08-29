@@ -113,3 +113,7 @@ export function formatMMDD(date: Date) {
 	const d = String(date.getDate()).padStart(2, '0');
 	return `${m}-${d}`;
 }
+
+export function delay(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}

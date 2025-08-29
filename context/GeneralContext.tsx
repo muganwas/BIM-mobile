@@ -1,7 +1,10 @@
+import { delay } from '@/helpers';
 import { User as UserProps, langCode, notifications } from '@/types';
 import { useNetInfo } from '@react-native-community/netinfo';
+import * as DeviceInfo from 'expo-device';
 import { Router, useRouter } from 'expo-router';
 import React, { createContext, useContext, useEffect } from 'react';
+import { Keyboard, Platform } from 'react-native';
 
 // Define the type for the context
 export interface AuthContextType {
@@ -11,6 +14,9 @@ export interface AuthContextType {
 	handleLogout: () => Promise<void>;
 	fetchNotifications: () => Promise<void>;
 	notifications: notifications[];
+	isAnimatable: boolean;
+	isHighEndDevice: boolean;
+	keyboardVisible: boolean;
 	setNotifications: React.Dispatch<React.SetStateAction<notifications[]>>;
 	selectedOption:
 		| 'notifications'
@@ -41,6 +47,7 @@ export const GeneralProvider = ({
 }: {
 	children: React.ReactNode;
 }) => {
+	const totalMemory = DeviceInfo.totalMemory;
 	const router = useRouter();
 	const netInfo = useNetInfo();
 	const [user, setUser] = React.useState<UserProps | null>(null);
@@ -51,14 +58,33 @@ export const GeneralProvider = ({
 		'notifications' | 'profile' | 'language' | 'search'
 	>();
 	const [mounted, setMounted] = React.useState<boolean>(false);
+	const [isAnimatable, setIsAnimatable] = React.useState<boolean>(false);
+	const [isHighEndDevice, setIsHighEndDevice] = React.useState<boolean>(false);
+	const [keyboardVisible, setKeyboardVisible] = React.useState<boolean>(false);
 	const [history, setHistory] = React.useState<string[]>([]);
 
 	useEffect(() => {
-		const delay = setTimeout(() => {
-			setMounted(true);
-		}, 200);
-		return () => clearTimeout(delay);
+		const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+			setKeyboardVisible(true);
+		});
+		const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+			setKeyboardVisible(false);
+		});
+		delay(200).then(() => setMounted(true));
+		return () => {
+			showSubscription.remove();
+			hideSubscription.remove();
+		};
 	}, []);
+
+	useEffect(() => {
+		if (!totalMemory) return;
+		const lIsHighEndDevice = totalMemory > 4 * 1024 * 1024 * 1024;
+		setIsHighEndDevice(lIsHighEndDevice);
+		setIsAnimatable(
+			Platform.OS === 'ios' || (Platform.OS === 'android' && lIsHighEndDevice)
+		);
+	}, [totalMemory]);
 
 	useEffect(() => {
 		if (mounted) {
@@ -162,7 +188,10 @@ export const GeneralProvider = ({
 				language,
 				history,
 				handleUpdateHistory,
+				isAnimatable,
+				isHighEndDevice,
 				setLanguage,
+				keyboardVisible,
 				notifications,
 				fetchNotifications,
 				selectedOption,

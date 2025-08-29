@@ -8,12 +8,14 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function RoutersScreen() {
 	const colorScheme = useColorScheme() ?? 'light';
+	const router = useRouter();
 	const { routers, fetchRouters } = useTransaction();
 	const { user, language } = useGeneral();
 
@@ -33,7 +35,8 @@ export default function RoutersScreen() {
 		// Logic to view a specific router
 	};
 	const handleEditRouter = (routerId: string) => {
-		// Logic to edit a specific router
+		if (!routerId) return;
+		router.push(`/routers/${routerId}`);
 	};
 	const handleDeleteRouter = (routerId: string) => {
 		// Logic to delete a specific router

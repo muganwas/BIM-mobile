@@ -33,6 +33,8 @@ const translations: Translations = {
 				addRouter: 'Add Router',
 				editRouter: 'Edit Router',
 				deleteRouter: 'Delete Router',
+				updateRouter: 'Update Router',
+				cancel: 'Cancel',
 			},
 			navigation: {
 				home: 'Dashboard',
@@ -57,6 +59,8 @@ const translations: Translations = {
 			},
 			routers: {
 				title: 'Routers',
+				editTitle: 'Edit Router',
+				newTitle: 'Create Router',
 			},
 			dashboard: {
 				title: 'Dashboard',
