@@ -46,6 +46,7 @@ export default function RouterDetailsScreen() {
 					padding: 0,
 					overflow: 'hidden',
 					marginBottom: 20,
+					height: 'auto',
 					marginHorizontal: 20,
 				}}
 			>
@@ -80,7 +81,7 @@ export default function RouterDetailsScreen() {
 					style={{
 						width: '100%',
 						paddingHorizontal: 20,
-						paddingTop: 10,
+						paddingVertical: 10,
 					}}
 				>
 					<ThemedInput
@@ -135,6 +136,7 @@ export default function RouterDetailsScreen() {
 						darkColor={Colors.dark.background}
 						placeholder={translations[language].categories.dashboard.routerType}
 						value={netRouter?.type}
+						label={translations[language].categories.routers.routerType}
 						setValue={(value) =>
 							setNetRouter(
 								(prev) =>
@@ -144,7 +146,7 @@ export default function RouterDetailsScreen() {
 									}
 							)
 						}
-						options={['Type 1', 'Type 2', 'Type 3']}
+						options={['Mikrotik', 'TpLink', 'LinkSys', 'Cisco']}
 					/>
 				</ThemedView>
 			</TileContainer>

@@ -5,9 +5,11 @@ import {
 	Animated as Reanimated,
 	StyleSheet,
 	Text,
+	TextStyle,
 	TouchableHighlight,
 	TouchableOpacity,
 	useAnimatedValue,
+	useColorScheme,
 	View,
 	type ViewProps,
 	ViewStyle,
@@ -16,10 +18,13 @@ import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedRef } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
+import { fontWeight } from '@/constants/Font';
 import { useGeneral } from '@/context/GeneralContext';
 import { delay } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import AnimContainer from './AnimContainer';
+import { ThemedText } from './ThemedText';
 
 export type ThemedDropdownProps = ViewProps & {
 	containerRef: Ref<View>;
@@ -32,6 +37,8 @@ export type ThemedDropdownProps = ViewProps & {
 	selectedValues?: string[];
 	showDropdown?: boolean;
 	delayTouch?: boolean;
+	label?: string;
+	labelStyle?: TextStyle;
 	setShowDropdown?: (v: boolean) => void;
 	multiselect?: boolean;
 	onSelect?: () => void;
@@ -59,6 +66,8 @@ export const ThemedDropdown = ({
 	multiselect,
 	placeholder,
 	dropDownStyle,
+	label,
+	labelStyle,
 	delayTouch,
 	onSelect,
 	id,
@@ -73,6 +82,7 @@ export const ThemedDropdown = ({
 	);
 	const { isAnimatable, keyboardVisible } = useGeneral();
 	const dropdownAnimVal = useAnimatedValue(0);
+	const colorScheme = useColorScheme() ?? 'light';
 	const scrollRef = useAnimatedRef<Animated.ScrollView>();
 	const setValDelay = useRef<NodeJS.Timeout | null>(null);
 
@@ -117,6 +127,22 @@ export const ThemedDropdown = ({
 				]}
 				{...otherProps}
 			>
+				{label && (
+					<ThemedText
+						lightColor={Colors.light.text}
+						darkColor={Colors.dark.text}
+						style={[
+							{
+								marginBottom: 8,
+								textAlign: 'left',
+								fontWeight: fontWeight['heading.two'],
+							},
+							labelStyle,
+						]}
+					>
+						{label}
+					</ThemedText>
+				)}
 				<TouchableOpacity
 					style={[
 						{
@@ -138,7 +164,16 @@ export const ThemedDropdown = ({
 					}}
 					activeOpacity={0.9}
 				>
-					<View style={[styles.valueContainer, {}]}>
+					<View
+						style={[
+							styles.valueContainer,
+							{
+								borderWidth: 2,
+								borderRadius: 5,
+								borderColor: Colors[colorScheme].inputBorder,
+							},
+						]}
+					>
 						{multiselect && !!selectedValues?.filter(Boolean)?.length ? (
 							<Text
 								allowFontScaling={false}
@@ -413,9 +448,7 @@ const styles = StyleSheet.create({
 	valueContainer: {
 		flexDirection: 'row',
 		justifyContent: 'space-between',
-		backgroundColor: '#2C414F26',
 		padding: 15,
-		borderRadius: 5,
 		position: 'relative',
 		zIndex: 5,
 	},

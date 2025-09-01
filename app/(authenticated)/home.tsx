@@ -74,90 +74,87 @@ export default function HomeScreen() {
 			setMonthlyPurchasesTotal(0);
 			return;
 		}
-		// Calculate the total of today's purchases
+
 		const today = new Date();
-		const todayPurchases = purchases.filter((purchase) => {
-			const purchaseDate = new Date(purchase.date);
-			return (
-				purchaseDate.getDate() === today.getDate() &&
-				purchaseDate.getMonth() === today.getMonth() &&
-				purchaseDate.getFullYear() === today.getFullYear()
-			);
-		});
-		const dailyTotal = todayPurchases.reduce(
-			(acc, purchase) => acc + purchase.amount,
-			0
-		);
-		// calculate the total of this week's purchases
-		const startOfWeek = new Date(today);
-		startOfWeek.setDate(today.getDate() - today.getDay()); // Set to the start of the week (Sunday)
-		const weekPurchases = purchases.filter((purchase) => {
-			const purchaseDate = new Date(purchase.date).getDate();
-			return (
-				purchaseDate >= startOfWeek.getDate() && purchaseDate <= today.getDate()
-			);
-		});
-		const sortedWeekPurchases = weekPurchases.sort((a, b) => {
-			return new Date(a.date).getTime() - new Date(b.date).getTime();
-		});
-		const lastSevenDates = Array.from({ length: 7 }, (_, i) => {
-			const date = new Date();
-			date.setDate(date.getDate() - i);
-			return date;
-		}).reverse();
-		const weekPurchasesPerDayTemp: dayPurchase[] = [];
-		lastSevenDates.forEach((date) => {
-			const key = date;
-			const purchase = sortedWeekPurchases.find((p, k) => {
-				return (
-					new Date(p.date).toLocaleDateString() === key.toLocaleDateString()
-				);
-			});
-			if (!purchase) {
-				weekPurchasesPerDayTemp.push({
-					date: new Date(key),
-					day: new Date(key).toLocaleDateString('en-US', {
-						weekday: 'long',
-					}),
-					amount: 0,
-				});
-				return;
-			}
-			const existing = weekPurchasesPerDayTemp.find(
-				(p) => p.date.getDate() === key.getDate()
-			);
-			if (existing) {
-				existing.amount += purchase.amount;
-			} else {
-				weekPurchasesPerDayTemp.push({
-					date: purchase?.date as Date,
-					day: new Date(purchase?.date).toLocaleDateString('en-US', {
-						weekday: 'long',
-					}),
-					amount: purchase?.amount as number,
-				});
-			}
-		});
-		setLastSevenDaysPurchases(weekPurchasesPerDayTemp);
-		const weekTotal = weekPurchases.reduce(
-			(acc, purchase) => acc + purchase.amount,
-			0
-		);
-		// calculate the total of this month's purchases
+		// Normalize today boundaries
+		const startOfToday = new Date(today);
+		startOfToday.setHours(0, 0, 0, 0);
+		const endOfToday = new Date(today);
+		endOfToday.setHours(23, 59, 59, 999);
+
+		// Start of week (Sunday). Change logic if week should start on Monday.
+		const startOfWeek = new Date(startOfToday);
+		startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+		startOfWeek.setHours(0, 0, 0, 0);
+
+		// Start of month
 		const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-		const monthPurchases = purchases.filter((purchase) => {
-			const purchaseDate = new Date(purchase.date);
-			return purchaseDate >= startOfMonth && purchaseDate <= today;
+		startOfMonth.setHours(0, 0, 0, 0);
+
+		// Helper to parse purchase date
+		const toDate = (d: Date | string) => {
+			const dt = new Date(d);
+			return dt;
+		};
+
+		// Daily total (range compare)
+		const dailyTotal = purchases
+			.filter((purchase) => {
+				const pd = toDate(purchase.date);
+				return pd >= startOfToday && pd <= endOfToday;
+			})
+			.reduce((acc, p) => acc + p.amount, 0);
+
+		// Weekly purchases (full date compare includes month/year)
+		const weekPurchases = purchases.filter((purchase) => {
+			const pd = toDate(purchase.date);
+			return pd >= startOfWeek && pd <= endOfToday;
 		});
-		const monthTotal = monthPurchases.reduce(
-			(acc, purchase) => acc + purchase.amount,
-			0
-		);
-		// Get the last five transactions
+
+		// Build last 7 days array (midnight timestamps) and aggregate per day
+		const lastSevenDates = Array.from({ length: 7 }, (_, i) => {
+			const d = new Date(startOfToday);
+			d.setDate(d.getDate() - (6 - i)); // oldest first
+			d.setHours(0, 0, 0, 0);
+			return d;
+		});
+
+		const weekPurchasesPerDayTemp: dayPurchase[] = lastSevenDates.map((day) => {
+			const dayStart = new Date(day);
+			const dayEnd = new Date(day);
+			dayEnd.setHours(23, 59, 59, 999);
+
+			const amount = weekPurchases
+				.filter((p) => {
+					const pd = toDate(p.date);
+					return pd >= dayStart && pd <= dayEnd;
+				})
+				.reduce((acc, p) => acc + p.amount, 0);
+
+			return {
+				date: new Date(day),
+				day: new Date(day).toLocaleDateString('en-US', { weekday: 'long' }),
+				amount,
+			};
+		});
+
+		// Monthly total (range compare)
+		const monthTotal = purchases
+			.filter((purchase) => {
+				const pd = toDate(purchase.date);
+				return pd >= startOfMonth && pd <= endOfToday;
+			})
+			.reduce((acc, p) => acc + p.amount, 0);
+
+		// Last five transactions (most recent)
 		const sortedPurchases = [...purchases].sort((a, b) => {
 			return new Date(b.date).getTime() - new Date(a.date).getTime();
 		});
 		setLastFiveTransactions(sortedPurchases.slice(0, 5));
+
+		// Set state
+		const weekTotal = weekPurchases.reduce((acc, p) => acc + p.amount, 0);
+		setLastSevenDaysPurchases(weekPurchasesPerDayTemp);
 		setWeeklyPurchasesTotal(weekTotal);
 		setMonthlyPurchasesTotal(monthTotal);
 		setDailyPurchasesTotal(dailyTotal);
@@ -170,30 +167,41 @@ export default function HomeScreen() {
 			setMonthlyVoucherUsersTotal(0);
 			return;
 		}
-		// Calculate the total of today's voucher users
+
+		// Normalize today range
 		const today = new Date();
+		const startOfToday = new Date(today);
+		startOfToday.setHours(0, 0, 0, 0);
+		const endOfToday = new Date(today);
+		endOfToday.setHours(23, 59, 59, 999);
+
+		// Start of week (Sunday). Adjust as needed if week starts on Monday:
+		const startOfWeek = new Date(startOfToday);
+		startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Sunday
+		startOfWeek.setHours(0, 0, 0, 0);
+
+		// Start of month
+		const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+		startOfMonth.setHours(0, 0, 0, 0);
+
+		// Today's voucher users (range compare)
 		const todayVoucherUsers = voucherUsers.filter((user) => {
 			const userDate = new Date(user.createdAt);
-			return (
-				userDate.getDate() === today.getDate() &&
-				userDate.getMonth() === today.getMonth() &&
-				userDate.getFullYear() === today.getFullYear()
-			);
+			return userDate >= startOfToday && userDate <= endOfToday;
 		});
 		const dailyTotal = todayVoucherUsers.length;
-		// calculate the total of this week's voucher users
-		const startOfWeek = new Date(today);
-		startOfWeek.setDate(today.getDate() - today.getDay()); // Set to the start of the week (Sunday)
+
+		// This week's voucher users (full date compare includes month/year)
 		const weekVoucherUsers = voucherUsers.filter((user) => {
-			const userDate = new Date(user.createdAt).getDate();
-			return userDate >= startOfWeek.getDate() && userDate <= today.getDate();
+			const userDate = new Date(user.createdAt);
+			return userDate >= startOfWeek && userDate <= endOfToday;
 		});
 		const weekTotal = weekVoucherUsers.length;
-		// calculate the total of this month's voucher users
-		const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+		// This month's voucher users
 		const monthVoucherUsers = voucherUsers.filter((user) => {
-			const userDate = new Date(user.createdAt).getDate();
-			return userDate >= startOfMonth.getDate() && userDate <= today.getDate();
+			const userDate = new Date(user.createdAt);
+			return userDate >= startOfMonth && userDate <= endOfToday;
 		});
 		const monthTotal = monthVoucherUsers.length;
 

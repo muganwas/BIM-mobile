@@ -61,6 +61,7 @@ const translations: Translations = {
 				title: 'Routers',
 				editTitle: 'Edit Router',
 				newTitle: 'Create Router',
+				routerType: 'Router Type',
 			},
 			dashboard: {
 				title: 'Dashboard',
