@@ -32,7 +32,8 @@ export default function DashboardTile({
 
 const styles = StyleSheet.create({
 	container: {
-		flexDirection: 'row',
+		flexDirection: 'column',
+		alignSelf: 'stretch',
 		alignItems: 'flex-start',
 		justifyContent: 'flex-start',
 		padding: 12,

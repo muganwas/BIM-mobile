@@ -93,7 +93,7 @@ export function ThemedInput({
 					display: secureTextEntry ? 'flex' : 'none',
 					position: 'absolute',
 					right: 10,
-					top: 15,
+					top: label ? '50%' : 15,
 					zIndex: 1,
 					backgroundColor: 'transparent',
 				}}

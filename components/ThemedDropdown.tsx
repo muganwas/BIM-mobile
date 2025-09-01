@@ -116,7 +116,6 @@ export const ThemedDropdown = ({
 					{
 						position: 'relative',
 						flexDirection: 'column',
-						height: 51,
 						overflow: 'visible',
 					},
 					style,
@@ -154,7 +153,7 @@ export const ThemedDropdown = ({
 						if (!active) return;
 						if (keyboardVisible) {
 							Keyboard.dismiss();
-							isAnimatable && (await delay(200));
+							isAnimatable && (await delay(50));
 						}
 						if (!!onSelect) {
 							onSelect();
@@ -208,6 +207,11 @@ export const ThemedDropdown = ({
 						position: 'absolute',
 						display: dropdownVisible ? 'flex' : 'none',
 						transformOrigin: 'top',
+						shadowColor: '#000',
+						shadowOffset: { width: 0, height: 2 },
+						shadowOpacity: 0.1,
+						shadowRadius: 10,
+						elevation: 6,
 						zIndex: 400,
 					}}
 					animStyle={{
@@ -294,13 +298,13 @@ export const ThemedDropdown = ({
 											if (isScrolling) return; // Prevent action while scrolling
 											if (keyboardVisible) {
 												Keyboard.dismiss();
-												isAnimatable && (await delay(200));
+												isAnimatable && (await delay(50));
 											}
-											setShowDropdown(!showDropdown);
 											setValDelay.current && clearTimeout(setValDelay.current);
-											setValDelay.current = setTimeout(() => {
-												setValue(option);
-											}, 200); // Delay setting value to allow for smoother interaction
+											//setValDelay.current = setTimeout(() => {
+											setValue(option);
+											//}, 50); // Delay setting value to allow for smoother interaction
+											setShowDropdown(!showDropdown);
 										}}
 										onPressOut={() => {
 											if (isScrolling) return; // Prevent action while scrolling
@@ -352,7 +356,7 @@ export const ThemedDropdown = ({
 											if (isScrolling) return; // Prevent action while scrolling
 											if (keyboardVisible) {
 												Keyboard.dismiss();
-												isAnimatable && (await delay(200));
+												isAnimatable && (await delay(50));
 											}
 											setValue(option);
 										}}
@@ -428,7 +432,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'column',
 		position: 'absolute',
 		width: '100%',
-		top: 56,
+		top: 90,
 		maxHeight: 150,
 		backgroundColor: '#fff',
 		borderColor: 'transparent',

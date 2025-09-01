@@ -95,6 +95,7 @@ export default function ParallaxScrollView({
 
 const styles = StyleSheet.create({
 	container: {
+		flexDirection: 'column',
 		flex: 1,
 	},
 	header: {

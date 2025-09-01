@@ -28,6 +28,8 @@ export interface NetRouter {
 	model?: string; // Model of the router
 	location: string; // Location of the router
 	firmwareVersion?: string; // Firmware version of the router
+	username: string;
+	password: string;
 	createdAt?: Date;
 	updatedAt?: Date;
 }

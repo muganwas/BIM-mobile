@@ -1,4 +1,5 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedDropdown } from '@/components/ThemedDropdown';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
@@ -12,7 +13,9 @@ import { useTransaction } from '@/context/TransactionContext';
 import { NetRouter } from '@/types';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { useColorScheme, View } from 'react-native';
+import { Dimensions, useColorScheme, View } from 'react-native';
+
+const devHeight = Dimensions.get('window').height;
 
 export default function RouterDetailsScreen() {
 	const routerTypeRef = useRef<View | null>(null);
@@ -21,6 +24,9 @@ export default function RouterDetailsScreen() {
 	const { language } = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
+	const [selectedDropDown, setSelectedDropDown] = useState<
+		string | undefined
+	>();
 
 	useEffect(() => {
 		if (routerId && routers) {
@@ -29,13 +35,25 @@ export default function RouterDetailsScreen() {
 		}
 	}, [routerId, routers]);
 	// Router details screen implementation
+	const handleUpdateRouter = () => {
+		if (netRouter) {
+			// Update router logic here
+		}
+	};
+	const handleCancel = () => {
+		// Cancel logic here
+	};
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
 				light: Colors.light.background,
 				dark: Colors.dark.background,
 			}}
-			contentStyle={{ paddingHorizontal: 10 }}
+			contentStyle={{
+				paddingHorizontal: 10,
+				//height: devHeight,
+			}}
+			containerStyle={{ flex: 1 }}
 		>
 			<TileContainer
 				id={routerId || 'new-router'}
@@ -44,9 +62,8 @@ export default function RouterDetailsScreen() {
 					flexDirection: 'column',
 					boxSizing: 'border-box',
 					padding: 0,
-					overflow: 'hidden',
+					paddingBottom: 10,
 					marginBottom: 20,
-					height: 'auto',
 					marginHorizontal: 20,
 				}}
 			>
@@ -55,6 +72,8 @@ export default function RouterDetailsScreen() {
 						width: '100%',
 						padding: 10,
 						height: 80,
+						borderTopStartRadius: 8,
+						borderTopEndRadius: 8,
 						justifyContent: 'center',
 						alignItems: 'center',
 					}}
@@ -137,17 +156,131 @@ export default function RouterDetailsScreen() {
 						placeholder={translations[language].categories.dashboard.routerType}
 						value={netRouter?.type}
 						label={translations[language].categories.routers.routerType}
-						setValue={(value) =>
+						showDropdown={selectedDropDown === 'router-type'}
+						setShowDropdown={(v) =>
+							setSelectedDropDown(v ? 'router-type' : undefined)
+						}
+						multiselect={false}
+						onSelect={() =>
+							setSelectedDropDown((prev) =>
+								prev === 'router-type' ? undefined : 'router-type'
+							)
+						}
+						setValue={(value) => {
 							setNetRouter(
 								(prev) =>
 									prev && {
 										...prev,
 										type: value,
 									}
-							)
-						}
+							);
+						}}
+						style={{ marginBottom: 10 }}
 						options={['Mikrotik', 'TpLink', 'LinkSys', 'Cisco']}
 					/>
+					<ThemedInput
+						label={translations[language].categories.dashboard.ipAddress}
+						placeholder='eg. 10.0.0.1'
+						value={netRouter?.ip}
+						setValue={(value) =>
+							setNetRouter(
+								(prev) =>
+									prev && {
+										...prev,
+										ip: value,
+									}
+							)
+						}
+						labelStyle={{
+							fontWeight: fontWeight['heading.two'],
+						}}
+						style={{
+							backgroundColor: Colors[colorScheme].background,
+							borderWidth: 2,
+							borderColor: Colors[colorScheme].inputBorder,
+							marginBottom: 10,
+						}}
+					/>
+					<ThemedInput
+						label={translations[language].categories.dashboard.routerUsername}
+						placeholder='eg. admin'
+						value={netRouter?.username}
+						setValue={(value) =>
+							setNetRouter(
+								(prev) =>
+									prev && {
+										...prev,
+										ip: value,
+									}
+							)
+						}
+						labelStyle={{
+							fontWeight: fontWeight['heading.two'],
+						}}
+						style={{
+							backgroundColor: Colors[colorScheme].background,
+							borderWidth: 2,
+							borderColor: Colors[colorScheme].inputBorder,
+							marginBottom: 10,
+						}}
+					/>
+					<ThemedInput
+						label={translations[language].categories.dashboard.routerPassword}
+						placeholder='******'
+						value={netRouter?.password}
+						setValue={(value) =>
+							setNetRouter(
+								(prev) =>
+									prev && {
+										...prev,
+										ip: value,
+									}
+							)
+						}
+						labelStyle={{
+							fontWeight: fontWeight['heading.two'],
+						}}
+						secureTextEntry={true}
+						style={{
+							backgroundColor: Colors[colorScheme].background,
+							borderWidth: 2,
+							borderColor: Colors[colorScheme].inputBorder,
+							marginBottom: 10,
+						}}
+					/>
+					<ThemedView
+						style={{
+							flexDirection: 'row',
+							width: '100%',
+							gap: 10,
+							marginTop: 10,
+						}}
+						lightColor={Colors.light.background}
+						darkColor={Colors.dark.background}
+					>
+						<ThemedButton
+							title={translations[
+								language
+							].categories.buttons.updateRouter.toUpperCase()}
+							lightColor={Colors.light.bim}
+							darkColor={Colors.dark.bim}
+							darkTextColor={Colors.dark.white}
+							lightTextColor={Colors.light.white}
+							onPress={handleUpdateRouter}
+							style={{ flex: 2 }}
+						/>
+						<ThemedButton
+							title={translations[
+								language
+							].categories.buttons.cancel.toUpperCase()}
+							lightColor={Colors.light.secondaryButton}
+							darkColor={Colors.dark.secondaryButton}
+							darkTextColor={Colors.dark.white}
+							lightTextColor={Colors.light.white}
+							onPress={handleCancel}
+							style={{ flex: 1 }}
+						/>
+					</ThemedView>
 				</ThemedView>
 			</TileContainer>
 		</ParallaxScrollView>

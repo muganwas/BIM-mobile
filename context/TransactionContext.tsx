@@ -188,6 +188,8 @@ export const TransactionProvider = ({
 				id: item.id,
 				name: item.name,
 				location: item.loc,
+				username: 'John doe ' + index,
+				password: 'password' + index,
 			}));
 			setRouters(data);
 		} catch (error: any) {

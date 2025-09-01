@@ -78,6 +78,8 @@ const translations: Translations = {
 				type: 'Type',
 				reason: 'Reason',
 				routerName: 'Router Name',
+				routerUsername: 'Router Username',
+				routerPassword: 'Router Password',
 				routerBalances: 'Router Balances',
 				date: 'Date',
 				voucher: 'Voucher',
