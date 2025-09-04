@@ -18,6 +18,13 @@ export interface Transaction {
 	method: TransactionMethod; // Reference to the transaction method used
 }
 
+export interface PromptButton {
+	title: string;
+	color: string;
+	textColor: string;
+	action: () => void;
+}
+
 export interface NetRouter {
 	id?: string;
 	ip: string; // IP address of the router

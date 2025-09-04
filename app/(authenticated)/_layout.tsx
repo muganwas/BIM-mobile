@@ -152,6 +152,7 @@ export default function DrawerLayout() {
 						marginLeft: -10,
 					},
 					sceneStyle: {
+						zIndex: 1,
 						marginBottom: Platform.OS === 'android' ? 50 : 5,
 					},
 					drawerLabelStyle: {

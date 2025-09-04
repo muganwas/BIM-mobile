@@ -35,6 +35,11 @@ const translations: Translations = {
 				deleteRouter: 'Delete Router',
 				updateRouter: 'Update Router',
 				cancel: 'Cancel',
+				delete: 'Delete',
+				close: 'Close',
+				ok: 'OK',
+				apply: 'Apply',
+				save: 'Save',
 			},
 			navigation: {
 				home: 'Dashboard',
@@ -62,6 +67,8 @@ const translations: Translations = {
 				editTitle: 'Edit Router',
 				newTitle: 'Create Router',
 				routerType: 'Router Type',
+				deleteMessage:
+					'Are you sure you want to delete this router? This action cannot be undone.',
 			},
 			dashboard: {
 				title: 'Dashboard',
@@ -81,6 +88,8 @@ const translations: Translations = {
 				routerUsername: 'Router Username',
 				routerPassword: 'Router Password',
 				routerBalances: 'Router Balances',
+				confirmDeleteTitle: 'Confirm Delete',
+				routerNamePlaceholder: 'eg. Router 01',
 				date: 'Date',
 				voucher: 'Voucher',
 				package: 'Package',

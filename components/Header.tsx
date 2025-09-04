@@ -673,6 +673,7 @@ export default function Header() {
 
 const styles = StyleSheet.create({
 	container: {
+		position: 'relative',
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center', // Add this for vertical centering

@@ -13,9 +13,7 @@ import { useTransaction } from '@/context/TransactionContext';
 import { NetRouter } from '@/types';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Dimensions, useColorScheme, View } from 'react-native';
-
-const devHeight = Dimensions.get('window').height;
+import { useColorScheme, View } from 'react-native';
 
 export default function RouterDetailsScreen() {
 	const routerTypeRef = useRef<View | null>(null);
@@ -24,6 +22,7 @@ export default function RouterDetailsScreen() {
 	const { language } = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
+
 	const [selectedDropDown, setSelectedDropDown] = useState<
 		string | undefined
 	>();
@@ -34,6 +33,7 @@ export default function RouterDetailsScreen() {
 			setNetRouter(router);
 		}
 	}, [routerId, routers]);
+
 	// Router details screen implementation
 	const handleUpdateRouter = () => {
 		if (netRouter) {
