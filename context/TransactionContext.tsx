@@ -1,10 +1,6 @@
 import { packages as defaultPackages } from '@/constants';
-import {
-	generateRandomNumbers,
-	randomDateBetweenDaysAgo,
-	ShowAlert,
-	toLocalISOString,
-} from '@/helpers';
+import { ShowAlert } from '@/helpers';
+import * as factories from '@/helpers/factories';
 import {
 	Bank,
 	DocumentProps,
@@ -12,8 +8,6 @@ import {
 	MicroTransaction,
 	NetRouter,
 	Transaction,
-	TransactionMethod,
-	TransactionStatus,
 	User,
 	VoucherUser,
 } from '@/types';
@@ -117,20 +111,7 @@ export const TransactionProvider = ({
 		if (!user) return;
 		try {
 			// Fetch documents from the server
-			const data: DocumentProps[] = [
-				{
-					id: '1',
-					name: 'ID document',
-					type: 'pdf',
-					url: 'https://example.com/sample.pdf',
-				},
-				{
-					id: '2',
-					name: 'trading license',
-					type: 'pdf',
-					url: 'https://example.com/image.jpg',
-				},
-			];
+			const data = factories.generateDocuments(2);
 			setDocuments(data);
 		} catch (error: any) {
 			ShowAlert(`Failed to fetch documents: ${error.message}`, 'Error');
@@ -141,22 +122,7 @@ export const TransactionProvider = ({
 		if (!user) return;
 		try {
 			// Fetch banks from the server
-			const data: Bank[] = [
-				{
-					id: '1',
-					name: 'Bank of Example',
-					accountNumber: '1234567890',
-					accountHolderName: 'John Doe',
-					SWIFTCode: 'BOEX1234',
-				},
-				{
-					id: '2',
-					name: 'Example Savings Bank',
-					accountNumber: '0987654321',
-					accountHolderName: 'Jane Doe',
-					SWIFTCode: 'ESB1234',
-				},
-			];
+			const data = factories.generateBanks(2);
 			setBanks(data);
 		} catch (error: any) {
 			ShowAlert(`Failed to fetch banks: ${error.message}`, 'Error');
@@ -166,31 +132,7 @@ export const TransactionProvider = ({
 	const fetchRouters = async (user: User | null) => {
 		if (!user) return;
 		try {
-			// Fetch routers from the server
-			const location = [
-				{ id: 'Kisa-1', name: 'Kisa Hostel', loc: 'UCU Mukono' },
-				{
-					id: 'Najjeera-1',
-					name: 'Ares Gaming Hub',
-					loc: 'Mbogo road, Najjeera II',
-				},
-				{
-					id: 'Bugujju-1',
-					name: 'Bugujju Electronics',
-					loc: 'Turker Road, Bugujju',
-				},
-			];
-			const data: NetRouter[] = location.map((item, index) => ({
-				ip: `192.168.5.${index + 1}`,
-				mac: `00:1A:2B:3C:4D:${index + 1}`,
-				type: 'Mikrotik',
-				transactionBalance: Math.floor(Math.random() * 1000000) + 10000,
-				id: item.id,
-				name: item.name,
-				location: item.loc,
-				username: 'John doe ' + index,
-				password: 'password' + index,
-			}));
+			const data = factories.generateNetRouters(3);
 			setRouters(data);
 		} catch (error: any) {
 			ShowAlert(`Failed to fetch routers: ${error.message}`, 'Error');
@@ -201,7 +143,12 @@ export const TransactionProvider = ({
 		if (!user) return;
 		try {
 			// Fetch internet packages from the server
-			setPackages(defaultPackages);
+			// Use project's default packages by default but allow factories to generate if needed
+			setPackages(
+				defaultPackages.length
+					? defaultPackages
+					: factories.generateInternetPackages()
+			);
 		} catch (error: any) {
 			ShowAlert(`Failed to fetch internet packages: ${error.message}`, 'Error');
 		}
@@ -210,47 +157,12 @@ export const TransactionProvider = ({
 	const fetchPurchases = async (user: User | null) => {
 		if (!user) return;
 		try {
-			const statuses: TransactionStatus[] = ['completed', 'pending', 'failed'];
-			const routerNames = ['Kisa-1', 'Najjeera-1', 'Bugujju-1'];
-			const methods: TransactionMethod[] = Array(10)
-				.fill(null)
-				.map((_, index) => ({
-					type: index % 2 === 0 ? 'mobile-money' : 'bank-transfer',
-					name: index % 2 === 0 ? 'Mobile Payment' : 'Bank Transfer',
-					phoneNumber: index % 2 === 0 ? generateRandomNumbers(10) : undefined,
-					accountNumber:
-						index % 2 === 0 ? undefined : generateRandomNumbers(10),
-				}));
-			// Fetch micro transactions from the server
-			const data: MicroTransaction[] = Array(20)
-				.fill(null)
-				.map((_, index) => ({
-					id: generateRandomNumbers(10),
-					amount: Math.floor(Math.random() * 10000) + 1000,
-					date: randomDateBetweenDaysAgo(6),
-					status: statuses[index % statuses.length],
-					reason: 'wifi',
-					routerName: routerNames[index % routerNames.length],
-					method: methods[index % methods.length],
-				}));
-			// Fetch voucher users from the server
-			const vocherUsers: VoucherUser[] = [];
-
-			data.forEach((data) => {
-				vocherUsers.push({
-					voucherCode: generateRandomNumbers(6),
-					package:
-						defaultPackages[Math.floor(Math.random() * defaultPackages.length)]
-							.tag,
-					status: 'active',
-					macAddress: `00:1A:2B:3C:4D:${data.id}`,
-					uptime: Math.floor(Math.random() * 1000),
-					bytesIn: Math.floor(Math.random() * 1000000),
-					bytesOut: Math.floor(Math.random() * 1000000),
-					comment: toLocalISOString(data.date) + '-' + data.id,
-					createdAt: data.date.toDateString(),
-				});
-			});
+			// Generate purchases and related voucher users using factories
+			const data = factories.generateMicroTransactions(20);
+			const vocherUsers = factories.generateVoucherUsersFromPurchases(
+				data,
+				defaultPackages
+			);
 			setVoucherUsers(vocherUsers);
 			setPurchases(data);
 		} catch (error: any) {

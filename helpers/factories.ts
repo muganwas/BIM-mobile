@@ -1,0 +1,214 @@
+import {
+	generateRandomNumbers,
+	randomDateBetweenDaysAgo,
+	toLocalISOString,
+} from '@/helpers';
+import {
+	Bank,
+	DocumentProps,
+	InternetPackage,
+	MicroTransaction,
+	NetRouter,
+	TransactionMethod,
+	TransactionStatus,
+	VoucherUser,
+} from '@/types';
+
+function randomInt(min: number, max: number) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const packageNames: InternetPackage['name'][] = [
+	'short',
+	'daily',
+	'weekly',
+	'monthly',
+];
+
+export function generateNetRouter(
+	overrides: Partial<NetRouter> = {}
+): NetRouter {
+	const idx = randomInt(1, 254);
+	const id = overrides.id ?? `R-${generateRandomNumbers(6)}`;
+	const name = overrides.name ?? `Router ${id}`;
+	const location = overrides.location ?? `Location ${randomInt(1, 10)}`;
+	const networkInfo = overrides.networkInfo ?? {
+		mac: `00:1A:2B:3C:4D:${String(idx).padStart(2, '0')}`,
+		ipv4: `192.168.${randomInt(0, 255)}.${idx}`,
+		ipv6: `::ffff:192.168.${randomInt(0, 255)}.${idx}`,
+		hostname: `router-${id}.local`,
+	};
+
+	return {
+		id,
+		name,
+		type: overrides.type ?? 'Mikrotik',
+		networkInfo,
+		hardwareInfo: overrides.hardwareInfo ?? {},
+		transactionBalance:
+			overrides.transactionBalance ?? randomInt(10000, 1000000),
+		model: overrides.model,
+		location,
+		firmwareVersion: overrides.firmwareVersion,
+		username: overrides.username ?? `admin-${String(id).slice(-4)}`,
+		password: overrides.password ?? `pass${generateRandomNumbers(4)}`,
+		createdAt: overrides.createdAt,
+		updatedAt: overrides.updatedAt,
+	};
+}
+
+export function generateNetRouters(count = 3, overrides?: Partial<NetRouter>) {
+	return Array.from({ length: count }, () => generateNetRouter(overrides));
+}
+
+export function generateTransactionMethod(
+	overrides: Partial<TransactionMethod> = {}
+): TransactionMethod {
+	const isMobile = Math.random() > 0.5;
+	return {
+		id: overrides.id,
+		name: overrides.name ?? (isMobile ? 'Mobile Payment' : 'Bank Transfer'),
+		type: overrides.type ?? (isMobile ? 'mobile-money' : 'bank-transfer'),
+		phoneNumber:
+			overrides.phoneNumber ??
+			(isMobile ? generateRandomNumbers(10) : undefined),
+		accountNumber:
+			overrides.accountNumber ??
+			(!isMobile ? generateRandomNumbers(10) : undefined),
+		cardNumber: overrides.cardNumber,
+		accountHolderName: overrides.accountHolderName,
+		csv: overrides.csv,
+		expiryDate: overrides.expiryDate,
+		createdAt: overrides.createdAt,
+		updatedAt: overrides.updatedAt,
+	};
+}
+
+export function generateMicroTransaction(
+	overrides: Partial<MicroTransaction> = {}
+): MicroTransaction {
+	const date = overrides.date ?? randomDateBetweenDaysAgo(6);
+	const statuses: TransactionStatus[] = ['completed', 'pending', 'failed'];
+	return {
+		id: overrides.id ?? generateRandomNumbers(10),
+		amount: overrides.amount ?? randomInt(1000, 20000),
+		status: overrides.status ?? statuses[randomInt(0, statuses.length - 1)],
+		routerName: overrides.routerName ?? `Router-${generateRandomNumbers(3)}`,
+		date,
+		reason: overrides.reason ?? 'wifi',
+		description: overrides.description,
+		method: overrides.method ?? generateTransactionMethod(),
+	} as MicroTransaction;
+}
+
+export function generateMicroTransactions(count = 10) {
+	return Array.from({ length: count }, () => generateMicroTransaction());
+}
+
+export function generateVoucherUserFromPurchase(
+	p: MicroTransaction,
+	packages: InternetPackage[] = []
+): VoucherUser {
+	const pkg = packages.length
+		? packages[randomInt(0, packages.length - 1)].tag
+		: 'short';
+	return {
+		voucherCode: generateRandomNumbers(6),
+		package: pkg,
+		status: 'active',
+		macAddress: `00:1A:2B:3C:4D:${p.id.slice(0, 2)}`,
+		uptime: randomInt(0, 5000),
+		bytesIn: randomInt(0, 1000000),
+		bytesOut: randomInt(0, 1000000),
+		comment: `${toLocalISOString(p.date)}-${p.id}`,
+		createdAt: p.date.toDateString(),
+	};
+}
+
+export function generateVoucherUsersFromPurchases(
+	purchases: MicroTransaction[],
+	packages: InternetPackage[] = []
+) {
+	return purchases.map((p) => generateVoucherUserFromPurchase(p, packages));
+}
+
+export function generateBank(overrides: Partial<Bank> = {}): Bank {
+	const id = overrides.id ?? generateRandomNumbers(6);
+	return {
+		id,
+		name: overrides.name ?? `Bank ${id}`,
+		accountNumber: overrides.accountNumber ?? generateRandomNumbers(10),
+		accountHolderName: overrides.accountHolderName ?? 'John Doe',
+		SWIFTCode: overrides.SWIFTCode,
+		currency: overrides.currency ?? 'UGX',
+		branch: overrides.branch,
+		createdAt: overrides.createdAt,
+		updatedAt: overrides.updatedAt,
+	};
+}
+
+export function generateBanks(count = 2) {
+	return Array.from({ length: count }, () => generateBank());
+}
+
+export function generateDocument(
+	overrides: Partial<DocumentProps> = {}
+): DocumentProps {
+	const id = overrides.id ?? generateRandomNumbers(6);
+	return {
+		id,
+		name: overrides.name ?? `Document ${id}`,
+		type: overrides.type ?? 'pdf',
+		url: overrides.url ?? `https://example.com/doc-${id}.pdf`,
+		createdAt: overrides.createdAt,
+		updatedAt: overrides.updatedAt,
+	};
+}
+
+export function generateDocuments(count = 2) {
+	return Array.from({ length: count }, () => generateDocument());
+}
+
+export function generateInternetPackage(
+	overrides: Partial<InternetPackage> = {}
+): InternetPackage {
+	const id = overrides.id ?? generateRandomNumbers(6);
+	const name =
+		overrides.name ?? packageNames[randomInt(0, packageNames.length - 1)];
+	return {
+		id,
+		tag: overrides.tag ?? `pkg-${id}`,
+		name,
+		price: overrides.price ?? randomInt(100, 5000),
+		duration:
+			overrides.duration ??
+			(name === 'short'
+				? 1
+				: name === 'daily'
+				? 24
+				: name === 'weekly'
+				? 168
+				: 720),
+		createdAt: overrides.createdAt,
+		updatedAt: overrides.updatedAt,
+	};
+}
+
+export function generateInternetPackages(count = 4) {
+	return Array.from({ length: count }, () => generateInternetPackage());
+}
+
+export default {
+	generateNetRouter,
+	generateNetRouters,
+	generateMicroTransaction,
+	generateMicroTransactions,
+	generateVoucherUserFromPurchase,
+	generateVoucherUsersFromPurchases,
+	generateBank,
+	generateBanks,
+	generateDocument,
+	generateDocuments,
+	generateInternetPackage,
+	generateInternetPackages,
+};
