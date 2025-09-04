@@ -36,27 +36,27 @@ export interface Hotspot {
 export interface NetworkInfo {
 	mac: string;
 	ipv4: string;
-	ipv6?: string;
-	hostname?: string;
-	routerHash?: string;
-	uptime?: string;
-	hotspots?: Hotspot[];
+	ipv6: string;
+	hostname: string;
+	routerHash: string;
+	uptime: string;
+	hotspots: Hotspot[];
 }
 
 export interface HardWareInfo {
-	cpuFrequency?: string;
-	cpuLoad?: string;
-	totalMemory?: string;
-	freeMemory?: string;
-	storage?: string;
-	routerOsVersion?: string;
-	firmwareVersion?: string;
+	cpuFrequency: string;
+	cpuLoad: string;
+	totalMemory: string;
+	freeMemory: string;
+	storage: string;
+	routerOsVersion: string;
+	firmwareVersion: string;
 	model?: string;
 }
 
 export interface NetRouter {
-	id?: string;
-	name?: string; // Name of the router
+	id: string;
+	name: string; // Name of the router
 	type: string;
 	networkInfo: NetworkInfo;
 	hardwareInfo: HardWareInfo;

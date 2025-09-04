@@ -6,6 +6,7 @@ import {
 import {
 	Bank,
 	DocumentProps,
+	HardWareInfo,
 	InternetPackage,
 	MicroTransaction,
 	NetRouter,
@@ -37,14 +38,40 @@ export function generateNetRouter(
 		ipv4: `192.168.${randomInt(0, 255)}.${idx}`,
 		ipv6: `::ffff:192.168.${randomInt(0, 255)}.${idx}`,
 		hostname: `router-${id}.local`,
+		routerHash: `hash-${generateRandomNumbers(8)}`,
+		uptime: `${randomInt(0, 999999)}`,
+		hotspots: Array.from({ length: randomInt(0, 2) }).map((_, hIdx) => ({
+			id: `${id}-hs-${hIdx + 1}`,
+			ssid: `SSID-${generateRandomNumbers(4)}`,
+			interface: `wlan${hIdx}`,
+			profile: `default-profile-${hIdx + 1}`,
+			status: Math.random() > 0.5 ? 'enabled' : 'disabled',
+		})),
 	};
+	const hwOverrides = (overrides.hardwareInfo || {}) as Partial<HardWareInfo>;
 
 	return {
 		id,
 		name,
 		type: overrides.type ?? 'Mikrotik',
 		networkInfo,
-		hardwareInfo: overrides.hardwareInfo ?? {},
+		hardwareInfo: overrides.hardwareInfo ?? {
+			cpuFrequency: hwOverrides.cpuFrequency ?? `${randomInt(800, 2400)}MHz`,
+			cpuLoad: hwOverrides.cpuLoad ?? `${randomInt(1, 100)}%`,
+			totalMemory: hwOverrides.totalMemory ?? `${randomInt(128, 2048)}MB`,
+			freeMemory: hwOverrides.freeMemory ?? `${randomInt(64, 1024)}MB`,
+			storage: hwOverrides.storage ?? `${randomInt(1, 128)}GB`,
+			routerOsVersion:
+				hwOverrides.routerOsVersion ??
+				`RouterOS ${randomInt(6, 7)}.${randomInt(0, 99)}`,
+			firmwareVersion:
+				hwOverrides.firmwareVersion ??
+				`v${randomInt(1, 9)}.${randomInt(0, 9)}.${randomInt(0, 99)}`,
+			model:
+				hwOverrides.model ??
+				overrides.model ??
+				`Model-${generateRandomNumbers(3)}`,
+		},
 		transactionBalance:
 			overrides.transactionBalance ?? randomInt(10000, 1000000),
 		model: overrides.model,
