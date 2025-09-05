@@ -1,5 +1,7 @@
 import {
+	generateRandomInt,
 	generateRandomNumbers,
+	generateRandomString,
 	randomDateBetweenDaysAgo,
 	toLocalISOString,
 } from '@/helpers';
@@ -15,10 +17,6 @@ import {
 	VoucherUser,
 } from '@/types';
 
-function randomInt(min: number, max: number) {
-	return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 const packageNames: InternetPackage['name'][] = [
 	'short',
 	'daily',
@@ -29,24 +27,26 @@ const packageNames: InternetPackage['name'][] = [
 export function generateNetRouter(
 	overrides: Partial<NetRouter> = {}
 ): NetRouter {
-	const idx = randomInt(1, 254);
+	const idx = generateRandomInt(1, 254);
 	const id = overrides.id ?? `R-${generateRandomNumbers(6)}`;
 	const name = overrides.name ?? `Router ${id}`;
-	const location = overrides.location ?? `Location ${randomInt(1, 10)}`;
+	const location = overrides.location ?? `Location ${generateRandomInt(1, 10)}`;
 	const networkInfo = overrides.networkInfo ?? {
 		mac: `00:1A:2B:3C:4D:${String(idx).padStart(2, '0')}`,
-		ipv4: `192.168.${randomInt(0, 255)}.${idx}`,
-		ipv6: `::ffff:192.168.${randomInt(0, 255)}.${idx}`,
+		ipv4: `192.168.${generateRandomInt(0, 255)}.${idx}`,
+		ipv6: `::ffff:192.168.${generateRandomInt(0, 255)}.${idx}`,
 		hostname: `router-${id}.local`,
-		routerHash: `hash-${generateRandomNumbers(8)}`,
-		uptime: `${randomInt(0, 999999)}`,
-		hotspots: Array.from({ length: randomInt(0, 2) }).map((_, hIdx) => ({
-			id: `${id}-hs-${hIdx + 1}`,
-			ssid: `SSID-${generateRandomNumbers(4)}`,
-			interface: `wlan${hIdx}`,
-			profile: `default-profile-${hIdx + 1}`,
-			status: Math.random() > 0.5 ? 'enabled' : 'disabled',
-		})),
+		routerHash: generateRandomString(24),
+		uptime: `${generateRandomInt(0, 999999)}`,
+		hotspots: Array.from({ length: generateRandomInt(0, 2) }).map(
+			(_, hIdx) => ({
+				id: `${id}-hs-${hIdx + 1}`,
+				ssid: `SSID-${generateRandomNumbers(4)}`,
+				interface: `wlan${hIdx}`,
+				profile: `default-profile-${hIdx + 1}`,
+				status: Math.random() > 0.5 ? 'enabled' : 'disabled',
+			})
+		),
 	};
 	const hwOverrides = (overrides.hardwareInfo || {}) as Partial<HardWareInfo>;
 
@@ -56,24 +56,29 @@ export function generateNetRouter(
 		type: overrides.type ?? 'Mikrotik',
 		networkInfo,
 		hardwareInfo: overrides.hardwareInfo ?? {
-			cpuFrequency: hwOverrides.cpuFrequency ?? `${randomInt(800, 2400)}MHz`,
-			cpuLoad: hwOverrides.cpuLoad ?? `${randomInt(1, 100)}%`,
-			totalMemory: hwOverrides.totalMemory ?? `${randomInt(128, 2048)}MB`,
-			freeMemory: hwOverrides.freeMemory ?? `${randomInt(64, 1024)}MB`,
-			storage: hwOverrides.storage ?? `${randomInt(1, 128)}GB`,
+			cpuFrequency:
+				hwOverrides.cpuFrequency ?? `${generateRandomInt(800, 2400)} MHz`,
+			cpuLoad: hwOverrides.cpuLoad ?? `${generateRandomInt(1, 100)}%`,
+			totalMemory:
+				hwOverrides.totalMemory ?? `${generateRandomInt(128, 2048)} MB`,
+			freeMemory: hwOverrides.freeMemory ?? `${generateRandomInt(64, 1024)} MB`,
+			storage: hwOverrides.storage ?? `${generateRandomInt(1, 128)} GB`,
 			routerOsVersion:
 				hwOverrides.routerOsVersion ??
-				`RouterOS ${randomInt(6, 7)}.${randomInt(0, 99)}`,
+				`RouterOS ${generateRandomInt(6, 7)}.${generateRandomInt(0, 99)}`,
 			firmwareVersion:
 				hwOverrides.firmwareVersion ??
-				`v${randomInt(1, 9)}.${randomInt(0, 9)}.${randomInt(0, 99)}`,
+				`v${generateRandomInt(1, 9)}.${generateRandomInt(
+					0,
+					9
+				)}.${generateRandomInt(0, 99)}`,
 			model:
 				hwOverrides.model ??
 				overrides.model ??
 				`Model-${generateRandomNumbers(3)}`,
 		},
 		transactionBalance:
-			overrides.transactionBalance ?? randomInt(10000, 1000000),
+			overrides.transactionBalance ?? generateRandomInt(10000, 1000000),
 		model: overrides.model,
 		location,
 		firmwareVersion: overrides.firmwareVersion,
@@ -118,8 +123,9 @@ export function generateMicroTransaction(
 	const statuses: TransactionStatus[] = ['completed', 'pending', 'failed'];
 	return {
 		id: overrides.id ?? generateRandomNumbers(10),
-		amount: overrides.amount ?? randomInt(1000, 20000),
-		status: overrides.status ?? statuses[randomInt(0, statuses.length - 1)],
+		amount: overrides.amount ?? generateRandomInt(1000, 20000),
+		status:
+			overrides.status ?? statuses[generateRandomInt(0, statuses.length - 1)],
 		routerName: overrides.routerName ?? `Router-${generateRandomNumbers(3)}`,
 		date,
 		reason: overrides.reason ?? 'wifi',
@@ -137,16 +143,16 @@ export function generateVoucherUserFromPurchase(
 	packages: InternetPackage[] = []
 ): VoucherUser {
 	const pkg = packages.length
-		? packages[randomInt(0, packages.length - 1)].tag
+		? packages[generateRandomInt(0, packages.length - 1)].tag
 		: 'short';
 	return {
 		voucherCode: generateRandomNumbers(6),
 		package: pkg,
 		status: 'active',
 		macAddress: `00:1A:2B:3C:4D:${p.id.slice(0, 2)}`,
-		uptime: randomInt(0, 5000),
-		bytesIn: randomInt(0, 1000000),
-		bytesOut: randomInt(0, 1000000),
+		uptime: generateRandomInt(0, 5000),
+		bytesIn: generateRandomInt(0, 1000000),
+		bytesOut: generateRandomInt(0, 1000000),
 		comment: `${toLocalISOString(p.date)}-${p.id}`,
 		createdAt: p.date.toDateString(),
 	};
@@ -201,12 +207,13 @@ export function generateInternetPackage(
 ): InternetPackage {
 	const id = overrides.id ?? generateRandomNumbers(6);
 	const name =
-		overrides.name ?? packageNames[randomInt(0, packageNames.length - 1)];
+		overrides.name ??
+		packageNames[generateRandomInt(0, packageNames.length - 1)];
 	return {
 		id,
 		tag: overrides.tag ?? `pkg-${id}`,
 		name,
-		price: overrides.price ?? randomInt(100, 5000),
+		price: overrides.price ?? generateRandomInt(100, 5000),
 		duration:
 			overrides.duration ??
 			(name === 'short'

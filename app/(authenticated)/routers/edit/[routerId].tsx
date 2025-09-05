@@ -88,9 +88,7 @@ export default function RouterDetailsScreen() {
 							fontWeight: fontWeight['heading.one'],
 						}}
 					>
-						{routerId
-							? translations[language].categories.routers.editTitle
-							: translations[language].categories.routers.newTitle}
+						{translations[language].categories.routers.editTitle}
 					</ThemedText>
 				</ThemedView>
 				<ThemedView
@@ -181,7 +179,7 @@ export default function RouterDetailsScreen() {
 					<ThemedInput
 						label={translations[language].categories.dashboard.ipAddress}
 						placeholder='eg. 10.0.0.1'
-						value={netRouter?.ip}
+						value={netRouter?.networkInfo.ipv4}
 						setValue={(value) =>
 							setNetRouter(
 								(prev) =>

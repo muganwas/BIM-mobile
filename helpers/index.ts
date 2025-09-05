@@ -81,6 +81,21 @@ export function generateRandomNumbers(length: number): string {
 	return result;
 }
 
+export function generateRandomString(length: number): string {
+	let result = '';
+	const characters =
+		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	const charactersLength = characters.length;
+	for (let i = 0; i < length; i++) {
+		result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	}
+	return result;
+}
+
+export function generateRandomInt(min: number, max: number) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 export function randomDateBetweenDaysAgo(daysAgo = 6): Date {
 	const now = new Date();
 	const start = new Date();
@@ -112,6 +127,28 @@ export function formatMMDD(date: Date) {
 	const m = String(date.getMonth() + 1).padStart(2, '0');
 	const d = String(date.getDate()).padStart(2, '0');
 	return `${m}-${d}`;
+}
+
+/**
+ * Convert milliseconds to a compact HhMmSs string. Examples:
+ * 19812000 -> "5h30m12s"
+ * 180000 -> "3m0s"
+ * 5000 -> "5s"
+ */
+export function msToHms(milliseconds: number): string {
+	if (!Number.isFinite(milliseconds) || milliseconds <= 0) return '0s';
+	const totalSeconds = Math.floor(milliseconds / 1000);
+	const hours = Math.floor(totalSeconds / 3600);
+	const minutes = Math.floor((totalSeconds % 3600) / 60);
+	const seconds = totalSeconds % 60;
+
+	const parts: string[] = [];
+	if (hours > 0) parts.push(`${hours}h`);
+	if (minutes > 0) parts.push(`${minutes}m`);
+	// Always show seconds (including 0) to have a deterministic string
+	parts.push(`${seconds}s`);
+
+	return parts.join('');
 }
 
 export function delay(ms: number): Promise<void> {

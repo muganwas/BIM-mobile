@@ -56,15 +56,16 @@ export default function RoutersScreen() {
 	};
 
 	const handleAddRouter = () => {
-		// Logic to add a new router
+		router.push('/routers/new');
 	};
 
 	const handleViewRouter = (routerId: string) => {
-		// Logic to view a specific router
+		if (!routerId) return;
+		router.push(`/routers/preview/${routerId}`);
 	};
 	const handleEditRouter = (routerId: string) => {
 		if (!routerId) return;
-		router.push(`/routers/${routerId}`);
+		router.push(`/routers/edit/${routerId}`);
 	};
 	const handleDeleteRouter = () => {
 		// Delete router logic here
@@ -121,7 +122,7 @@ export default function RoutersScreen() {
 					/>
 				</ThemedView>
 				<TileContainer
-					id='router-balances'
+					id='router-list'
 					backgroundColor={Colors[colorScheme].background}
 					style={{
 						flexDirection: 'column',
@@ -323,7 +324,7 @@ export default function RoutersScreen() {
 											lightColor={Colors.light.text}
 											darkColor={Colors.dark.text}
 										>
-											{router.ip}
+											{router?.networkInfo.ipv4}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
