@@ -47,6 +47,7 @@ export default function Header({ goback, ...props }: HeaderProps) {
 		selectedOption,
 		setSelectedOption,
 		online,
+		handleGoBack,
 	} = useGeneral(); // Get user from context
 	const navigation = useNavigation<DrawerNavigationProp>();
 	const [searchValue, setSearchValue] = useState('');
@@ -58,7 +59,9 @@ export default function Header({ goback, ...props }: HeaderProps) {
 	const toggleDrawer = (back?: boolean) => {
 		setSelectedOption(undefined);
 		if (back) {
-			navigation.goBack();
+			// prefer app-level history navigation when available
+			if (handleGoBack) handleGoBack();
+			else navigation.goBack();
 		} else {
 			navigation.toggleDrawer();
 		}

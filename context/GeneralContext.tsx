@@ -31,6 +31,7 @@ export interface AuthContextType {
 	>;
 	history: string[]; // Optional, can be used for navigation history
 	handleUpdateHistory: (current: string) => void;
+	handleGoBack: () => void;
 	handleAuthentication: (credentials: {
 		number: string;
 		password: string;
@@ -113,9 +114,40 @@ export const GeneralProvider = ({
 
 	const handleUpdateHistory = (current: string) => {
 		setHistory((prev) => {
+			// avoid pushing duplicate consecutive entries
+			if (prev.length > 0 && prev[prev.length - 1] === current) return prev;
 			const newHistory = [...prev, current];
-			if (newHistory.length > 10) {
+			if (newHistory.length > 50) {
 				newHistory.shift(); // Keep the history length manageable
+			}
+			return newHistory;
+		});
+	};
+
+	const handleGoBack = () => {
+		setHistory((prev) => {
+			if (prev.length <= 1) {
+				// nothing to go back to; fallback to router.back() if available
+				try {
+					router.back?.();
+				} catch (e: any) {
+					console.log('Error during router.back():', e);
+					// last resort: replace to root
+					router.replace('/');
+				}
+				return prev;
+			}
+
+			// last element is current, previous is the one we want to navigate to
+			const newHistory = [...prev];
+			newHistory.pop(); // remove current
+			const previous = newHistory.pop();
+			if (previous) {
+				// navigate to previous
+				(router.push as any)(previous);
+			} else {
+				if (router.back) router.back();
+				else router.replace('/');
 			}
 			return newHistory;
 		});
@@ -188,6 +220,7 @@ export const GeneralProvider = ({
 				language,
 				history,
 				handleUpdateHistory,
+				handleGoBack,
 				isAnimatable,
 				isHighEndDevice,
 				setLanguage,
