@@ -9,17 +9,26 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { msToHms } from '@/helpers';
 import { NetRouter } from '@/types';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function RouterDetailsScreen() {
+	const navigation = useNavigation<any>();
 	const { routerId } = useLocalSearchParams() as { routerId?: string };
 	const { routers } = useTransaction();
 	const { language } = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
+
+	useEffect(() => {
+		navigation.setOptions({
+			headerProps: {
+				goback: true,
+			},
+		});
+	}, [navigation]);
 
 	useEffect(() => {
 		if (routerId && routers) {

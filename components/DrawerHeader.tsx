@@ -1,8 +1,6 @@
 import { Colors } from '@/constants/Colors';
-import {
-	DrawerNavigationProp,
-	useDrawerStatus,
-} from '@react-navigation/drawer';
+// @ts-ignore - some versions of @react-navigation/drawer may or may not export useDrawerStatus types
+import { useDrawerStatus } from '@react-navigation/drawer';
 import { useEffect } from 'react';
 import {
 	Animated,
@@ -12,11 +10,13 @@ import {
 } from 'react-native';
 import { ThemedView } from './ThemedView';
 import { IconSymbol } from './ui/IconSymbol';
+// avoid importing fragile navigation types/hooks from @react-navigation/drawer which can vary by version
+type DrawerNavigationProp = any;
 
 export default function Header({
 	navigation,
 }: {
-	navigation: DrawerNavigationProp<any>;
+	navigation: DrawerNavigationProp;
 }) {
 	const arrowAnimValue = useAnimatedValue(0);
 	const drawerStatus = useDrawerStatus();

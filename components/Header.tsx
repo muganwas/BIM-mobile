@@ -3,7 +3,6 @@ import { fontSize } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { langCode } from '@/types';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -24,7 +23,14 @@ import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 import { IconSymbol } from './ui/IconSymbol';
 
-export default function Header() {
+// avoid importing navigation types from @react-navigation/drawer which can vary by version
+type DrawerHeaderProps = any;
+type DrawerNavigationProp = any;
+
+export type HeaderProps = DrawerHeaderProps & {
+	goback?: boolean;
+};
+export default function Header({ goback, ...props }: HeaderProps) {
 	const colorScheme = useColorScheme() ?? 'light';
 	const router = useRouter();
 	const profileAnimValue = useAnimatedValue(0);
@@ -42,16 +48,20 @@ export default function Header() {
 		setSelectedOption,
 		online,
 	} = useGeneral(); // Get user from context
-	const navigation = useNavigation<DrawerNavigationProp<any>>();
+	const navigation = useNavigation<DrawerNavigationProp>();
 	const [searchValue, setSearchValue] = useState('');
 	const [showSearchInput, setShowSearchInput] = useState(false);
 	const [showLanguageSelection, setShowLanguageSelection] = useState(false);
 	const [showNotifications, setShowNotifications] = useState(false);
 	const [showProfile, setShowProfile] = useState(false);
 
-	const toggleDrawer = () => {
+	const toggleDrawer = (back?: boolean) => {
 		setSelectedOption(undefined);
-		navigation.toggleDrawer();
+		if (back) {
+			navigation.goBack();
+		} else {
+			navigation.toggleDrawer();
+		}
 	};
 
 	const toggleLanguageSelection = useCallback(
@@ -195,9 +205,9 @@ export default function Header() {
 					flex: 1,
 				}}
 			>
-				<TouchableOpacity onPress={toggleDrawer}>
+				<TouchableOpacity onPress={() => toggleDrawer(goback)}>
 					<IconSymbol
-						name='menu'
+						name={goback ? 'chevron.left' : 'menu'}
 						size={24}
 						color={Colors[colorScheme].text}
 						style={{ marginRight: 10 }}

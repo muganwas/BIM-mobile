@@ -7,16 +7,16 @@ import React, { useEffect } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 
 export default function VouchersScreen() {
-	const { voucherUsers, fetchVoucherUsers } = useTransaction();
+	const { voucherUsers, fetchPurchases } = useTransaction();
 	const { user } = useGeneral();
 
 	useEffect(() => {
 		if (user && voucherUsers.length === 0) {
 			(async () => {
-				await fetchVoucherUsers(user);
+				await fetchPurchases(user);
 			})();
 		}
-	}, [user, voucherUsers, fetchVoucherUsers]);
+	}, [user, voucherUsers, fetchPurchases]);
 
 	return (
 		<ThemedView
@@ -26,7 +26,7 @@ export default function VouchersScreen() {
 		>
 			<FlatList
 				data={voucherUsers}
-				keyExtractor={(item) => item.name?.toString() ?? ''}
+				keyExtractor={(item) => item.voucherCode?.toString() ?? ''}
 				renderItem={({ item }) => (
 					<ThemedView
 						lightColor={Colors.light.background}
@@ -37,7 +37,7 @@ export default function VouchersScreen() {
 							lightColor={Colors.light.text}
 							darkColor={Colors.dark.text}
 						>
-							{item.name}
+							{item.voucherCode}
 						</ThemedText>
 						<ThemedText
 							lightColor={Colors.light.text}

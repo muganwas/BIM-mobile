@@ -34,6 +34,7 @@ const MAPPING: IconMapping = {
 	'paperplane.fill': { type: 'ionicon', name: 'send' },
 	'chevron.left.forwardslash.chevron.right': { type: 'material', name: 'code' },
 	'chevron.right': { type: 'ionicon', name: 'chevron-forward' },
+	'chevron.left': { type: 'ionicon', name: 'chevron-back' },
 	'search.outline': { type: 'ionicon', name: 'search-outline' },
 	'notifications.outline': { type: 'material-community', name: 'bell-outline' },
 	'notifications.outline.badge': {

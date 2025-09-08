@@ -1,5 +1,9 @@
 import { Drawer } from 'expo-router/drawer';
 import React from 'react';
+// avoid importing fragile navigation types from @react-navigation/drawer which can differ by version
+// allow importing DrawerContentScrollView at runtime; suppress type errors if the package's types differ
+// @ts-ignore
+import { DrawerContentScrollView } from '@react-navigation/drawer';
 
 import DrawerHeader from '@/components/DrawerHeader';
 import Header from '@/components/Header';
@@ -12,7 +16,7 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { TransactionProvider } from '@/context/TransactionContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { DrawerContentScrollView } from '@react-navigation/drawer';
+// use a runtime require to access DrawerContentScrollView to avoid missing type exports
 import { Platform, TouchableOpacity, View } from 'react-native';
 
 function CustomDrawerContent(props: any) {
@@ -135,14 +139,19 @@ export default function DrawerLayout() {
 	return (
 		<TransactionProvider>
 			<Drawer
-				drawerContent={(props) => <CustomDrawerContent {...props} />}
+				drawerContent={(props: any) => <CustomDrawerContent {...props} />}
 				screenOptions={{
 					headerShown: true,
 					drawerActiveTintColor: Colors[colorScheme].drawerItem,
 					drawerInactiveTintColor: Colors[colorScheme].drawerInactiveItem,
 					drawerActiveBackgroundColor:
 						Colors[colorScheme].drawerActiveBackground,
-					header: () => <Header />,
+					header: (props: any) => {
+						// allow screens to pass a custom goback via options.headerProps?.goback
+						// fallback to the navigation back object when available
+						const goback = props.options?.headerProps?.goback ?? !!props.back;
+						return <Header {...props} goback={goback} />;
+					},
 					drawerStyle: {
 						backgroundColor: Colors[colorScheme].drawerBackground,
 					},
@@ -163,94 +172,125 @@ export default function DrawerLayout() {
 			>
 				<Drawer.Screen
 					name='home'
-					options={{
-						title: translations[language].categories.navigation['home'],
-						drawerIcon: ({ color }: { color: string }) => (
-							<IconSymbol size={24} name='home.outline' color={color} />
-						),
-					}}
+					options={
+						{
+							title: translations[language].categories.navigation['home'],
+							headerProps: { goback: false },
+							drawerIcon: ({ color }: { color: string }) => (
+								<IconSymbol size={24} name='home.outline' color={color} />
+							),
+						} as any
+					}
 				/>
 				<Drawer.Screen
 					name='routers'
-					options={{
-						title: translations[language].categories.navigation['routers'],
-						drawerIcon: ({ color }: { color: string }) => (
-							<IconSymbol size={24} name='routers.outline' color={color} />
-						),
-					}}
+					options={
+						{
+							title: translations[language].categories.navigation['routers'],
+							headerProps: { goback: false },
+							drawerIcon: ({ color }: { color: string }) => (
+								<IconSymbol size={24} name='routers.outline' color={color} />
+							),
+						} as any
+					}
 				/>
 				<Drawer.Screen
 					name='packages'
-					options={{
-						title: translations[language].categories.navigation['packages'],
-						drawerIcon: ({ color }: { color: string }) => (
-							<IconSymbol size={24} name='packages' color={color} />
-						),
-					}}
+					options={
+						{
+							title: translations[language].categories.navigation['packages'],
+							headerProps: { goback: false },
+							drawerIcon: ({ color }: { color: string }) => (
+								<IconSymbol size={24} name='packages' color={color} />
+							),
+						} as any
+					}
 				/>
 				<Drawer.Screen
 					name='vouchers'
-					options={{
-						title: translations[language].categories.navigation['vouchers'],
-						drawerIcon: ({ color }: { color: string }) => (
-							<IconSymbol size={24} name='vouchers' color={color} />
-						),
-					}}
+					options={
+						{
+							title: translations[language].categories.navigation['vouchers'],
+							headerProps: { goback: false },
+							drawerIcon: ({ color }: { color: string }) => (
+								<IconSymbol size={24} name='vouchers' color={color} />
+							),
+						} as any
+					}
 				/>
 				<Drawer.Screen
 					name='transactions'
-					options={{
-						title: translations[language].categories.navigation['transactions'],
-						drawerIcon: ({ color }: { color: string }) => (
-							<IconSymbol size={24} name='transactions' color={color} />
-						),
-					}}
+					options={
+						{
+							title:
+								translations[language].categories.navigation['transactions'],
+							headerProps: { goback: false },
+							drawerIcon: ({ color }: { color: string }) => (
+								<IconSymbol size={24} name='transactions' color={color} />
+							),
+						} as any
+					}
 				/>
 				<Drawer.Screen
 					name='withdraw'
-					options={{
-						title: translations[language].categories.navigation['withdraw'],
-						drawerIcon: ({ color }: { color: string }) => (
-							<IconSymbol size={24} name='withdrawal' color={color} />
-						),
-					}}
+					options={
+						{
+							title: translations[language].categories.navigation['withdraw'],
+							headerProps: { goback: false },
+							drawerIcon: ({ color }: { color: string }) => (
+								<IconSymbol size={24} name='withdrawal' color={color} />
+							),
+						} as any
+					}
 				/>
 				<Drawer.Screen
 					name='banks'
-					options={{
-						title: translations[language].categories.navigation['banks'],
-						drawerIcon: ({ color }: { color: string }) => (
-							<IconSymbol size={24} name='bank' color={color} />
-						),
-					}}
+					options={
+						{
+							title: translations[language].categories.navigation['banks'],
+							headerProps: { goback: false },
+							drawerIcon: ({ color }: { color: string }) => (
+								<IconSymbol size={24} name='bank' color={color} />
+							),
+						} as any
+					}
 				/>
 				<Drawer.Screen
 					name='documents'
-					options={{
-						title: translations[language].categories.navigation['documents'],
-						drawerIcon: ({ color }: { color: string }) => (
-							<IconSymbol size={24} name='documents' color={color} />
-						),
-					}}
+					options={
+						{
+							title: translations[language].categories.navigation['documents'],
+							headerProps: { goback: false },
+							drawerIcon: ({ color }: { color: string }) => (
+								<IconSymbol size={24} name='documents' color={color} />
+							),
+						} as any
+					}
 				/>
 				<Drawer.Screen
 					name='profile'
-					options={{
-						title: translations[language].categories.navigation['profile'],
-						drawerItemStyle: {
-							display: 'none',
-						},
-					}}
+					options={
+						{
+							title: translations[language].categories.navigation['profile'],
+							headerProps: { goback: false },
+							drawerItemStyle: {
+								display: 'none',
+							},
+						} as any
+					}
 				/>
 				<Drawer.Screen
 					name='notifications'
-					options={{
-						title:
-							translations[language].categories.navigation['notifications'],
-						drawerItemStyle: {
-							display: 'none',
-						},
-					}}
+					options={
+						{
+							title:
+								translations[language].categories.navigation['notifications'],
+							headerProps: { goback: false },
+							drawerItemStyle: {
+								display: 'none',
+							},
+						} as any
+					}
 				/>
 				{/* Add more drawer screens as needed */}
 			</Drawer>
