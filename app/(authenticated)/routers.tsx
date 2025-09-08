@@ -24,7 +24,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 export default function RoutersScreen() {
 	const colorScheme = useColorScheme() ?? 'light';
 	const router = useRouter();
-	const { routers, fetchRouters } = useTransaction();
+	const { routers, setRouters, fetchRouters } = useTransaction();
 	const promptFadeAnim = useAnimatedValue(0);
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [activeRouter, setActiveRouter] = useState<string | undefined>();
@@ -70,6 +70,10 @@ export default function RoutersScreen() {
 	const handleDeleteRouter = () => {
 		// Delete router logic here
 		console.log('Deleting router with ID:', activeRouter);
+		//update state
+		const updatedRouters = routers.filter((r) => r.id !== activeRouter);
+		// Assuming there's a method in the context to update routers
+		setRouters(updatedRouters);
 		toggleShowPrompt(false);
 	};
 
@@ -365,10 +369,11 @@ export default function RoutersScreen() {
 											</TouchableOpacity>
 											<TouchableOpacity
 												onPress={() => {
-													const router: NetRouter | undefined = routers.find(
+													const r: NetRouter | undefined = routers.find(
 														(r) => r.id === router?.id
 													);
-													if (router) setActiveRouter(router.id);
+													if (!r) return;
+													setActiveRouter(r.id);
 													toggleShowPrompt(true);
 												}}
 											>
