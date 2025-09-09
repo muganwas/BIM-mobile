@@ -3,10 +3,12 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import React, { useEffect } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 
 export default function BanksScreen() {
+	useTrackHistory('/(authenticated)/banks');
 	const { banks, fetchBanks } = useTransaction();
 	const { user } = useGeneral();
 

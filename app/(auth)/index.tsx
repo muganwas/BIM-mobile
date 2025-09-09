@@ -12,6 +12,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
 import { verifyToken } from '@/helpers/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -29,6 +30,8 @@ import {
 const devWidth = Dimensions.get('window').width;
 
 export default function RegisterScreen() {
+	// track register screen
+	useTrackHistory('/(auth)/index');
 	const router = useRouter();
 	const navigation = useNavigation();
 	// timeout ref

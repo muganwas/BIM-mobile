@@ -111,7 +111,7 @@ export function IconSymbol({
 	const iconConfig = MAPPING[name];
 
 	if (!iconConfig) {
-		console.warn(`Icon "${name}" not found in MAPPING`);
+		// Missing mapping: fall back to a generic icon without logging to console
 		return (
 			<MaterialIcons color={color} size={size} name='help' style={style} />
 		);

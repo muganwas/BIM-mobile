@@ -9,9 +9,10 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import { NetRouter } from '@/types';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
 	Animated,
 	StyleSheet,
@@ -29,6 +30,21 @@ export default function RoutersScreen() {
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [activeRouter, setActiveRouter] = useState<string | undefined>();
 	const { user, language } = useGeneral();
+
+	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
+	const routerListDetailsId = useRef(
+		`router-list-details-${Math.random().toString(36).slice(2)}`
+	);
+
+	const routerListId = useRef(
+		`router-list-${Math.random().toString(36).slice(2)}`
+	);
+	const routerListHeaderId = useRef(
+		`router-list-header-${Math.random().toString(36).slice(2)}`
+	);
+
+	// explicitly track this page in app history
+	useTrackHistory('/(authenticated)/routers');
 
 	useEffect(() => {
 		if (user && routers.length === 0) {
@@ -69,7 +85,6 @@ export default function RoutersScreen() {
 	};
 	const handleDeleteRouter = () => {
 		// Delete router logic here
-		console.log('Deleting router with ID:', activeRouter);
 		//update state
 		const updatedRouters = routers.filter((r) => r.id !== activeRouter);
 		// Assuming there's a method in the context to update routers
@@ -126,7 +141,7 @@ export default function RoutersScreen() {
 					/>
 				</ThemedView>
 				<TileContainer
-					id='router-list'
+					id={routerListId.current}
 					backgroundColor={Colors[colorScheme].background}
 					style={{
 						flexDirection: 'column',
@@ -145,7 +160,7 @@ export default function RoutersScreen() {
 							darkColor={Colors.dark.background}
 						>
 							<ThemedView
-								id='router-list-header'
+								id={routerListHeaderId.current}
 								style={{
 									flexDirection: 'row',
 									justifyContent: 'space-between',
@@ -251,7 +266,7 @@ export default function RoutersScreen() {
 								</ThemedText>
 							</ThemedView>
 							<ScrollView
-								id='router-list-details'
+								id={routerListDetailsId.current}
 								style={{
 									flexDirection: 'column',
 									backgroundColor: Colors[colorScheme].background,

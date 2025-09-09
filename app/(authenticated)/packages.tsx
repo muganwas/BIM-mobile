@@ -7,14 +7,28 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
-import React, { useEffect } from 'react';
+import useTrackHistory from '@/hooks/useTrackHistory';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackagesScreen() {
+	useTrackHistory('/(authenticated)/packages');
 	const colorScheme = useColorScheme() ?? 'light';
 	const { packages, fetchPackages, routers } = useTransaction();
 	const { user, language } = useGeneral();
+
+	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
+	const packageRouterListDetailsId = useRef(
+		`package-router-list-details-${Math.random().toString(36).slice(2)}`
+	);
+
+	const packageRouterListId = useRef(
+		`package-router-list-${Math.random().toString(36).slice(2)}`
+	);
+	const packageRouterListHeaderId = useRef(
+		`package-router-list-header-${Math.random().toString(36).slice(2)}`
+	);
 
 	useEffect(() => {
 		if (user && packages.length === 0) {
@@ -48,7 +62,7 @@ export default function PackagesScreen() {
 				</ThemedText>
 			</ThemedView>
 			<TileContainer
-				id='package-router-list'
+				id={packageRouterListId.current}
 				backgroundColor={Colors[colorScheme].background}
 				style={{
 					flexDirection: 'column',
@@ -67,7 +81,7 @@ export default function PackagesScreen() {
 						darkColor={Colors.dark.background}
 					>
 						<ThemedView
-							id='package-router-list-header'
+							id={packageRouterListHeaderId.current}
 							style={{
 								flexDirection: 'row',
 								justifyContent: 'space-between',
@@ -173,7 +187,7 @@ export default function PackagesScreen() {
 							</ThemedText>
 						</ThemedView>
 						<ScrollView
-							id='package-router-list-details'
+							id={packageRouterListDetailsId.current}
 							style={{
 								flexDirection: 'column',
 								backgroundColor: Colors[colorScheme].background,

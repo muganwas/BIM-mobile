@@ -6,11 +6,13 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import React, { useEffect } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function TransactionsScreen() {
+	useTrackHistory('/(authenticated)/transactions');
 	const colorScheme = useColorScheme() ?? 'light';
 	const { purchases, fetchPurchases } = useTransaction();
 	const { user, language } = useGeneral();

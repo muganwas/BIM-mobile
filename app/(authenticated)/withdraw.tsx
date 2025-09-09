@@ -1,9 +1,11 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import { StyleSheet } from 'react-native';
 
 export default function WithdrawScreen() {
+	useTrackHistory('/(authenticated)/withdraw');
 	return (
 		<ThemedView
 			lightColor={Colors.light.background}

@@ -3,10 +3,13 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import React, { useEffect } from 'react';
 import { FlatList, Linking, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function DocumentsScreen() {
+	// explicitly track documents page
+	useTrackHistory('/(authenticated)/documents');
 	const { documents, fetchDocuments } = useTransaction();
 	const { user } = useGeneral();
 

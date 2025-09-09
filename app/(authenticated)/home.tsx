@@ -17,6 +17,7 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { formatMMDD, translateWithVariables } from '@/helpers';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import { dayPurchase, MicroTransaction, VoucherUser } from '@/types';
 import { useEffect, useState } from 'react';
 import { BarChart } from 'react-native-chart-kit';
@@ -24,6 +25,9 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 export default function HomeScreen() {
 	const { setSelectedOption, language } = useGeneral();
+
+	// explicitly track home page
+	useTrackHistory('/(authenticated)/home');
 	const width = Dimensions.get('window').width;
 	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
 	const { purchases, voucherUsers, routers } = useTransaction();
@@ -48,9 +52,32 @@ export default function HomeScreen() {
 
 	useEffect(() => {
 		if (purchases && routers) {
+			// Helper to normalize strings for tolerant matching between generated
+			// purchases and routers. Factories may produce slightly different
+			// formats (e.g. purchase.routerName vs router.id vs router.name), so
+			// compare multiple normalized variants.
+			const normalize = (s?: string) =>
+				(s ?? '')
+					.toString()
+					.toLowerCase()
+					.replace(/[^a-z0-9]/g, '');
 			const purchasesMap: Record<string, number> = {};
 			purchases.forEach((purchase) => {
-				const router = routers.find((r) => r.id === purchase.routerName);
+				const target = normalize(purchase.routerName);
+				const router = routers.find((r) => {
+					if (!r) return false;
+					const idN = normalize(r.id);
+					const nameN = normalize(r.name);
+					// Exact id or name match, or fuzzy containment match
+					return (
+						idN === target ||
+						nameN === target ||
+						idN.includes(target) ||
+						nameN.includes(target) ||
+						target.includes(idN) ||
+						target.includes(nameN)
+					);
+				});
 				if (router) {
 					const key = `${router.name}_${router.location}`;
 					purchasesMap[key] = (purchasesMap[key] || 0) + purchase.amount;

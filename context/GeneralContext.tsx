@@ -3,7 +3,12 @@ import { User as UserProps, langCode, notifications } from '@/types';
 import { useNetInfo } from '@react-native-community/netinfo';
 import * as DeviceInfo from 'expo-device';
 import { Router, useRouter } from 'expo-router';
-import React, { createContext, useContext, useEffect } from 'react';
+import React, {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+} from 'react';
 import { Keyboard, Platform } from 'react-native';
 
 // Define the type for the context
@@ -112,46 +117,154 @@ export const GeneralProvider = ({
 		mounted && check();
 	}, [netInfo, mounted]);
 
-	const handleUpdateHistory = (current: string) => {
+	const handleUpdateHistory = useCallback((current: string) => {
+		// Helper: normalize a path by replacing likely id segments with a placeholder
+		const normalizePath = (p: string) => {
+			try {
+				// strip query/hash
+				const stripped = p.split('?')[0].split('#')[0];
+				const parts = stripped.split('/').filter(Boolean);
+				const normalized = parts
+					.map((seg) => {
+						// treat numeric-only or long hex/uuid-like segments as ids
+						if (/^\d+$/.test(seg)) return ':id';
+						if (/^[0-9a-fA-F-]{8,}$/.test(seg)) return ':id';
+						return seg;
+					})
+					.join('/');
+				return '/' + normalized;
+			} catch {
+				return p;
+			}
+		};
+
 		setHistory((prev) => {
-			// avoid pushing duplicate consecutive entries
+			// avoid pushing exact duplicate consecutive entries
 			if (prev.length > 0 && prev[prev.length - 1] === current) return prev;
+
+			// if last entry has the same skeleton (route shape) as current,
+			// replace the last entry instead of pushing a new one. This prevents
+			// dynamic-route parameter swaps from creating two near-duplicate entries
+			// which previously caused the back handler to skip one route.
+			if (prev.length > 0) {
+				const last = prev[prev.length - 1];
+				if (normalizePath(last) === normalizePath(current)) {
+					const newHistory = [...prev];
+					newHistory[newHistory.length - 1] = current; // update to newest paramized path
+					return newHistory;
+				}
+			}
+
 			const newHistory = [...prev, current];
 			if (newHistory.length > 50) {
 				newHistory.shift(); // Keep the history length manageable
 			}
 			return newHistory;
 		});
-	};
+	}, []);
 
-	const handleGoBack = () => {
+	const handleGoBack = useCallback(() => {
 		setHistory((prev) => {
 			if (prev.length <= 1) {
-				// nothing to go back to; fallback to router.back() if available
 				try {
 					router.back?.();
-				} catch (e: any) {
-					console.log('Error during router.back():', e);
-					// last resort: replace to root
-					router.replace('/');
+				} catch {
+					(router.replace as unknown as (p: string) => void)('/');
 				}
 				return prev;
 			}
 
-			// last element is current, previous is the one we want to navigate to
+			// Build a small normalizer (mirror of handleUpdateHistory's logic)
+			const normalizePath = (p: string) => {
+				try {
+					const stripped = p.split('?')[0].split('#')[0];
+					const parts = stripped.split('/').filter(Boolean);
+					const normalized = parts
+						.map((seg) => {
+							if (/^\d+$/.test(seg)) return ':id';
+							if (/^[0-9a-fA-F-]{8,}$/.test(seg)) return ':id';
+							return seg;
+						})
+						.join('/');
+					return '/' + normalized;
+				} catch {
+					return p;
+				}
+			};
+
+			// Remove only the current entry initially
 			const newHistory = [...prev];
 			newHistory.pop(); // remove current
-			const previous = newHistory.pop();
-			if (previous) {
-				// navigate to previous
-				(router.push as any)(previous);
-			} else {
+			let previous = newHistory[newHistory.length - 1];
+
+			if (!previous) {
+				// no previous, fallback
 				if (router.back) router.back();
-				else router.replace('/');
+				else (router.replace as unknown as (p: string) => void)('/');
+				return newHistory;
 			}
-			return newHistory;
+
+			// If the previous entry is a short-lived duplicate caused by ordering
+			// (pattern like: A, B, A where current was the trailing A), try to
+			// find the nearest earlier entry whose normalized skeleton differs from
+			// `previous` and navigate there instead.
+			let targetIndex = newHistory.length - 2; // start one before `previous`
+			const prevSkeleton = normalizePath(previous);
+			while (
+				targetIndex >= 0 &&
+				normalizePath(newHistory[targetIndex]) === prevSkeleton
+			) {
+				targetIndex--;
+			}
+
+			let targetPath: string;
+			let resultingHistory: string[];
+			if (targetIndex >= 0) {
+				// We found an earlier differing entry; choose it and trim history to it
+				targetPath = newHistory[targetIndex];
+				resultingHistory = newHistory.slice(0, targetIndex + 1);
+			} else {
+				// No earlier differing entry; navigate to `previous` (the last remaining)
+				targetPath = previous;
+				resultingHistory = newHistory;
+			}
+
+			try {
+				navigateToPath(router, targetPath);
+			} catch {
+				if (router.back) {
+					try {
+						router.back();
+					} catch {
+						(router.replace as unknown as (p: string) => void)(targetPath);
+					}
+				} else {
+					(router.replace as unknown as (p: string) => void)(targetPath);
+				}
+			}
+
+			return resultingHistory;
 		});
-	};
+	}, [router]);
+
+	// Helper to navigate to a string path while keeping typing localized.
+	function navigateToPath(router: Router, path: string) {
+		// Router types in expo-router may be strict; cast once here to allow simple string paths
+		try {
+			// prefer replace when navigating to a previous path to avoid stacking routes
+			try {
+				(router.replace as unknown as (p: string) => void)(path);
+				return;
+			} catch {
+				// fall back to push if replace isn't available on this router instance
+				(router.push as unknown as (p: string) => void)(path);
+				return;
+			}
+		} catch {
+			// fallback: replace
+			router.replace(path as any);
+		}
+	}
 
 	const handleAuthentication = async ({
 		number,

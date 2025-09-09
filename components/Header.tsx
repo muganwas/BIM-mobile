@@ -361,7 +361,9 @@ export default function Header({ goback, ...props }: HeaderProps) {
 					showsVerticalScrollIndicator={true}
 					nestedScrollEnabled={true}
 					scrollEnabled={true}
-					onScroll={() => console.log('scrolling')}
+					onScroll={() => {
+						/* intentional no-op to suppress noisy logs */
+					}}
 				>
 					{Object.entries(translations).map(([key, value]) => (
 						<TouchableOpacity

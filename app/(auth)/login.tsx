@@ -10,6 +10,7 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -28,6 +29,7 @@ import {
 const devWidth = Dimensions.get('window').width;
 
 export default function LoginsScreen() {
+	useTrackHistory('/(auth)/login');
 	const router = useRouter();
 	const navigation = useNavigation();
 	// timeout ref

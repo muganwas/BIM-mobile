@@ -8,15 +8,39 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { msToHms } from '@/helpers';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import { NetRouter } from '@/types';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function RouterDetailsScreen() {
 	const navigation = useNavigation<any>();
 	const { routerId } = useLocalSearchParams() as { routerId?: string };
+
+	// ensure this dynamic preview page explicitly records both its parent and itself
+	const { history, handleUpdateHistory } = useGeneral();
+
+	// call the tracking hook at top-level (rules of hooks)
+	useTrackHistory(
+		routerId
+			? `/(authenticated)/routers/preview/${routerId}`
+			: '/(authenticated)/routers/preview'
+	);
+
+	useLayoutEffect(() => {
+		// if the last entry isn't the parent routers list, pre-seed it so back goes there
+		// useLayoutEffect guarantees this runs before other effects that push the preview entry
+		const parent = '/(authenticated)/routers';
+		if (
+			!history ||
+			history.length === 0 ||
+			history[history.length - 1] !== parent
+		) {
+			handleUpdateHistory(parent);
+		}
+	}, [history, handleUpdateHistory]);
 	const { routers } = useTransaction();
 	const { language } = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light';

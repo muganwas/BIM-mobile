@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { GeneralProvider, useGeneral } from '@/context/GeneralContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import { Animated, Text, useAnimatedValue } from 'react-native';
 
 SplashScreen.preventAutoHideAsync();
@@ -23,6 +24,9 @@ function RootLayoutContent() {
 	const [loaded] = useFonts({
 		SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
 	});
+
+	// record navigation history across the app
+	useTrackHistory();
 
 	useEffect(() => {
 		if (online)

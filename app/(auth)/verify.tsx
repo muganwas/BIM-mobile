@@ -7,6 +7,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -23,6 +24,7 @@ import {
 const devWidth = Dimensions.get('window').width;
 
 export default function VerifyTokenScreen() {
+	useTrackHistory('/(auth)/verify');
 	const colorScheme = useColorScheme() ?? 'light';
 	const router = useRouter();
 	// timeout ref

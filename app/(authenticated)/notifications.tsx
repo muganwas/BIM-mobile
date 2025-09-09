@@ -4,9 +4,12 @@ import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import useTrackHistory from '@/hooks/useTrackHistory';
+import React from 'react';
 import { StyleSheet } from 'react-native';
 
 export default function NotificationsScreen() {
+	useTrackHistory('/(authenticated)/notifications');
 	const { notifications, language } = useGeneral(); // Get notifications from context
 	return (
 		<ThemedView
