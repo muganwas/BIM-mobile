@@ -24,11 +24,22 @@ export const renderElement = async (node, el) =>
     new Promise((resolve) => {
         try {
             if (createRootImpl) {
-                const root = createRootImpl(el);
-                roots.set(el, root);
-                root.render(node);
-                resolve(null);
-                return;
+                const existing = roots.get(el);
+                if (existing && typeof existing.render === 'function') {
+                    existing.render(node);
+                    resolve(null);
+                    return;
+                }
+                try {
+                    const root = createRootImpl(el);
+                    roots.set(el, root);
+                    root.render(node);
+                    resolve(null);
+                    return;
+                } catch (_createErr) {
+                    // If createRoot fails because the container was already used,
+                    // fall back to the legacy render path below.
+                }
             }
             // As a last-resort fallback (older React), use the classic render.
             // Use bracket access so static linters don't flag direct identifiers as deprecated.
@@ -38,9 +49,18 @@ export const renderElement = async (node, el) =>
             import('react-dom/client')
                 .then((client) => {
                     if (client && typeof client.createRoot === 'function') {
-                        const root = client.createRoot(el);
-                        roots.set(el, root);
-                        root.render(node);
+                        const existing = roots.get(el);
+                        if (existing && typeof existing.render === 'function') {
+                            existing.render(node);
+                        } else {
+                            try {
+                                const root = client.createRoot(el);
+                                roots.set(el, root);
+                                root.render(node);
+                            } catch (_e2) {
+                                ReactDOM['render'](node, el, () => { });
+                            }
+                        }
                     } else {
                         ReactDOM['render'](node, el, () => { });
                     }
@@ -58,23 +78,24 @@ export const unmountElement = (el) => {
             return;
         }
         if (createRootImpl) {
-            // If createRoot is available but we don't have a stored root (maybe
-            // Storybook created it differently), attempt to create a temporary
-            // root and unmount it immediately.
-            try {
-                const tempRoot = createRootImpl(el);
-                if (tempRoot && typeof tempRoot.unmount === 'function') {
-                    tempRoot.unmount();
-                    return;
-                }
-            } catch (_err2) {
-                // ignore
+            const existing = roots.get(el);
+            if (existing && typeof existing.unmount === 'function') {
+                existing.unmount();
+                roots.delete(el);
+                return;
             }
+            // If we don't have an existing root, avoid creating a temporary root
+            // on a container that may already have one. Fall back to legacy
+            // unmountComponentAtNode where available, otherwise DOM cleanup.
         }
         // Fallback to legacy unmount if present (bracket access to avoid lint)
         if (ReactDOM && typeof ReactDOM['unmountComponentAtNode'] === 'function') {
-            ReactDOM['unmountComponentAtNode'](el);
-            return;
+            try {
+                ReactDOM['unmountComponentAtNode'](el);
+                return;
+            } catch (_e3) {
+                // if unmountComponentAtNode throws, fall through to cleanup
+            }
         }
         // Last resort: clear DOM
         while (el.firstChild) el.removeChild(el.firstChild);
