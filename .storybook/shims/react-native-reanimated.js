@@ -1,23 +1,23 @@
 // Minimal shim for react-native-reanimated used in web Storybook
-const React = require('react');
+import React from 'react';
 
 const noop = () => { };
 
-module.exports = {
-    // minimal named exports
-    useSharedValue: (v) => ({ value: v }),
-    useAnimatedStyle: (fn) => fn || (() => ({})),
-    withTiming: (v) => v,
-    runOnJS: (fn) => fn,
-    // default export to satisfy both import styles
-    default: {
-        useSharedValue: (v) => ({ value: v }),
-        useAnimatedStyle: (fn) => fn || (() => ({})),
-        withTiming: (v) => v,
-        runOnJS: (fn) => fn,
-        // helpers
-        Value: function () { },
-        event: () => noop,
-    },
-    __esModule: true,
+export const useSharedValue = (v) => ({ value: v });
+export const useAnimatedStyle = (fn) => fn || (() => ({}));
+export const withTiming = (v) => v;
+export const runOnJS = (fn) => fn;
+export const useAnimatedRef = () => React.useRef(null);
+
+const defaultExport = {
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+    runOnJS,
+    useAnimatedRef,
+    // helpers
+    Value: function () { },
+    event: () => noop,
 };
+
+export default defaultExport;

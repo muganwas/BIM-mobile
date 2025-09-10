@@ -1,3 +1,4 @@
+import bimTextImg from '@/assets/images/bim-text-img.png';
 import { Colors } from '@/constants/Colors';
 // @ts-ignore - some versions of @react-navigation/drawer may or may not export useDrawerStatus types
 import { useDrawerStatus } from '@react-navigation/drawer';
@@ -47,7 +48,7 @@ export default function Header({
 			}}
 		>
 			<Image
-				source={require('@/assets/images/bim-text-img.png')}
+				source={bimTextImg}
 				style={{ width: 200, height: 40, resizeMode: 'contain' }}
 			/>
 			<TouchableOpacity onPress={() => navigation.toggleDrawer()}>

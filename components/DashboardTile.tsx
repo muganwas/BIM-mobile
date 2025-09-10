@@ -7,7 +7,7 @@ import TileContainer from './TileContainer';
 
 export default function DashboardTile({
 	id,
-	amount,
+	amount = 0,
 	amountType = 'double',
 	title,
 	iconName,
@@ -76,7 +76,11 @@ export default function DashboardTile({
 					lightColor={Colors.light.valueText}
 					darkColor={Colors.dark.valueText}
 				>
-					{amountType === 'double' ? amount.toFixed(2) : amount}
+					{amountType === 'double'
+						? typeof amount === 'number'
+							? amount.toFixed(2)
+							: '0.00'
+						: amount ?? 0}
 				</ThemedText>
 			</ThemedView>
 		</TileContainer>

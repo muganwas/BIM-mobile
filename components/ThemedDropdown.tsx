@@ -20,7 +20,6 @@ import Animated, { useAnimatedRef } from 'react-native-reanimated';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { fontWeight } from '@/constants/Font';
-import { useGeneral } from '@/context/GeneralContext';
 import { delay } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import AnimContainer from './AnimContainer';
@@ -45,6 +44,9 @@ export type ThemedDropdownProps = ViewProps & {
 	onPressEnd?: (v: any) => void;
 	secondaryElement?: (option: string) => ReactNode;
 	setValue: (value: any) => void;
+	isAnimatable?: boolean;
+	keyboardVisible?: boolean;
+	id?: string;
 	toggleMainScroll?: (v: boolean) => void;
 	options: string[];
 	dropDownStyle?: ViewStyle;
@@ -73,6 +75,8 @@ export const ThemedDropdown = ({
 	id,
 	toggleMainScroll,
 	secondaryElement,
+	isAnimatable = true,
+	keyboardVisible = false,
 	containerRef,
 	...otherProps
 }: ThemedDropdownProps) => {
@@ -80,7 +84,6 @@ export const ThemedDropdown = ({
 		{ light: lightColor, dark: darkColor },
 		'background'
 	);
-	const { isAnimatable, keyboardVisible } = useGeneral();
 	const dropdownAnimVal = useAnimatedValue(0);
 	const colorScheme = useColorScheme() ?? 'light';
 	const scrollRef = useAnimatedRef<Animated.ScrollView>();

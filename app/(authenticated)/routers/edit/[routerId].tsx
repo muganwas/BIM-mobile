@@ -19,7 +19,7 @@ export default function RouterDetailsScreen() {
 	const routerTypeRef = useRef<View | null>(null);
 	const { routerId } = useLocalSearchParams() as { routerId?: string };
 	const { routers } = useTransaction();
-	const { language } = useGeneral();
+	const { language, isAnimatable, keyboardVisible } = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
 
@@ -155,6 +155,8 @@ export default function RouterDetailsScreen() {
 						value={netRouter?.type}
 						label={translations[language].categories.routers.routerType}
 						showDropdown={selectedDropDown === 'router-type'}
+						isAnimatable={isAnimatable}
+						keyboardVisible={keyboardVisible}
 						setShowDropdown={(v) =>
 							setSelectedDropDown(v ? 'router-type' : undefined)
 						}

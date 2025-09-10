@@ -17,7 +17,7 @@ export default function NewRouterScreen() {
 	const routerTypeRef = useRef<View | null>(null);
 	const router = useRouter();
 	const { routerId } = useLocalSearchParams() as { routerId?: string };
-	const { language } = useGeneral();
+	const { language, isAnimatable, keyboardVisible } = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [routerName, setRouterName] = useState<string>('');
 	const [location, setLocation] = useState<string>('');
@@ -147,6 +147,8 @@ export default function NewRouterScreen() {
 						}
 						setValue={(value) => setRouterType(value)}
 						style={{ marginBottom: 10 }}
+						isAnimatable={isAnimatable}
+						keyboardVisible={keyboardVisible}
 						options={['Mikrotik', 'TpLink', 'LinkSys', 'Cisco']}
 					/>
 					<ThemedInput
