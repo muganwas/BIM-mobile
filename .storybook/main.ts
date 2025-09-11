@@ -40,7 +40,27 @@ const config: StorybookConfig = {
 				find: 'expo-router',
 				replacement: path.resolve(__dirname, 'shims', 'expo-router-shim.js'),
 			},
+			{
+				find: '@react-navigation/drawer',
+				replacement: path.resolve(
+					__dirname,
+					'shims',
+					'react-navigation-drawer-shim.js'
+				),
+			},
+			{
+				find: '@react-navigation/elements',
+				replacement: path.resolve(
+					__dirname,
+					'shims',
+					'react-navigation-elements-shim.js'
+				),
+			},
 			{ find: '@', replacement: repoRoot },
+			{
+				find: 'expo-asset',
+				replacement: path.resolve(__dirname, 'shims', 'expo-asset.js'),
+			},
 			{ find: /^@\/(.*)$/, replacement: repoRoot + '/$1' },
 			// Map bare import to our shim and subpath imports to the shim folder so
 			// imports like 'react-native/Libraries/...' resolve during Vite transform.
@@ -49,8 +69,8 @@ const config: StorybookConfig = {
 				replacement: path.resolve(__dirname, 'shims', 'react-native'),
 			},
 			{
-				find: /^react-native\/(.*)$/,
-				replacement: path.resolve(__dirname, 'shims', 'react-native', '$1'),
+				find: 'warn-once',
+				replacement: path.resolve(__dirname, 'shims', 'warn-once.js'),
 			},
 			{
 				find: 'react-native-reanimated',
@@ -59,6 +79,14 @@ const config: StorybookConfig = {
 					'shims',
 					'react-native-reanimated.js'
 				),
+			},
+			{
+				find: 'react-native-svg',
+				replacement: path.resolve(__dirname, 'shims', 'react-native-svg.js'),
+			},
+			{
+				find: 'expo-blur',
+				replacement: path.resolve(__dirname, 'shims', 'expo-blur.js'),
 			},
 			{
 				find: 'react-native-gesture-handler',
@@ -79,6 +107,14 @@ const config: StorybookConfig = {
 			{
 				find: 'invariant',
 				replacement: path.resolve(__dirname, 'shims', 'invariant.js'),
+			},
+			{
+				find: 'react-native-safe-area-context',
+				replacement: path.resolve(
+					__dirname,
+					'shims',
+					'react-native-safe-area-context.js'
+				),
 			},
 			{
 				find: '@storybook/react-dom-shim',

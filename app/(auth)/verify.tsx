@@ -1,3 +1,4 @@
+import bimTextImg from '@/assets/images/bim-text-img.png';
 import Loader from '@/components/Loader';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
@@ -121,7 +122,7 @@ export default function VerifyTokenScreen() {
 							darkColor={Colors.dark.background}
 						>
 							<Image
-								source={require('@/assets/images/bim-text-img.png')}
+								source={bimTextImg}
 								style={{ height: 35, resizeMode: 'contain' }}
 							/>
 						</ThemedView>

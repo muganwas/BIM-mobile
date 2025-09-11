@@ -133,7 +133,18 @@ function CustomDrawerContent(props: any) {
 }
 
 export default function DrawerLayout() {
-	const { language } = useGeneral();
+	const {
+		user,
+		handleLogout,
+		language,
+		setLanguage,
+		notifications,
+		setNotifications,
+		selectedOption,
+		setSelectedOption,
+		online,
+		handleGoBack,
+	} = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
 
 	return (
@@ -150,7 +161,22 @@ export default function DrawerLayout() {
 						// allow screens to pass a custom goback via options.headerProps?.goback
 						// fallback to the navigation back object when available
 						const goback = props.options?.headerProps?.goback ?? !!props.back;
-						return <Header {...props} goback={goback} />;
+						return (
+							<Header
+								goback={goback}
+								user={user}
+								handleLogout={handleLogout}
+								language={language}
+								setLanguage={setLanguage}
+								notifications={notifications}
+								setNotifications={setNotifications}
+								selectedOption={selectedOption}
+								setSelectedOption={setSelectedOption}
+								online={online}
+								handleGoBack={handleGoBack}
+								{...props}
+							/>
+						);
 					},
 					drawerStyle: {
 						backgroundColor: Colors[colorScheme].drawerBackground,

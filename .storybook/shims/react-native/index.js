@@ -1,6 +1,6 @@
 // ESM wrapper that explicitly exports commonly-used React Native symbols
 // and falls back to the default shim for anything else.
-import ShimDefault, * as Shim from '../react-native-shim.js';
+import * as Shim from '../react-native-shim.js';
 
 // Ensure a minimal globalThis.expo object exists for expo-modules-core runtime checks.
 // expo-modules-core calls ensureNativeModulesAreInstalled() which expects
@@ -44,7 +44,7 @@ if (typeof globalThis !== 'undefined' && !globalThis.expo) {
 try {
     const webModules = (globalThis && globalThis.expo && globalThis.expo.modules) || {};
     // Prefer implementation from the underlying shim if available
-    const shimNativeModules = (Shim && Shim.NativeModules) || (ShimDefault && ShimDefault.NativeModules) || {};
+    const shimNativeModules = (Shim && Shim.NativeModules) || (Shim.default && Shim.default.NativeModules) || {};
     webModules.ExpoWebBrowser = webModules.ExpoWebBrowser || shimNativeModules.ExpoWebBrowser || {
         openBrowserAsync: async (url) => {
             try {
@@ -55,20 +55,30 @@ try {
             return { type: 'opened' };
         },
     };
+    // Minimal ExpoAsset stub used by some expo packages (e.g. expo-haptics)
+    webModules.ExpoAsset = webModules.ExpoAsset || shimNativeModules.ExpoAsset || {
+        fromModule: (module) => {
+            // Return an object with a localUri and a downloadAsync helper
+            const uri = (module && (module.uri || module)) || '';
+            return {
+                localUri: uri,
+                async downloadAsync() {
+                    return { localUri: uri };
+                },
+            };
+        },
+        async downloadAsync() {
+            return { localUri: '' };
+        },
+    };
     if (globalThis && globalThis.expo) globalThis.expo.modules = webModules;
 } catch (_e) {
     // ignore shim setup errors in storybook
 }
 
-// Common named exports expected by many libraries/stories
-export const View = (Shim && Shim.View) || (ShimDefault && ShimDefault.View);
-export const Text = (Shim && Shim.Text) || (ShimDefault && ShimDefault.Text);
-export const Image = (Shim && Shim.Image) || (ShimDefault && ShimDefault.Image);
-export const Animated = (Shim && Shim.Animated) || (ShimDefault && ShimDefault.Animated);
-export const ScrollView = (Shim && Shim.ScrollView) || (ShimDefault && ShimDefault.ScrollView);
-export const FlatList = (Shim && Shim.FlatList) || (ShimDefault && ShimDefault.FlatList);
-export const SafeAreaView = (Shim && Shim.SafeAreaView) || (ShimDefault && ShimDefault.SafeAreaView);
-export const TouchableOpacity = (Shim && Shim.TouchableOpacity) || (ShimDefault && ShimDefault.TouchableOpacity);
+// Delegate named exports to the underlying shim to avoid duplicate export errors.
+// Consumers can still `import * as Shim` or import named symbols directly from this module
+// because we re-export everything below.
 
 // Minimal TurboModuleRegistry shim required by some native libraries (e.g. react-native-svg fabric)
 // Provide getEnforcing(name) -> returns a no-op proxy so method calls don't crash in the web preview.
@@ -79,9 +89,12 @@ export const TurboModuleRegistry = {
     getEnforcing: (/* name */) => new Proxy({}, {
         get: () => () => undefined,
     }),
+    get: (/* name */) => new Proxy({}, {
+        get: () => () => undefined,
+    }),
 };
 
-// Re-export everything else and default
+// Re-export everything from the underlying shim and expose its default via the namespace
 export * from '../react-native-shim.js';
-export { ShimDefault as default };
+export default Shim.default;
 

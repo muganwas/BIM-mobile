@@ -1,7 +1,11 @@
-export default {
+const Constants = {
     manifest: {},
-    deviceName: 'web',
-    appOwnership: 'expo',
-    // add other lightweight properties commonly accessed in code
-    manifest2: {},
+    expoConfig: {},
+    installationId: '',
+    deviceName: typeof navigator !== 'undefined' ? navigator.userAgent : 'web',
+    isDevice: false,
+    platform: { web: true },
+    getWebViewUserAgent: () => (typeof navigator !== 'undefined' ? navigator.userAgent : ''),
 };
+
+export default Constants;

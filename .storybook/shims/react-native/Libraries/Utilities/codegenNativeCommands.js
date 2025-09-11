@@ -1,5 +1,5 @@
 // Minimal stub for react-native's codegenNativeCommands used by some RN libraries
-module.exports = function codegenNativeCommands(spec) {
+export default function codegenNativeCommands(spec) {
     // Return a small Commands object that maps supportedCommands to noop functions
     const cmds = {};
     try {
@@ -11,4 +11,4 @@ module.exports = function codegenNativeCommands(spec) {
         // ignore
     }
     return cmds;
-};
+}

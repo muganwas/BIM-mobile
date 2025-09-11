@@ -1,8 +1,13 @@
+import avatarMaleImg from '@/assets/images/avatar-male.png';
 import { Colors } from '@/constants/Colors';
 import { fontSize } from '@/constants/Font';
 import translations from '@/constants/Trans';
-import { useGeneral } from '@/context/GeneralContext';
-import { langCode } from '@/types';
+import {
+	headerOptions,
+	langCode,
+	notifications,
+	User as UserProps,
+} from '@/types';
 import { useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -23,33 +28,39 @@ import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 import { IconSymbol } from './ui/IconSymbol';
 
-// avoid importing navigation types from @react-navigation/drawer which can vary by version
-type DrawerHeaderProps = any;
-type DrawerNavigationProp = any;
-
-export type HeaderProps = DrawerHeaderProps & {
+export type HeaderProps = {
 	goback?: boolean;
+	user?: UserProps | null;
+	handleLogout: () => void;
+	language: langCode;
+	setLanguage: (lang: langCode) => void;
+	notifications: notifications[];
+	setNotifications: React.Dispatch<React.SetStateAction<notifications[]>>;
+	selectedOption?: headerOptions;
+	setSelectedOption: React.Dispatch<React.SetStateAction<headerOptions>>;
+	online: boolean;
+	handleGoBack?: () => void;
 };
-export default function Header({ goback, ...props }: HeaderProps) {
+export default function Header({
+	goback,
+	user,
+	handleLogout,
+	language,
+	setLanguage,
+	notifications,
+	setNotifications,
+	selectedOption,
+	setSelectedOption,
+	online,
+	handleGoBack,
+}: HeaderProps) {
 	const colorScheme = useColorScheme() ?? 'light';
 	const router = useRouter();
 	const profileAnimValue = useAnimatedValue(0);
 	const searchAnimValue = useAnimatedValue(0);
 	const notificationsAnimValue = useAnimatedValue(0);
 	const languageAnimValue = useAnimatedValue(0);
-	const {
-		user,
-		handleLogout,
-		language,
-		setLanguage,
-		notifications,
-		setNotifications,
-		selectedOption,
-		setSelectedOption,
-		online,
-		handleGoBack,
-	} = useGeneral(); // Get user from context
-	const navigation = useNavigation<DrawerNavigationProp>();
+	const navigation = useNavigation<any>();
 	const [searchValue, setSearchValue] = useState('');
 	const [showSearchInput, setShowSearchInput] = useState(false);
 	const [showLanguageSelection, setShowLanguageSelection] = useState(false);
@@ -320,11 +331,7 @@ export default function Header({ goback, ...props }: HeaderProps) {
 					}
 				>
 					<Image
-						source={
-							user?.avatarUrl
-								? { uri: user.avatarUrl }
-								: require('@/assets/images/avatar-male.png')
-						}
+						source={user?.avatarUrl ? { uri: user.avatarUrl } : avatarMaleImg}
 						style={{ width: 40, height: 40, borderRadius: 20 }}
 					/>
 					<View
@@ -575,9 +582,7 @@ export default function Header({ goback, ...props }: HeaderProps) {
 						<ThemedView style={{ height: 40, position: 'relative' }}>
 							<Image
 								source={
-									user?.avatarUrl
-										? { uri: user.avatarUrl }
-										: require('@/assets/images/avatar-male.png')
+									user?.avatarUrl ? { uri: user.avatarUrl } : avatarMaleImg
 								}
 								style={{ width: 40, height: 40, borderRadius: 20 }}
 							/>

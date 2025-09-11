@@ -1,3 +1,5 @@
+import blueCheckImg from '@/assets/icons/blue-check.png';
+import chevronDownImg from '@/assets/icons/chevron-down.png';
 import { ReactNode, Ref, useEffect, useRef, useState } from 'react';
 import {
 	Image,
@@ -85,6 +87,9 @@ export const ThemedDropdown = ({
 		'background'
 	);
 	const dropdownAnimVal = useAnimatedValue(0);
+	// On web there's no native animated driver available. Only enable native driver when
+	// running in a true native environment (no document global).
+	const canUseNativeDriver = typeof document === 'undefined';
 	const colorScheme = useColorScheme() ?? 'light';
 	const scrollRef = useAnimatedRef<Animated.ScrollView>();
 	const setValDelay = useRef<NodeJS.Timeout | null>(null);
@@ -100,17 +105,23 @@ export const ThemedDropdown = ({
 			Reanimated.timing(dropdownAnimVal, {
 				toValue: 0,
 				duration: 100,
-				useNativeDriver: true,
+				useNativeDriver: canUseNativeDriver,
 			}).start(() => setDropdownVisible(false));
 		} else {
 			setDropdownVisible(true);
 			Reanimated.timing(dropdownAnimVal, {
 				toValue: 1,
 				duration: 100,
-				useNativeDriver: true,
+				useNativeDriver: canUseNativeDriver,
 			}).start();
 		}
-	}, [showDropdown, scrollRef, isAnimatable, dropdownAnimVal]);
+	}, [
+		showDropdown,
+		scrollRef,
+		isAnimatable,
+		dropdownAnimVal,
+		canUseNativeDriver,
+	]);
 	return (
 		<>
 			<View
@@ -199,7 +210,7 @@ export const ThemedDropdown = ({
 							</Text>
 						)}
 						<View>
-							<Image source={require('@/assets/icons/chevron-down.png')} />
+							<Image source={chevronDownImg} />
 						</View>
 					</View>
 				</TouchableOpacity>
@@ -395,7 +406,7 @@ export const ThemedDropdown = ({
 												darkColor='transparent'
 											>
 												<Image
-													source={require('@/assets/icons/blue-check.png')}
+													source={blueCheckImg}
 													style={{
 														display: selectedValues?.includes(option)
 															? 'flex'

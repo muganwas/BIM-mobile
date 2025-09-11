@@ -22,7 +22,7 @@ type Props = PropsWithChildren<{
 	headerImage?: ReactElement;
 	containerStyle?: StyleProp<ViewStyle>;
 	contentStyle?: StyleProp<ViewStyle>;
-	headerBackgroundColor: { dark: string; light: string };
+	headerBackgroundColor?: { dark: string; light: string };
 	onTouchStart?: (e: GestureResponderEvent) => void; // Optional callback for touch start events
 }>;
 
@@ -38,6 +38,11 @@ export default function ParallaxScrollView({
 	const scrollRef = useAnimatedRef<Animated.ScrollView>();
 	const scrollOffset = useScrollViewOffset(scrollRef);
 	const bottom = useBottomTabOverflow();
+	// Provide a safe default when stories forget to pass headerBackgroundColor
+	const hb = headerBackgroundColor ?? {
+		light: 'transparent',
+		dark: 'transparent',
+	};
 	const headerAnimatedStyle = useAnimatedStyle(() => {
 		return {
 			transform: [
@@ -63,8 +68,8 @@ export default function ParallaxScrollView({
 		<ThemedView
 			onTouchStart={onTouchStart}
 			style={[styles.container, containerStyle]}
-			lightColor={headerBackgroundColor.light}
-			darkColor={headerBackgroundColor.dark}
+			lightColor={hb.light}
+			darkColor={hb.dark}
 		>
 			<Animated.ScrollView
 				ref={scrollRef}
@@ -77,7 +82,7 @@ export default function ParallaxScrollView({
 					style={[
 						styles.header,
 						{
-							backgroundColor: headerBackgroundColor[colorScheme],
+							backgroundColor: hb[colorScheme],
 							display: headerImage ? 'flex' : 'none',
 						},
 						headerAnimatedStyle,

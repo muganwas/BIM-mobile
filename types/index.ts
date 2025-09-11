@@ -9,6 +9,13 @@ export interface User {
 	updatedAt: Date;
 }
 
+export type headerOptions =
+	| 'notifications'
+	| 'profile'
+	| 'language'
+	| 'search'
+	| undefined;
+
 export interface Transaction {
 	id: string;
 	amount: number;

@@ -1,5 +1,10 @@
 import { delay } from '@/helpers';
-import { User as UserProps, langCode, notifications } from '@/types';
+import {
+	User as UserProps,
+	headerOptions,
+	langCode,
+	notifications,
+} from '@/types';
 import { useNetInfo } from '@react-native-community/netinfo';
 import * as DeviceInfo from 'expo-device';
 import { Router, useRouter } from 'expo-router';
@@ -23,17 +28,9 @@ export interface AuthContextType {
 	isHighEndDevice: boolean;
 	keyboardVisible: boolean;
 	setNotifications: React.Dispatch<React.SetStateAction<notifications[]>>;
-	selectedOption:
-		| 'notifications'
-		| 'profile'
-		| 'language'
-		| 'search'
-		| undefined; // Optional, can be used for dropdown state
-	setSelectedOption: React.Dispatch<
-		React.SetStateAction<
-			'notifications' | 'profile' | 'language' | 'search' | undefined
-		>
-	>;
+	selectedOption: headerOptions;
+	// Optional, can be used for dropdown state
+	setSelectedOption: React.Dispatch<React.SetStateAction<headerOptions>>;
 	history: string[]; // Optional, can be used for navigation history
 	handleUpdateHistory: (current: string) => void;
 	handleGoBack: () => void;

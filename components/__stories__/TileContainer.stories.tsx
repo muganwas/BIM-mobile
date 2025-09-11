@@ -1,5 +1,6 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import React from 'react';
+import { Text } from 'react-native';
 import TileContainer from '../TileContainer';
 
 export default {
@@ -8,7 +9,9 @@ export default {
 } as ComponentMeta<typeof TileContainer>;
 
 const Template: ComponentStory<typeof TileContainer> = (args: any) => (
-	<TileContainer {...args}>Tile content</TileContainer>
+	<TileContainer {...args}>
+		<Text>Tile content</Text>
+	</TileContainer>
 );
 
 export const Default = Template.bind({});

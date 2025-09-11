@@ -1,4 +1,5 @@
 import React from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 class StoryErrorBoundary extends React.Component<
 	any,
@@ -40,7 +41,9 @@ class StoryErrorBoundary extends React.Component<
 export const decorators = [
 	(Story: any) => (
 		<StoryErrorBoundary>
-			<Story />
+			<SafeAreaProvider>
+				<Story />
+			</SafeAreaProvider>
 		</StoryErrorBoundary>
 	),
 ];
