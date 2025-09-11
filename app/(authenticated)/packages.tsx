@@ -1,7 +1,7 @@
+import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
@@ -9,7 +9,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackagesScreen() {
@@ -45,12 +45,13 @@ export default function PackagesScreen() {
 			style={styles.container}
 		>
 			<ThemedView
+				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
 				lightColor={Colors.light.background}
 				darkColor={Colors.dark.background}
 			>
 				<ThemedText
-					lightColor={Colors.light.bim}
-					darkColor={Colors.dark.bim}
+					lightColor={Colors.light.text}
+					darkColor={Colors.dark.text}
 					style={{
 						width: '100%',
 						textTransform: 'capitalize',
@@ -60,7 +61,17 @@ export default function PackagesScreen() {
 				>
 					{translations[language].categories.routers.title}
 				</ThemedText>
+				<ThemedText
+					style={{
+						fontSize: fontSize['text.medium'],
+					}}
+					lightColor={Colors.light.text}
+					darkColor={Colors.dark.text}
+				>
+					{translations[language].categories.packages.subtitle}
+				</ThemedText>
 			</ThemedView>
+
 			<TileContainer
 				id={packageRouterListId.current}
 				backgroundColor={Colors[colorScheme].background}
@@ -95,15 +106,6 @@ export default function PackagesScreen() {
 							darkColor={Colors.dark.background}
 						>
 							<ThemedText
-								style={{ width: 30 }}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								#
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
 								style={{
 									fontSize: fontSize['text.medium'],
 									width: 120,
@@ -113,7 +115,7 @@ export default function PackagesScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{translations[language].categories.dashboard.routerName}
+								{translations[language].categories.dashboard.name}
 							</ThemedText>
 							<ThemedText
 								numberOfLines={1}
@@ -141,20 +143,6 @@ export default function PackagesScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{translations[language].categories.dashboard.type}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
 								{translations[language].categories.dashboard.ipAddress}
 							</ThemedText>
 							<ThemedText
@@ -169,7 +157,7 @@ export default function PackagesScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{translations[language].categories.dashboard.balance}
+								{translations[language].categories.dashboard.routerUsername}
 							</ThemedText>
 							<ThemedText
 								numberOfLines={1}
@@ -193,125 +181,99 @@ export default function PackagesScreen() {
 								backgroundColor: Colors[colorScheme].background,
 							}}
 						>
-							{routers.map((router, index) => (
-								<ThemedView
-									key={index}
-									style={{
-										flexDirection: 'row',
-										width: '100%',
-										paddingVertical: 12,
-										gap: 10,
-										paddingHorizontal: 5,
-										justifyContent: 'space-between',
-										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
-										borderBottomColor: Colors[colorScheme].borderDark,
-									}}
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
-								>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											width: 30,
-											overflow: 'hidden',
-											paddingRight: 8,
-										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
-									>
-										{index + 1}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											width: 120,
-											paddingRight: 8,
-											overflow: 'hidden',
-										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
-									>
-										{router.name}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											paddingRight: 8,
-											width: 120,
-										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
-									>
-										{router.location}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											paddingRight: 8,
-											width: 120,
-										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
-									>
-										{router.type}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											paddingRight: 8,
-											width: 120,
-										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
-									>
-										{router?.networkInfo.ipv4}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											paddingRight: 8,
-											width: 120,
-										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
-									>
-										{router.transactionBalance}
-									</ThemedText>
+							<ThemedView
+								style={{ flexDirection: 'column', gap: 5 }}
+								lightColor={Colors.light.background}
+								darkColor={Colors.dark.background}
+							>
+								{routers.map((router, index) => (
 									<ThemedView
+										key={index}
 										style={{
 											flexDirection: 'row',
+											width: '100%',
+											alignItems: 'center',
+											paddingVertical: 5,
+											paddingHorizontal: 5,
+											backgroundColor:
+												index % 2 === 0
+													? Colors[colorScheme].listItemBackground
+													: Colors[colorScheme].background,
 											justifyContent: 'space-between',
-											gap: 5,
-											width: 120,
 										}}
 										lightColor={Colors.light.background}
 										darkColor={Colors.dark.background}
 									>
-										<TouchableOpacity onPress={() => {}}>
-											<IconSymbol
-												color={Colors[colorScheme].lime}
-												name='eye.outline'
-											/>
-										</TouchableOpacity>
-										<TouchableOpacity onPress={() => {}}>
-											<IconSymbol
-												color={Colors[colorScheme].yellow}
-												name='edit.outline'
-											/>
-										</TouchableOpacity>
-										<TouchableOpacity
-											onPress={() => {
-												// setActiveRouter(router.id);
+										<ThemedText
+											numberOfLines={1}
+											style={{
+												width: 120,
+												paddingRight: 8,
+												overflow: 'hidden',
 											}}
+											lightColor={Colors.light.text}
+											darkColor={Colors.dark.text}
 										>
-											<IconSymbol
-												color={Colors[colorScheme].error}
-												name='delete.outline'
+											{router.name}
+										</ThemedText>
+										<ThemedText
+											numberOfLines={1}
+											style={{
+												paddingRight: 8,
+												width: 120,
+											}}
+											lightColor={Colors.light.text}
+											darkColor={Colors.dark.text}
+										>
+											{router.location}
+										</ThemedText>
+										<ThemedText
+											numberOfLines={1}
+											style={{
+												paddingRight: 8,
+												width: 120,
+											}}
+											lightColor={Colors.light.text}
+											darkColor={Colors.dark.text}
+										>
+											{router?.networkInfo.ipv4}
+										</ThemedText>
+										<ThemedText
+											numberOfLines={1}
+											style={{
+												paddingRight: 8,
+												width: 120,
+											}}
+											lightColor={Colors.light.text}
+											darkColor={Colors.dark.text}
+										>
+											{router.username}
+										</ThemedText>
+										<ThemedView
+											style={{
+												flexDirection: 'row',
+												justifyContent: 'space-between',
+												gap: 5,
+												width: 120,
+											}}
+											lightColor={Colors.light.background}
+											darkColor={Colors.dark.background}
+										>
+											<ThemedButton
+												title={translations[
+													language
+												].categories.buttons.hotspots.toUpperCase()}
+												onPress={() => {}}
+												lightColor={Colors.light.lime}
+												darkColor={Colors.dark.lime}
+												darkTextColor={Colors.dark.white}
+												lightTextColor={Colors.light.white}
+												style={{ flex: 1 }}
 											/>
-										</TouchableOpacity>
+										</ThemedView>
 									</ThemedView>
-								</ThemedView>
-							))}
+								))}
+							</ThemedView>
 						</ScrollView>
 					</ThemedView>
 				</ScrollView>

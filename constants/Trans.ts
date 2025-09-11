@@ -36,6 +36,7 @@ const translations: Translations = {
 				editRouter: 'Edit Router',
 				deleteRouter: 'Delete Router',
 				updateRouter: 'Update Router',
+				hotspots: 'Hotspots',
 				cancel: 'Cancel',
 				delete: 'Delete',
 				close: 'Close',
@@ -94,6 +95,9 @@ const translations: Translations = {
 				deleteMessage:
 					'Are you sure you want to delete this router? This action cannot be undone.',
 			},
+			packages: {
+				subtitle: 'Select router to view associated packages',
+			},
 			dashboard: {
 				title: 'Dashboard',
 				todaysTransactions: "Today's Transactions",
@@ -120,6 +124,7 @@ const translations: Translations = {
 				status: 'Status',
 				ipAddress: 'IP Address',
 				macAddress: 'MAC Address',
+				name: 'Name',
 				location: 'Location',
 				actions: 'Actions',
 				balance: 'Balance',
