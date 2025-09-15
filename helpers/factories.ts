@@ -38,7 +38,7 @@ export function generateNetRouter(
 		hostname: `router-${id}.local`,
 		routerHash: generateRandomString(24),
 		uptime: `${generateRandomInt(0, 999999)}`,
-		hotspots: Array.from({ length: generateRandomInt(0, 2) }).map(
+		hotspots: Array.from({ length: generateRandomInt(1, 2) }).map(
 			(_, hIdx) => ({
 				id: `${id}-hs-${hIdx + 1}`,
 				ssid: `SSID-${generateRandomNumbers(4)}`,
@@ -214,6 +214,9 @@ export function generateInternetPackage(
 		tag: overrides.tag ?? `pkg-${id}`,
 		name,
 		price: overrides.price ?? generateRandomInt(100, 5000),
+		bandwidth:
+			overrides.bandwidth ??
+			`${generateRandomInt(1, 100)} MBps/${generateRandomInt(1, 100)} MBps`,
 		duration:
 			overrides.duration ??
 			(name === 'short'
@@ -223,8 +226,8 @@ export function generateInternetPackage(
 				: name === 'weekly'
 				? 168
 				: 720),
-		createdAt: overrides.createdAt,
-		updatedAt: overrides.updatedAt,
+		createdAt: overrides.createdAt ?? new Date(),
+		updatedAt: overrides.updatedAt ?? new Date(),
 	};
 }
 

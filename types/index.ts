@@ -84,6 +84,7 @@ export interface InternetPackage {
 	tag: string;
 	name: InternetPackageName; // Name of the internet package
 	price: number; // Price of the package
+	bandwidth: string; // Bandwidth in MBps/MBps
 	duration: number; // Duration in hours
 	createdAt?: Date;
 	updatedAt?: Date;

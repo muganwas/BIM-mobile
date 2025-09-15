@@ -36,6 +36,7 @@ const translations: Translations = {
 				editRouter: 'Edit Router',
 				deleteRouter: 'Delete Router',
 				updateRouter: 'Update Router',
+				viewPackages: 'View Packages',
 				hotspots: 'Hotspots',
 				cancel: 'Cancel',
 				delete: 'Delete',
@@ -97,6 +98,9 @@ const translations: Translations = {
 			},
 			packages: {
 				subtitle: 'Select router to view associated packages',
+			},
+			hotspots: {
+				title: 'Hotspot Servers for Router:',
 			},
 			dashboard: {
 				title: 'Dashboard',

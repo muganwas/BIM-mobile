@@ -1,6 +1,7 @@
 import { useGeneral } from '@/context/GeneralContext';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 // Best-effort hook to record the current path to the GeneralContext history.
 // It tries to derive a readable path using available router data. If expo-router
@@ -9,51 +10,47 @@ import { useEffect, useRef } from 'react';
 export default function useTrackHistory(path?: string) {
 	const router = useRouter();
 	const { handleUpdateHistory } = useGeneral();
-	const timer = useRef<number | null>(null);
 
-	useEffect(() => {
-		const push = (p: string) => {
-			// debounce quick repeated calls
-			if (timer.current) {
-				clearTimeout(timer.current);
-			}
-			timer.current = setTimeout(() => {
-				handleUpdateHistory(p);
-				timer.current = null;
-			}, 100) as unknown as number;
-		};
+	// Keep a ref of the last path we pushed so we only call
+	// handleUpdateHistory when the path actually changes.
+	const lastPushedRef = useRef<string | null>(null);
 
-		if (path && path.length > 0) {
-			push(path);
-			return () => {
-				if (timer.current) clearTimeout(timer.current);
-			};
-		}
-
-		// Try a few strategies to derive a path string
+	const derivePath = useCallback((): string => {
+		if (path && path.length > 0) return path;
 		let derived = '';
 		try {
-			// expo-router sometimes exposes a pathname-like prop
 			// @ts-ignore
 			derived = router.pathname || router.asPath || '';
 		} catch {
 			derived = '';
 		}
-
-		// Fallback: if router has a current route name
 		if (!derived) {
 			try {
 				// @ts-ignore
 				derived = router.route || '';
 			} catch {}
 		}
+		return derived ? derived.toString() : '';
+	}, [path, router]);
 
-		if (derived) {
-			push(derived.toString());
-		}
+	useEffect(() => {
+		const p = derivePath();
+		if (!p) return;
+		if (lastPushedRef.current === p) return;
+		lastPushedRef.current = p;
+		try {
+			handleUpdateHistory(p);
+		} catch {}
+	}, [derivePath, handleUpdateHistory]);
 
-		return () => {
-			if (timer.current) clearTimeout(timer.current);
-		};
-	}, [path, router, handleUpdateHistory]);
+	// Also update history whenever the screen gains focus (even without a re-render)
+	useFocusEffect(
+		useCallback(() => {
+			const p = derivePath();
+			if (!p) return;
+			try {
+				handleUpdateHistory(p);
+			} catch {}
+		}, [derivePath, handleUpdateHistory])
+	);
 }

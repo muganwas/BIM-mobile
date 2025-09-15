@@ -9,15 +9,22 @@ import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import {
+	useFocusEffect,
+	useLocalSearchParams,
+	useNavigation,
+	useRouter,
+} from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useColorScheme, View } from 'react-native';
 
 export default function NewRouterScreen() {
 	const routerTypeRef = useRef<View | null>(null);
 	const router = useRouter();
+	const navigation = useNavigation();
 	const { routerId } = useLocalSearchParams() as { routerId?: string };
-	const { language, isAnimatable, keyboardVisible } = useGeneral();
+	const { language, isAnimatable, keyboardVisible, handleUpdateHistory } =
+		useGeneral();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [routerName, setRouterName] = useState<string>('');
 	const [location, setLocation] = useState<string>('');
@@ -29,6 +36,33 @@ export default function NewRouterScreen() {
 	const [selectedDropDown, setSelectedDropDown] = useState<
 		string | undefined
 	>();
+
+	useEffect(() => {
+		navigation.setOptions({
+			headerProps: {
+				goback: true,
+			},
+		});
+	}, [navigation]);
+
+	// Seed parent immediately on mount to guarantee ordering before any current route push
+	useEffect(() => {
+		handleUpdateHistory('/(authenticated)/routers');
+	}, [handleUpdateHistory]);
+
+	// Seed parent path on focus so back goes to routers list; guard to run once per focus
+	const seededParentRef = useRef(false);
+	useFocusEffect(
+		useCallback(() => {
+			if (!seededParentRef.current) {
+				handleUpdateHistory('/(authenticated)/routers/new');
+				seededParentRef.current = true;
+			}
+			return () => {
+				seededParentRef.current = false; // reset on blur
+			};
+		}, [handleUpdateHistory])
+	);
 
 	// Router details screen implementation
 	const handleCreateRouter = () => {};

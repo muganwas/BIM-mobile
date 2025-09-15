@@ -14,24 +14,28 @@ export const packages: InternetPackage[] = [
 		name: 'daily',
 		tag: 'profile_DAILY1000Shs',
 		price: 1000,
+		bandwidth: '1Mbps',
 		duration: 24,
 	},
 	{
 		name: 'weekly',
 		tag: 'profile_WEEKLY5000Shs',
 		price: 5000,
+		bandwidth: '2Mbps',
 		duration: 168,
 	},
 	{
 		name: 'monthly',
 		tag: 'profile_MONTHLY20000Shs',
 		price: 20000,
+		bandwidth: '5Mbps',
 		duration: 720,
 	},
 	{
 		name: 'short',
 		tag: 'profile_5HRS500Shs',
 		price: 500,
+		bandwidth: '256Kbps',
 		duration: 5,
 	},
 ];

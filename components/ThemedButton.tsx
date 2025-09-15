@@ -75,6 +75,7 @@ export function ThemedButton({
 					<IconSymbol name={icon} size={20} color={iconColor || textColor} />
 				)}
 				<ThemedText
+					numberOfLines={1}
 					style={[styles.buttonText, { color: textColor }, textStyle]}
 					lightColor={textColor}
 					darkColor={textColor}

@@ -1,26 +1,28 @@
 import { delay } from '@/helpers';
 import {
-	User as UserProps,
 	headerOptions,
 	langCode,
 	notifications,
+	User as UserProps,
 } from '@/types';
 import { useNetInfo } from '@react-native-community/netinfo';
 import * as DeviceInfo from 'expo-device';
-import { Router, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, {
 	createContext,
 	useCallback,
 	useContext,
 	useEffect,
+	useState,
 } from 'react';
 import { Keyboard, Platform } from 'react-native';
 
-// Define the type for the context
+type RouterType = ReturnType<typeof useRouter>;
+
 export interface AuthContextType {
 	user: UserProps | null;
 	language: langCode;
-	setLanguage: (lang: langCode) => void;
+	setLanguage: (l: langCode) => void;
 	handleLogout: () => Promise<void>;
 	fetchNotifications: () => Promise<void>;
 	notifications: notifications[];
@@ -28,71 +30,90 @@ export interface AuthContextType {
 	isHighEndDevice: boolean;
 	keyboardVisible: boolean;
 	setNotifications: React.Dispatch<React.SetStateAction<notifications[]>>;
-	selectedOption: headerOptions;
-	// Optional, can be used for dropdown state
-	setSelectedOption: React.Dispatch<React.SetStateAction<headerOptions>>;
-	history: string[]; // Optional, can be used for navigation history
+	selectedOption: headerOptions | undefined;
+	setSelectedOption: React.Dispatch<
+		React.SetStateAction<headerOptions | undefined>
+	>;
+	history: string[];
 	handleUpdateHistory: (current: string) => void;
 	handleGoBack: () => void;
 	handleAuthentication: (credentials: {
 		number: string;
-		password: string;
+		password?: string;
 	}) => Promise<void>;
 	online: boolean;
-	router: Router;
+	router: RouterType;
 }
 
-// Create the context with the proper type
 const GeneralContext = createContext<AuthContextType | undefined>(undefined);
 
-export const GeneralProvider = ({
+const HISTORY_KEY = 'BIM_history_v1';
+const MAX_HISTORY = 5;
+
+export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
-}: {
-	children: React.ReactNode;
 }) => {
-	const totalMemory = DeviceInfo.totalMemory;
 	const router = useRouter();
 	const netInfo = useNetInfo();
-	const [user, setUser] = React.useState<UserProps | null>(null);
-	const [notifications, setNotifications] = React.useState<notifications[]>([]);
-	const [language, setLanguage] = React.useState<langCode>('en'); // Default language
-	const [online, setOnline] = React.useState<boolean>(true);
-	const [selectedOption, setSelectedOption] = React.useState<
-		'notifications' | 'profile' | 'language' | 'search'
-	>();
-	const [mounted, setMounted] = React.useState<boolean>(false);
-	const [isAnimatable, setIsAnimatable] = React.useState<boolean>(false);
-	const [isHighEndDevice, setIsHighEndDevice] = React.useState<boolean>(false);
-	const [keyboardVisible, setKeyboardVisible] = React.useState<boolean>(false);
-	const [history, setHistory] = React.useState<string[]>([]);
+	const totalMemory = (DeviceInfo as any)?.totalMemory;
+
+	// Used to suppress history updates while we are programmatically navigating back
+	const navigatingBackRef = React.useRef(false);
+
+	const [user, setUser] = useState<UserProps | null>(null);
+	const [notifications, setNotifications] = useState<notifications[]>([]);
+	const [language, setLanguage] = useState<langCode>('en');
+	const [online, setOnline] = useState<boolean>(true);
+	const [selectedOption, setSelectedOption] = useState<
+		headerOptions | undefined
+	>(undefined);
+	const [mounted, setMounted] = useState<boolean>(false);
+	const [isAnimatable, setIsAnimatable] = useState<boolean>(false);
+	const [isHighEndDevice, setIsHighEndDevice] = useState<boolean>(false);
+	const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
+
+	const [history, setHistory] = useState<string[]>(() => {
+		try {
+			if (typeof window !== 'undefined' && window.sessionStorage) {
+				const raw =
+					window.sessionStorage.getItem(HISTORY_KEY) ||
+					window.localStorage.getItem(HISTORY_KEY);
+				if (raw) {
+					const parsed = JSON.parse(raw);
+					if (Array.isArray(parsed)) return parsed as string[];
+				}
+			}
+		} catch {
+			// ignore
+		}
+		return [];
+	});
 
 	useEffect(() => {
-		const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
-			setKeyboardVisible(true);
-		});
-		const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-			setKeyboardVisible(false);
-		});
+		const show = Keyboard.addListener('keyboardDidShow', () =>
+			setKeyboardVisible(true)
+		);
+		const hide = Keyboard.addListener('keyboardDidHide', () =>
+			setKeyboardVisible(false)
+		);
 		delay(200).then(() => setMounted(true));
 		return () => {
-			showSubscription.remove();
-			hideSubscription.remove();
+			show.remove();
+			hide.remove();
 		};
 	}, []);
 
 	useEffect(() => {
 		if (!totalMemory) return;
-		const lIsHighEndDevice = totalMemory > 4 * 1024 * 1024 * 1024;
-		setIsHighEndDevice(lIsHighEndDevice);
+		const lIsHighEnd = totalMemory > 4 * 1024 * 1024 * 1024;
+		setIsHighEndDevice(lIsHighEnd);
 		setIsAnimatable(
-			Platform.OS === 'ios' || (Platform.OS === 'android' && lIsHighEndDevice)
+			Platform.OS === 'ios' || (Platform.OS === 'android' && lIsHighEnd)
 		);
 	}, [totalMemory]);
 
 	useEffect(() => {
-		if (mounted) {
-			(async () => await fetchNotifications())();
-		}
+		if (mounted) (async () => await fetchNotifications())();
 	}, [mounted]);
 
 	useEffect(() => {
@@ -107,127 +128,182 @@ export const GeneralProvider = ({
 				} catch {
 					setOnline(false);
 				}
-			} else {
-				setOnline(false);
-			}
+			} else setOnline(false);
 		};
 		mounted && check();
 	}, [netInfo, mounted]);
 
+	const normalizePath = (p: string) => {
+		try {
+			const stripped = p.split('?')[0].split('#')[0];
+			const parts = stripped.split('/').filter(Boolean);
+			return (
+				'/' +
+				parts
+					.map((seg) =>
+						/^\d+$/.test(seg) || /^[0-9a-fA-F-]{8,}$/.test(seg) ? ':id' : seg
+					)
+					.join('/')
+			);
+		} catch {
+			return p;
+		}
+	};
+
+	const persist = (arr: string[]) => {
+		try {
+			if (typeof window !== 'undefined' && window.sessionStorage) {
+				const payload = JSON.stringify(arr);
+				window.sessionStorage.setItem(HISTORY_KEY, payload);
+				window.localStorage.setItem(HISTORY_KEY, payload);
+			}
+		} catch (e) {
+			if ((window as any)?.__BIM_HISTORY_DEBUG__)
+				console.debug('GeneralContext: persist failed', e);
+		}
+	};
+
 	const handleUpdateHistory = useCallback((current: string) => {
-		// Helper: normalize a path by replacing likely id segments with a placeholder
-		const normalizePath = (p: string) => {
+		const debug = (window as any)?.__BIM_HISTORY_DEBUG__;
+		if (debug) console.debug('handleUpdateHistory called with', current);
+		setHistory((prev) => {
+			if (debug) console.debug('handleUpdateHistory prev', prev);
+			// If a back navigation is in progress, ignore incidental updates
+			if (navigatingBackRef.current) {
+				if (debug)
+					console.debug('handleUpdateHistory: skipping due to back nav');
+				return prev;
+			}
 			try {
-				// strip query/hash
-				const stripped = p.split('?')[0].split('#')[0];
-				const parts = stripped.split('/').filter(Boolean);
-				const normalized = parts
-					.map((seg) => {
-						// treat numeric-only or long hex/uuid-like segments as ids
-						if (/^\d+$/.test(seg)) return ':id';
-						if (/^[0-9a-fA-F-]{8,}$/.test(seg)) return ':id';
-						return seg;
-					})
-					.join('/');
-				return '/' + normalized;
-			} catch {
-				return p;
-			}
-		};
+				const last = prev[prev.length - 1] || '';
+				if (
+					current === '/(authenticated)/routers' &&
+					last.includes('/(authenticated)/routers/hotspots')
+				)
+					return prev;
+			} catch {}
 
-		setHistory((prev) => {
-			// avoid pushing exact duplicate consecutive entries
-			if (prev.length > 0 && prev[prev.length - 1] === current) return prev;
-
-			// if last entry has the same skeleton (route shape) as current,
-			// replace the last entry instead of pushing a new one. This prevents
-			// dynamic-route parameter swaps from creating two near-duplicate entries
-			// which previously caused the back handler to skip one route.
-			if (prev.length > 0) {
-				const last = prev[prev.length - 1];
-				if (normalizePath(last) === normalizePath(current)) {
-					const newHistory = [...prev];
-					newHistory[newHistory.length - 1] = current; // update to newest paramized path
-					return newHistory;
+			// If the routers parent is being pushed AFTER a routers detail is already last,
+			// reorder so the parent sits immediately before the current detail (keep detail last).
+			try {
+				const isRoutersParent = current === '/(authenticated)/routers';
+				const last = prev[prev.length - 1] || '';
+				const isRoutersDetail =
+					/\/(authenticated)\/routers\/(preview|edit)\//.test(last);
+				if (isRoutersParent && isRoutersDetail) {
+					// Remove any previous occurrences of the parent to avoid duplicates
+					const withoutParent = prev.filter(
+						(p) => normalizePath(p) !== normalizePath(current)
+					);
+					const lastEntry = withoutParent[withoutParent.length - 1];
+					const base = withoutParent.slice(0, -1);
+					const reordered = [...base, current, lastEntry].slice(
+						Math.max(0, base.length + 2 - MAX_HISTORY)
+					);
+					if (debug)
+						console.debug(
+							'handleUpdateHistory: reorder parent before detail',
+							reordered
+						);
+					persist(reordered);
+					return reordered;
 				}
-			}
+			} catch {}
 
-			const newHistory = [...prev, current];
-			if (newHistory.length > 50) {
-				newHistory.shift(); // Keep the history length manageable
-			}
-			return newHistory;
-		});
-	}, []);
-
-	const handleGoBack = useCallback(() => {
-		setHistory((prev) => {
-			if (prev.length <= 1) {
-				try {
-					router.back?.();
-				} catch {
-					(router.replace as unknown as (p: string) => void)('/');
-				}
+			if (prev.length > 0 && prev[prev.length - 1] === current) {
+				if (debug)
+					console.debug(
+						'handleUpdateHistory: identical last entry, skipping',
+						current
+					);
 				return prev;
 			}
 
-			// Build a small normalizer (mirror of handleUpdateHistory's logic)
-			const normalizePath = (p: string) => {
-				try {
-					const stripped = p.split('?')[0].split('#')[0];
-					const parts = stripped.split('/').filter(Boolean);
-					const normalized = parts
-						.map((seg) => {
-							if (/^\d+$/.test(seg)) return ':id';
-							if (/^[0-9a-fA-F-]{8,}$/.test(seg)) return ':id';
-							return seg;
-						})
-						.join('/');
-					return '/' + normalized;
-				} catch {
-					return p;
-				}
-			};
+			if (
+				prev.length > 0 &&
+				normalizePath(prev[prev.length - 1]) === normalizePath(current)
+			) {
+				const updated = [...prev];
+				updated[updated.length - 1] = current;
+				if (debug)
+					console.debug('handleUpdateHistory: replace-last with', updated);
+				persist(updated);
+				return updated;
+			}
 
-			// Remove only the current entry initially
+			const next = [...prev, current];
+			if (next.length > MAX_HISTORY) {
+				next.splice(0, next.length - MAX_HISTORY);
+			}
+			if (debug) console.debug('handleUpdateHistory: push next', next);
+			persist(next);
+			return next;
+		});
+	}, []);
+
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			(window as any).__BIM_DUMP_HISTORY__ = () =>
+				console.log('BIM_HISTORY_DUMP', history);
+			return () => {
+				try {
+					delete (window as any).__BIM_DUMP_HISTORY__;
+				} catch {}
+			};
+		}
+	}, [history]);
+
+	const navigateToPath = useCallback(
+		(path: string) => {
+			try {
+				(router.replace as any)(path);
+				return;
+			} catch {}
+			try {
+				(router.push as any)(path);
+				return;
+			} catch {}
+			try {
+				router.replace(path as any);
+			} catch {}
+		},
+		[router]
+	);
+
+	const handleGoBack = useCallback(() => {
+		navigatingBackRef.current = true;
+		setHistory((prev) => {
+			if ((window as any)?.__BIM_HISTORY_DEBUG__)
+				console.debug('handleGoBack prev', prev);
+
+			const current = prev[prev.length - 1];
+			const prevPath = prev[prev.length - 2];
+			console.log('Prev path:', prevPath);
+			console.log('Current path:', current);
+
+			// If no previous path in history, fallback
+			if (prev.length <= 1 || !prevPath) {
+				let currentPath = '';
+				try {
+					const anyRouter = router as any;
+					currentPath =
+						anyRouter?.pathname || anyRouter?.asPath || anyRouter?.route || '';
+				} catch {}
+				if (currentPath && /\/routers\/hotspots\//.test(currentPath)) {
+					navigateToPath('/(authenticated)/packages');
+					return prev;
+				}
+				router.back?.();
+				return prev;
+			}
+
+			// Pop current and navigate to the immediate previous entry
 			const newHistory = [...prev];
 			newHistory.pop(); // remove current
-			let previous = newHistory[newHistory.length - 1];
-
-			if (!previous) {
-				// no previous, fallback
-				if (router.back) router.back();
-				else (router.replace as unknown as (p: string) => void)('/');
-				return newHistory;
-			}
-
-			// If the previous entry is a short-lived duplicate caused by ordering
-			// (pattern like: A, B, A where current was the trailing A), try to
-			// find the nearest earlier entry whose normalized skeleton differs from
-			// `previous` and navigate there instead.
-			let targetIndex = newHistory.length - 2; // start one before `previous`
-			const prevSkeleton = normalizePath(previous);
-			while (
-				targetIndex >= 0 &&
-				normalizePath(newHistory[targetIndex]) === prevSkeleton
-			) {
-				targetIndex--;
-			}
-
-			let targetPath: string;
-			let resultingHistory: string[];
-			if (targetIndex >= 0) {
-				// We found an earlier differing entry; choose it and trim history to it
-				targetPath = newHistory[targetIndex];
-				resultingHistory = newHistory.slice(0, targetIndex + 1);
-			} else {
-				// No earlier differing entry; navigate to `previous` (the last remaining)
-				targetPath = previous;
-				resultingHistory = newHistory;
-			}
+			const targetPath = prevPath;
 
 			try {
-				navigateToPath(router, targetPath);
+				navigateToPath(targetPath);
 			} catch {
 				if (router.back) {
 					try {
@@ -240,85 +316,43 @@ export const GeneralProvider = ({
 				}
 			}
 
-			return resultingHistory;
+			persist(newHistory);
+			return newHistory;
 		});
-	}, [router]);
-
-	// Helper to navigate to a string path while keeping typing localized.
-	function navigateToPath(router: Router, path: string) {
-		// Router types in expo-router may be strict; cast once here to allow simple string paths
-		try {
-			// prefer replace when navigating to a previous path to avoid stacking routes
-			try {
-				(router.replace as unknown as (p: string) => void)(path);
-				return;
-			} catch {
-				// fall back to push if replace isn't available on this router instance
-				(router.push as unknown as (p: string) => void)(path);
-				return;
-			}
-		} catch {
-			// fallback: replace
-			router.replace(path as any);
-		}
-	}
+		// Clear the navigatingBack flag on the next tick to allow future updates
+		setTimeout(() => {
+			navigatingBackRef.current = false;
+		}, 0);
+	}, [router, navigateToPath]);
 
 	const handleAuthentication = async ({
 		number,
-		password,
 	}: {
 		number: string;
-		password: string;
+		password?: string;
 	}) => {
-		try {
-			// Handle error, e.g., redirect to login
-			setUser({
-				id: '123doe',
-				name: 'J Doe',
-				email: 'jd@gmail.com',
-				phone: number,
-				avatarUrl: '',
-				userLanguage: 'en',
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			});
-			router.replace('/(auth)/verify');
-		} catch (error: any) {
-			console.error('Authentication error:', error);
-		}
+		setUser({
+			id: '123doe',
+			name: 'J Doe',
+			email: 'jd@gmail.com',
+			phone: number,
+			avatarUrl: '',
+			userLanguage: 'en',
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		} as any);
+		router.replace('/(auth)/verify');
 	};
 
 	const handleLogout = async () => {
-		try {
-			// Simulate logout process
-			setUser(null);
-			setNotifications([]);
-			router.replace('/(auth)/login');
-		} catch (error: any) {
-			console.error('Logout error:', error);
-		}
+		setUser(null);
+		setNotifications([]);
+		router.replace('/(auth)/login');
 	};
 
 	const fetchNotifications = async () => {
-		try {
-			// Simulate fetching notifications
-			const fetchedNotifications: notifications[] = [
-				{
-					id: '1',
-					from: 'System',
-					to: 'User',
-					type: 'alert',
-					title: 'Welcome!',
-					message: 'Welcome to the app!',
-					isRead: false,
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				},
-			];
-			setNotifications(fetchedNotifications);
-		} catch (error: any) {
-			console.error('Error fetching notifications:', error);
-		}
+		const fetched: notifications[] = [];
+		setNotifications(fetched);
 	};
 
 	return (
@@ -349,11 +383,19 @@ export const GeneralProvider = ({
 	);
 };
 
-// Custom hook to use the AuthContext
 export const useGeneral = () => {
 	const context = useContext(GeneralContext);
-	if (!context) {
-		throw new Error('useGeneral must be used within an AuthProvider');
-	}
+	if (!context)
+		throw new Error('useGeneral must be used within a GeneralProvider');
 	return context;
 };
+
+export function enableHistoryDebug() {
+	if (typeof window !== 'undefined')
+		(window as any).__BIM_HISTORY_DEBUG__ = true;
+}
+
+export function disableHistoryDebug() {
+	if (typeof window !== 'undefined')
+		(window as any).__BIM_HISTORY_DEBUG__ = false;
+}

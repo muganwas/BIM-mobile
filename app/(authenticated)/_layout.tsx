@@ -173,7 +173,9 @@ export default function DrawerLayout() {
 								selectedOption={selectedOption}
 								setSelectedOption={setSelectedOption}
 								online={online}
-								handleGoBack={handleGoBack}
+								handleGoBack={
+									props.options?.headerProps?.handleGoBack ?? handleGoBack
+								}
 								{...props}
 							/>
 						);

@@ -10,22 +10,38 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import useTrackHistory from '@/hooks/useTrackHistory';
 import { NetRouter } from '@/types';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useColorScheme, View } from 'react-native';
 
 export default function RouterDetailsScreen() {
 	const routerTypeRef = useRef<View | null>(null);
+	const navigation = useNavigation();
 	const { routerId } = useLocalSearchParams() as { routerId?: string };
 	const { routers } = useTransaction();
-	const { language, isAnimatable, keyboardVisible } = useGeneral();
+	const { language, isAnimatable, keyboardVisible, handleUpdateHistory } =
+		useGeneral();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
-
 	const [selectedDropDown, setSelectedDropDown] = useState<
 		string | undefined
 	>();
+
+	// Seed parent immediately on mount to guarantee ordering before current route push
+	useEffect(() => {
+		handleUpdateHistory('/(authenticated)/routers');
+	}, [handleUpdateHistory]);
+
+	// Removed focus-based seeding to avoid reshuffling history during back
+
+	// call the tracking hook after seeding so current route is pushed after parent
+	useTrackHistory(
+		routerId
+			? `/(authenticated)/routers/edit/${routerId}`
+			: '/(authenticated)/routers/edit'
+	);
 
 	useEffect(() => {
 		if (routerId && routers) {
@@ -33,6 +49,14 @@ export default function RouterDetailsScreen() {
 			setNetRouter(router);
 		}
 	}, [routerId, routers]);
+
+	useEffect(() => {
+		navigation.setOptions({
+			headerProps: {
+				goback: true,
+			},
+		});
+	}, [navigation]);
 
 	// Router details screen implementation
 	const handleUpdateRouter = () => {
