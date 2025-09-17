@@ -8,28 +8,72 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
+import { NetRouter } from '@/types';
+import {
+	useFocusEffect,
+	useLocalSearchParams,
+	useNavigation,
+	useRouter,
+} from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
-export default function VouchersScreen() {
-	useTrackHistory('/(authenticated)/vouchers');
+export default function VouchersHotspotScreen() {
 	const colorScheme = useColorScheme() ?? 'light';
+	const navigation = useNavigation();
 	const router = useRouter();
+	const { vRId } = useLocalSearchParams() as { vRId?: string };
+	// memoize the path so useTrackHistory doesn't receive a new string each render
+	const trackPath = useMemo(() => {
+		return vRId ? '/(authenticated)/routers/vouchers/' + vRId : undefined;
+	}, [vRId]);
+	useTrackHistory(trackPath);
 	const { packages, fetchPackages, routers } = useTransaction();
-	const { user, language } = useGeneral();
+	const { user, language, handleUpdateHistory } = useGeneral();
+	const [currentRouter, setCurrentRouter] = React.useState<NetRouter>();
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
-	const packageRouterListDetailsId = useRef(
-		`package-router-list-details-${Math.random().toString(36).slice(2)}`
+	const packageRouterHotspotsListDetailsId = useRef(
+		`package-router-hotspots-list-details-${Math.random()
+			.toString(36)
+			.slice(2)}`
 	);
 
-	const packageRouterListId = useRef(
-		`package-router-list-${Math.random().toString(36).slice(2)}`
+	const packageRouterHotspotsListId = useRef(
+		`package-router-hotspots-list-${Math.random().toString(36).slice(2)}`
 	);
-	const packageRouterListHeaderId = useRef(
-		`package-router-list-header-${Math.random().toString(36).slice(2)}`
+	const packageRouterHotspotsListHeaderId = useRef(
+		`package-router-hotspots-list-header-${Math.random().toString(36).slice(2)}`
+	);
+
+	// avoid repeatedly seeding the parent history entry (prevents loops)
+	const seededParentRef = useRef(false);
+
+	useEffect(() => {
+		navigation.setOptions({
+			headerProps: {
+				goback: true,
+			},
+		});
+	}, [navigation]);
+
+	useFocusEffect(
+		useCallback(() => {
+			if (!vRId) return;
+			const parent = '/(authenticated)/vouchers';
+			if (!seededParentRef.current) {
+				handleUpdateHistory(parent);
+				if (trackPath) {
+					handleUpdateHistory(trackPath);
+				}
+				seededParentRef.current = true;
+			}
+			return () => {
+				// on blur (cleanup)
+				seededParentRef.current = false;
+			};
+		}, [handleUpdateHistory, trackPath, vRId])
 	);
 
 	useEffect(() => {
@@ -39,6 +83,13 @@ export default function VouchersScreen() {
 			})();
 		}
 	}, [user, packages, fetchPackages]);
+
+	useEffect(() => {
+		if (vRId && routers) {
+			const found = routers.find((r) => r.id === vRId);
+			setCurrentRouter(found);
+		}
+	}, [vRId, routers]);
 
 	return (
 		<ThemedView
@@ -58,24 +109,25 @@ export default function VouchersScreen() {
 						width: '100%',
 						textTransform: 'capitalize',
 						fontSize: fontSize['heading.one'],
-						fontWeight: fontWeight['heading.one'],
+						fontWeight: fontWeight['heading.three'],
 					}}
 				>
-					{translations[language].categories.vouchers.mainTitle}
-				</ThemedText>
-				<ThemedText
-					style={{
-						fontSize: fontSize['text.medium'],
-					}}
-					lightColor={Colors.light.text}
-					darkColor={Colors.dark.text}
-				>
-					{translations[language].categories.vouchers.mainSubtitle}
+					{translations[language].categories.hotspots.title}
+					<ThemedText
+						lightColor={Colors.light.text}
+						darkColor={Colors.dark.text}
+						style={{
+							fontSize: fontSize['heading.one'],
+							fontWeight: fontWeight['heading.one'],
+						}}
+					>
+						{currentRouter ? ` ${currentRouter.name}` : ''}
+					</ThemedText>
 				</ThemedText>
 			</ThemedView>
 
 			<TileContainer
-				id={packageRouterListId.current}
+				id={packageRouterHotspotsListId.current}
 				backgroundColor={Colors[colorScheme].background}
 				style={{
 					flexDirection: 'column',
@@ -94,7 +146,7 @@ export default function VouchersScreen() {
 						darkColor={Colors.dark.background}
 					>
 						<ThemedView
-							id={packageRouterListHeaderId.current}
+							id={packageRouterHotspotsListHeaderId.current}
 							style={{
 								flexDirection: 'row',
 								justifyContent: 'space-between',
@@ -177,7 +229,7 @@ export default function VouchersScreen() {
 							</ThemedText>
 						</ThemedView>
 						<ScrollView
-							id={packageRouterListDetailsId.current}
+							id={packageRouterHotspotsListDetailsId.current}
 							style={{
 								flexDirection: 'column',
 								backgroundColor: Colors[colorScheme].background,
@@ -188,7 +240,7 @@ export default function VouchersScreen() {
 								lightColor={Colors.light.background}
 								darkColor={Colors.dark.background}
 							>
-								{routers.map((r, index) => (
+								{currentRouter?.networkInfo.hotspots.map((hotspot, index) => (
 									<ThemedView
 										key={index}
 										style={{
@@ -213,10 +265,10 @@ export default function VouchersScreen() {
 												paddingRight: 8,
 												overflow: 'hidden',
 											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={Colors.light.bim}
+											darkColor={Colors.dark.bim}
 										>
-											{r.name}
+											{hotspot.ssid.toUpperCase()}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -227,7 +279,7 @@ export default function VouchersScreen() {
 											lightColor={Colors.light.text}
 											darkColor={Colors.dark.text}
 										>
-											{r.location}
+											{hotspot.interface}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -238,7 +290,7 @@ export default function VouchersScreen() {
 											lightColor={Colors.light.text}
 											darkColor={Colors.dark.text}
 										>
-											{r?.networkInfo.ipv4}
+											{hotspot.profile}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -249,7 +301,7 @@ export default function VouchersScreen() {
 											lightColor={Colors.light.text}
 											darkColor={Colors.dark.text}
 										>
-											{r.username}
+											{hotspot.status}
 										</ThemedText>
 										<ThemedView
 											style={{
@@ -264,10 +316,14 @@ export default function VouchersScreen() {
 											<ThemedButton
 												title={translations[
 													language
-												].categories.buttons.hotspots.toUpperCase()}
-												onPress={() => router.push(`/routers/vouchers/${r.id}`)}
-												lightColor={Colors.light.lightBlue}
-												darkColor={Colors.dark.lightBlue}
+												].categories.buttons.viewVouchers.toUpperCase()}
+												onPress={() =>
+													router.push(
+														`/(authenticated)/routers/vouchers/${vRId}/${hotspot.id}`
+													)
+												}
+												lightColor={Colors.light.bim}
+												darkColor={Colors.dark.bim}
 												darkTextColor={Colors.dark.white}
 												lightTextColor={Colors.light.white}
 												style={{ flex: 1 }}

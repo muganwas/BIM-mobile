@@ -23,6 +23,7 @@ export type ThemedButtonProps = {
 	darkTextColor?: string;
 	lightColor?: string;
 	darkColor?: string;
+	numberOfLines?: number;
 	icon?: SFSymbols6_0;
 	iconColor?: string;
 };
@@ -38,6 +39,7 @@ export function ThemedButton({
 	darkColor,
 	icon,
 	iconColor,
+	numberOfLines,
 }: ThemedButtonProps) {
 	const colorScheme = useColorScheme() ?? 'light';
 	const presetBg = useThemeColor(
@@ -75,7 +77,7 @@ export function ThemedButton({
 					<IconSymbol name={icon} size={20} color={iconColor || textColor} />
 				)}
 				<ThemedText
-					numberOfLines={1}
+					numberOfLines={numberOfLines ?? 1}
 					style={[styles.buttonText, { color: textColor }, textStyle]}
 					lightColor={textColor}
 					darkColor={textColor}
@@ -92,15 +94,16 @@ const styles = StyleSheet.create({
 		paddingVertical: 10,
 		paddingHorizontal: 15,
 		borderRadius: 5,
+		overflow: 'hidden',
 		alignItems: 'center',
 		justifyContent: 'center',
-	} as ViewStyle,
+	},
 	buttonContent: {
 		flexDirection: 'row',
 		alignItems: 'center',
-	} as ViewStyle,
+	},
 	buttonText: {
 		fontSize: 16,
 		fontWeight: '500',
-	} as TextStyle,
+	},
 });

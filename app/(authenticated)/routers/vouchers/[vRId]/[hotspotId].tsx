@@ -1,38 +1,46 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
-import { generateRandomInt, msToHms } from '@/helpers';
+import { generateRandomInt, translateWithVariables } from '@/helpers';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { NetRouter } from '@/types';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { Hotspot, NetRouter } from '@/types';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
-export default function RouterDetailsScreen() {
+export default function HotspotVouchersScreen() {
 	const navigation = useNavigation<any>();
-	const { routerId } = useLocalSearchParams() as { routerId?: string };
+	const router = useRouter();
+	const { vRId, hotspotId } = useLocalSearchParams() as {
+		vRId?: string;
+		hotspotId?: string;
+	};
 	const { handleUpdateHistory, language } = useGeneral();
 	const { routers } = useTransaction();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
+	const [hotSpot, setHotSpot] = useState<Hotspot | undefined>();
 
 	// Seed parent immediately on mount to guarantee ordering before current route push
 	useEffect(() => {
-		handleUpdateHistory('/(authenticated)/routers');
-	}, [handleUpdateHistory]);
+		if (!vRId) return;
+		handleUpdateHistory('/(authenticated)/routers/vouchers/' + vRId);
+	}, [handleUpdateHistory, vRId]);
 
 	// Track current route after parent seeding is registered
 	useTrackHistory(
-		routerId
-			? `/(authenticated)/routers/preview/${routerId}`
-			: '/(authenticated)/routers/preview'
+		hotspotId && vRId
+			? `/(authenticated)/routers/vouchers/${vRId}/${hotspotId}`
+			: '/(authenticated)/routers/vouchers'
 	);
 
 	useEffect(() => {
@@ -44,16 +52,35 @@ export default function RouterDetailsScreen() {
 	}, [navigation]);
 
 	useEffect(() => {
-		if (routerId && routers) {
-			const router = routers.find((r) => r.id === routerId);
+		if (vRId && hotspotId && routers) {
+			const router = routers.find((r) => r.id === vRId);
 			setNetRouter(router);
+			const hotspot = router?.networkInfo.hotspots.find(
+				(h) => h.id === hotspotId
+			);
+			setHotSpot(hotspot);
 		}
-	}, [routerId, routers]);
+	}, [vRId, hotspotId, routers]);
 
-	const handleViewHotspotUsers = (hotspotId: string) => {
-		if (!hotspotId) return;
+	const handleClearUserDetails = (voucher: string) => {
+		if (!voucher) return;
+		return router.push(
+			`/(authenticated)/routers/vouchers/${vRId}/${hotspotId}/${voucher}`
+		);
+	};
+
+	const handleEditUserDetails = (voucher: string) => {
+		if (!voucher) return;
+		return router.push(
+			`/(authenticated)/routers/vouchers/${vRId}/${hotspotId}/${voucher}`
+		);
+	};
+
+	const handleDeleteUser = (voucher: string) => {
+		if (!voucher) return;
 		// Update router logic here
 	};
+
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
@@ -65,164 +92,68 @@ export default function RouterDetailsScreen() {
 			}}
 			containerStyle={{ flex: 1 }}
 		>
-			<TileContainer
-				id={routerId || 'new-router'}
-				backgroundColor={Colors[colorScheme].background}
+			<ThemedView
 				style={{
 					flexDirection: 'column',
-					boxSizing: 'border-box',
-					overflow: 'hidden',
-					paddingBottom: 10,
+					gap: 20,
+					marginBottom: 10,
 					marginHorizontal: 20,
 				}}
+				lightColor={Colors.light.background}
+				darkColor={Colors.dark.background}
 			>
+				<ThemedText
+					lightColor={Colors.light.text}
+					darkColor={Colors.dark.text}
+					style={{
+						width: '100%',
+						textTransform: 'capitalize',
+						fontSize: fontSize['heading.one'],
+						fontWeight: fontWeight['heading.one'],
+					}}
+				>
+					{translateWithVariables(
+						translations[language].categories.vouchers.vouchersSubtitle,
+						{
+							hotspotName: hotSpot?.ssid ?? '',
+							routerName: netRouter?.name ?? '',
+						}
+					)}
+				</ThemedText>
 				<ThemedView
+					style={{
+						flexDirection: 'row',
+						gap: 10,
+					}}
 					lightColor={Colors.light.background}
 					darkColor={Colors.dark.background}
-					style={{ flexDirection: 'column', padding: 10 }}
 				>
-					<ThemedText
-						style={{
-							fontSize: fontSize['heading.one'],
-							fontWeight: fontWeight['heading.two'],
-							marginBottom: 10,
-						}}
-						lightColor={Colors.light['heading.one']}
-						darkColor={Colors.dark['heading.one']}
-					>
-						{translations[language].categories.routers.routerHash}
-					</ThemedText>
-					<ThemedText>{netRouter?.networkInfo.routerHash}</ThemedText>
+					<ThemedButton
+						style={{ flex: 1 }}
+						lightColor={Colors.light.bim}
+						darkColor={Colors.dark.bim}
+						lightTextColor={Colors.light.white}
+						darkTextColor={Colors.dark.white}
+						title={translations[
+							language
+						].categories.buttons.createSingleVoucher.toUpperCase()}
+						onPress={() => {}}
+					/>
+					<ThemedButton
+						style={{ flex: 1 }}
+						lightColor={Colors.light.lime}
+						darkColor={Colors.dark.lime}
+						lightTextColor={Colors.light.white}
+						darkTextColor={Colors.dark.white}
+						title={translations[
+							language
+						].categories.buttons.createBulkVouchers.toUpperCase()}
+						onPress={() => {}}
+					/>
 				</ThemedView>
-			</TileContainer>
+			</ThemedView>
 			<TileContainer
-				id={routerId || 'new-router-' + generateRandomInt(1000, 9999)}
-				backgroundColor={Colors[colorScheme].background}
-				style={{
-					flexDirection: 'column',
-					boxSizing: 'border-box',
-					overflow: 'hidden',
-					paddingBottom: 10,
-					marginHorizontal: 20,
-				}}
-			>
-				<ThemedView
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
-					style={{ flexDirection: 'column', padding: 10 }}
-				>
-					<ThemedText
-						style={{
-							fontSize: fontSize['heading.one'],
-							fontWeight: fontWeight['heading.two'],
-							marginBottom: 10,
-						}}
-						lightColor={Colors.light['heading.one']}
-						darkColor={Colors.dark['heading.one']}
-					>
-						{translations[language].categories.routers.routerStatus}
-					</ThemedText>
-					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
-						style={{ flexDirection: 'row', alignItems: 'center' }}
-					>
-						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
-							style={styles.statusLabel}
-						>
-							{`${translations[language].categories.routers.uptime}:`}
-						</ThemedText>
-						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.networkInfo.uptime &&
-								msToHms(parseInt(netRouter.networkInfo.uptime))}
-						</ThemedText>
-					</ThemedView>
-					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
-						style={{ flexDirection: 'row', alignItems: 'center' }}
-					>
-						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
-							style={styles.statusLabel}
-						>
-							{`${translations[language].categories.routers.routerOS}:`}
-						</ThemedText>
-						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.routerOsVersion}
-						</ThemedText>
-					</ThemedView>
-					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
-						style={{ flexDirection: 'row', alignItems: 'center' }}
-					>
-						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
-							style={styles.statusLabel}
-						>
-							{`${translations[language].categories.routers.freeMemory}:`}
-						</ThemedText>
-						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.freeMemory}
-						</ThemedText>
-					</ThemedView>
-					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
-						style={{ flexDirection: 'row', alignItems: 'center' }}
-					>
-						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
-							style={styles.statusLabel}
-						>
-							{`${translations[language].categories.routers.totalMemory}:`}
-						</ThemedText>
-						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.totalMemory}
-						</ThemedText>
-					</ThemedView>
-					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
-						style={{ flexDirection: 'row', alignItems: 'center' }}
-					>
-						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
-							style={styles.statusLabel}
-						>
-							{`${translations[language].categories.routers.cpuFrequency}:`}
-						</ThemedText>
-						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.cpuFrequency}
-						</ThemedText>
-					</ThemedView>
-					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
-						style={{ flexDirection: 'row', alignItems: 'center' }}
-					>
-						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
-							style={styles.statusLabel}
-						>
-							{`${translations[language].categories.routers.cpuLoad}:`}
-						</ThemedText>
-						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.cpuLoad}
-						</ThemedText>
-					</ThemedView>
-				</ThemedView>
-			</TileContainer>
-			<TileContainer
-				id={routerId || 'new-router-' + generateRandomInt(1000, 9999)}
+				id={vRId || 'new-router-' + generateRandomInt(1000, 9999)}
 				backgroundColor={Colors[colorScheme].background}
 				style={{
 					flexDirection: 'column',
@@ -275,7 +206,7 @@ export default function RouterDetailsScreen() {
 						darkColor={Colors.dark.background}
 					>
 						<ThemedView
-							id={`hotspot-list-header-${routerId}`}
+							id='hotspot-list-header'
 							style={{
 								flexDirection: 'row',
 								justifyContent: 'space-between',
@@ -293,7 +224,14 @@ export default function RouterDetailsScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{translations[language].categories.routers.id}
+								#
+							</ThemedText>
+							<ThemedText
+								style={styles.colTitle}
+								lightColor={Colors.light.text}
+								darkColor={Colors.dark.text}
+							>
+								{translations[language].categories.vouchers.vouchers}
 							</ThemedText>
 							<ThemedText
 								numberOfLines={1}
@@ -302,7 +240,7 @@ export default function RouterDetailsScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{translations[language].categories.routers.hotspotName}
+								{translations[language].categories.vouchers.package}
 							</ThemedText>
 							<ThemedText
 								numberOfLines={1}
@@ -311,7 +249,7 @@ export default function RouterDetailsScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{translations[language].categories.routers.interface}
+								{translations[language].categories.vouchers.status}
 							</ThemedText>
 							<ThemedText
 								numberOfLines={1}
@@ -320,7 +258,7 @@ export default function RouterDetailsScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{translations[language].categories.routers.profile}
+								{translations[language].categories.vouchers.macAddress}
 							</ThemedText>
 							<ThemedText
 								numberOfLines={1}
@@ -329,26 +267,45 @@ export default function RouterDetailsScreen() {
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{translations[language].categories.routers.status}
+								{translations[language].categories.vouchers.uptime}
 							</ThemedText>
 							<ThemedText
 								numberOfLines={1}
 								ellipsizeMode='tail'
-								style={[styles.colTitle, { textAlign: 'center' }]}
+								style={styles.colTitle}
 								lightColor={Colors.light.text}
 								darkColor={Colors.dark.text}
 							>
-								{translations[language].categories.routers.actions}
+								{translations[language].categories.vouchers.bytesIn}
+							</ThemedText>
+							<ThemedText
+								numberOfLines={1}
+								ellipsizeMode='tail'
+								style={styles.colTitle}
+								lightColor={Colors.light.text}
+								darkColor={Colors.dark.text}
+							>
+								{translations[language].categories.vouchers.bytesOut}
+							</ThemedText>
+
+							<ThemedText
+								numberOfLines={1}
+								ellipsizeMode='tail'
+								style={[styles.colTitle, { width: 120, textAlign: 'center' }]}
+								lightColor={Colors.light.text}
+								darkColor={Colors.dark.text}
+							>
+								{translations[language].categories.vouchers.actions}
 							</ThemedText>
 						</ThemedView>
 						<ScrollView
-							id={`hotspot-list-details-${routerId}`}
+							id={`hotspot-list-details-${hotspotId}`}
 							style={{
 								flexDirection: 'column',
 								backgroundColor: Colors[colorScheme].background,
 							}}
 						>
-							{netRouter?.networkInfo.hotspots.map((hotspot, index) => (
+							{hotSpot?.users?.map((user, index) => (
 								<ThemedView
 									key={index}
 									style={{
@@ -366,11 +323,7 @@ export default function RouterDetailsScreen() {
 								>
 									<ThemedText
 										numberOfLines={1}
-										style={{
-											width: 30,
-											overflow: 'hidden',
-											paddingRight: 8,
-										}}
+										style={{ width: 30 }}
 										lightColor={Colors.light.text}
 										darkColor={Colors.dark.text}
 									>
@@ -379,10 +332,10 @@ export default function RouterDetailsScreen() {
 									<ThemedText
 										numberOfLines={1}
 										style={styles.colInfo}
-										lightColor={Colors.light.bim}
-										darkColor={Colors.dark.bim}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
 									>
-										{hotspot.ssid}
+										{user.voucherCode}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
@@ -390,7 +343,7 @@ export default function RouterDetailsScreen() {
 										lightColor={Colors.light.text}
 										darkColor={Colors.dark.text}
 									>
-										{hotspot.interface}
+										{user.package}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
@@ -398,7 +351,7 @@ export default function RouterDetailsScreen() {
 										lightColor={Colors.light.text}
 										darkColor={Colors.dark.text}
 									>
-										{hotspot.profile}
+										{user.status}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
@@ -406,33 +359,80 @@ export default function RouterDetailsScreen() {
 										lightColor={Colors.light.text}
 										darkColor={Colors.dark.text}
 									>
-										{hotspot.status}
+										{user.macAddress}
+									</ThemedText>
+									<ThemedText
+										numberOfLines={1}
+										style={styles.colInfo}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
+									>
+										{user.uptime}
+									</ThemedText>
+									<ThemedText
+										numberOfLines={1}
+										style={styles.colInfo}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
+									>
+										{user.bytesIn}
+									</ThemedText>
+									<ThemedText
+										numberOfLines={1}
+										style={styles.colInfo}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
+									>
+										{user.bytesOut}
 									</ThemedText>
 									<ThemedView
-										style={{
-											flexDirection: 'row',
-											justifyContent: 'space-between',
-											gap: 5,
-											width: 120,
-										}}
+										style={[
+											styles.colInfo,
+											{
+												flexDirection: 'row',
+												justifyContent: 'space-between',
+												gap: 5,
+												width: 120,
+											},
+										]}
 										lightColor={Colors.light.background}
 										darkColor={Colors.dark.background}
 									>
 										<TouchableOpacity
 											style={{
-												backgroundColor: Colors[colorScheme].bim,
 												paddingVertical: 6,
-												paddingHorizontal: 12,
-												borderRadius: 8,
 											}}
-											onPress={() => handleViewHotspotUsers(hotspot.id)}
+											onPress={() => handleEditUserDetails(user.voucherCode)}
 										>
-											<ThemedText
-												lightColor={Colors.light.white}
-												darkColor={Colors.dark.white}
-											>
-												{translations[language].categories.buttons.viewUsers}
-											</ThemedText>
+											<IconSymbol
+												name='edit.outline'
+												size={20}
+												color={Colors[colorScheme].yellow}
+											/>
+										</TouchableOpacity>
+										<TouchableOpacity
+											style={{
+												paddingVertical: 6,
+											}}
+											onPress={() => handleClearUserDetails(user.voucherCode)}
+										>
+											<IconSymbol
+												name='block'
+												size={20}
+												color={Colors[colorScheme].error}
+											/>
+										</TouchableOpacity>
+										<TouchableOpacity
+											style={{
+												paddingVertical: 6,
+											}}
+											onPress={() => handleDeleteUser(user.voucherCode)}
+										>
+											<IconSymbol
+												name='delete.outline'
+												size={20}
+												color={Colors[colorScheme].error}
+											/>
 										</TouchableOpacity>
 									</ThemedView>
 								</ThemedView>
@@ -452,12 +452,12 @@ const styles = StyleSheet.create({
 	},
 	colTitle: {
 		fontSize: fontSize['text.small'],
-		width: 120,
+		width: 100,
 		textTransform: 'uppercase',
 		paddingRight: 8,
 	},
 	colInfo: {
-		width: 120,
+		width: 100,
 		paddingRight: 8,
 		overflow: 'hidden',
 	},

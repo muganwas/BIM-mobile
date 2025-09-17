@@ -38,6 +38,7 @@ export interface Hotspot {
 	interface: string; // Network interface associated with the hotspot
 	profile: string; // Profile name for the hotspot
 	status: 'enabled' | 'disabled'; // Status of the hotspot
+	users?: VoucherUser[]; // Optional list of voucher users connected to the hotspot
 }
 
 export interface NetworkInfo {
@@ -113,6 +114,7 @@ export interface Bank {
 
 export interface VoucherUser {
 	voucherCode: string;
+	password?: string;
 	package: string;
 	status: 'active' | 'inactive';
 	macAddress: string; // MAC address of the user

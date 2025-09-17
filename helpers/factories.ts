@@ -29,7 +29,7 @@ export function generateNetRouter(
 ): NetRouter {
 	const idx = generateRandomInt(1, 254);
 	const id = overrides.id ?? `R-${generateRandomNumbers(6)}`;
-	const name = overrides.name ?? `Router ${id}`;
+	const name = overrides.name ?? `${id}`;
 	const location = overrides.location ?? `Location ${generateRandomInt(1, 10)}`;
 	const networkInfo = overrides.networkInfo ?? {
 		mac: `00:1A:2B:3C:4D:${String(idx).padStart(2, '0')}`,
@@ -45,6 +45,20 @@ export function generateNetRouter(
 				interface: `wlan${hIdx}`,
 				profile: `default-profile-${hIdx + 1}`,
 				status: Math.random() > 0.5 ? 'enabled' : 'disabled',
+				// Optionally include connected users for this hotspot
+				users: Array.from({ length: generateRandomInt(1, 5) }).map(() => ({
+					voucherCode: generateRandomNumbers(6),
+					package: packageNames[generateRandomInt(0, packageNames.length - 1)],
+					status: Math.random() > 0.2 ? 'active' : 'inactive',
+					macAddress: `00:1A:2B:3C:4D:${String(
+						generateRandomInt(0, 255)
+					).padStart(2, '0')}`,
+					uptime: generateRandomInt(0, 5000),
+					bytesIn: generateRandomInt(0, 1_000_000),
+					bytesOut: generateRandomInt(0, 1_000_000),
+					comment: `${toLocalISOString(new Date())}-${id}`,
+					createdAt: new Date().toDateString(),
+				})),
 			})
 		),
 	};
