@@ -138,6 +138,9 @@ const config: StorybookConfig = {
 			'.tsx': 'tsx',
 		};
 
+		// Ensure automatic JSX runtime so components don’t need `import React` in scope
+		config.optimizeDeps.esbuildOptions.jsx = 'automatic';
+
 		config.optimizeDeps.exclude = [
 			'expo-device',
 			'expo-router',
@@ -150,6 +153,8 @@ const config: StorybookConfig = {
 
 		config.esbuild = config.esbuild || {};
 		config.esbuild.loader = 'tsx';
+		(config.esbuild as any).jsx = 'automatic';
+		(config.esbuild as any).jsxImportSource = 'react';
 
 		config.define = {
 			...(config.define || {}),
