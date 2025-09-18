@@ -13,6 +13,7 @@ import { useTransaction } from '@/context/TransactionContext';
 import { generateRandomInt, translateWithVariables } from '@/helpers';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { Hotspot, NetRouter } from '@/types';
+import CreateVouchers from '@/views/CreateVouchers';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -26,6 +27,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 export default function HotspotVouchersScreen() {
 	const promptFadeAnim = useAnimatedValue(0);
+	const createVouchersFadeAnim = useAnimatedValue(0);
 	const affirmAction = useRef<() => void | null>(null);
 	const navigation = useNavigation<any>();
 	const router = useRouter();
@@ -42,6 +44,8 @@ export default function HotspotVouchersScreen() {
 	const [promptTitle, setPromptTitle] = useState('');
 	const [promptMessage, setPromptMessage] = useState('');
 	const [promptConfirmText, setPromptConfirmText] = useState('');
+	const [showCreateVouchers, setShowCreateVouchers] = useState(false);
+	const [multipleVouchers, setMultipleVouchers] = useState(false);
 
 	// Seed parent immediately on mount to guarantee ordering before current route push
 	useEffect(() => {
@@ -113,6 +117,35 @@ export default function HotspotVouchersScreen() {
 		}
 	};
 
+	const toggleShowCreateVouchers = (show?: boolean) => {
+		const toValue = show ?? !showCreateVouchers;
+		if (toValue) {
+			Animated.timing(createVouchersFadeAnim, {
+				toValue: 1,
+				duration: 300,
+				useNativeDriver: true,
+			}).start(() => {
+				setShowCreateVouchers(true);
+			});
+		} else {
+			Animated.timing(createVouchersFadeAnim, {
+				toValue: 0,
+				duration: 300,
+				useNativeDriver: true,
+			}).start(() => {
+				setShowCreateVouchers(false);
+			});
+		}
+	};
+
+	const handleCreateVouchers = () => {
+		// Generate vouchers logic
+		setTimeout(() => {
+			// Call the create vouchers function
+			toggleShowCreateVouchers(false);
+		}, 300);
+	};
+
 	return (
 		<>
 			<ParallaxScrollView
@@ -170,7 +203,10 @@ export default function HotspotVouchersScreen() {
 							title={translations[
 								language
 							].categories.buttons.createSingleVoucher.toUpperCase()}
-							onPress={() => {}}
+							onPress={() => {
+								setMultipleVouchers(false);
+								toggleShowCreateVouchers(true);
+							}}
 						/>
 						<ThemedButton
 							style={{ flex: 1 }}
@@ -181,7 +217,10 @@ export default function HotspotVouchersScreen() {
 							title={translations[
 								language
 							].categories.buttons.createBulkVouchers.toUpperCase()}
-							onPress={() => {}}
+							onPress={() => {
+								setMultipleVouchers(true);
+								toggleShowCreateVouchers(true);
+							}}
 						/>
 					</ThemedView>
 				</ThemedView>
@@ -529,6 +568,16 @@ export default function HotspotVouchersScreen() {
 					},
 				]}
 			/>
+			{hotSpot && (
+				<CreateVouchers
+					visible={showCreateVouchers}
+					fadeAnim={createVouchersFadeAnim}
+					multiple={multipleVouchers}
+					hotspot={hotSpot}
+					toggleVisible={toggleShowCreateVouchers}
+					generateVouchers={handleCreateVouchers}
+				/>
+			)}
 		</>
 	);
 }

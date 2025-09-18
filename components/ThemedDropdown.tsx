@@ -52,6 +52,7 @@ export type ThemedDropdownProps = ViewProps & {
 	toggleMainScroll?: (v: boolean) => void;
 	options: string[];
 	dropDownStyle?: ViewStyle;
+	openDirection?: 'down' | 'up';
 };
 
 export const ThemedDropdown = ({
@@ -80,6 +81,7 @@ export const ThemedDropdown = ({
 	isAnimatable = true,
 	keyboardVisible = false,
 	containerRef,
+	openDirection = 'down',
 	...otherProps
 }: ThemedDropdownProps) => {
 	const backgroundColor = useThemeColor(
@@ -181,7 +183,7 @@ export const ThemedDropdown = ({
 						style={[
 							styles.valueContainer,
 							{
-								borderWidth: 2,
+								borderWidth: 1,
 								borderRadius: 5,
 								borderColor: Colors[colorScheme].inputBorder,
 							},
@@ -227,16 +229,27 @@ export const ThemedDropdown = ({
 						shadowRadius: 10,
 						elevation: 6,
 						zIndex: 400,
+						// Position relative to trigger to avoid misalignment
+						...(openDirection === 'down'
+							? { top: '100%', marginTop: 6 }
+							: { bottom: '100%', marginBottom: 6 }),
 					}}
 					animStyle={{
 						transform: [
 							// Change from simple translateY to scale origin from bottom
-							{
-								translateY: dropdownAnimVal.interpolate({
-									inputRange: [0, 1],
-									outputRange: [20, 0], // Slightly more downward starting position
-								}),
-							},
+							openDirection === 'down'
+								? {
+										translateY: dropdownAnimVal.interpolate({
+											inputRange: [0, 1],
+											outputRange: [20, 0],
+										}),
+								  }
+								: {
+										translateY: dropdownAnimVal.interpolate({
+											inputRange: [0, 1],
+											outputRange: [-20, 0],
+										}),
+								  },
 							{
 								scaleY: dropdownAnimVal.interpolate({
 									inputRange: [0, 1],
@@ -252,10 +265,11 @@ export const ThemedDropdown = ({
 						ref={scrollRef}
 						nestedScrollEnabled={true}
 						keyboardShouldPersistTaps='handled'
-						style={{ backgroundColor: '#fff' }}
-						onTouchStart={(e) => {
+						style={{ backgroundColor: '#fff', maxHeight: 220 }}
+						contentContainerStyle={{ paddingBottom: 16 }}
+						showsVerticalScrollIndicator
+						onTouchStart={() => {
 							if (delayTouch) {
-								e.stopPropagation();
 								setIsScrolling(true);
 								resetIsCrollingTimeout.current = setTimeout(
 									() => setIsScrolling(false),
@@ -263,8 +277,7 @@ export const ThemedDropdown = ({
 								);
 							}
 						}}
-						onScrollBeginDrag={(e) => {
-							e.stopPropagation();
+						onScrollBeginDrag={() => {
 							setIsScrolling(true);
 							if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
 						}}
@@ -284,7 +297,7 @@ export const ThemedDropdown = ({
 							resetIsCrollingTimeout.current &&
 								clearTimeout(resetIsCrollingTimeout.current);
 						}}
-						onScroll={(e) => e.stopPropagation()}
+						onScroll={() => {}}
 					>
 						<ThemedView
 							style={[
@@ -446,8 +459,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'column',
 		position: 'absolute',
 		width: '100%',
-		top: 90,
-		maxHeight: 150,
+		maxHeight: 220,
 		backgroundColor: '#fff',
 		borderColor: 'transparent',
 		borderWidth: 1,
