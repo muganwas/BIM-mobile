@@ -89,6 +89,13 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		return [];
 	});
 
+	// Keep an up-to-date ref of history so we can read it synchronously
+	// without causing re-renders or relying on setState updaters.
+	const historyRef = React.useRef<string[]>(history);
+	useEffect(() => {
+		historyRef.current = history;
+	}, [history]);
+
 	useEffect(() => {
 		const show = Keyboard.addListener('keyboardDidShow', () =>
 			setKeyboardVisible(true)
@@ -272,56 +279,55 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const handleGoBack = useCallback(() => {
 		navigatingBackRef.current = true;
-		setHistory((prev) => {
-			if ((window as any)?.__BIM_HISTORY_DEBUG__)
-				console.debug('handleGoBack prev', prev);
+		const prev = historyRef.current || [];
+		let action: () => void = () => {};
 
-			const current = prev[prev.length - 1];
-			const prevPath = prev[prev.length - 2];
-			console.log('Prev path:', prevPath);
-			console.log('Current path:', current);
+		if ((window as any)?.__BIM_HISTORY_DEBUG__)
+			console.debug('handleGoBack using history', prev);
 
-			// If no previous path in history, fallback
-			if (prev.length <= 1 || !prevPath) {
-				let currentPath = '';
-				try {
-					const anyRouter = router as any;
-					currentPath =
-						anyRouter?.pathname || anyRouter?.asPath || anyRouter?.route || '';
-				} catch {}
-				if (currentPath && /\/routers\/hotspots\//.test(currentPath)) {
-					navigateToPath('/(authenticated)/packages');
-					return prev;
-				}
-				router.back?.();
-				return prev;
-			}
-
-			// Pop current and navigate to the immediate previous entry
-			const newHistory = [...prev];
-			newHistory.pop(); // remove current
-			const targetPath = prevPath;
-
+		if (prev.length <= 1 || !prev[prev.length - 2]) {
+			// No previous path recorded, use a fallback navigation
+			let currentPath = '';
 			try {
-				navigateToPath(targetPath);
-			} catch {
-				if (router.back) {
-					try {
-						router.back();
-					} catch {
+				const anyRouter = router as any;
+				currentPath =
+					anyRouter?.pathname || anyRouter?.asPath || anyRouter?.route || '';
+			} catch {}
+			if (currentPath && /\/routers\/hotspots\//.test(currentPath)) {
+				action = () => navigateToPath('/(authenticated)/packages');
+			} else {
+				action = () => router.back?.();
+			}
+		} else {
+			// Pop current and navigate to the immediate previous entry
+			const targetPath = prev[prev.length - 2];
+			const newHistory = prev.slice(0, -1);
+			setHistory(newHistory);
+			persist(newHistory);
+			action = () => {
+				try {
+					navigateToPath(targetPath);
+				} catch {
+					if (router.back) {
+						try {
+							router.back();
+						} catch {
+							(router.replace as unknown as (p: string) => void)(targetPath);
+						}
+					} else {
 						(router.replace as unknown as (p: string) => void)(targetPath);
 					}
-				} else {
-					(router.replace as unknown as (p: string) => void)(targetPath);
 				}
-			}
+			};
+		}
 
-			persist(newHistory);
-			return newHistory;
-		});
-		// Clear the navigatingBack flag on the next tick to allow future updates
+		// Perform navigation after state has been updated, outside of render/state updater
 		setTimeout(() => {
-			navigatingBackRef.current = false;
+			try {
+				action();
+			} finally {
+				navigatingBackRef.current = false;
+			}
 		}, 0);
 	}, [router, navigateToPath]);
 

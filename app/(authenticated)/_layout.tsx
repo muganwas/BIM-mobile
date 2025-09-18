@@ -24,6 +24,23 @@ function CustomDrawerContent(props: any) {
 	const { state, descriptors, navigation } = props;
 	const activeIndex = state.index;
 
+	// Allowlist of routes to show in the drawer. Only routes listed here will render.
+	// Edit this set to control which routes appear as links in the drawer.
+	const allowedRoutes = React.useMemo(
+		() =>
+			new Set<string>([
+				'home',
+				'routers',
+				'packages',
+				'vouchers',
+				'transactions',
+				'withdraw',
+				'banks',
+				'documents',
+			]),
+		[]
+	);
+
 	return (
 		<DrawerContentScrollView
 			contentContainerStyle={{ padding: 0 }}
@@ -42,6 +59,8 @@ function CustomDrawerContent(props: any) {
 			{state.routes.map((route: any, i: number) => {
 				const { options } = descriptors[route.key];
 				const showItem = options.drawerItemStyle?.display !== 'none';
+				// Skip routes that are not explicitly allowed
+				if (!allowedRoutes.has(route.name)) return null;
 				const label = options.drawerLabel ?? options.title ?? route.name;
 				const isActive = i === activeIndex;
 				const activeBg =
