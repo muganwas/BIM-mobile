@@ -10,7 +10,6 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { translateWithVariables } from '@/helpers';
-import { Hotspot, NetRouter, VoucherUser } from '@/types';
 import {
 	useFocusEffect,
 	useLocalSearchParams,
@@ -18,10 +17,9 @@ import {
 	useRouter,
 } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useColorScheme, View } from 'react-native';
+import { useColorScheme } from 'react-native';
 
 export default function EditVoucherScreen() {
-	const routerTypeRef = useRef<View | null>(null);
 	const router = useRouter();
 	const navigation = useNavigation();
 	const { vRId, hotspotId, voucher } = useLocalSearchParams() as {
@@ -29,21 +27,12 @@ export default function EditVoucherScreen() {
 		hotspotId?: string;
 		voucher?: string;
 	};
-	const { language, isAnimatable, keyboardVisible, handleUpdateHistory } =
-		useGeneral();
+	const { language, handleUpdateHistory } = useGeneral();
 	const { routers } = useTransaction();
 	const colorScheme = useColorScheme() ?? 'light';
 	const [profile, setProfile] = useState<string>('');
 	const [username, setUsername] = useState<string>('');
 	const [password, setPassword] = useState<string>('');
-
-	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
-	const [hotspot, setHotspot] = useState<Hotspot | undefined>();
-	const [user, setUser] = useState<VoucherUser | undefined>();
-
-	const [selectedDropDown, setSelectedDropDown] = useState<
-		string | undefined
-	>();
 
 	useEffect(() => {
 		navigation.setOptions({
@@ -79,13 +68,10 @@ export default function EditVoucherScreen() {
 	useEffect(() => {
 		if (vRId && hotspotId && routers) {
 			const router = routers.find((r) => r.id === vRId);
-			setNetRouter(router);
 			const hotspot = router?.networkInfo.hotspots.find(
 				(h) => h.id === hotspotId
 			);
-			setHotspot(hotspot);
 			const user = hotspot?.users?.find((u) => u.voucherCode === voucher);
-			setUser(user);
 			setUsername(user?.voucherCode || '');
 			setPassword(user?.password || '');
 			setProfile(user?.package || '');
@@ -192,7 +178,7 @@ export default function EditVoucherScreen() {
 					/>
 					<ThemedInput
 						label={translations[language].categories.vouchers.profile}
-						placeholder='******'
+						placeholder='Daily-1000Shs'
 						value={profile || ''}
 						setValue={(value) => setProfile(value)}
 						labelStyle={{

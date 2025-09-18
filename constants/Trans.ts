@@ -32,6 +32,7 @@ const translations: Translations = {
 				allVoucherUsers: 'View All Voucher Users',
 				createSingleVoucher: 'Create Single Voucher',
 				createBulkVouchers: 'Create Bulk Vouchers',
+				confirm: 'Confirm',
 				downloadCSV: 'Download CSV',
 				viewUsers: 'View Users',
 				addRouter: 'Add Router',
@@ -47,6 +48,7 @@ const translations: Translations = {
 				delete: 'Delete',
 				close: 'Close',
 				ok: 'OK',
+				block: 'Block',
 				apply: 'Apply',
 				save: 'Save',
 			},
@@ -124,6 +126,12 @@ const translations: Translations = {
 				username: 'Username',
 				password: 'Password',
 				profile: 'Profile',
+				confirmBlockTitle: 'Confirm Block User',
+				blockMessage:
+					'Are you sure you want to block this user? They will no longer be able to access the hotspot.',
+				confirmDeleteTitle: 'Confirm Delete User',
+				deleteMessage:
+					'Are you sure you want to delete this user? This action cannot be undone.',
 			},
 			dashboard: {
 				title: 'Dashboard',

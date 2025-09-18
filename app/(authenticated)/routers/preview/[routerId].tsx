@@ -342,7 +342,7 @@ export default function RouterDetailsScreen() {
 							</ThemedText>
 						</ThemedView>
 						<ScrollView
-							id={`hotspot-list-details-${routerId}`}
+							nativeID={`hotspot-list-details-${routerId}`}
 							style={{
 								flexDirection: 'column',
 								backgroundColor: Colors[colorScheme].background,
