@@ -5,7 +5,6 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import React from 'react';
 import {
 	StyleSheet,
 	TextStyle,
@@ -26,6 +25,7 @@ export type ThemedButtonProps = {
 	numberOfLines?: number;
 	icon?: SFSymbols6_0;
 	iconColor?: string;
+	disabled?: boolean;
 };
 
 export function ThemedButton({
@@ -40,6 +40,7 @@ export function ThemedButton({
 	icon,
 	iconColor,
 	numberOfLines,
+	disabled,
 }: ThemedButtonProps) {
 	const colorScheme = useColorScheme() ?? 'light';
 	const presetBg = useThemeColor(
@@ -65,8 +66,19 @@ export function ThemedButton({
 
 	return (
 		<TouchableOpacity
-			style={[styles.button, { backgroundColor }, style]}
+			style={[
+				styles.button,
+				{
+					backgroundColor,
+					alignSelf: 'flex-start',
+					maxWidth: '100%',
+					flexShrink: 0,
+					opacity: disabled ? 0.6 : 1,
+				},
+				style,
+			]}
 			onPress={onPress}
+			disabled={!!disabled}
 		>
 			<ThemedView
 				style={styles.buttonContent}
@@ -77,8 +89,12 @@ export function ThemedButton({
 					<IconSymbol name={icon} size={20} color={iconColor || textColor} />
 				)}
 				<ThemedText
-					numberOfLines={numberOfLines ?? 1}
-					style={[styles.buttonText, { color: textColor }, textStyle]}
+					numberOfLines={numberOfLines}
+					style={[
+						styles.buttonText,
+						{ color: textColor, textTransform: 'uppercase' },
+						textStyle,
+					]}
 					lightColor={textColor}
 					darkColor={textColor}
 				>
@@ -92,7 +108,7 @@ export function ThemedButton({
 const styles = StyleSheet.create({
 	button: {
 		paddingVertical: 10,
-		paddingHorizontal: 15,
+		paddingHorizontal: 16,
 		borderRadius: 5,
 		overflow: 'hidden',
 		alignItems: 'center',

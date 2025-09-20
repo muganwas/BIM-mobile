@@ -72,6 +72,7 @@ const MAPPING: IconMapping = {
 		name: 'eye-outline',
 	},
 	block: { type: 'material', name: 'block' },
+	clock: { type: 'material-community', name: 'clock-outline' },
 	calendar: { type: 'material-community', name: 'calendar-blank-outline' },
 	monthlyCalendar: {
 		type: 'material-community',

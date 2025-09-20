@@ -1,6 +1,7 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
+import ThemedDatePicker from '@/components/ThemedDatePicker';
 import { ThemedDropdown } from '@/components/ThemedDropdown';
-import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
@@ -9,10 +10,10 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import { formatAmount } from '@/helpers';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, useColorScheme, View } from 'react-native';
+import { useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function TransactionsScreen() {
@@ -25,16 +26,20 @@ export default function TransactionsScreen() {
 	// Filters state
 	const [startDate, setStartDate] = useState<Date | null>(null);
 	const [endDate, setEndDate] = useState<Date | null>(null);
-	const [showStartPicker, setShowStartPicker] = useState(false);
-	const [showEndPicker, setShowEndPicker] = useState(false);
-	const [status, setStatus] = useState<string | undefined>(undefined);
-	const [type, setType] = useState<string | undefined>(undefined);
+	const [status, setStatus] = useState<string>(t.all);
+	const [type, setType] = useState<string>(t.all);
 
 	// Dropdown local
 	const [showStatusDd, setShowStatusDd] = useState(false);
 	const [showTypeDd, setShowTypeDd] = useState(false);
-	const statusOptions = useMemo(() => [t.pending, t.approved], [t]);
-	const typeOptions = useMemo(() => [t.debit, t.credit], [t]);
+	const statusOptions = useMemo(() => [t.all, t.pending, t.approved], [t]);
+	const typeOptions = useMemo(() => [t.all, t.debit, t.credit], [t]);
+
+	// When language changes, reset default selections to "All"
+	useEffect(() => {
+		setStatus(t.all);
+		setType(t.all);
+	}, [t.all]);
 
 	// Pagination
 	const [page, setPage] = useState(1);
@@ -53,15 +58,17 @@ export default function TransactionsScreen() {
 		return purchases.filter((p) => {
 			const inStart = startDate ? p.date >= startDate : true;
 			const inEnd = endDate ? p.date <= endDate : true;
-			const matchesStatus = status
-				? p.status.toLowerCase() === status.toLowerCase()
-				: true;
-			const matchesType = type
-				? p.method.type.toLowerCase() === type.toLowerCase()
-				: true;
+			const matchesStatus =
+				!status || status.toLowerCase() === t.all.toLowerCase()
+					? true
+					: p.status.toLowerCase() === status.toLowerCase();
+			const matchesType =
+				!type || type.toLowerCase() === t.all.toLowerCase()
+					? true
+					: p.method.type.toLowerCase() === type.toLowerCase();
 			return inStart && inEnd && matchesStatus && matchesType;
 		});
-	}, [purchases, startDate, endDate, status, type]);
+	}, [purchases, startDate, endDate, status, type, t.all]);
 
 	const totalBalance = useMemo(
 		() => filtered.reduce((sum, p) => sum + (p.amount || 0), 0),
@@ -74,11 +81,38 @@ export default function TransactionsScreen() {
 		return filtered.slice(start, start + pageSize);
 	}, [filtered, page]);
 
+	// Button handlers (stubs)
+	const handleApplyFilters = () => {
+		// Reset to first page; extend to trigger fetch if needed
+		setPage(1);
+	};
+
+	const handleExportExcel = () => {
+		// TODO: Implement export to Excel
+		console.log('Export to Excel clicked');
+	};
+
+	const handleExportPdf = () => {
+		// TODO: Implement export to PDF
+		console.log('Export to PDF clicked');
+	};
+
+	const handlePrevPage = () => {
+		setPage((p) => Math.max(1, p - 1));
+	};
+
+	const handleNextPage = () => {
+		setPage((p) => Math.min(totalPages, p + 1));
+	};
+
 	return (
-		<ThemedView
-			lightColor={Colors.light.background}
-			darkColor={Colors.dark.background}
-			style={styles.container}
+		<ParallaxScrollView
+			headerBackgroundColor={{
+				light: Colors.light.background,
+				dark: Colors.dark.background,
+			}}
+			contentStyle={{ padding: 16 }}
+			containerStyle={{ flex: 1 }}
 		>
 			{/* Title */}
 			<ThemedText
@@ -106,154 +140,203 @@ export default function TransactionsScreen() {
 					marginBottom: 12,
 				}}
 			>
-				<View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
+				<ThemedView
+					style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}
+					lightColor={Colors[colorScheme].background}
+					darkColor={Colors[colorScheme].background}
+				>
 					{/* Start Date */}
-					<View style={{ flexBasis: '48%', flexGrow: 1 }}>
-						<ThemedInput
+					<ThemedView
+						style={{ flexBasis: '48%', flexGrow: 1 }}
+						lightColor={Colors[colorScheme].background}
+						darkColor={Colors[colorScheme].background}
+					>
+						<ThemedDatePicker
 							label={t.startDate}
-							value={startDate ? startDate.toDateString() : ''}
 							placeholder={t.startDate}
-							editable={false}
-							onTouchEnd={() => setShowStartPicker(true)}
-							setValue={() => {}}
+							value={startDate}
+							onChange={(d) => setStartDate(d)}
+							mode='date'
+							inputStyle={{ backgroundColor: Colors[colorScheme].background }}
 						/>
-						{showStartPicker && Platform.OS !== 'web' && (
-							<DateTimePicker
-								value={startDate ?? new Date()}
-								mode='date'
-								onChange={(_, d) => {
-									setShowStartPicker(false);
-									if (d) setStartDate(d);
-								}}
-							/>
-						)}
-					</View>
+					</ThemedView>
 					{/* End Date */}
-					<View style={{ flexBasis: '48%', flexGrow: 1 }}>
-						<ThemedInput
+					<ThemedView
+						style={{ flexBasis: '48%', flexGrow: 1 }}
+						lightColor={Colors[colorScheme].background}
+						darkColor={Colors[colorScheme].background}
+					>
+						<ThemedDatePicker
 							label={t.endDate}
-							value={endDate ? endDate.toDateString() : ''}
 							placeholder={t.endDate}
-							editable={false}
-							onTouchEnd={() => setShowEndPicker(true)}
-							setValue={() => {}}
+							value={endDate}
+							onChange={(d) => setEndDate(d)}
+							mode='date'
+							inputStyle={{ backgroundColor: Colors[colorScheme].background }}
 						/>
-						{showEndPicker && Platform.OS !== 'web' && (
-							<DateTimePicker
-								value={endDate ?? new Date()}
-								mode='date'
-								onChange={(_, d) => {
-									setShowEndPicker(false);
-									if (d) setEndDate(d);
-								}}
-							/>
-						)}
-					</View>
+					</ThemedView>
 
 					{/* Status */}
-					<View style={{ flexBasis: '48%', flexGrow: 1 }}>
+					<ThemedView
+						style={{ flexBasis: '48%', flexGrow: 1 }}
+						lightColor={Colors[colorScheme].background}
+						darkColor={Colors[colorScheme].background}
+					>
 						<ThemedDropdown
 							id='status-dd'
 							containerRef={{ current: null } as any}
 							label={t.status}
 							placeholder={t.status}
 							options={statusOptions}
-							value={status || ''}
+							value={status}
 							setValue={(v) => setStatus(v)}
 							showDropdown={showStatusDd}
 							setShowDropdown={setShowStatusDd}
 							openDirection='down'
 						/>
-					</View>
+					</ThemedView>
 
 					{/* Transaction Type */}
-					<View style={{ flexBasis: '48%', flexGrow: 1 }}>
+					<ThemedView
+						style={{ flexBasis: '48%', flexGrow: 1 }}
+						lightColor={Colors[colorScheme].background}
+						darkColor={Colors[colorScheme].background}
+					>
 						<ThemedDropdown
 							id='type-dd'
 							containerRef={{ current: null } as any}
 							label={t.transactionType}
 							placeholder={t.transactionType}
 							options={typeOptions}
-							value={type || ''}
+							value={type}
 							setValue={(v) => setType(v)}
 							showDropdown={showTypeDd}
 							setShowDropdown={setShowTypeDd}
 							openDirection='down'
 						/>
-					</View>
-				</View>
+					</ThemedView>
+				</ThemedView>
 
 				{/* Actions row */}
-				<View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
+				<ThemedView
+					style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}
+					lightColor={Colors[colorScheme].background}
+					darkColor={Colors[colorScheme].background}
+				>
 					<ThemedButton
 						title={t.applyFilters}
-						onPress={() => setPage(1)}
+						onPress={handleApplyFilters}
 						style={{ backgroundColor: Colors[colorScheme].bim }}
 						lightTextColor={Colors.light.white}
 						darkTextColor={Colors.dark.white}
 					/>
-					<View style={{ flex: 1 }} />
-					<ThemedButton title={t.exportExcel} onPress={() => {}} />
-					<ThemedButton title={t.exportPdf} onPress={() => {}} />
-				</View>
+					<ThemedView
+						style={{ flex: 1 }}
+						lightColor={Colors[colorScheme].background}
+						darkColor={Colors[colorScheme].background}
+					/>
+				</ThemedView>
 
 				{/* Total balance */}
-				<View style={{ marginTop: 8 }}>
+				<ThemedView
+					style={{
+						marginTop: 8,
+						flexDirection: 'row',
+						alignItems: 'center',
+						gap: 8,
+					}}
+					lightColor={Colors[colorScheme].background}
+					darkColor={Colors[colorScheme].background}
+				>
 					<ThemedText
 						lightColor={Colors.light.text}
 						darkColor={Colors.dark.text}
-						style={{ fontWeight: fontWeight['heading.two'] }}
+						style={{
+							fontWeight: fontWeight['heading.two'],
+							fontSize: fontSize['heading.two'],
+						}}
 					>
-						{t.totalBalance}: {totalBalance.toFixed(2)}
+						{t.totalBalance}:
 					</ThemedText>
-				</View>
+					<ThemedView
+						style={{
+							backgroundColor: Colors[colorScheme].lime,
+							borderRadius: 6,
+							paddingHorizontal: 8,
+							paddingVertical: 4,
+						}}
+						lightColor={Colors[colorScheme].background}
+						darkColor={Colors[colorScheme].background}
+					>
+						<ThemedText
+							lightColor={Colors.light.white}
+							darkColor={Colors.dark.white}
+							style={{
+								fontWeight: fontWeight['heading.two'],
+								fontSize: fontSize['heading.two'],
+							}}
+						>
+							{formatAmount(totalBalance, 2)}
+						</ThemedText>
+					</ThemedView>
+				</ThemedView>
 			</TileContainer>
+
+			{/* Export buttons section (no TileContainer) */}
+			<ThemedView
+				style={{
+					flexDirection: 'row',
+					gap: 12,
+					marginBottom: 12,
+					flexWrap: 'wrap',
+				}}
+				lightColor={Colors[colorScheme].background}
+				darkColor={Colors[colorScheme].background}
+			>
+				<ThemedButton
+					title={t.exportExcel}
+					onPress={handleExportExcel}
+					style={{ backgroundColor: Colors[colorScheme].lime }}
+					lightTextColor={Colors.light.white}
+					darkTextColor={Colors.dark.white}
+				/>
+				<ThemedButton
+					title={t.exportPdf}
+					onPress={handleExportPdf}
+					style={{ backgroundColor: Colors[colorScheme].dangerButton }}
+					lightTextColor={Colors.light.white}
+					darkTextColor={Colors.dark.white}
+				/>
+			</ThemedView>
 			<TileContainer
 				id='router-balances'
 				backgroundColor={Colors[colorScheme].background}
-				style={{
-					flexDirection: 'column',
-					overflow: 'hidden',
-					boxSizing: 'border-box',
-					height: 350,
-				}}
+				style={{ flexDirection: 'column', boxSizing: 'border-box', padding: 0 }}
 			>
-				<ThemedView
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
-				>
-					<ThemedText
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
-						style={{
-							width: '100%',
-							textTransform: 'capitalize',
-							fontSize: fontSize['heading.three'],
-							fontWeight: fontWeight['heading.three'],
-						}}
-					>
-						{translations[language].categories.dashboard.routerBalances}
-					</ThemedText>
-				</ThemedView>
 				{/* Table with horizontal scroll */}
 				<ScrollView
 					horizontal
 					showsHorizontalScrollIndicator
 					nestedScrollEnabled
 				>
-					<View>
+					<ThemedView
+						lightColor={Colors[colorScheme].background}
+						darkColor={Colors[colorScheme].background}
+					>
 						{/* Header Row */}
 						<ThemedView
 							id='transactions-header'
 							style={{
 								flexDirection: 'row',
+								width: '100%',
 								gap: 10,
 								paddingVertical: 10,
+								paddingHorizontal: 10,
 								borderBottomWidth: 1,
 								borderBottomColor: Colors[colorScheme].borderDark,
 							}}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={Colors.light.titleBg}
+							darkColor={Colors.dark.titleBg}
 						>
 							{[
 								t.colHash,
@@ -286,6 +369,7 @@ export default function TransactionsScreen() {
 							style={{
 								flexDirection: 'column',
 								backgroundColor: Colors[colorScheme].background,
+								padding: 10,
 							}}
 							nestedScrollEnabled
 						>
@@ -320,9 +404,7 @@ export default function TransactionsScreen() {
 										lightColor={Colors.light.text}
 										darkColor={Colors.dark.text}
 									>
-										{trans.amount.toFixed
-											? trans.amount.toFixed(2)
-											: trans.amount}
+										{formatAmount(trans.amount, 2)}
 									</ThemedText>
 									{/* Type */}
 									<ThemedText
@@ -343,7 +425,7 @@ export default function TransactionsScreen() {
 										{trans.reason}
 									</ThemedText>
 									{/* Status */}
-									<View
+									<ThemedView
 										style={{
 											width: 120,
 											flexShrink: 0,
@@ -354,6 +436,8 @@ export default function TransactionsScreen() {
 											alignItems: 'center',
 											justifyContent: 'center',
 										}}
+										lightColor={Colors[colorScheme].background}
+										darkColor={Colors[colorScheme].background}
 									>
 										<ThemedText
 											numberOfLines={1}
@@ -363,7 +447,7 @@ export default function TransactionsScreen() {
 										>
 											{trans.status}
 										</ThemedText>
-									</View>
+									</ThemedView>
 									{/* Router Name */}
 									<ThemedText
 										style={{ width: 120, flexShrink: 0 }}
@@ -385,20 +469,26 @@ export default function TransactionsScreen() {
 								</ThemedView>
 							))}
 						</ScrollView>
-					</View>
+					</ThemedView>
 				</ScrollView>
 				{/* Pagination Controls */}
-				<View
+				<ThemedView
 					style={{
 						flexDirection: 'row',
 						gap: 12,
 						marginTop: 8,
 						alignItems: 'center',
 					}}
+					lightColor={Colors[colorScheme].background}
+					darkColor={Colors[colorScheme].background}
 				>
 					<ThemedButton
-						title={'<'}
-						onPress={() => setPage((p) => Math.max(1, p - 1))}
+						title={'Previous'}
+						onPress={handlePrevPage}
+						disabled={page <= 1}
+						lightTextColor={page <= 1 ? Colors.light.mutedText : undefined}
+						darkTextColor={page <= 1 ? Colors.dark.mutedText : undefined}
+						textStyle={{ fontSize: 14 }}
 					/>
 					<ThemedText
 						lightColor={Colors.light.text}
@@ -407,25 +497,21 @@ export default function TransactionsScreen() {
 						{page} / {totalPages}
 					</ThemedText>
 					<ThemedButton
-						title={'>'}
-						onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+						title={'Next'}
+						onPress={handleNextPage}
+						disabled={page >= totalPages}
+						lightTextColor={
+							page >= totalPages ? Colors.light.mutedText : undefined
+						}
+						darkTextColor={
+							page >= totalPages ? Colors.dark.mutedText : undefined
+						}
+						textStyle={{ fontSize: 14 }}
 					/>
-				</View>
+				</ThemedView>
 			</TileContainer>
-		</ThemedView>
+		</ParallaxScrollView>
 	);
 }
 
-const styles = StyleSheet.create({
-	container: {
-		flexDirection: 'column',
-		flex: 1,
-		padding: 16,
-	},
-	routerItem: {
-		flexDirection: 'row',
-		padding: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: '#eee',
-	},
-});
+// styles removed; layout handled by ParallaxScrollView props

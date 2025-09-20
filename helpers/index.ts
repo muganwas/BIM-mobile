@@ -154,3 +154,23 @@ export function msToHms(milliseconds: number): string {
 export function delay(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/**
+ * Format a number with thousand separators and fixed decimals.
+ * Defaults to 2 decimal places. Falls back gracefully if Intl is unavailable.
+ */
+export function formatAmount(value: number | string, decimals = 2): string {
+	const n = typeof value === 'string' ? Number(value) : value;
+	if (!Number.isFinite(n)) return '0';
+	try {
+		return new Intl.NumberFormat(undefined, {
+			minimumFractionDigits: decimals,
+			maximumFractionDigits: decimals,
+		}).format(n);
+	} catch {
+		const fixed = n.toFixed(decimals);
+		const [intPart, decPart] = fixed.split('.');
+		const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+		return decPart ? `${withCommas}.${decPart}` : withCommas;
+	}
+}

@@ -182,6 +182,7 @@ const translations: Translations = {
 				totalBalance: 'Total balance',
 				exportExcel: 'Export to Excel',
 				exportPdf: 'Export to PDF',
+				all: 'All',
 				approved: 'Approved',
 				pending: 'Pending',
 				debit: 'Debit',
