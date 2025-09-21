@@ -137,7 +137,7 @@ export const ThemedDropdown = ({
 					style,
 					showDropdown && {
 						elevation: 25,
-						zIndex: 900,
+						zIndex: 2500,
 					},
 				]}
 				{...otherProps}
@@ -228,7 +228,7 @@ export const ThemedDropdown = ({
 						shadowOpacity: 0.1,
 						shadowRadius: 10,
 						elevation: 6,
-						zIndex: 400,
+						zIndex: 3000,
 						// Position relative to trigger to avoid misalignment
 						...(openDirection === 'down'
 							? { top: '100%', marginTop: 6 }

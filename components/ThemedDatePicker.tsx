@@ -63,9 +63,18 @@ export default function ThemedDatePicker({
 		}
 	}, [value, displayFormat, mode]);
 
-	const handleChange = (_: DateTimePickerEvent, date?: Date) => {
-		// Android emits event with type 'dismissed'/'set' but we're using the two-arg signature
-		setOpen(false);
+	const handleChange = (event: DateTimePickerEvent, date?: Date) => {
+		// Android: modal shows confirm/cancel -> event.type is 'set' or 'dismissed'
+		// iOS: inline changes fire continuously without event.type semantics
+		if (Platform.OS === 'android') {
+			if (event.type === 'set' && date) {
+				onChange(date);
+			}
+			// Close regardless of set/dismissed on Android
+			setOpen(false);
+			return;
+		}
+		// iOS: commit the value live, but do not auto-close to allow adjustments
 		if (date) onChange(date);
 	};
 
@@ -143,10 +152,7 @@ export default function ThemedDatePicker({
 					style={{ alignItems: 'flex-end', marginTop: 6 }}
 				>
 					<TouchableOpacity onPress={() => onChange(null)}>
-						<ThemedText
-							lightColor={Colors.light.bim}
-							darkColor={Colors.dark.bim}
-						>
+						<ThemedText style={{ color: Colors[colorScheme].bim }}>
 							Clear
 						</ThemedText>
 					</TouchableOpacity>

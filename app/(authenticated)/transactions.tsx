@@ -138,6 +138,10 @@ export default function TransactionsScreen() {
 					gap: 12,
 					padding: 12,
 					marginBottom: 12,
+					// Ensure any nested dropdown overlays subsequent sections
+					...(showStatusDd || showTypeDd
+						? { zIndex: 2000 as any, elevation: 20 }
+						: {}),
 				}}
 			>
 				<ThemedView
