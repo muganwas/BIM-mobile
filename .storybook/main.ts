@@ -19,6 +19,23 @@ const config: StorybookConfig = {
 			: [];
 
 		const extra = [
+				// Force ThemedDatePicker to resolve to the web variant in Storybook
+				{
+					find: path.resolve(repoRoot, 'components', 'ThemedDatePicker.tsx'),
+					replacement: path.resolve(
+						repoRoot,
+						'components',
+						'ThemedDatePicker.web.tsx'
+					),
+				},
+				{
+					find: '@/components/ThemedDatePicker',
+					replacement: path.resolve(
+						repoRoot,
+						'components',
+						'ThemedDatePicker.web.tsx'
+					),
+				},
 			{
 				find: 'process',
 				replacement: path.resolve(
@@ -116,6 +133,15 @@ const config: StorybookConfig = {
 					'react-native-safe-area-context.js'
 				),
 			},
+			// Shim native-only datetimepicker so Vite never parses its JS files
+			{
+				find: '@react-native-community/datetimepicker',
+				replacement: path.resolve(__dirname, 'shims', 'datetimepicker.js'),
+			},
+			{
+				find: /@react-native-community\/datetimepicker\/.*/,
+				replacement: path.resolve(__dirname, 'shims', 'datetimepicker.js'),
+			},
 			{
 				find: '@storybook/react-dom-shim',
 				replacement: path.resolve(
@@ -149,6 +175,14 @@ const config: StorybookConfig = {
 			'@expo/vector-icons',
 			'react-native-screens',
 			'react-native-safe-area-context',
+			'@react-native-community/datetimepicker',
+		];
+
+		// Ensure SSR (if used by Storybook) does not attempt to bundle datetimepicker
+		(config as any).ssr = (config as any).ssr || {};
+		(config as any).ssr.external = [
+			...(((config as any).ssr.external as string[]) || []),
+			'@react-native-community/datetimepicker',
 		];
 
 		config.esbuild = config.esbuild || {};

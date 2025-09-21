@@ -8,6 +8,32 @@ export default defineConfig({
 	plugins: [tsconfigPaths({ root: repoRoot })],
 	resolve: {
 		alias: [
+			// Force ThemedDatePicker to resolve to the web variant in Storybook,
+			// even if tsconfigPaths resolves an absolute file first.
+			{
+				find: path.resolve(repoRoot, 'components', 'ThemedDatePicker.tsx'),
+				replacement: path.resolve(
+					repoRoot,
+					'components',
+					'ThemedDatePicker.web.tsx'
+				),
+			},
+			{
+				find: path.resolve(repoRoot, 'components', 'ThemedDatePicker'),
+				replacement: path.resolve(
+					repoRoot,
+					'components',
+					'ThemedDatePicker.web.tsx'
+				),
+			},
+			{
+				find: '@/components/ThemedDatePicker',
+				replacement: path.resolve(
+					repoRoot,
+					'components',
+					'ThemedDatePicker.web.tsx'
+				),
+			},
 			// Explicit per-file aliases (deterministic)
 			{
 				find: '@/components/ThemedText',
@@ -75,7 +101,23 @@ export default defineConfig({
 				find: 'expo-constants',
 				replacement: path.resolve(__dirname, 'shims/expo-constants.js'),
 			},
+			{
+				find: '@react-native-community/datetimepicker',
+				replacement: path.resolve(__dirname, 'shims/datetimepicker.js'),
+			},
+			{
+				find: /@react-native-community\/datetimepicker\/.*/,
+				replacement: path.resolve(__dirname, 'shims/datetimepicker.js'),
+			},
 		],
 		extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
+	},
+	// Prevent Vite from trying to prebundle datetimepicker (contains TS-only syntax in .js)
+	optimizeDeps: {
+		exclude: ['@react-native-community/datetimepicker'],
+	},
+	// Also ensure SSR build does not attempt to process it
+	ssr: {
+		external: ['@react-native-community/datetimepicker'],
 	},
 });
