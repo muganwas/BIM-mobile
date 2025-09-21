@@ -1,5 +1,5 @@
 // Minimal shim for @react-native-community/datetimepicker for Storybook web
 export default function DateTimePicker() {
-  return null;
+    return null;
 }
 export const DateTimePickerEvent = {};

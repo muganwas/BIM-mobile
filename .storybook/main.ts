@@ -19,23 +19,23 @@ const config: StorybookConfig = {
 			: [];
 
 		const extra = [
-				// Force ThemedDatePicker to resolve to the web variant in Storybook
-				{
-					find: path.resolve(repoRoot, 'components', 'ThemedDatePicker.tsx'),
-					replacement: path.resolve(
-						repoRoot,
-						'components',
-						'ThemedDatePicker.web.tsx'
-					),
-				},
-				{
-					find: '@/components/ThemedDatePicker',
-					replacement: path.resolve(
-						repoRoot,
-						'components',
-						'ThemedDatePicker.web.tsx'
-					),
-				},
+			// Force ThemedDatePicker to resolve to the web variant in Storybook
+			{
+				find: path.resolve(repoRoot, 'components', 'ThemedDatePicker.tsx'),
+				replacement: path.resolve(
+					repoRoot,
+					'components',
+					'ThemedDatePicker.web.tsx'
+				),
+			},
+			{
+				find: '@/components/ThemedDatePicker',
+				replacement: path.resolve(
+					repoRoot,
+					'components',
+					'ThemedDatePicker.web.tsx'
+				),
+			},
 			{
 				find: 'process',
 				replacement: path.resolve(
