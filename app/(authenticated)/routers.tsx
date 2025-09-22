@@ -12,7 +12,7 @@ import { useTransaction } from '@/context/TransactionContext';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { NetRouter } from '@/types';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
 	Animated,
 	StyleSheet,
@@ -282,6 +282,10 @@ export default function RoutersScreen() {
 											gap: 10,
 											paddingHorizontal: 5,
 											justifyContent: 'space-between',
+											backgroundColor:
+												index % 2 === 0
+													? Colors[colorScheme].listItemBackground
+													: Colors[colorScheme].background,
 											borderBottomWidth: index < routers.length - 1 ? 1 : 0,
 											borderBottomColor: Colors[colorScheme].borderDark,
 										}}
@@ -363,8 +367,8 @@ export default function RoutersScreen() {
 												gap: 5,
 												width: 120,
 											}}
-											lightColor={Colors.light.background}
-											darkColor={Colors.dark.background}
+											lightColor='transparent'
+											darkColor='transparent'
 										>
 											<TouchableOpacity
 												onPress={() => handleViewRouter(router?.id as string)}

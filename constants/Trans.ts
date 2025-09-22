@@ -52,6 +52,7 @@ const translations: Translations = {
 				block: 'Block',
 				apply: 'Apply',
 				save: 'Save',
+				withdraw: 'withdraw',
 			},
 			navigation: {
 				home: 'Dashboard',
@@ -105,13 +106,14 @@ const translations: Translations = {
 					'Are you sure you want to delete this router? This action cannot be undone.',
 			},
 			packages: {
+				title: 'Packages',
 				subtitle: 'Select router to view associated packages',
 			},
 			hotspots: {
 				title: 'Hotspot Servers for Router:',
 			},
 			vouchers: {
-				mainTitle: 'Routers',
+				title: 'Vouchers',
 				mainSubtitle: 'Select router to manage vouchers',
 				vouchersSubtitle:
 					'Vouchers for Hotspot Server: {hotspotName} on router: {routerName}',
@@ -194,6 +196,15 @@ const translations: Translations = {
 				colStatus: 'Status',
 				colRouterName: 'Router Name',
 				colTransactionDate: 'Transaction Date',
+			},
+			withdraw: {
+				title: 'Withdraw',
+				subtitle: 'Select router to manage withdrawals',
+				withdrawFundsFromRouter: 'withdraw funds from router',
+				withdrawAmount: 'Withdraw amount',
+				mobileMoneyPhone: 'Mobile money phone number',
+				narrationOptional: 'Narration (optional)',
+				initiateWithdrawal: 'Initiate withdrawal',
 			},
 		},
 	},

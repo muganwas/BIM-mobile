@@ -5,6 +5,7 @@ import {
 	TouchableOpacity,
 	View,
 	ViewStyle,
+	useColorScheme,
 	type TextInputProps,
 } from 'react-native';
 
@@ -52,6 +53,9 @@ export function ThemedInput({
 	...rest
 }: ThemedInputProps) {
 	const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+	const colorScheme = useColorScheme() ?? 'light';
+	const placeholderColor =
+		rest.placeholderTextColor ?? Colors[colorScheme].mutedText;
 	const [showPassword, setShowPassword] = useState(false);
 	return (
 		<View
@@ -85,7 +89,7 @@ export function ThemedInput({
 				placeholder={placeholder}
 				secureTextEntry={secureTextEntry && !showPassword}
 				keyboardType={keyboardType}
-				placeholderTextColor={'#333333'}
+				placeholderTextColor={placeholderColor}
 				{...rest}
 			/>
 			<TouchableOpacity

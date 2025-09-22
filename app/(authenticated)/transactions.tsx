@@ -116,13 +116,13 @@ export default function TransactionsScreen() {
 		>
 			{/* Title */}
 			<ThemedText
-				lightColor={Colors.light.screenTitleText}
-				darkColor={Colors.dark.screenTitleText}
+				lightColor={Colors.light.bim}
+				darkColor={Colors.dark.bim}
 				style={{
 					width: '100%',
 					textTransform: 'capitalize',
-					fontSize: fontSize['heading.three'],
-					fontWeight: fontWeight['heading.three'],
+					fontSize: fontSize['heading.one'],
+					fontWeight: fontWeight['heading.one'],
 					marginBottom: 12,
 				}}
 			>
@@ -335,7 +335,7 @@ export default function TransactionsScreen() {
 								width: '100%',
 								gap: 10,
 								paddingVertical: 10,
-								paddingHorizontal: 10,
+								paddingHorizontal: 5,
 								borderBottomWidth: 1,
 								borderBottomColor: Colors[colorScheme].borderDark,
 							}}
@@ -373,7 +373,6 @@ export default function TransactionsScreen() {
 							style={{
 								flexDirection: 'column',
 								backgroundColor: Colors[colorScheme].background,
-								padding: 10,
 							}}
 							nestedScrollEnabled
 						>
@@ -384,8 +383,13 @@ export default function TransactionsScreen() {
 										flexDirection: 'row',
 										width: '100%',
 										paddingVertical: 12,
+										paddingHorizontal: 5,
 										gap: 10,
 										alignItems: 'center',
+										backgroundColor:
+											index % 2 === 0
+												? Colors[colorScheme].listItemBackground
+												: Colors[colorScheme].background,
 										borderBottomWidth: index < paged.length - 1 ? 1 : 0,
 										borderBottomColor: Colors[colorScheme].borderDark,
 									}}

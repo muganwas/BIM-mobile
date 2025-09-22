@@ -9,7 +9,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -61,7 +61,7 @@ export default function VouchersScreen() {
 						fontWeight: fontWeight['heading.one'],
 					}}
 				>
-					{translations[language].categories.vouchers.mainTitle}
+					{translations[language].categories.vouchers.title}
 				</ThemedText>
 				<ThemedText
 					style={{
@@ -183,99 +183,94 @@ export default function VouchersScreen() {
 								backgroundColor: Colors[colorScheme].background,
 							}}
 						>
-							<ThemedView
-								style={{ flexDirection: 'column', gap: 5 }}
-								lightColor={Colors.light.background}
-								darkColor={Colors.dark.background}
-							>
-								{routers.map((r, index) => (
+							{routers.map((r, index) => (
+								<ThemedView
+									key={index}
+									style={{
+										flexDirection: 'row',
+										width: '100%',
+										alignItems: 'center',
+										paddingVertical: 5,
+										paddingHorizontal: 5,
+										backgroundColor:
+											index % 2 === 0
+												? Colors[colorScheme].listItemBackground
+												: Colors[colorScheme].background,
+										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
+										borderBottomColor: Colors[colorScheme].borderDark,
+										justifyContent: 'space-between',
+									}}
+									lightColor={Colors.light.background}
+									darkColor={Colors.dark.background}
+								>
+									<ThemedText
+										numberOfLines={1}
+										style={{
+											width: 120,
+											paddingRight: 8,
+											overflow: 'hidden',
+										}}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
+									>
+										{r.name}
+									</ThemedText>
+									<ThemedText
+										numberOfLines={1}
+										style={{
+											paddingRight: 8,
+											width: 120,
+										}}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
+									>
+										{r.location}
+									</ThemedText>
+									<ThemedText
+										numberOfLines={1}
+										style={{
+											paddingRight: 8,
+											width: 120,
+										}}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
+									>
+										{r?.networkInfo.ipv4}
+									</ThemedText>
+									<ThemedText
+										numberOfLines={1}
+										style={{
+											paddingRight: 8,
+											width: 120,
+										}}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
+									>
+										{r.username}
+									</ThemedText>
 									<ThemedView
-										key={index}
 										style={{
 											flexDirection: 'row',
-											width: '100%',
-											alignItems: 'center',
-											paddingVertical: 5,
-											paddingHorizontal: 5,
-											backgroundColor:
-												index % 2 === 0
-													? Colors[colorScheme].listItemBackground
-													: Colors[colorScheme].background,
 											justifyContent: 'space-between',
+											width: 120,
 										}}
-										lightColor={Colors.light.background}
-										darkColor={Colors.dark.background}
+										lightColor='transparent'
+										darkColor='transparent'
 									>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												width: 120,
-												paddingRight: 8,
-												overflow: 'hidden',
-											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
-										>
-											{r.name}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												paddingRight: 8,
-												width: 120,
-											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
-										>
-											{r.location}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												paddingRight: 8,
-												width: 120,
-											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
-										>
-											{r?.networkInfo.ipv4}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												paddingRight: 8,
-												width: 120,
-											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
-										>
-											{r.username}
-										</ThemedText>
-										<ThemedView
-											style={{
-												flexDirection: 'row',
-												justifyContent: 'space-between',
-												gap: 5,
-												width: 120,
-											}}
-											lightColor={Colors.light.background}
-											darkColor={Colors.dark.background}
-										>
-											<ThemedButton
-												title={translations[
-													language
-												].categories.buttons.hotspots.toUpperCase()}
-												onPress={() => router.push(`/routers/vouchers/${r.id}`)}
-												lightColor={Colors.light.lightBlue}
-												darkColor={Colors.dark.lightBlue}
-												darkTextColor={Colors.dark.white}
-												lightTextColor={Colors.light.white}
-												style={{ flex: 1 }}
-											/>
-										</ThemedView>
+										<ThemedButton
+											title={translations[
+												language
+											].categories.buttons.hotspots.toUpperCase()}
+											onPress={() => router.push(`/routers/vouchers/${r.id}`)}
+											lightColor={Colors.light.lightBlue}
+											darkColor={Colors.dark.lightBlue}
+											darkTextColor={Colors.dark.white}
+											lightTextColor={Colors.light.white}
+											style={{ flex: 1 }}
+										/>
 									</ThemedView>
-								))}
-							</ThemedView>
+								</ThemedView>
+							))}
 						</ScrollView>
 					</ThemedView>
 				</ScrollView>
