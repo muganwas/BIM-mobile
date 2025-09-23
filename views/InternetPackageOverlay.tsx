@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
 	Animated,
 	KeyboardAvoidingView,
@@ -52,16 +52,26 @@ export default function InternetPackageOverlay({
 	const [duration, setDuration] = useState('');
 
 	// Handlers for setting input values (kept simple for now; place for validation/transforms)
-	const handleChangeName = (v: string) => setName(v);
-	const handleChangeUsersPerDevice = (v: string) => setUsersPerDevice(v);
-	const handleChangeBandwidth = (v: string) => setBandwidth(v);
-	const handleChangeDuration = (v: string) => setDuration(v);
+	const handleChangeName = useCallback((v: string) => setName(v ?? ''), []);
+	const handleChangeUsersPerDevice = useCallback(
+		(v: string) => setUsersPerDevice(v ?? ''),
+		[]
+	);
+	const handleChangeBandwidth = useCallback(
+		(v: string) => setBandwidth(v ?? ''),
+		[]
+	);
+	const handleChangeDuration = useCallback(
+		(v: string) => setDuration(v ?? ''),
+		[]
+	);
 
 	useEffect(() => {
 		if (visible) {
 			setName(initial?.name ?? '');
 			setUsersPerDevice(
-				initial?.usersPerDevice !== undefined && initial?.usersPerDevice !== null
+				initial?.usersPerDevice !== undefined &&
+					initial?.usersPerDevice !== null
 					? String(initial.usersPerDevice)
 					: '1'
 			);
@@ -135,7 +145,7 @@ export default function InternetPackageOverlay({
 
 					<ThemedInput
 						label={t.internetPackage.packageName}
-						placeholder={t.internetPackage.placeholderPackageName}
+						placeholder={t.internetPackage.placeholderPackageName || ''}
 						value={name}
 						setValue={handleChangeName}
 						editable={!readOnly}
@@ -145,7 +155,7 @@ export default function InternetPackageOverlay({
 					/>
 					<ThemedInput
 						label={t.internetPackage.usersPerDevice}
-						placeholder={t.internetPackage.placeholderUsersPerDevice}
+						placeholder={t.internetPackage.placeholderUsersPerDevice || ''}
 						keyboardType='number-pad'
 						value={usersPerDevice}
 						setValue={handleChangeUsersPerDevice}
@@ -156,7 +166,7 @@ export default function InternetPackageOverlay({
 					/>
 					<ThemedInput
 						label={t.internetPackage.bandwidth}
-						placeholder={t.internetPackage.placeholderBandwidth}
+						placeholder={t.internetPackage.placeholderBandwidth || ''}
 						value={bandwidth}
 						setValue={handleChangeBandwidth}
 						editable={!readOnly}
@@ -166,7 +176,7 @@ export default function InternetPackageOverlay({
 					/>
 					<ThemedInput
 						label={t.internetPackage.durationHours}
-						placeholder={t.internetPackage.placeholderDurationHours}
+						placeholder={t.internetPackage.placeholderDurationHours || ''}
 						keyboardType='number-pad'
 						value={duration}
 						setValue={handleChangeDuration}

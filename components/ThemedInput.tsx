@@ -13,7 +13,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { IconSymbol } from './ui/IconSymbol';
 
 export type ThemedInputProps = TextInputProps & {
@@ -57,6 +57,17 @@ export function ThemedInput({
 	const placeholderColor =
 		rest.placeholderTextColor ?? Colors[colorScheme].mutedText;
 	const [showPassword, setShowPassword] = useState(false);
+	const [focused, setFocused] = useState(false);
+	const onFocus = useCallback(() => setFocused(true), []);
+	const onBlur = useCallback(() => setFocused(false), []);
+	// Normalize value to a string for stability across platforms (Android focus edge cases)
+	const normalizedValue =
+		typeof value === 'string'
+			? value
+			: value === undefined || value === null
+			? ''
+			: String(value);
+	const countLength = normalizedValue.length;
 	return (
 		<View
 			style={[
@@ -81,7 +92,9 @@ export function ThemedInput({
 						{
 							// Default theming for ALL inputs across the app
 							backgroundColor: Colors[colorScheme].inputBackground,
-							borderColor: Colors[colorScheme].inputBorder,
+							borderColor: focused
+								? Colors[colorScheme].focusedInput
+								: Colors[colorScheme].inputBorder,
 							borderWidth: 1,
 						},
 						secureTextEntry && {
@@ -92,17 +105,13 @@ export function ThemedInput({
 						style,
 					]}
 					onChangeText={(t) => setValue(t ?? '')}
-					value={
-						typeof value === 'string'
-							? value
-							: value === undefined || value === null
-							? ''
-							: String(value)
-					}
+					value={normalizedValue}
 					placeholder={placeholder ?? ''}
 					secureTextEntry={secureTextEntry && !showPassword}
 					keyboardType={keyboardType}
 					placeholderTextColor={placeholderColor}
+					onFocus={onFocus}
+					onBlur={onBlur}
 					{...rest}
 				/>
 				{secureTextEntry && (
@@ -147,7 +156,7 @@ export function ThemedInput({
 					lightColor={'#333333B2'}
 					darkColor={'#333333B2'}
 				>
-					{`${value?.length ?? '0'}/500 words`}
+					{`${countLength}/500 words`}
 				</ThemedText>
 			</ThemedView>
 			<ThemedView
