@@ -1,6 +1,5 @@
 import { ReactElement } from 'react';
-import { Animated, Modal } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Animated, Modal, Platform, View } from 'react-native';
 
 export type contentPosition = 'top' | 'bottom' | 'center';
 
@@ -20,12 +19,16 @@ export default function OverlayContainer({
 	onTouch?: () => void;
 }) {
 	return (
-		<Modal transparent visible={showOverlay} animationType='fade'>
-			<GestureHandlerRootView style={{ flex: 1 }}>
+		<Modal
+			transparent
+			visible={showOverlay}
+			animationType='fade'
+			statusBarTranslucent={Platform.OS === 'android'}
+		>
+			<View style={{ flex: 1 }}>
 				<Animated.View
 					id={id}
-					// Let children (e.g., dropdowns with ScrollView) receive touch/scroll gestures
-					pointerEvents='box-none'
+					pointerEvents='auto'
 					style={{
 						display: 'flex',
 						position: 'absolute',
@@ -48,7 +51,7 @@ export default function OverlayContainer({
 				>
 					{children}
 				</Animated.View>
-			</GestureHandlerRootView>
+			</View>
 		</Modal>
 	);
 }
