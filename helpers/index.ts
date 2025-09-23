@@ -174,3 +174,24 @@ export function formatAmount(value: number | string, decimals = 2): string {
 		return decPart ? `${withCommas}.${decPart}` : withCommas;
 	}
 }
+
+/**
+ * Validate an IPv4 address in dotted decimal notation.
+ * - Must have exactly 4 octets
+ * - Each octet is numeric and between 0 and 255
+ * - No leading zeros unless the octet is exactly "0"
+ */
+export function validateIPv4(ip: string): boolean {
+	if (typeof ip !== 'string') return false;
+	const parts = ip.trim().split('.');
+	if (parts.length !== 4) return false;
+	for (const part of parts) {
+		if (part.length === 0) return false;
+		if (!/^\d+$/.test(part)) return false;
+		// disallow leading zeros like 01, 001 etc., but allow single '0'
+		if (part.length > 1 && part.startsWith('0')) return false;
+		const n = Number(part);
+		if (n < 0 || n > 255) return false;
+	}
+	return true;
+}

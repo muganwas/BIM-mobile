@@ -317,6 +317,7 @@ export default function VouchersHotspotScreen() {
 												title={translations[
 													language
 												].categories.buttons.viewVouchers.toUpperCase()}
+												numberOfLines={1}
 												onPress={() =>
 													router.push(
 														`/(authenticated)/routers/vouchers/${vRId}/${hotspot.id}`

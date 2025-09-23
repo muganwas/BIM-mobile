@@ -10,10 +10,12 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import * as factories from '@/helpers/factories';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { NetRouter } from '@/types';
+import RouterOverlay from '@/views/Router';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	Animated,
 	TouchableOpacity,
@@ -28,8 +30,27 @@ export default function RoutersScreen() {
 	const { routers, setRouters, fetchRouters } = useTransaction();
 	const promptFadeAnim = useAnimatedValue(0);
 	const [showPrompt, setShowPrompt] = useState(false);
+	const [showCreateModal, setShowCreateModal] = useState(false);
+	const [showEditModal, setShowEditModal] = useState(false);
+	const [editRouterId, setEditRouterId] = useState<string | undefined>();
 	const [activeRouter, setActiveRouter] = useState<string | undefined>();
 	const { user, language } = useGeneral();
+
+	// compute initial values for edit modal when a router is selected
+	const editInitial = useMemo(() => {
+		if (!editRouterId) return undefined;
+		const r = routers.find((x) => x.id === editRouterId);
+		return r
+			? {
+					name: r.name,
+					location: r.location,
+					type: r.type,
+					ipAddress: r.networkInfo.ipv4,
+					username: r.username,
+					password: r.password,
+			  }
+			: undefined;
+	}, [routers, editRouterId]);
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
 	const routerListDetailsId = useRef(
@@ -108,7 +129,7 @@ export default function RoutersScreen() {
 	};
 
 	const handleAddRouter = () => {
-		router.push('/routers/new');
+		setShowCreateModal(true);
 	};
 
 	const handleViewRouter = (routerId: string) => {
@@ -117,7 +138,8 @@ export default function RoutersScreen() {
 	};
 	const handleEditRouter = (routerId: string) => {
 		if (!routerId) return;
-		router.push(`/routers/edit/${routerId}`);
+		setEditRouterId(routerId);
+		setShowEditModal(true);
 	};
 	const handleDeleteRouter = () => {
 		// Delete router logic here
@@ -376,6 +398,87 @@ export default function RoutersScreen() {
 					</ScrollView>
 				</TileContainer>
 			</ParallaxScrollView>
+			{/* Add Router Modal */}
+			<RouterOverlay
+				visible={showCreateModal}
+				mode='add'
+				onCancel={() => setShowCreateModal(false)}
+				onBack={() => setShowCreateModal(false)}
+				onSubmit={({ name, location, type, ipAddress, username, password }) => {
+					const newRouter = factories.generateNetRouter({
+						name,
+						location,
+						type,
+						networkInfo: {
+							mac: `00:1A:2B:3C:4D:${Math.floor(Math.random() * 255)
+								.toString(16)
+								.padStart(2, '0')}`,
+							ipv4: ipAddress,
+							ipv6: `::ffff:${ipAddress}`,
+							hostname: `${name.toLowerCase().replace(/\s+/g, '-')}.local`,
+							routerHash: Math.random().toString(36).slice(2, 10),
+							uptime: '0',
+							hotspots: [],
+						},
+						username,
+						password,
+					});
+					setRouters((prev) => [newRouter, ...prev]);
+					setShowCreateModal(false);
+				}}
+			/>
+
+			{/* Edit Router Modal */}
+			{editRouterId && (
+				<RouterOverlay
+					visible={showEditModal}
+					mode='edit'
+					initial={editInitial}
+					onCancel={() => {
+						setShowEditModal(false);
+						setEditRouterId(undefined);
+					}}
+					onBack={() => {
+						setShowEditModal(false);
+						setEditRouterId(undefined);
+					}}
+					onSubmit={({
+						name,
+						location,
+						type,
+						ipAddress,
+						username,
+						password,
+					}) => {
+						if (!editRouterId) return;
+						setRouters((prev) =>
+							prev.map((r) =>
+								r.id === editRouterId
+									? {
+											...r,
+											name,
+											location,
+											type,
+											username,
+											password,
+											networkInfo: {
+												...r.networkInfo,
+												ipv4: ipAddress,
+												ipv6: `::ffff:${ipAddress}`,
+												hostname: `${name
+													.toLowerCase()
+													.replace(/\s+/g, '-')}.local`,
+											},
+											updatedAt: new Date(),
+									  }
+									: r
+							)
+						);
+						setShowEditModal(false);
+						setEditRouterId(undefined);
+					}}
+				/>
+			)}
 			<Prompt
 				id='delete-router-prompt'
 				fadeAnim={promptFadeAnim}

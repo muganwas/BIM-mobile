@@ -198,6 +198,7 @@ export default function HotspotVouchersScreen() {
 							style={{ flex: 1 }}
 							lightColor={Colors.light.bim}
 							darkColor={Colors.dark.bim}
+							numberOfLines={1}
 							lightTextColor={Colors.light.white}
 							darkTextColor={Colors.dark.white}
 							title={translations[
@@ -212,6 +213,7 @@ export default function HotspotVouchersScreen() {
 							style={{ flex: 1 }}
 							lightColor={Colors.light.lime}
 							darkColor={Colors.dark.lime}
+							numberOfLines={1}
 							lightTextColor={Colors.light.white}
 							darkTextColor={Colors.dark.white}
 							title={translations[

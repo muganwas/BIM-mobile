@@ -317,6 +317,7 @@ export default function PackageRouterHotspotsScreen() {
 												title={translations[
 													language
 												].categories.buttons.viewPackages.toUpperCase()}
+												numberOfLines={1}
 												onPress={() => {}}
 												lightColor={Colors.light.lime}
 												darkColor={Colors.dark.lime}
