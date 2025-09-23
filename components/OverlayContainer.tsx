@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { Animated, Modal, Platform, View } from 'react-native';
+import { Modal, Platform, View } from 'react-native';
 
 export type contentPosition = 'top' | 'bottom' | 'center';
 
@@ -13,20 +13,22 @@ export default function OverlayContainer({
 }: {
 	id?: string;
 	showOverlay: boolean;
-	fadeAnim: Animated.Value;
+	fadeAnim: any;
 	children: ReactElement;
 	position?: contentPosition;
 	onTouch?: () => void;
 }) {
 	return (
 		<Modal
-			transparent
+			transparent={Platform.OS !== 'android'}
 			visible={showOverlay}
 			animationType='fade'
 			statusBarTranslucent={Platform.OS === 'android'}
+			hardwareAccelerated={true}
+			onRequestClose={() => { /* required on Android to avoid warnings */ }}
 		>
 			<View style={{ flex: 1 }}>
-				<Animated.View
+				<View
 					id={id}
 					pointerEvents='auto'
 					style={{
@@ -50,7 +52,7 @@ export default function OverlayContainer({
 					}}
 				>
 					{children}
-				</Animated.View>
+				</View>
 			</View>
 		</Modal>
 	);

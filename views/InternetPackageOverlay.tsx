@@ -118,6 +118,7 @@ export default function InternetPackageOverlay({
 		>
 			<KeyboardAvoidingView
 				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+				enabled={Platform.OS === 'ios'}
 				style={{ width: '90%' }}
 			>
 				<ThemedView
