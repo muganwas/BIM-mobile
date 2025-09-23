@@ -1,3 +1,4 @@
+import { PortalProvider } from '@/components/Portal';
 import {
 	DarkTheme,
 	DefaultTheme,
@@ -91,7 +92,9 @@ export default function RootLayout() {
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<GeneralProvider>
-				<RootLayoutContent />
+				<PortalProvider>
+					<RootLayoutContent />
+				</PortalProvider>
 			</GeneralProvider>
 		</GestureHandlerRootView>
 	);

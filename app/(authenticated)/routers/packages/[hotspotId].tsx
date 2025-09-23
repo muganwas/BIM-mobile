@@ -45,6 +45,31 @@ export default function HotspotPackagesScreen() {
 	const [showPrompt, setShowPrompt] = useState(false);
 	const promptFadeAnim = useRef(new Animated.Value(0)).current;
 
+	// Animate overlay visibility
+	useEffect(() => {
+		// stop any ongoing animation to prevent jank
+		if ((overlayFadeAnim as any).stopAnimation) {
+			(overlayFadeAnim as any).stopAnimation();
+		}
+		Animated.timing(overlayFadeAnim, {
+			toValue: showOverlay ? 1 : 0,
+			duration: 160,
+			useNativeDriver: true,
+		}).start();
+	}, [showOverlay, overlayFadeAnim]);
+
+	// Animate prompt visibility
+	useEffect(() => {
+		if ((promptFadeAnim as any).stopAnimation) {
+			(promptFadeAnim as any).stopAnimation();
+		}
+		Animated.timing(promptFadeAnim, {
+			toValue: showPrompt ? 1 : 0,
+			duration: 160,
+			useNativeDriver: true,
+		}).start();
+	}, [showPrompt, promptFadeAnim]);
+
 	// Build and track path
 	const trackPath = useMemo(() => {
 		return hotspotId

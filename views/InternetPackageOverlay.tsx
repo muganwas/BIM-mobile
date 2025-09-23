@@ -32,6 +32,7 @@ type Props = {
 		bandwidth: string;
 		duration: number;
 	}) => void;
+	onRequestClose?: () => void;
 };
 
 export default function InternetPackageOverlay({
@@ -41,6 +42,7 @@ export default function InternetPackageOverlay({
 	initial,
 	onClose,
 	onSubmit,
+	onRequestClose,
 }: Props) {
 	const colorScheme = useColorScheme() ?? 'light';
 	const { language } = useGeneral();
@@ -115,6 +117,7 @@ export default function InternetPackageOverlay({
 			showOverlay={visible}
 			fadeAnim={fadeAnim}
 			position='center'
+			onRequestClose={onRequestClose ?? onClose}
 		>
 			<KeyboardAvoidingView
 				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
