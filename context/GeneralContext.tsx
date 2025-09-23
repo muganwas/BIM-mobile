@@ -195,8 +195,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			try {
 				const isRoutersParent = current === '/(authenticated)/routers';
 				const last = prev[prev.length - 1] || '';
-				const isRoutersDetail =
-					/\/(authenticated)\/routers\/preview\//.test(last);
+				const isRoutersDetail = /\/(authenticated)\/routers\/preview\//.test(
+					last
+				);
 				if (isRoutersParent && isRoutersDetail) {
 					// Remove any previous occurrences of the parent to avoid duplicates
 					const withoutParent = prev.filter(

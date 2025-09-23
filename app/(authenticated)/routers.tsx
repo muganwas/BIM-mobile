@@ -227,7 +227,7 @@ export default function RoutersScreen() {
 									flexDirection: 'row',
 									justifyContent: 'space-between',
 									gap: 10,
-									paddingHorizontal: 5,
+									paddingHorizontal: 10,
 									paddingVertical: 10,
 									borderBottomWidth: 1,
 									borderBottomColor: Colors[colorScheme].borderDark,
@@ -269,7 +269,7 @@ export default function RoutersScreen() {
 											width: '100%',
 											paddingVertical: 12,
 											gap: 10,
-											paddingHorizontal: 5,
+											paddingHorizontal: 10,
 											justifyContent: 'space-between',
 											backgroundColor:
 												index % 2 === 0

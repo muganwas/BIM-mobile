@@ -14,7 +14,7 @@ import { generateRandomInt, translateWithVariables } from '@/helpers';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { Hotspot, NetRouter } from '@/types';
 import CreateVouchers from '@/views/CreateVouchers';
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
 	Animated,
@@ -30,7 +30,6 @@ export default function HotspotVouchersScreen() {
 	const createVouchersFadeAnim = useAnimatedValue(0);
 	const affirmAction = useRef<() => void | null>(null);
 	const navigation = useNavigation<any>();
-	const router = useRouter();
 	const { vRId, hotspotId } = useLocalSearchParams() as {
 		vRId?: string;
 		hotspotId?: string;
@@ -46,6 +45,7 @@ export default function HotspotVouchersScreen() {
 	const [promptConfirmText, setPromptConfirmText] = useState('');
 	const [showCreateVouchers, setShowCreateVouchers] = useState(false);
 	const [multipleVouchers, setMultipleVouchers] = useState(false);
+	const [editVoucherCode, setEditVoucherCode] = useState<string | null>(null);
 
 	// Seed parent immediately on mount to guarantee ordering before current route push
 	useEffect(() => {
@@ -80,10 +80,11 @@ export default function HotspotVouchersScreen() {
 	}, [vRId, hotspotId, routers]);
 
 	const handleEditUserDetails = (voucher: string) => {
-		if (!voucher) return;
-		return router.push(
-			`/(authenticated)/routers/vouchers/${vRId}/${hotspotId}/${voucher}`
-		);
+		if (!voucher || !hotSpot) return;
+		// Always reset to single-voucher mode for edits
+		setMultipleVouchers(false);
+		setEditVoucherCode(voucher);
+		toggleShowCreateVouchers(true);
 	};
 
 	const handleDeleteUser = (v: string) => {
@@ -134,6 +135,8 @@ export default function HotspotVouchersScreen() {
 				useNativeDriver: true,
 			}).start(() => {
 				setShowCreateVouchers(false);
+				setEditVoucherCode(null);
+				setMultipleVouchers(false);
 			});
 		}
 	};
@@ -141,9 +144,32 @@ export default function HotspotVouchersScreen() {
 	const handleCreateVouchers = () => {
 		// Generate vouchers logic
 		setTimeout(() => {
-			// Call the create vouchers function
 			toggleShowCreateVouchers(false);
 		}, 300);
+	};
+
+	const handleSubmitVoucherOverlay = ({
+		multiple,
+		numberOfUsers,
+		package: pkg,
+	}: {
+		multiple: boolean;
+		numberOfUsers: number;
+		package: string;
+	}) => {
+		if (!hotSpot) return;
+		if (editVoucherCode) {
+			// Edit existing voucher (update package only for now)
+			const targetVoucher = hotSpot.users?.find(
+				(u) => u.voucherCode === editVoucherCode
+			);
+			if (targetVoucher) targetVoucher.package = pkg;
+			setEditVoucherCode(null);
+			toggleShowCreateVouchers(false);
+			return;
+		}
+		// Else create (existing logic can be invoked)
+		handleCreateVouchers();
 	};
 
 	return (
@@ -163,7 +189,7 @@ export default function HotspotVouchersScreen() {
 						flexDirection: 'column',
 						gap: 20,
 						marginBottom: 10,
-						marginHorizontal: 20,
+						paddingHorizontal: 10,
 					}}
 					lightColor={Colors.light.background}
 					darkColor={Colors.dark.background}
@@ -233,42 +259,9 @@ export default function HotspotVouchersScreen() {
 						flexDirection: 'column',
 						boxSizing: 'border-box',
 						overflow: 'hidden',
-						paddingBottom: 10,
-						marginHorizontal: 20,
+						padding: 0,
 					}}
 				>
-					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
-						style={{ flexDirection: 'row' }}
-					>
-						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
-							numberOfLines={1}
-						>
-							<ThemedText
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-								style={{
-									fontWeight: fontWeight['heading.three'],
-									fontSize: fontSize['heading.two'],
-								}}
-							>
-								{`${translations[language].categories.routers.hotspotsTitle}: `}
-							</ThemedText>
-							<ThemedText
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-								style={{
-									fontWeight: fontWeight['heading.two'],
-									fontSize: fontSize['heading.two'],
-								}}
-							>
-								{netRouter?.name}
-							</ThemedText>
-						</ThemedText>
-					</ThemedView>
 					<ScrollView
 						style={{ width: '100%' }}
 						horizontal
@@ -285,13 +278,13 @@ export default function HotspotVouchersScreen() {
 									flexDirection: 'row',
 									justifyContent: 'space-between',
 									gap: 10,
-									paddingHorizontal: 5,
+									paddingHorizontal: 10,
 									paddingVertical: 10,
 									borderBottomWidth: 1,
 									borderBottomColor: Colors[colorScheme].borderDark,
 								}}
-								lightColor={Colors.light.background}
-								darkColor={Colors.dark.background}
+								lightColor={Colors.light.titleBg}
+								darkColor={Colors.dark.titleBg}
 							>
 								<ThemedText
 									style={{ width: 30 }}
@@ -387,10 +380,14 @@ export default function HotspotVouchersScreen() {
 											width: '100%',
 											paddingVertical: 12,
 											gap: 10,
-											paddingHorizontal: 5,
+											paddingHorizontal: 10,
 											justifyContent: 'space-between',
 											borderBottomWidth: index < routers.length - 1 ? 1 : 0,
 											borderBottomColor: Colors[colorScheme].borderDark,
+											backgroundColor:
+												index % 2 === 0
+													? Colors[colorScheme].listItemBackground
+													: Colors[colorScheme].background,
 										}}
 										lightColor={Colors.light.background}
 										darkColor={Colors.dark.background}
@@ -469,8 +466,8 @@ export default function HotspotVouchersScreen() {
 													width: 120,
 												},
 											]}
-											lightColor={Colors.light.background}
-											darkColor={Colors.dark.background}
+											lightColor='transparent'
+											darkColor='transparent'
 										>
 											<TouchableOpacity
 												style={{
@@ -570,13 +567,33 @@ export default function HotspotVouchersScreen() {
 					},
 				]}
 			/>
-			{hotSpot && (
+			{showCreateVouchers && hotSpot && (
 				<CreateVouchers
 					visible={showCreateVouchers}
 					fadeAnim={createVouchersFadeAnim}
 					multiple={multipleVouchers}
 					hotspot={hotSpot}
-					toggleVisible={toggleShowCreateVouchers}
+					toggleVisible={(v) => {
+						toggleShowCreateVouchers(v);
+					}}
+					mode={editVoucherCode ? 'edit' : 'create'}
+					initialPkg={
+						editVoucherCode
+							? hotSpot.users?.find((u) => u.voucherCode === editVoucherCode)
+									?.package || ''
+							: undefined
+					}
+					titleOverride={
+						editVoucherCode
+							? translations[language].categories.vouchers.editVoucherTitle
+							: undefined
+					}
+					primaryButtonLabelOverride={
+						editVoucherCode
+							? translations[language].categories.buttons.saveChanges
+							: undefined
+					}
+					onSubmit={handleSubmitVoucherOverlay}
 					generateVouchers={handleCreateVouchers}
 				/>
 			)}

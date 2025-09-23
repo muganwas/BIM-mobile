@@ -233,7 +233,7 @@ export default function DocumentsScreen() {
 								width: '100%',
 								gap: 10,
 								paddingVertical: 10,
-								paddingHorizontal: 5,
+								paddingHorizontal: 10,
 								borderBottomWidth: 1,
 								borderBottomColor: Colors[colorScheme].borderDark,
 							}}
@@ -270,7 +270,7 @@ export default function DocumentsScreen() {
 										flexDirection: 'row',
 										width: '100%',
 										paddingVertical: 12,
-										paddingHorizontal: 5,
+										paddingHorizontal: 10,
 										gap: 10,
 										alignItems: 'center',
 										backgroundColor:

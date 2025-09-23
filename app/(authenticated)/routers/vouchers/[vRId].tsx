@@ -133,6 +133,7 @@ export default function VouchersHotspotScreen() {
 					flexDirection: 'column',
 					overflow: 'hidden',
 					boxSizing: 'border-box',
+					padding: 0,
 				}}
 			>
 				<ScrollView
@@ -151,13 +152,13 @@ export default function VouchersHotspotScreen() {
 								flexDirection: 'row',
 								justifyContent: 'space-between',
 								gap: 10,
-								paddingHorizontal: 5,
+								paddingHorizontal: 10,
 								paddingVertical: 10,
 								borderBottomWidth: 1,
 								borderBottomColor: Colors[colorScheme].borderDark,
 							}}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={Colors.light.titleBg}
+							darkColor={Colors.dark.titleBg}
 						>
 							<ThemedText
 								style={{
@@ -248,7 +249,7 @@ export default function VouchersHotspotScreen() {
 											width: '100%',
 											alignItems: 'center',
 											paddingVertical: 5,
-											paddingHorizontal: 5,
+											paddingHorizontal: 10,
 											backgroundColor:
 												index % 2 === 0
 													? Colors[colorScheme].listItemBackground

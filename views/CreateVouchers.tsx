@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
 	Animated,
 	KeyboardAvoidingView,
@@ -25,7 +25,25 @@ type Props = {
 	multiple: boolean;
 	hotspot: Hotspot;
 	toggleVisible: (v?: boolean) => void;
-	generateVouchers: () => void;
+	/**
+	 * Unified submit handler. When in create mode, this should generate vouchers.
+	 * When in edit mode, this should update the selected voucher.
+	 */
+	onSubmit?: (payload: {
+		multiple: boolean;
+		numberOfUsers: number;
+		package: string;
+	}) => void;
+	/** Optional legacy callback; if provided and onSubmit is not set, it will be used. */
+	generateVouchers?: () => void;
+	/** Optional explicit mode; defaults to 'create' */
+	mode?: 'create' | 'edit';
+	/** Pre-select package when editing */
+	initialPkg?: string;
+	/** Override header title */
+	titleOverride?: string;
+	/** Override primary button label */
+	primaryButtonLabelOverride?: string;
 };
 
 export default function CreateVouchers({
@@ -34,7 +52,12 @@ export default function CreateVouchers({
 	multiple,
 	hotspot,
 	toggleVisible,
+	onSubmit,
 	generateVouchers,
+	mode = 'create',
+	initialPkg,
+	titleOverride,
+	primaryButtonLabelOverride,
 }: Props) {
 	const { language, handleGoBack, isAnimatable, keyboardVisible } =
 		useGeneral();
@@ -48,15 +71,37 @@ export default function CreateVouchers({
 	// Build dropdown options from available packages; fallback to common set
 	const packageOptions = (packages || []).map((p) => p.name).filter(Boolean);
 
-	// Keep numberOfUsers enforced based on `multiple`
+	// Keep numberOfUsers enforced to 1 when not in multiple mode initially (user can edit later)
 	useEffect(() => {
 		if (!multiple) setNumberOfUsers('1');
 	}, [multiple]);
 
+	// Initialize the package when provided (e.g., in edit mode)
+	useEffect(() => {
+		if (visible && initialPkg) setPkg(initialPkg);
+	}, [visible, initialPkg]);
+
+	// Close any open UI affordances when hiding to avoid lingering visuals
+	useEffect(() => {
+		if (!visible) {
+			setShowPackageDropdown(false);
+		}
+	}, [visible]);
+
 	const onCancel = () =>
 		toggleVisible ? toggleVisible(false) : handleGoBack();
 
-	const onGenerate = () => generateVouchers();
+	const onGenerate = () => {
+		const count = parseInt(numberOfUsers || '1', 10) || 1;
+		const effectiveMultiple = multiple || count > 1;
+		if (onSubmit)
+			return onSubmit({
+				multiple: effectiveMultiple,
+				numberOfUsers: count,
+				package: pkg,
+			});
+		if (generateVouchers) return generateVouchers();
+	};
 
 	return (
 		<OverlayContainer
@@ -85,9 +130,18 @@ export default function CreateVouchers({
 						lightColor={Colors.light.screenTitleText}
 						darkColor={Colors.dark.screenTitleText}
 					>
-						{multiple
-							? translations[language].categories.vouchers.createHotspotVouchers
-							: translations[language].categories.vouchers.createHotspotVoucher}
+						{(() => {
+							const count = parseInt(numberOfUsers || '1', 10) || 1;
+							const effectiveMultiple = multiple || count > 1;
+							if (titleOverride) return titleOverride;
+							if (mode === 'edit')
+								return translations[language].categories.buttons.saveChanges;
+							return effectiveMultiple
+								? translations[language].categories.vouchers
+										.createHotspotVouchers
+								: translations[language].categories.vouchers
+										.createHotspotVoucher;
+						})()}
 					</ThemedText>
 
 					<ThemedInput
@@ -112,7 +166,7 @@ export default function CreateVouchers({
 						keyboardType='number-pad'
 						value={numberOfUsers}
 						setValue={setNumberOfUsers}
-						editable={multiple}
+						editable={true}
 						style={{
 							backgroundColor: Colors[colorScheme].background,
 							borderColor: Colors[colorScheme].inputBorder,
@@ -162,9 +216,20 @@ export default function CreateVouchers({
 							darkTextColor={Colors.dark.white}
 						/>
 						<ThemedButton
-							title={translations[
-								language
-							].categories.buttons.generateUsersAndPdf.toUpperCase()}
+							title={(primaryButtonLabelOverride
+								? primaryButtonLabelOverride
+								: mode === 'edit'
+								? translations[language].categories.buttons.saveChanges
+								: (() => {
+										const count = parseInt(numberOfUsers || '1', 10) || 1;
+										const effectiveMultiple = multiple || count > 1;
+										return effectiveMultiple
+											? translations[language].categories.buttons
+													.generateUsersAndPdf
+											: translations[language].categories.buttons
+													.generateUserAndPdf || 'Generate user and pdf';
+								  })()
+							).toUpperCase()}
 							lightColor={Colors.light.bim}
 							darkColor={Colors.dark.bim}
 							lightTextColor={Colors.light.white}

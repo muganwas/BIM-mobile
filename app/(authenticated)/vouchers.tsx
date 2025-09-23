@@ -137,7 +137,7 @@ export default function VouchersScreen() {
 								flexDirection: 'row',
 								justifyContent: 'space-between',
 								gap: 10,
-								paddingHorizontal: 5,
+								paddingHorizontal: 10,
 								paddingVertical: 10,
 								borderBottomWidth: 1,
 								borderBottomColor: Colors[colorScheme].borderDark,
@@ -179,7 +179,7 @@ export default function VouchersScreen() {
 										width: '100%',
 										alignItems: 'center',
 										paddingVertical: 5,
-										paddingHorizontal: 5,
+										paddingHorizontal: 10,
 										backgroundColor:
 											index % 2 === 0
 												? Colors[colorScheme].listItemBackground

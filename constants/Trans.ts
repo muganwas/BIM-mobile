@@ -33,6 +33,7 @@ const translations: Translations = {
 				createSingleVoucher: 'Create Single Voucher',
 				createBulkVouchers: 'Create Bulk Vouchers',
 				generateUsersAndPdf: 'Generate users and pdf',
+				generateUserAndPdf: 'Generate user and pdf',
 				confirm: 'Confirm',
 				downloadCSV: 'Download CSV',
 				viewUsers: 'View Users',

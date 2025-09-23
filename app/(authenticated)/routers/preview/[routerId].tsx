@@ -10,13 +10,14 @@ import { useTransaction } from '@/context/TransactionContext';
 import { generateRandomInt, msToHms } from '@/helpers';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { NetRouter } from '@/types';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function RouterDetailsScreen() {
 	const navigation = useNavigation<any>();
+	const router = useRouter();
 	const { routerId } = useLocalSearchParams() as { routerId?: string };
 	const { handleUpdateHistory, language } = useGeneral();
 	const { routers } = useTransaction();
@@ -52,7 +53,7 @@ export default function RouterDetailsScreen() {
 
 	const handleViewHotspotUsers = (hotspotId: string) => {
 		if (!hotspotId) return;
-		// Update router logic here
+		router.push(`/routers/vouchers/${routerId}/${hotspotId}`);
 	};
 	return (
 		<ParallaxScrollView
@@ -79,7 +80,7 @@ export default function RouterDetailsScreen() {
 				<ThemedView
 					lightColor={Colors.light.background}
 					darkColor={Colors.dark.background}
-					style={{ flexDirection: 'column', padding: 10 }}
+					style={{ flexDirection: 'column' }}
 				>
 					<ThemedText
 						style={{
@@ -102,7 +103,7 @@ export default function RouterDetailsScreen() {
 					flexDirection: 'column',
 					boxSizing: 'border-box',
 					overflow: 'hidden',
-					paddingBottom: 10,
+					padding: 0,
 					marginHorizontal: 20,
 				}}
 			>
@@ -228,14 +229,18 @@ export default function RouterDetailsScreen() {
 					flexDirection: 'column',
 					boxSizing: 'border-box',
 					overflow: 'hidden',
-					paddingBottom: 10,
+					padding: 0,
 					marginHorizontal: 20,
 				}}
 			>
 				<ThemedView
 					lightColor={Colors.light.background}
 					darkColor={Colors.dark.background}
-					style={{ flexDirection: 'row' }}
+					style={{
+						flexDirection: 'row',
+						paddingHorizontal: 10,
+						paddingTop: 10,
+					}}
 				>
 					<ThemedText
 						lightColor={Colors.light.text}
@@ -280,13 +285,13 @@ export default function RouterDetailsScreen() {
 								flexDirection: 'row',
 								justifyContent: 'space-between',
 								gap: 10,
-								paddingHorizontal: 5,
+								paddingHorizontal: 10,
 								paddingVertical: 10,
 								borderBottomWidth: 1,
 								borderBottomColor: Colors[colorScheme].borderDark,
 							}}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={Colors.light.titleBg}
+							darkColor={Colors.dark.titleBg}
 						>
 							<ThemedText
 								style={{ width: 30 }}
@@ -356,8 +361,12 @@ export default function RouterDetailsScreen() {
 										width: '100%',
 										paddingVertical: 12,
 										gap: 10,
-										paddingHorizontal: 5,
+										paddingHorizontal: 10,
 										justifyContent: 'space-between',
+										backgroundColor:
+											index % 2 === 0
+												? Colors[colorScheme].listItemBackground
+												: Colors[colorScheme].background,
 										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
 										borderBottomColor: Colors[colorScheme].borderDark,
 									}}
