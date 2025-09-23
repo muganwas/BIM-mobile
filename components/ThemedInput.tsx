@@ -93,7 +93,11 @@ export function ThemedInput({
 					]}
 					onChangeText={setValue}
 					value={
-						typeof value === 'string' ? value : value == null ? '' : String(value)
+						typeof value === 'string'
+							? value
+							: value === undefined || value === null
+							? ''
+							: String(value)
 					}
 					placeholder={placeholder}
 					secureTextEntry={secureTextEntry && !showPassword}
@@ -101,27 +105,28 @@ export function ThemedInput({
 					placeholderTextColor={placeholderColor}
 					{...rest}
 				/>
-				<TouchableOpacity
-					style={{
-						display: secureTextEntry ? 'flex' : 'none',
-						position: 'absolute',
-						right: 10,
-						top: 0,
-						bottom: 0,
-						justifyContent: 'center',
-						zIndex: 1,
-						backgroundColor: 'transparent',
-					}}
-					activeOpacity={0.7}
-					onPress={() => setShowPassword((prev) => !prev)}
-				>
-					<IconSymbol
-						name={showPassword ? 'password.off.outline' : 'password.outline'}
-						size={20}
-						color={color}
-						style={{ marginRight: 10 }}
-					/>
-				</TouchableOpacity>
+				{secureTextEntry && (
+					<TouchableOpacity
+						style={{
+							position: 'absolute',
+							right: 10,
+							top: 0,
+							bottom: 0,
+							justifyContent: 'center',
+							zIndex: 1,
+							backgroundColor: 'transparent',
+						}}
+						activeOpacity={0.7}
+						onPress={() => setShowPassword((prev) => !prev)}
+					>
+						<IconSymbol
+							name={showPassword ? 'password.off.outline' : 'password.outline'}
+							size={20}
+							color={color}
+							style={{ marginRight: 10 }}
+						/>
+					</TouchableOpacity>
+				)}
 			</View>
 			<ThemedView
 				style={[
@@ -173,7 +178,6 @@ export function ThemedInput({
 
 const styles = StyleSheet.create({
 	input: {
-		boxSizing: 'border-box',
 		padding: 16,
 		width: '100%',
 		height: 51,

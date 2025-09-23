@@ -166,7 +166,6 @@ export default function ThemedFilePicker({
 
 const styles = StyleSheet.create({
 	input: {
-		boxSizing: 'border-box',
 		padding: 0,
 		paddingRight: 12,
 		width: '100%',

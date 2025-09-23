@@ -51,6 +51,12 @@ export default function InternetPackageOverlay({
 	const [bandwidth, setBandwidth] = useState('');
 	const [duration, setDuration] = useState('');
 
+	// Handlers for setting input values (kept simple for now; place for validation/transforms)
+	const handleChangeName = (v: string) => setName(v);
+	const handleChangeUsersPerDevice = (v: string) => setUsersPerDevice(v);
+	const handleChangeBandwidth = (v: string) => setBandwidth(v);
+	const handleChangeDuration = (v: string) => setDuration(v);
+
 	useEffect(() => {
 		if (visible) {
 			setName(initial?.name ?? '');
@@ -105,7 +111,6 @@ export default function InternetPackageOverlay({
 						padding: 20,
 						borderRadius: 10,
 						width: '100%',
-						gap: 12,
 					}}
 					lightColor={Colors.light.background}
 					darkColor={Colors.dark.background}
@@ -126,30 +131,20 @@ export default function InternetPackageOverlay({
 						label={t.internetPackage.packageName}
 						placeholder={t.internetPackage.placeholderPackageName}
 						value={name}
-						setValue={setName}
+						setValue={handleChangeName}
 						editable={!readOnly}
-						style={{
-							marginBottom: 10,
-							backgroundColor: Colors[colorScheme].inputBackground,
-							borderWidth: 1,
-							borderColor: Colors[colorScheme].inputBorder,
-						}}
+						style={{ marginBottom: 10 }}
 						lightColor={Colors.light.text}
 						darkColor={Colors.dark.text}
 					/>
 					<ThemedInput
 						label={t.internetPackage.usersPerDevice}
 						placeholder={t.internetPackage.placeholderUsersPerDevice}
-						keyboardType='number-pad'
+						keyboardType='numeric'
 						value={usersPerDevice}
-						setValue={setUsersPerDevice}
+						setValue={handleChangeUsersPerDevice}
 						editable={!readOnly}
-						style={{
-							marginBottom: 10,
-							backgroundColor: Colors[colorScheme].inputBackground,
-							borderWidth: 1,
-							borderColor: Colors[colorScheme].inputBorder,
-						}}
+						style={{ marginBottom: 10 }}
 						lightColor={Colors.light.text}
 						darkColor={Colors.dark.text}
 					/>
@@ -157,30 +152,20 @@ export default function InternetPackageOverlay({
 						label={t.internetPackage.bandwidth}
 						placeholder={t.internetPackage.placeholderBandwidth}
 						value={bandwidth}
-						setValue={setBandwidth}
+						setValue={handleChangeBandwidth}
 						editable={!readOnly}
-						style={{
-							marginBottom: 10,
-							backgroundColor: Colors[colorScheme].inputBackground,
-							borderWidth: 1,
-							borderColor: Colors[colorScheme].inputBorder,
-						}}
+						style={{ marginBottom: 10 }}
 						lightColor={Colors.light.text}
 						darkColor={Colors.dark.text}
 					/>
 					<ThemedInput
 						label={t.internetPackage.durationHours}
 						placeholder={t.internetPackage.placeholderDurationHours}
-						keyboardType='number-pad'
+						keyboardType='numeric'
 						value={duration}
-						setValue={setDuration}
+						setValue={handleChangeDuration}
 						editable={!readOnly}
-						style={{
-							marginBottom: 18,
-							backgroundColor: Colors[colorScheme].inputBackground,
-							borderWidth: 1,
-							borderColor: Colors[colorScheme].inputBorder,
-						}}
+						style={{ marginBottom: 18 }}
 						lightColor={Colors.light.text}
 						darkColor={Colors.dark.text}
 					/>
