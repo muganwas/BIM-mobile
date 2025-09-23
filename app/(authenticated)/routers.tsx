@@ -1,3 +1,4 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Prompt from '@/components/Prompt';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
@@ -15,7 +16,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
 	Animated,
-	StyleSheet,
 	TouchableOpacity,
 	useAnimatedValue,
 	useColorScheme,
@@ -53,6 +53,42 @@ export default function RoutersScreen() {
 			})();
 		}
 	}, [user, routers, fetchRouters]);
+
+	// Predefine header columns for the routers table
+	const routerHeaders = [
+		{ key: 'row', label: '#', width: 30 },
+		{
+			key: 'name',
+			label: translations[language].categories.dashboard.routerName,
+			width: 120,
+		},
+		{
+			key: 'location',
+			label: translations[language].categories.dashboard.location,
+			width: 120,
+		},
+		{
+			key: 'type',
+			label: translations[language].categories.dashboard.type,
+			width: 120,
+		},
+		{
+			key: 'ip',
+			label: translations[language].categories.dashboard.ipAddress,
+			width: 120,
+		},
+		{
+			key: 'balance',
+			label: translations[language].categories.dashboard.balance,
+			width: 120,
+		},
+		{
+			key: 'actions',
+			label: translations[language].categories.dashboard.actions,
+			width: 120,
+			textAlign: 'center' as const,
+		},
+	];
 
 	const toggleShowPrompt = (v?: boolean) => {
 		const value = v ?? !showPrompt;
@@ -94,10 +130,13 @@ export default function RoutersScreen() {
 
 	return (
 		<>
-			<ThemedView
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
-				style={styles.container}
+			<ParallaxScrollView
+				headerBackgroundColor={{
+					light: Colors.light.background,
+					dark: Colors.dark.background,
+				}}
+				containerStyle={{ flex: 1 }}
+				contentStyle={{ padding: 16 }}
 			>
 				<ThemedView
 					lightColor={Colors.light.background}
@@ -173,97 +212,24 @@ export default function RoutersScreen() {
 								lightColor={Colors.light.background}
 								darkColor={Colors.dark.background}
 							>
-								<ThemedText
-									style={{ width: 30 }}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
-								>
-									#
-								</ThemedText>
-								<ThemedText
-									numberOfLines={1}
-									ellipsizeMode='tail'
-									style={{
-										fontSize: fontSize['text.medium'],
-										width: 120,
-										textTransform: 'uppercase',
-										paddingRight: 8,
-									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
-								>
-									{translations[language].categories.dashboard.routerName}
-								</ThemedText>
-								<ThemedText
-									numberOfLines={1}
-									ellipsizeMode='tail'
-									style={{
-										fontSize: fontSize['text.medium'],
-										width: 120,
-										textTransform: 'uppercase',
-										paddingRight: 8,
-									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
-								>
-									{translations[language].categories.dashboard.location}
-								</ThemedText>
-								<ThemedText
-									numberOfLines={1}
-									ellipsizeMode='tail'
-									style={{
-										fontSize: fontSize['text.medium'],
-										width: 120,
-										textTransform: 'uppercase',
-										paddingRight: 8,
-									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
-								>
-									{translations[language].categories.dashboard.type}
-								</ThemedText>
-								<ThemedText
-									numberOfLines={1}
-									ellipsizeMode='tail'
-									style={{
-										fontSize: fontSize['text.medium'],
-										width: 120,
-										textTransform: 'uppercase',
-										paddingRight: 8,
-									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
-								>
-									{translations[language].categories.dashboard.ipAddress}
-								</ThemedText>
-								<ThemedText
-									numberOfLines={1}
-									ellipsizeMode='tail'
-									style={{
-										fontSize: fontSize['text.medium'],
-										width: 120,
-										textTransform: 'uppercase',
-										paddingRight: 8,
-									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
-								>
-									{translations[language].categories.dashboard.balance}
-								</ThemedText>
-								<ThemedText
-									numberOfLines={1}
-									ellipsizeMode='tail'
-									style={{
-										fontSize: fontSize['text.medium'],
-										width: 120,
-										textTransform: 'uppercase',
-										textAlign: 'center',
-									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
-								>
-									{translations[language].categories.dashboard.actions}
-								</ThemedText>
+								{routerHeaders.map((col) => (
+									<ThemedText
+										key={`hdr-${col.key}`}
+										numberOfLines={1}
+										ellipsizeMode='tail'
+										style={{
+											fontSize: fontSize['text.medium'],
+											width: col.width,
+											textTransform: 'uppercase',
+											paddingRight: 8,
+											...(col.textAlign ? { textAlign: col.textAlign } : {}),
+										}}
+										lightColor={Colors.light.text}
+										darkColor={Colors.dark.text}
+									>
+										{col.label}
+									</ThemedText>
+								))}
 							</ThemedView>
 							<ScrollView
 								id={routerListDetailsId.current}
@@ -408,7 +374,7 @@ export default function RoutersScreen() {
 						</ThemedView>
 					</ScrollView>
 				</TileContainer>
-			</ThemedView>
+			</ParallaxScrollView>
 			<Prompt
 				id='delete-router-prompt'
 				fadeAnim={promptFadeAnim}
@@ -435,16 +401,4 @@ export default function RoutersScreen() {
 	);
 }
 
-const styles = StyleSheet.create({
-	container: {
-		position: 'relative',
-		flex: 1,
-		padding: 16,
-		zIndex: 1,
-	},
-	routerItem: {
-		padding: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: '#eee',
-	},
-});
+// styles previously used for container/routerItem are no longer necessary after ParallaxScrollView refactor

@@ -6,8 +6,9 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+	Animated,
 	KeyboardAvoidingView,
 	Platform,
 	StyleSheet,
@@ -41,14 +42,28 @@ export default function WithdrawFunds({
 	const [phone, setPhone] = useState('');
 	const [narration, setNarration] = useState('');
 
+	// Provide a real Animated.Value for overlay
+	const fadeAnim = useRef(new Animated.Value(0)).current;
+
 	// Reset fields when opening/closing
 	useEffect(() => {
 		if (visible) {
 			setAmount('');
 			setPhone('');
 			setNarration('');
+			Animated.timing(fadeAnim, {
+				toValue: 1,
+				duration: 150,
+				useNativeDriver: true,
+			}).start();
+		} else {
+			Animated.timing(fadeAnim, {
+				toValue: 0,
+				duration: 150,
+				useNativeDriver: true,
+			}).start();
 		}
-	}, [visible]);
+	}, [visible, fadeAnim]);
 
 	const t = translations[language]?.categories ?? ({} as any);
 	const toTitleCase = (s: string) =>
@@ -68,7 +83,7 @@ export default function WithdrawFunds({
 	return (
 		<OverlayContainer
 			showOverlay={visible}
-			fadeAnim={undefined as any}
+			fadeAnim={fadeAnim}
 			position='center'
 		>
 			<KeyboardAvoidingView

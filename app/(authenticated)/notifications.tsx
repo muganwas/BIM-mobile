@@ -1,3 +1,4 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
@@ -5,17 +6,19 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import React from 'react';
 import { StyleSheet } from 'react-native';
 
 export default function NotificationsScreen() {
 	useTrackHistory('/(authenticated)/notifications');
 	const { notifications, language } = useGeneral(); // Get notifications from context
 	return (
-		<ThemedView
-			style={styles.container}
-			lightColor={Colors.light.background}
-			darkColor={Colors.dark.background}
+		<ParallaxScrollView
+			headerBackgroundColor={{
+				light: Colors.light.background,
+				dark: Colors.dark.background,
+			}}
+			containerStyle={{ flex: 1 }}
+			contentStyle={{ padding: 16 }}
 		>
 			<ThemedText
 				style={styles.title}
@@ -59,17 +62,12 @@ export default function NotificationsScreen() {
 					</ThemedText>
 				)}
 			</ThemedView>
-		</ThemedView>
+		</ParallaxScrollView>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		flexDirection: 'column',
-		justifyContent: 'flex-start',
-		alignItems: 'center',
-	},
+	container: {},
 	header: {
 		flex: 1,
 		justifyContent: 'center',

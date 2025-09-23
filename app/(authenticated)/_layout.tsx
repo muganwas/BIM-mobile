@@ -21,6 +21,7 @@ import { Platform, TouchableOpacity, View } from 'react-native';
 
 function CustomDrawerContent(props: any) {
 	const colorScheme = useColorScheme() ?? 'light';
+	const { language } = useGeneral();
 	const { state, descriptors, navigation } = props;
 	const activeIndex = state.index;
 
@@ -61,7 +62,14 @@ function CustomDrawerContent(props: any) {
 				const showItem = options.drawerItemStyle?.display !== 'none';
 				// Skip routes that are not explicitly allowed
 				if (!allowedRoutes.has(route.name)) return null;
-				const label = options.drawerLabel ?? options.title ?? route.name;
+				// Derive a label: prefer explicit option, otherwise use translations by route name, fallback to route.name
+				const translatedNav = translations[language]?.categories
+					?.navigation as Record<string, string>;
+				const label =
+					options.drawerLabel ??
+					options.title ??
+					translatedNav?.[route.name] ??
+					route.name;
 				const isActive = i === activeIndex;
 				const activeBg =
 					options.drawerActiveBackgroundColor ??
@@ -69,16 +77,45 @@ function CustomDrawerContent(props: any) {
 				const inactiveBg =
 					options.drawerInactiveBackgroundColor ??
 					Colors[colorScheme].drawerButtonBackground;
-				const icon = options.drawerIcon
-					? options.drawerIcon({
-							focused: isActive,
-							color: isActive
-								? options.drawerActiveTintColor ??
-								  Colors[colorScheme].drawerItem
-								: options.drawerInactiveTintColor ??
-								  Colors[colorScheme].drawerInactiveItem,
-					  })
-					: null;
+				const iconColor = isActive
+					? options.drawerActiveTintColor ?? Colors[colorScheme].drawerItem
+					: options.drawerInactiveTintColor ??
+					  Colors[colorScheme].drawerInactiveItem;
+				let icon: React.ReactNode = null;
+				switch (route.name) {
+					case 'home':
+						icon = (
+							<IconSymbol size={24} name='home.outline' color={iconColor} />
+						);
+						break;
+					case 'routers':
+						icon = (
+							<IconSymbol size={24} name='routers.outline' color={iconColor} />
+						);
+						break;
+					case 'packages':
+						icon = <IconSymbol size={24} name='packages' color={iconColor} />;
+						break;
+					case 'vouchers':
+						icon = <IconSymbol size={24} name='vouchers' color={iconColor} />;
+						break;
+					case 'transactions':
+						icon = (
+							<IconSymbol size={24} name='transactions' color={iconColor} />
+						);
+						break;
+					case 'withdraw':
+						icon = <IconSymbol size={24} name='withdrawal' color={iconColor} />;
+						break;
+					case 'banks':
+						icon = <IconSymbol size={24} name='bank' color={iconColor} />;
+						break;
+					case 'documents':
+						icon = <IconSymbol size={24} name='documents' color={iconColor} />;
+						break;
+					default:
+						icon = null;
+				}
 				if (!showItem) {
 					return null;
 				}
@@ -217,128 +254,16 @@ export default function DrawerLayout() {
 					},
 				}}
 			>
-				<Drawer.Screen
-					name='home'
-					options={
-						{
-							title: translations[language].categories.navigation['home'],
-							headerProps: { goback: false },
-							drawerIcon: ({ color }: { color: string }) => (
-								<IconSymbol size={24} name='home.outline' color={color} />
-							),
-						} as any
-					}
-				/>
-				<Drawer.Screen
-					name='routers'
-					options={
-						{
-							title: translations[language].categories.navigation['routers'],
-							headerProps: { goback: false },
-							drawerIcon: ({ color }: { color: string }) => (
-								<IconSymbol size={24} name='routers.outline' color={color} />
-							),
-						} as any
-					}
-				/>
-				<Drawer.Screen
-					name='packages'
-					options={
-						{
-							title: translations[language].categories.navigation['packages'],
-							headerProps: { goback: false },
-							drawerIcon: ({ color }: { color: string }) => (
-								<IconSymbol size={24} name='packages' color={color} />
-							),
-						} as any
-					}
-				/>
-				<Drawer.Screen
-					name='vouchers'
-					options={
-						{
-							title: translations[language].categories.navigation['vouchers'],
-							headerProps: { goback: false },
-							drawerIcon: ({ color }: { color: string }) => (
-								<IconSymbol size={24} name='vouchers' color={color} />
-							),
-						} as any
-					}
-				/>
-				<Drawer.Screen
-					name='transactions'
-					options={
-						{
-							title:
-								translations[language].categories.navigation['transactions'],
-							headerProps: { goback: false },
-							drawerIcon: ({ color }: { color: string }) => (
-								<IconSymbol size={24} name='transactions' color={color} />
-							),
-						} as any
-					}
-				/>
-				<Drawer.Screen
-					name='withdraw'
-					options={
-						{
-							title: translations[language].categories.navigation['withdraw'],
-							headerProps: { goback: false },
-							drawerIcon: ({ color }: { color: string }) => (
-								<IconSymbol size={24} name='withdrawal' color={color} />
-							),
-						} as any
-					}
-				/>
-				<Drawer.Screen
-					name='banks'
-					options={
-						{
-							title: translations[language].categories.navigation['banks'],
-							headerProps: { goback: false },
-							drawerIcon: ({ color }: { color: string }) => (
-								<IconSymbol size={24} name='bank' color={color} />
-							),
-						} as any
-					}
-				/>
-				<Drawer.Screen
-					name='documents'
-					options={
-						{
-							title: translations[language].categories.navigation['documents'],
-							headerProps: { goback: false },
-							drawerIcon: ({ color }: { color: string }) => (
-								<IconSymbol size={24} name='documents' color={color} />
-							),
-						} as any
-					}
-				/>
-				<Drawer.Screen
-					name='profile'
-					options={
-						{
-							title: translations[language].categories.navigation['profile'],
-							headerProps: { goback: false },
-							drawerItemStyle: {
-								display: 'none',
-							},
-						} as any
-					}
-				/>
-				<Drawer.Screen
-					name='notifications'
-					options={
-						{
-							title:
-								translations[language].categories.navigation['notifications'],
-							headerProps: { goback: false },
-							drawerItemStyle: {
-								display: 'none',
-							},
-						} as any
-					}
-				/>
+				<Drawer.Screen name='home' />
+				<Drawer.Screen name='routers' />
+				<Drawer.Screen name='packages' />
+				<Drawer.Screen name='vouchers' />
+				<Drawer.Screen name='transactions' />
+				<Drawer.Screen name='withdraw' />
+				<Drawer.Screen name='banks' />
+				<Drawer.Screen name='documents' />
+				<Drawer.Screen name='profile' />
+				<Drawer.Screen name='notifications' />
 				{/* Add more drawer screens as needed */}
 			</Drawer>
 		</TransactionProvider>

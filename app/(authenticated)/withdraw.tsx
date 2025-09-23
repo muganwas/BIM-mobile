@@ -35,6 +35,40 @@ export default function WithdrawScreen() {
 		() => translations[language].categories.dashboard.currency ?? 'UGX',
 		[language]
 	);
+
+	// Predefine header columns for the withdraw routers table
+	const withdrawHeaders = useMemo(
+		() => [
+			{ key: 'row', label: '#', width: 30 },
+			{
+				key: 'name',
+				label: translations[language].categories.dashboard.name,
+				width: 120,
+			},
+			{
+				key: 'location',
+				label: translations[language].categories.dashboard.location,
+				width: 120,
+			},
+			{
+				key: 'ip',
+				label: translations[language].categories.dashboard.ipAddress,
+				width: 120,
+			},
+			{
+				key: 'balance',
+				label: translations[language].categories.dashboard.balance,
+				width: 120,
+			},
+			{
+				key: 'actions',
+				label: translations[language].categories.dashboard.actions,
+				width: 120,
+				textAlign: 'center' as const,
+			},
+		],
+		[language]
+	);
 	const selectedRouter = useMemo(
 		() => routers.find((r) => r.id === selectedRouterId) || null,
 		[routers, selectedRouterId]
@@ -129,83 +163,24 @@ export default function WithdrawScreen() {
 							lightColor={Colors.light.background}
 							darkColor={Colors.dark.background}
 						>
-							<ThemedText
-								style={{ width: 30 }}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								#
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.name}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.location}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.ipAddress}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.balance}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									textAlign: 'center',
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.actions}
-							</ThemedText>
+							{withdrawHeaders.map((col) => (
+								<ThemedText
+									key={`hdr-${col.key}`}
+									numberOfLines={1}
+									ellipsizeMode='tail'
+									style={{
+										fontSize: fontSize['text.medium'],
+										width: col.width,
+										textTransform: 'uppercase',
+										paddingRight: 8,
+										...(col.textAlign ? { textAlign: col.textAlign } : {}),
+									}}
+									lightColor={Colors.light.text}
+									darkColor={Colors.dark.text}
+								>
+									{col.label}
+								</ThemedText>
+							))}
 						</ThemedView>
 
 						<ScrollView

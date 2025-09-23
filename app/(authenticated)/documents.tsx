@@ -1,10 +1,11 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { FlatList, Linking, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function DocumentsScreen() {
@@ -22,10 +23,13 @@ export default function DocumentsScreen() {
 	}, [user, documents, fetchDocuments]);
 
 	return (
-		<ThemedView
-			lightColor={Colors.light.background}
-			darkColor={Colors.dark.background}
-			style={styles.container}
+		<ParallaxScrollView
+			headerBackgroundColor={{
+				light: Colors.light.background,
+				dark: Colors.dark.background,
+			}}
+			containerStyle={{ flex: 1 }}
+			contentStyle={{ padding: 16 }}
 		>
 			<FlatList
 				data={documents}
@@ -56,15 +60,12 @@ export default function DocumentsScreen() {
 					</ThemedView>
 				)}
 			/>
-		</ThemedView>
+		</ParallaxScrollView>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		padding: 16,
-	},
+	container: {},
 	routerItem: {
 		padding: 12,
 		borderBottomWidth: 1,

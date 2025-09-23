@@ -260,7 +260,7 @@ export default function ThemedDatePicker({
 								pointerEvents='none'
 							>
 								<IconSymbol
-									name={iconName as any}
+									name={iconName as unknown as string}
 									size={20}
 									color={Colors[colorScheme].text}
 								/>

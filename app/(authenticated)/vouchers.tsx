@@ -1,3 +1,4 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -9,8 +10,8 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { useEffect, useMemo, useRef } from 'react';
+import { useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function VouchersScreen() {
@@ -40,11 +41,47 @@ export default function VouchersScreen() {
 		}
 	}, [user, packages, fetchPackages]);
 
+	// Predefine header columns outside JSX for stability/consistency
+	const voucherHeaders = useMemo(
+		() => [
+			{
+				key: 'name',
+				label: translations[language].categories.dashboard.name,
+				width: 120,
+			},
+			{
+				key: 'location',
+				label: translations[language].categories.dashboard.location,
+				width: 120,
+			},
+			{
+				key: 'ip',
+				label: translations[language].categories.dashboard.ipAddress,
+				width: 120,
+			},
+			{
+				key: 'username',
+				label: translations[language].categories.dashboard.routerUsername,
+				width: 120,
+			},
+			{
+				key: 'actions',
+				label: translations[language].categories.dashboard.actions,
+				width: 120,
+				textAlign: 'center' as const,
+			},
+		],
+		[language]
+	);
+
 	return (
-		<ThemedView
-			lightColor={Colors.light.background}
-			darkColor={Colors.dark.background}
-			style={styles.container}
+		<ParallaxScrollView
+			headerBackgroundColor={{
+				light: Colors.light.background,
+				dark: Colors.dark.background,
+			}}
+			containerStyle={{ flex: 1 }}
+			contentStyle={{ padding: 16 }}
 		>
 			<ThemedView
 				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
@@ -107,74 +144,24 @@ export default function VouchersScreen() {
 							lightColor={Colors.light.background}
 							darkColor={Colors.dark.background}
 						>
-							<ThemedText
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.name}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.location}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.ipAddress}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.routerUsername}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 120,
-									textTransform: 'uppercase',
-									textAlign: 'center',
-								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
-							>
-								{translations[language].categories.dashboard.actions}
-							</ThemedText>
+							{voucherHeaders.map((col) => (
+								<ThemedText
+									key={`hdr-${col.key}`}
+									numberOfLines={1}
+									ellipsizeMode='tail'
+									style={{
+										fontSize: fontSize['text.medium'],
+										width: col.width,
+										textTransform: 'uppercase',
+										paddingRight: 8,
+										...(col.textAlign ? { textAlign: col.textAlign } : {}),
+									}}
+									lightColor={Colors.light.text}
+									darkColor={Colors.dark.text}
+								>
+									{col.label}
+								</ThemedText>
+							))}
 						</ThemedView>
 						<ScrollView
 							id={packageRouterListDetailsId.current}
@@ -275,18 +262,6 @@ export default function VouchersScreen() {
 					</ThemedView>
 				</ScrollView>
 			</TileContainer>
-		</ThemedView>
+		</ParallaxScrollView>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		padding: 16,
-	},
-	routerItem: {
-		padding: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: '#eee',
-	},
-});

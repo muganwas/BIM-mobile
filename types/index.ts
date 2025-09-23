@@ -101,12 +101,12 @@ export interface DocumentProps {
 }
 
 export interface Bank {
-	id?: string;
+	id: string;
 	name: string; // Name of the bank
 	accountNumber: string; // Account number of the bank
 	accountHolderName: string; // Name of the account holder
-	SWIFTCode?: string; // Optional, can be used for international transactions
-	currency?: string; // Optional, can be used to specify the currency of the bank account
+	SWIFTCode: string;
+	currency: string;
 	branch?: string; // Optional branch name
 	createdAt?: Date;
 	updatedAt?: Date;

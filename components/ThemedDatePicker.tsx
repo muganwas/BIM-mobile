@@ -137,7 +137,7 @@ export default function ThemedDatePicker({
 						pointerEvents='none'
 					>
 						<IconSymbol
-							name={iconName as any}
+							name={iconName as 'clock' | 'calendar'}
 							size={20}
 							color={Colors[colorScheme].text}
 						/>

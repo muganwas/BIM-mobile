@@ -1,5 +1,5 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useGeneral } from '@/context/GeneralContext';
 // avoid importing navigation types from @react-navigation/drawer which may not export them in some versions
@@ -28,11 +28,18 @@ export default function ProfileScreen() {
 	});
 
 	return (
-		<ThemedView style={{ flex: 1, padding: 16 }}>
+		<ParallaxScrollView
+			headerBackgroundColor={{
+				light: Colors.light.background,
+				dark: Colors.dark.background,
+			}}
+			containerStyle={{ flex: 1 }}
+			contentStyle={{ padding: 16 }}
+		>
 			<ThemedText style={{ color: Colors[colorScheme].text }}>
 				Welcome, {user?.name || 'User'}!
 			</ThemedText>
 			{/* Add more profile related components here */}
-		</ThemedView>
+		</ParallaxScrollView>
 	);
 }

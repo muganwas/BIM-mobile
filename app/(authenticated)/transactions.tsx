@@ -12,8 +12,8 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { formatAmount } from '@/helpers';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { useEffect, useMemo, useState } from 'react';
-import { useColorScheme } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useColorScheme, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function TransactionsScreen() {
@@ -34,6 +34,10 @@ export default function TransactionsScreen() {
 	const [showTypeDd, setShowTypeDd] = useState(false);
 	const statusOptions = useMemo(() => [t.all, t.pending, t.approved], [t]);
 	const typeOptions = useMemo(() => [t.all, t.debit, t.credit], [t]);
+
+	// Refs for dropdown containers (avoid any-casts)
+	const statusDdRef = useRef<View>(null);
+	const typeDdRef = useRef<View>(null);
 
 	// When language changes, reset default selections to "All"
 	useEffect(() => {
@@ -80,6 +84,20 @@ export default function TransactionsScreen() {
 		const start = (page - 1) * pageSize;
 		return filtered.slice(start, start + pageSize);
 	}, [filtered, page]);
+
+	// Predefine table headers (so metadata like length is known before render)
+	const txHeaders = useMemo(
+		() => [
+			{ key: 'hash', label: t.colHash, width: 30 },
+			{ key: 'amount', label: t.colAmount, width: 120 },
+			{ key: 'type', label: t.colType, width: 120 },
+			{ key: 'reason', label: t.colReason, width: 120 },
+			{ key: 'status', label: t.colStatus, width: 120 },
+			{ key: 'router', label: t.colRouterName, width: 120 },
+			{ key: 'date', label: t.colTransactionDate, width: 120 },
+		],
+		[t]
+	);
 
 	// Button handlers (stubs)
 	const handleApplyFilters = () => {
@@ -140,7 +158,7 @@ export default function TransactionsScreen() {
 					marginBottom: 12,
 					// Ensure any nested dropdown overlays subsequent sections
 					...(showStatusDd || showTypeDd
-						? { zIndex: 2000 as any, elevation: 20 }
+						? { zIndex: 2000, elevation: 20 }
 						: {}),
 				}}
 			>
@@ -188,7 +206,7 @@ export default function TransactionsScreen() {
 					>
 						<ThemedDropdown
 							id='status-dd'
-							containerRef={{ current: null } as any}
+							containerRef={statusDdRef}
 							label={t.status}
 							placeholder={t.status}
 							options={statusOptions}
@@ -208,7 +226,7 @@ export default function TransactionsScreen() {
 					>
 						<ThemedDropdown
 							id='type-dd'
-							containerRef={{ current: null } as any}
+							containerRef={typeDdRef}
 							label={t.transactionType}
 							placeholder={t.transactionType}
 							options={typeOptions}
@@ -342,22 +360,14 @@ export default function TransactionsScreen() {
 							lightColor={Colors.light.titleBg}
 							darkColor={Colors.dark.titleBg}
 						>
-							{[
-								t.colHash,
-								t.colAmount,
-								t.colType,
-								t.colReason,
-								t.colStatus,
-								t.colRouterName,
-								t.colTransactionDate,
-							].map((label, idx) => (
+							{txHeaders.map((col) => (
 								<ThemedText
-									key={`hdr-${idx}`}
+									key={`hdr-${col.key}`}
 									numberOfLines={1}
 									ellipsizeMode='tail'
 									style={{
 										fontSize: fontSize['text.medium'],
-										width: idx === 0 ? 30 : 120,
+										width: col.width,
 										flexShrink: 0,
 										textTransform: 'uppercase',
 										paddingRight: 8,
@@ -365,7 +375,7 @@ export default function TransactionsScreen() {
 									lightColor={Colors.light.text}
 									darkColor={Colors.dark.text}
 								>
-									{label}
+									{col.label}
 								</ThemedText>
 							))}
 						</ThemedView>

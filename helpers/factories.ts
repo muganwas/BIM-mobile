@@ -181,12 +181,49 @@ export function generateVoucherUsersFromPurchases(
 
 export function generateBank(overrides: Partial<Bank> = {}): Bank {
 	const id = overrides.id ?? generateRandomNumbers(6);
+	// Helpers to build SWIFT/BIC in strict 4-2-2 pattern (8 chars)
+	const randomLetters = (len: number) => {
+		const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		let out = '';
+		for (let i = 0; i < len; i++)
+			out += letters[Math.floor(Math.random() * letters.length)];
+		return out;
+	};
+	const randomAlnum = (len: number) => {
+		const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+		let out = '';
+		for (let i = 0; i < len; i++)
+			out += chars[Math.floor(Math.random() * chars.length)];
+		return out;
+	};
+	// Map ISO 4217 currency -> ISO 3166-1 alpha-2 country code (best-effort)
+	const currencyToCountry: Record<string, string> = {
+		UGX: 'UG', // Uganda Shilling
+		KES: 'KE', // Kenya Shilling
+		TZS: 'TZ', // Tanzania Shilling
+		RWF: 'RW', // Rwanda Franc
+		BIF: 'BI', // Burundi Franc
+		CDF: 'CD', // Congolese Franc
+		GHS: 'GH', // Ghana Cedi
+		NGN: 'NG', // Nigeria Naira
+		ZAR: 'ZA', // South Africa Rand
+		USD: 'US', // US Dollar
+		EUR: 'DE', // Euro (choose DE as representative country)
+		GBP: 'GB', // British Pound
+		XAF: 'CM', // Central African CFA (Cameroon as representative)
+		XOF: 'SN', // West African CFA (Senegal as representative)
+	};
+	const bankCurrency = (overrides.currency ?? 'UGX').toUpperCase();
+	const countryCode = currencyToCountry[bankCurrency] ?? 'UG';
+	const generatedSwift = `${randomLetters(4)}${countryCode}${randomAlnum(2)}`; // 4-2-2
 	return {
 		id,
 		name: overrides.name ?? `Bank ${id}`,
 		accountNumber: overrides.accountNumber ?? generateRandomNumbers(10),
 		accountHolderName: overrides.accountHolderName ?? 'John Doe',
-		SWIFTCode: overrides.SWIFTCode,
+		// SWIFT/BIC: strict 4-2-2 base code (8 chars)
+		SWIFTCode: overrides.SWIFTCode ?? generatedSwift,
+		// Currency is required; default to UGX if not provided
 		currency: overrides.currency ?? 'UGX',
 		branch: overrides.branch,
 		createdAt: overrides.createdAt,
