@@ -91,7 +91,7 @@ export function ThemedInput({
 						fontFamily ? { fontFamily } : undefined,
 						style,
 					]}
-					onChangeText={setValue}
+					onChangeText={(t) => setValue(t ?? '')}
 					value={
 						typeof value === 'string'
 							? value
@@ -99,7 +99,7 @@ export function ThemedInput({
 							? ''
 							: String(value)
 					}
-					placeholder={placeholder}
+					placeholder={placeholder ?? ''}
 					secureTextEntry={secureTextEntry && !showPassword}
 					keyboardType={keyboardType}
 					placeholderTextColor={placeholderColor}

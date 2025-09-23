@@ -61,10 +61,16 @@ export default function InternetPackageOverlay({
 		if (visible) {
 			setName(initial?.name ?? '');
 			setUsersPerDevice(
-				initial?.usersPerDevice != null ? String(initial.usersPerDevice) : '1'
+				initial?.usersPerDevice !== undefined && initial?.usersPerDevice !== null
+					? String(initial.usersPerDevice)
+					: '1'
 			);
 			setBandwidth(initial?.bandwidth ?? '');
-			setDuration(initial?.duration != null ? String(initial.duration) : '1');
+			setDuration(
+				initial?.duration !== undefined && initial?.duration !== null
+					? String(initial.duration)
+					: '1'
+			);
 		}
 	}, [visible, initial]);
 
@@ -140,7 +146,7 @@ export default function InternetPackageOverlay({
 					<ThemedInput
 						label={t.internetPackage.usersPerDevice}
 						placeholder={t.internetPackage.placeholderUsersPerDevice}
-						keyboardType='numeric'
+						keyboardType='number-pad'
 						value={usersPerDevice}
 						setValue={handleChangeUsersPerDevice}
 						editable={!readOnly}
@@ -161,7 +167,7 @@ export default function InternetPackageOverlay({
 					<ThemedInput
 						label={t.internetPackage.durationHours}
 						placeholder={t.internetPackage.placeholderDurationHours}
-						keyboardType='numeric'
+						keyboardType='number-pad'
 						value={duration}
 						setValue={handleChangeDuration}
 						editable={!readOnly}
