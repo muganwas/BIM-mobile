@@ -186,6 +186,7 @@ export const ThemedDropdown = ({
 								borderWidth: 1,
 								borderRadius: 5,
 								borderColor: Colors[colorScheme].inputBorder,
+								backgroundColor: Colors[colorScheme].inputBackground,
 							},
 						]}
 					>

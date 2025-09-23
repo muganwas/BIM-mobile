@@ -54,6 +54,8 @@ const translations: Translations = {
 				apply: 'Apply',
 				save: 'Save',
 				withdraw: 'withdraw',
+				createPackage: 'Create package',
+				createNewPackage: 'Create new package',
 			},
 			navigation: {
 				home: 'Dashboard',
@@ -109,6 +111,25 @@ const translations: Translations = {
 			packages: {
 				title: 'Packages',
 				subtitle: 'Select router to view associated packages',
+				packagesOnHotspot: 'Packages on Hotspot: {hotspotName}',
+				usersPerDevice: 'Users per device',
+				bandwidth: 'Bandwidth',
+				durationHours: 'Duration (hrs)',
+				deleteMessage:
+					'Are you sure you want to delete this package? This action cannot be undone.',
+			},
+			internetPackage: {
+				createTitle: 'Create Internet Package',
+				editTitle: 'Edit Internet Package',
+				viewTitle: 'Internet Package',
+				packageName: 'Package name',
+				usersPerDevice: 'Users per device',
+				bandwidth: 'Bandwidth',
+				durationHours: 'Duration (hours)',
+				placeholderPackageName: 'e.g. daily',
+				placeholderUsersPerDevice: 'e.g. 1',
+				placeholderBandwidth: 'e.g. 5Mbps',
+				placeholderDurationHours: 'e.g. 24',
 			},
 			hotspots: {
 				title: 'Hotspot Servers for Router:',

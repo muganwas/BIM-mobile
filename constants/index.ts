@@ -15,6 +15,7 @@ export const packages: InternetPackage[] = [
 		tag: 'profile_DAILY1000Shs',
 		price: 1000,
 		bandwidth: '1Mbps',
+		usersPerDevice: 1,
 		duration: 24,
 	},
 	{
@@ -22,6 +23,7 @@ export const packages: InternetPackage[] = [
 		tag: 'profile_WEEKLY5000Shs',
 		price: 5000,
 		bandwidth: '2Mbps',
+		usersPerDevice: 2,
 		duration: 168,
 	},
 	{
@@ -29,6 +31,7 @@ export const packages: InternetPackage[] = [
 		tag: 'profile_MONTHLY20000Shs',
 		price: 20000,
 		bandwidth: '5Mbps',
+		usersPerDevice: 3,
 		duration: 720,
 	},
 	{
@@ -36,6 +39,7 @@ export const packages: InternetPackage[] = [
 		tag: 'profile_5HRS500Shs',
 		price: 500,
 		bandwidth: '256Kbps',
+		usersPerDevice: 1,
 		duration: 5,
 	},
 ];

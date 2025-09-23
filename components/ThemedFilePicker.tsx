@@ -112,7 +112,15 @@ export default function ThemedFilePicker({
 			<ThemedView
 				lightColor={lightColor ?? Colors[colorScheme].background}
 				darkColor={darkColor ?? Colors[colorScheme].background}
-				style={[styles.input, style]}
+				style={[
+					styles.input,
+					{
+						backgroundColor: Colors[colorScheme].inputBackground,
+						borderColor: Colors[colorScheme].inputBorder,
+						borderWidth: 1,
+					},
+					style,
+				]}
 			>
 				{/* Left embedded button */}
 				<TouchableOpacity
@@ -161,7 +169,6 @@ const styles = StyleSheet.create({
 		boxSizing: 'border-box',
 		padding: 0,
 		paddingRight: 12,
-		backgroundColor: '#2C414F26',
 		width: '100%',
 		height: 51,
 		borderRadius: 5,

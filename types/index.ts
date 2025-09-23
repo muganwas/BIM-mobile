@@ -86,6 +86,7 @@ export interface InternetPackage {
 	name: InternetPackageName; // Name of the internet package
 	price: number; // Price of the package
 	bandwidth: string; // Bandwidth in MBps/MBps
+	usersPerDevice: number; // Number of users allowed per device
 	duration: number; // Duration in hours
 	createdAt?: Date;
 	updatedAt?: Date;

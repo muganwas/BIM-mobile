@@ -21,6 +21,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackageRouterHotspotsScreen() {
 	const colorScheme = useColorScheme() ?? 'light';
+	const router = useRouter();
 	const navigation = useNavigation();
 	const expoRouter = useRouter();
 	const { rId } = useLocalSearchParams() as { rId?: string };
@@ -319,7 +320,11 @@ export default function PackageRouterHotspotsScreen() {
 													language
 												].categories.buttons.viewPackages.toUpperCase()}
 												numberOfLines={1}
-												onPress={() => {}}
+												onPress={() =>
+													router.push(
+														`/(authenticated)/routers/packages/${hotspot.id}`
+													)
+												}
 												lightColor={Colors.light.lime}
 												darkColor={Colors.dark.lime}
 												darkTextColor={Colors.dark.white}

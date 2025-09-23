@@ -294,6 +294,10 @@ export function generateInternetPackage(
 	const name =
 		overrides.name ??
 		packageNames[generateRandomInt(0, packageNames.length - 1)];
+	// Provide a sensible default for usersPerDevice by package name
+	const defaultUsersPerDevice =
+		overrides.usersPerDevice ??
+		(name === 'monthly' ? 3 : name === 'weekly' ? 2 : 1);
 	return {
 		id,
 		tag: overrides.tag ?? `pkg-${id}`,
@@ -302,6 +306,7 @@ export function generateInternetPackage(
 		bandwidth:
 			overrides.bandwidth ??
 			`${generateRandomInt(1, 100)} MBps/${generateRandomInt(1, 100)} MBps`,
+		usersPerDevice: defaultUsersPerDevice,
 		duration:
 			overrides.duration ??
 			(name === 'short'
