@@ -8,7 +8,10 @@ import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import { generateBank } from '@/helpers/factories';
 import useTrackHistory from '@/hooks/useTrackHistory';
+import { Bank as BankType } from '@/types';
+import BankAccount from '@/views/BankAccount';
 import { useEffect, useMemo, useState } from 'react';
 import { TouchableOpacity, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -16,7 +19,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 export default function BanksScreen() {
 	useTrackHistory('/(authenticated)/banks');
 	const colorScheme = useColorScheme() ?? 'light';
-	const { banks, fetchBanks } = useTransaction();
+	const { banks, fetchBanks, setBanks } = useTransaction();
 	const { user } = useGeneral();
 	const [page] = useState(1);
 	const pageSize = 50; // banks are typically few; keep high page size
@@ -45,13 +48,74 @@ export default function BanksScreen() {
 		}
 	}, [user, banks, fetchBanks]);
 
-	const handleAddAccount = () => {
-		// TODO: navigate to add-account screen or open modal
-		console.log('Add account');
+	const [showAdd, setShowAdd] = useState(false);
+	const [showEdit, setShowEdit] = useState(false);
+	const [showView, setShowView] = useState(false);
+	const [editBank, setEditBank] = useState<BankType | null>(null);
+	const handleAddAccount = () => setShowAdd(true);
+	const handleCancelAdd = () => setShowAdd(false);
+	const handleSaveAdd = ({
+		name,
+		accountNumber,
+		phone,
+		swift,
+	}: {
+		name: string;
+		accountNumber: string;
+		phone: string;
+		swift: string;
+	}) => {
+		// Create a new bank entry locally using factories; currency default UGX
+		const newBank = generateBank({
+			name,
+			accountNumber,
+			SWIFTCode: swift,
+			currency: 'UGX',
+			accountHolderName: phone,
+		});
+		setBanks((prev) => [newBank, ...prev]);
+		setShowAdd(false);
 	};
-	const handleView = (id: string) => console.log('View bank', id);
-	const handleEdit = (id: string) => console.log('Edit bank', id);
+	const handleView = (id: string) => {
+		const found = banks.find((b) => b.id === id) ?? null;
+		setEditBank(found);
+		setShowView(!!found);
+	};
+	const handleEdit = (id: string) => {
+		const found = banks.find((b) => b.id === id) ?? null;
+		setEditBank(found);
+		setShowEdit(!!found);
+	};
 	const handleDelete = (id: string) => console.log('Delete bank', id);
+
+	const handleUpdateBank = ({
+		name,
+		accountNumber,
+		phone,
+		swift,
+	}: {
+		name: string;
+		accountNumber: string;
+		phone: string;
+		swift: string;
+	}) => {
+		if (!editBank) return;
+		setBanks((prev) =>
+			prev.map((b) =>
+				b.id === editBank.id
+					? {
+							...b,
+							name,
+							accountNumber,
+							accountHolderName: phone,
+							SWIFTCode: swift,
+					  }
+					: b
+			)
+		);
+		setShowEdit(false);
+		setEditBank(null);
+	};
 
 	return (
 		<ParallaxScrollView
@@ -249,6 +313,54 @@ export default function BanksScreen() {
 					</ThemedView>
 				</ScrollView>
 			</TileContainer>
+			{/* Bank Account Modal (Add) */}
+			<BankAccount
+				visible={showAdd}
+				onCancel={handleCancelAdd}
+				onSave={handleSaveAdd}
+			/>
+			{/* Bank Account Modal (Edit) */}
+			<BankAccount
+				visible={showEdit}
+				mode='edit'
+				initial={{
+					name: editBank?.name ?? '',
+					accountNumber: editBank?.accountNumber ?? '',
+					phone: editBank?.accountHolderName ?? '',
+					swift: editBank?.SWIFTCode ?? '',
+				}}
+				onCancel={() => {
+					setShowEdit(false);
+					setEditBank(null);
+				}}
+				onSave={handleUpdateBank}
+			/>
+			{/* Bank Account (View mode) */}
+			<BankAccount
+				visible={showView}
+				mode='view'
+				initial={{
+					name: editBank?.name ?? '',
+					accountNumber: editBank?.accountNumber ?? '',
+					phone: editBank?.accountHolderName ?? '',
+					swift: editBank?.SWIFTCode ?? '',
+				}}
+				onBack={() => {
+					setShowView(false);
+					setEditBank(null);
+				}}
+				onEdit={() => {
+					setShowView(false);
+					setShowEdit(true);
+				}}
+				onCancel={() => {
+					setShowView(false);
+					setEditBank(null);
+				}}
+				onSave={() => {
+					/* no-op in view mode */
+				}}
+			/>
 		</ParallaxScrollView>
 	);
 }
