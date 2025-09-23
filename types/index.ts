@@ -91,10 +91,18 @@ export interface InternetPackage {
 	updatedAt?: Date;
 }
 
+export type identityDocumentType = 'passport' | 'id-card' | 'driver-license';
+export type companyDocumentType =
+	| 'incorporation-certificate'
+	| 'tax-document'
+	| 'articles-of-association';
+
 export interface DocumentProps {
 	id?: string;
+	documentId: string; // Unique identifier for the document
 	name: string; // Name of the document
-	type: 'pdf' | 'image' | 'text'; // Type of the document
+	type: identityDocumentType | companyDocumentType; // Type of document
+	status: 'pending' | 'approved' | 'rejected';
 	url: string; // URL to access the document
 	createdAt?: Date;
 	updatedAt?: Date;

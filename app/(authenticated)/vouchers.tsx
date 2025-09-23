@@ -118,6 +118,7 @@ export default function VouchersScreen() {
 					flexDirection: 'column',
 					overflow: 'hidden',
 					boxSizing: 'border-box',
+					padding: 0,
 				}}
 			>
 				<ScrollView
@@ -141,8 +142,8 @@ export default function VouchersScreen() {
 								borderBottomWidth: 1,
 								borderBottomColor: Colors[colorScheme].borderDark,
 							}}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={Colors.light.titleBg}
+							darkColor={Colors.dark.titleBg}
 						>
 							{voucherHeaders.map((col) => (
 								<ThemedText

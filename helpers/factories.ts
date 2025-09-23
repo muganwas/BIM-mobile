@@ -238,12 +238,46 @@ export function generateBanks(count = 2) {
 export function generateDocument(
 	overrides: Partial<DocumentProps> = {}
 ): DocumentProps {
-	const id = overrides.id ?? generateRandomNumbers(6);
+	// Ensure required documentId is present
+	const documentId = overrides.documentId ?? `DOC-${generateRandomNumbers(8)}`;
+	const type: DocumentProps['type'] = overrides.type ?? 'id-card';
+	// Determine file extension by type group (identity -> jpg, company -> pdf)
+	const identityTypes = new Set(['passport', 'id-card', 'driver-license']);
+	const ext = identityTypes.has(type as string) ? 'jpg' : 'pdf';
+	// Derive a stable status when not provided
+	const statusPool: DocumentProps['status'][] = [
+		'pending',
+		'approved',
+		'rejected',
+	];
+	const status: DocumentProps['status'] =
+		overrides.status ??
+		statusPool[
+			documentId.charCodeAt(documentId.length - 1) % statusPool.length
+		];
+
 	return {
-		id,
-		name: overrides.name ?? `Document ${id}`,
-		type: overrides.type ?? 'pdf',
-		url: overrides.url ?? `https://example.com/doc-${id}.pdf`,
+		// id is optional; generate one if not provided to keep objects unique in lists
+		id: overrides.id ?? generateRandomNumbers(6),
+		documentId,
+		name:
+			overrides.name ??
+			(type === 'passport'
+				? 'Passport'
+				: type === 'driver-license'
+				? 'Driver License'
+				: type === 'id-card'
+				? 'ID Card'
+				: type === 'incorporation-certificate'
+				? 'Incorporation Certificate'
+				: type === 'tax-document'
+				? 'Tax Document'
+				: type === 'articles-of-association'
+				? 'Articles of Association'
+				: 'Document'),
+		type,
+		url: overrides.url ?? `https://example.com/documents/${documentId}.${ext}`,
+		status,
 		createdAt: overrides.createdAt,
 		updatedAt: overrides.updatedAt,
 	};

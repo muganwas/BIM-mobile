@@ -186,6 +186,7 @@ export default function RoutersScreen() {
 						flexDirection: 'column',
 						overflow: 'hidden',
 						boxSizing: 'border-box',
+						padding: 0,
 					}}
 				>
 					<ScrollView
@@ -209,8 +210,8 @@ export default function RoutersScreen() {
 									borderBottomWidth: 1,
 									borderBottomColor: Colors[colorScheme].borderDark,
 								}}
-								lightColor={Colors.light.background}
-								darkColor={Colors.dark.background}
+								lightColor={Colors.light.titleBg}
+								darkColor={Colors.dark.titleBg}
 							>
 								{routerHeaders.map((col) => (
 									<ThemedText

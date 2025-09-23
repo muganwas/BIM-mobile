@@ -114,6 +114,7 @@ export default function PackagesScreen() {
 					flexDirection: 'column',
 					overflow: 'hidden',
 					boxSizing: 'border-box',
+					padding: 0,
 				}}
 			>
 				<ScrollView
@@ -137,8 +138,8 @@ export default function PackagesScreen() {
 								borderBottomWidth: 1,
 								borderBottomColor: Colors[colorScheme].borderDark,
 							}}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={Colors.light.titleBg}
+							darkColor={Colors.dark.titleBg}
 						>
 							{packageHeaders.map((col) => (
 								<ThemedText

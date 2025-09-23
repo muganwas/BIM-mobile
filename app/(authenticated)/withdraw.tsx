@@ -138,6 +138,7 @@ export default function WithdrawScreen() {
 					overflow: 'hidden',
 					boxSizing: 'border-box',
 					marginTop: 12,
+					padding: 0,
 				}}
 			>
 				<ScrollView
@@ -160,8 +161,8 @@ export default function WithdrawScreen() {
 								borderBottomWidth: 1,
 								borderBottomColor: Colors[colorScheme].borderDark,
 							}}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={Colors.light.titleBg}
+							darkColor={Colors.dark.titleBg}
 						>
 							{withdrawHeaders.map((col) => (
 								<ThemedText

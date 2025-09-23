@@ -71,6 +71,7 @@ const MAPPING: IconMapping = {
 		type: 'material-community',
 		name: 'eye-outline',
 	},
+	attachFile: { type: 'material', name: 'attach-file' },
 	block: { type: 'material', name: 'block' },
 	clock: { type: 'material-community', name: 'clock-outline' },
 	calendar: { type: 'material-community', name: 'calendar-blank-outline' },

@@ -5,3 +5,8 @@ declare module '*.svg' {
 	const content: React.FC<SvgProps>;
 	export default content;
 }
+
+// Optional dependency: expo-document-picker (runtime imported)
+declare module 'expo-document-picker' {
+	export function getDocumentAsync(options?: any): Promise<any>;
+}
