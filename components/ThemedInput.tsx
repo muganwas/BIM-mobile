@@ -191,7 +191,6 @@ const styles = StyleSheet.create({
 		width: '100%',
 		height: 51,
 		borderRadius: 5,
-		letterSpacing: 0.25,
 		fontSize: 14,
 	},
 });

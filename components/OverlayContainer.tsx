@@ -18,19 +18,24 @@ export default function OverlayContainer({
 	position?: contentPosition;
 	onTouch?: () => void;
 }) {
+	const modalAnimation: 'none' | 'slide' | 'fade' =
+		Platform.OS === 'android' ? 'none' : 'fade';
 	return (
 		<Modal
 			transparent={Platform.OS !== 'android'}
 			visible={showOverlay}
-			animationType='fade'
+			animationType={modalAnimation}
 			statusBarTranslucent={Platform.OS === 'android'}
 			hardwareAccelerated={true}
-			onRequestClose={() => { /* required on Android to avoid warnings */ }}
+			onRequestClose={() => {
+				/* required on Android to avoid warnings */
+			}}
 		>
 			<View style={{ flex: 1 }}>
 				<View
-					id={id}
-					pointerEvents='auto'
+					nativeID={id}
+					pointerEvents='box-none'
+					collapsable={false}
 					style={{
 						display: 'flex',
 						position: 'absolute',
