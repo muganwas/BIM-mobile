@@ -256,7 +256,7 @@ export default function Document({
 }
 
 const styles = StyleSheet.create({
-	kbContainer: { width: '90%' },
+	kbContainer: { width: '100%' },
 	card: {
 		flexDirection: 'column',
 		padding: 20,

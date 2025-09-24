@@ -16,6 +16,8 @@ export default function OverlayContainer({
 	fadeAnim,
 	id,
 	position = 'bottom',
+	horizontalPadding = 20,
+	verticalPadding = 0,
 	children,
 	onTouch = () => {},
 	useNativeModal,
@@ -26,6 +28,10 @@ export default function OverlayContainer({
 	fadeAnim: any;
 	children: ReactElement;
 	position?: contentPosition;
+	/** Inner content container horizontal padding (applied around children). Default: 20 */
+	horizontalPadding?: number;
+	/** Inner content container vertical padding (applied around children). Default: 0 */
+	verticalPadding?: number;
 	onTouch?: () => void;
 	/** Force using the native Modal; default is true on all platforms unless explicitly set to false */
 	useNativeModal?: boolean;
@@ -119,7 +125,8 @@ export default function OverlayContainer({
 							right: 0,
 							bottom: 0,
 							top: 0,
-							paddingTop: 30,
+							paddingHorizontal: horizontalPadding,
+							paddingVertical: verticalPadding,
 							alignItems: 'center',
 							justifyContent:
 								position === 'bottom'
@@ -138,6 +145,10 @@ export default function OverlayContainer({
 							collapsable={false}
 							style={{
 								opacity: fadeAnim,
+								width: '100%',
+								backgroundColor: 'transparent',
+								padding: 0,
+								margin: 0,
 								transform: [{ scale: contentScale }],
 							}}
 						>
@@ -184,7 +195,8 @@ export default function OverlayContainer({
 						right: 0,
 						bottom: 0,
 						top: 0,
-						paddingTop: 30,
+						paddingHorizontal: horizontalPadding,
+						paddingVertical: verticalPadding,
 						alignItems: 'center',
 						justifyContent:
 							position === 'bottom'

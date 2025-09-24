@@ -333,7 +333,7 @@ export default function HotspotPackagesScreen() {
 											lightColor={Colors.light.text}
 											darkColor={Colors.dark.text}
 										>
-											{p.name}
+											{p.tag}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}

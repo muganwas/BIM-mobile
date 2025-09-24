@@ -70,7 +70,7 @@ export default function InternetPackageOverlay({
 
 	useEffect(() => {
 		if (visible) {
-			setName(initial?.name ?? '');
+			setName(initial?.tag ?? '');
 			setUsersPerDevice(
 				initial?.usersPerDevice !== undefined &&
 					initial?.usersPerDevice !== null
@@ -122,7 +122,7 @@ export default function InternetPackageOverlay({
 			<KeyboardAvoidingView
 				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
 				enabled={Platform.OS === 'ios'}
-				style={{ width: '90%' }}
+				style={{ width: '100%' }}
 			>
 				<ThemedView
 					style={{

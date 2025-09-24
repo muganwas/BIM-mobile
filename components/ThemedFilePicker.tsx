@@ -177,6 +177,7 @@ const styles = StyleSheet.create({
 	},
 	leftBtn: {
 		height: 35,
+		marginLeft: 5,
 		paddingHorizontal: 10,
 		borderRadius: 6,
 		flexDirection: 'row',

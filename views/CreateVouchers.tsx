@@ -111,7 +111,6 @@ export default function CreateVouchers({
 		>
 			<KeyboardAvoidingView
 				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-				style={{ width: '90%' }}
 			>
 				<ThemedView
 					style={{
