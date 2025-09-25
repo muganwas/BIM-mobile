@@ -1,3 +1,4 @@
+import FormContainer from '@/components/FormContainer';
 import OverlayContainer from '@/components/OverlayContainer';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedDropdown } from '@/components/ThemedDropdown';
@@ -10,14 +11,7 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { DocumentProps } from '@/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-	Animated,
-	KeyboardAvoidingView,
-	Platform,
-	StyleSheet,
-	useColorScheme,
-	View,
-} from 'react-native';
+import { Animated, StyleSheet, useColorScheme, View } from 'react-native';
 
 type DocumentPayload = {
 	type: DocumentProps['type'];
@@ -112,10 +106,7 @@ export default function Document({
 			fadeAnim={fadeAnim}
 			position='center'
 		>
-			<KeyboardAvoidingView
-				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-				style={styles.kbContainer}
-			>
+			<FormContainer style={styles.kbContainer}>
 				<ThemedView
 					style={styles.card}
 					lightColor={Colors.light.background}
@@ -250,7 +241,7 @@ export default function Document({
 						)}
 					</View>
 				</ThemedView>
-			</KeyboardAvoidingView>
+			</FormContainer>
 		</OverlayContainer>
 	);
 }

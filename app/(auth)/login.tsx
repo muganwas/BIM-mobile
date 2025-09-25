@@ -1,4 +1,5 @@
 import bimTextImg from '@/assets/images/bim-text-img.png';
+import FormContainer from '@/components/FormContainer';
 import Loader from '@/components/Loader';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
@@ -18,10 +19,11 @@ import {
 	Animated,
 	BackHandler,
 	Dimensions,
+	findNodeHandle,
 	Image,
-	KeyboardAvoidingView,
 	Platform,
 	StyleSheet,
+	TextInput,
 	TouchableOpacity,
 	useAnimatedValue,
 	useColorScheme,
@@ -37,6 +39,7 @@ export default function LoginsScreen() {
 	const loginTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const loaderFadeAnim = useAnimatedValue(0);
 	const colorScheme = useColorScheme() ?? 'light';
+	const scrollRef = useRef<any>(null);
 	const { handleAuthentication, language } = useGeneral(); // Get authenticate function from context
 	const [phoneNumber, setPhoneNumber] = useState('');
 	const [password, setPassword] = useState('');
@@ -71,6 +74,35 @@ export default function LoginsScreen() {
 		if (focusedInput) {
 			setErrors((prev) => ({ ...prev, [focusedInput]: false }));
 		}
+	}, [focusedInput]);
+
+	useEffect(() => {
+		if (!focusedInput || !scrollRef.current) return;
+		const responder: any =
+			(scrollRef.current as any)?.getScrollResponder?.() ?? scrollRef.current;
+		if (!responder?.scrollResponderScrollNativeHandleToKeyboard) return;
+		const doScroll = () => {
+			try {
+				const TI: any = TextInput as any;
+				let focused: any = null;
+				if (TI?.State && typeof TI.State.currentlyFocusedInput === 'function') {
+					focused = TI.State.currentlyFocusedInput();
+				} else if (typeof TI?.currentlyFocusedInput === 'function') {
+					focused = TI.currentlyFocusedInput();
+				}
+				if (!focused) return;
+				const handle = findNodeHandle(focused);
+				if (!handle) return;
+				responder.scrollResponderScrollNativeHandleToKeyboard(handle, 80, true);
+			} catch {}
+		};
+		doScroll();
+		const t1 = setTimeout(doScroll, 60);
+		const t2 = setTimeout(doScroll, 140);
+		return () => {
+			clearTimeout(t1);
+			clearTimeout(t2);
+		};
 	}, [focusedInput]);
 	const handleSetPhone = (value: string): void => {
 		const phoneNumber = formatPhoneNumber(value);
@@ -151,7 +183,7 @@ export default function LoginsScreen() {
 
 	return (
 		<>
-			<KeyboardAvoidingView
+			<FormContainer
 				style={{
 					flex: 1,
 					minWidth: devWidth,
@@ -166,6 +198,7 @@ export default function LoginsScreen() {
 						light: Colors[colorScheme].background,
 						dark: Colors[colorScheme].background,
 					}}
+					getScrollRef={(r) => (scrollRef.current = r)}
 				>
 					<ThemedView
 						style={styles.container}
@@ -322,7 +355,7 @@ export default function LoginsScreen() {
 						</ThemedView>
 					</ThemedView>
 				</ParallaxScrollView>
-			</KeyboardAvoidingView>
+			</FormContainer>
 			<Loader
 				showOverlay={loading}
 				fadeAnim={loaderFadeAnim}

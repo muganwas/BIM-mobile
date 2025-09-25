@@ -1,3 +1,4 @@
+import FormContainer from '@/components/FormContainer';
 import OverlayContainer from '@/components/OverlayContainer';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
@@ -9,7 +10,6 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useEffect, useRef, useState } from 'react';
 import {
 	Animated,
-	KeyboardAvoidingView,
 	Platform,
 	StyleSheet,
 	useColorScheme,
@@ -86,7 +86,7 @@ export default function WithdrawFunds({
 			fadeAnim={fadeAnim}
 			position='center'
 		>
-			<KeyboardAvoidingView
+			<FormContainer
 				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
 				style={styles.kbContainer}
 			>
@@ -179,7 +179,7 @@ export default function WithdrawFunds({
 						/>
 					</View>
 				</ThemedView>
-			</KeyboardAvoidingView>
+			</FormContainer>
 		</OverlayContainer>
 	);
 }

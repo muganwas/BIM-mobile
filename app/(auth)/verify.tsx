@@ -1,4 +1,5 @@
 import bimTextImg from '@/assets/images/bim-text-img.png';
+import FormContainer from '@/components/FormContainer';
 import Loader from '@/components/Loader';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
@@ -15,9 +16,10 @@ import {
 	Animated,
 	Dimensions,
 	Image,
-	KeyboardAvoidingView,
 	Platform,
 	StyleSheet,
+	TextInput,
+	findNodeHandle,
 	useAnimatedValue,
 	useColorScheme,
 } from 'react-native';
@@ -33,6 +35,8 @@ export default function VerifyTokenScreen() {
 	const loaderFadeAnim = useAnimatedValue(0);
 	const { language } = useGeneral(); // Get language from context
 	const [code, setCode] = useState('');
+	const [focusedInput, setFocusedInput] = useState<string | null>(null);
+	const scrollRef = useRef<any>(null);
 	const [loading, setLoading] = useState(false);
 	const [errors, setErrors] = useState({
 		code: false,
@@ -47,6 +51,36 @@ export default function VerifyTokenScreen() {
 			}
 		};
 	}, []);
+
+	// Auto-scroll focused input into view
+	useEffect(() => {
+		if (!focusedInput || !scrollRef.current) return;
+		const responder: any =
+			(scrollRef.current as any)?.getScrollResponder?.() ?? scrollRef.current;
+		if (!responder?.scrollResponderScrollNativeHandleToKeyboard) return;
+		const doScroll = () => {
+			try {
+				const TI: any = TextInput as any;
+				let focused: any = null;
+				if (TI?.State && typeof TI.State.currentlyFocusedInput === 'function') {
+					focused = TI.State.currentlyFocusedInput();
+				} else if (typeof TI?.currentlyFocusedInput === 'function') {
+					focused = TI.currentlyFocusedInput();
+				}
+				if (!focused) return;
+				const handle = findNodeHandle(focused);
+				if (!handle) return;
+				responder.scrollResponderScrollNativeHandleToKeyboard(handle, 80, true);
+			} catch {}
+		};
+		doScroll();
+		const t1 = setTimeout(doScroll, 60);
+		const t2 = setTimeout(doScroll, 140);
+		return () => {
+			clearTimeout(t1);
+			clearTimeout(t2);
+		};
+	}, [focusedInput]);
 
 	const handleSetCode = (value: string) => {
 		if (value.length > 6) return; // Limit input to 6 characters
@@ -95,7 +129,7 @@ export default function VerifyTokenScreen() {
 	};
 	return (
 		<>
-			<KeyboardAvoidingView
+			<FormContainer
 				style={{
 					flex: 1,
 					minWidth: devWidth,
@@ -110,6 +144,7 @@ export default function VerifyTokenScreen() {
 						light: Colors[colorScheme].background,
 						dark: Colors[colorScheme].background,
 					}}
+					getScrollRef={(r) => (scrollRef.current = r)}
 				>
 					<ThemedView
 						style={styles.container}
@@ -183,6 +218,8 @@ export default function VerifyTokenScreen() {
 									}
 									placeholderTextColor={Colors[colorScheme].text}
 									keyboardType='number-pad'
+									onFocus={() => setFocusedInput('code')}
+									onBlur={() => setFocusedInput(null)}
 								/>
 								<ThemedButton
 									title={translations[language].categories.buttons[
@@ -209,7 +246,7 @@ export default function VerifyTokenScreen() {
 						</ThemedView>
 					</ThemedView>
 				</ParallaxScrollView>
-			</KeyboardAvoidingView>
+			</FormContainer>
 			<Loader
 				showOverlay={loading}
 				fadeAnim={loaderFadeAnim}

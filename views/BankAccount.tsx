@@ -1,3 +1,4 @@
+import FormContainer from '@/components/FormContainer';
 import OverlayContainer from '@/components/OverlayContainer';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
@@ -7,14 +8,7 @@ import { phoneRegexWithSpaces } from '@/constants';
 import { Colors } from '@/constants/Colors';
 import { formatPhoneNumber } from '@/helpers';
 import { useEffect, useRef, useState } from 'react';
-import {
-	Animated,
-	KeyboardAvoidingView,
-	Platform,
-	StyleSheet,
-	useColorScheme,
-	View,
-} from 'react-native';
+import { Animated, StyleSheet, useColorScheme, View } from 'react-native';
 
 type BankAccountPayload = {
 	name: string;
@@ -110,10 +104,7 @@ export default function BankAccount({
 			fadeAnim={fadeAnim}
 			position='center'
 		>
-			<KeyboardAvoidingView
-				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-				style={styles.kbContainer}
-			>
+			<FormContainer style={styles.kbContainer}>
 				<ThemedView
 					style={styles.card}
 					lightColor={Colors.light.background}
@@ -236,7 +227,7 @@ export default function BankAccount({
 						)}
 					</View>
 				</ThemedView>
-			</KeyboardAvoidingView>
+			</FormContainer>
 		</OverlayContainer>
 	);
 }

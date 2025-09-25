@@ -1,11 +1,6 @@
+import FormContainer from '@/components/FormContainer';
 import { useCallback, useEffect, useState } from 'react';
-import {
-	Animated,
-	KeyboardAvoidingView,
-	Platform,
-	useColorScheme,
-	View,
-} from 'react-native';
+import { Animated, useColorScheme, View } from 'react-native';
 
 import OverlayContainer from '@/components/OverlayContainer';
 import { ThemedButton } from '@/components/ThemedButton';
@@ -119,11 +114,7 @@ export default function InternetPackageOverlay({
 			position='center'
 			onRequestClose={onRequestClose ?? onClose}
 		>
-			<KeyboardAvoidingView
-				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-				enabled={Platform.OS === 'ios'}
-				style={{ width: '100%' }}
-			>
+			<FormContainer style={{ width: '100%' }}>
 				<ThemedView
 					style={{
 						flexDirection: 'column',
@@ -219,7 +210,7 @@ export default function InternetPackageOverlay({
 						)}
 					</View>
 				</ThemedView>
-			</KeyboardAvoidingView>
+			</FormContainer>
 		</OverlayContainer>
 	);
 }
