@@ -504,6 +504,8 @@ export default function TransactionsScreen() {
 						title={'Previous'}
 						onPress={handlePrevPage}
 						disabled={page <= 1}
+						darkColor={Colors.dark.background}
+						lightColor={Colors.light.background}
 						lightTextColor={page <= 1 ? Colors.light.mutedText : undefined}
 						darkTextColor={page <= 1 ? Colors.dark.mutedText : undefined}
 						textStyle={{ fontSize: 14 }}
@@ -518,6 +520,8 @@ export default function TransactionsScreen() {
 						title={'Next'}
 						onPress={handleNextPage}
 						disabled={page >= totalPages}
+						darkColor={Colors.dark.background}
+						lightColor={Colors.light.background}
 						lightTextColor={
 							page >= totalPages ? Colors.light.mutedText : undefined
 						}
