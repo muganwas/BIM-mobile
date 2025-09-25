@@ -70,7 +70,6 @@ export function ThemedButton({
 				styles.button,
 				{
 					backgroundColor,
-					alignSelf: 'flex-start',
 					maxWidth: '100%',
 					flexShrink: 0,
 					opacity: disabled ? 0.6 : 1,

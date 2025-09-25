@@ -23,20 +23,47 @@ const PortalContext = React.createContext<PortalContextValue | null>(null);
 export function PortalProvider({ children }: { children: ReactNode }) {
 	const nextKeyRef = useRef(0);
 	const [entries, setEntries] = useState<PortalEntry[]>([]);
+	const aliveRef = useRef(true);
 
-	const mount = useCallback((node: ReactNode) => {
-		const key = ++nextKeyRef.current;
-		setEntries((prev) => [...prev, { key, node }]);
-		return key;
+	React.useEffect(() => {
+		return () => {
+			aliveRef.current = false;
+		};
 	}, []);
 
-	const update = useCallback((key: number, node: ReactNode) => {
-		setEntries((prev) => prev.map((e) => (e.key === key ? { ...e, node } : e)));
-	}, []);
+	const enqueue = useCallback(
+		(updater: (prev: PortalEntry[]) => PortalEntry[]) => {
+			// Defer to the next macrotask to avoid scheduling updates during insertion effects
+			setTimeout(() => {
+				if (!aliveRef.current) return;
+				setEntries((prev) => updater(prev));
+			}, 0);
+		},
+		[]
+	);
 
-	const unmount = useCallback((key: number) => {
-		setEntries((prev) => prev.filter((e) => e.key !== key));
-	}, []);
+	const mount = useCallback(
+		(node: ReactNode) => {
+			const key = ++nextKeyRef.current;
+			enqueue((prev) => [...prev, { key, node }]);
+			return key;
+		},
+		[enqueue]
+	);
+
+	const update = useCallback(
+		(key: number, node: ReactNode) => {
+			enqueue((prev) => prev.map((e) => (e.key === key ? { ...e, node } : e)));
+		},
+		[enqueue]
+	);
+
+	const unmount = useCallback(
+		(key: number) => {
+			enqueue((prev) => prev.filter((e) => e.key !== key));
+		},
+		[enqueue]
+	);
 
 	const value = useMemo(
 		() => ({ mount, update, unmount }),
@@ -74,7 +101,7 @@ export function Portal({ children }: { children: ReactNode }) {
 	const ctx = React.useContext(PortalContext);
 	const keyRef = useRef<number | null>(null);
 
-	React.useEffect(() => {
+	React.useLayoutEffect(() => {
 		if (!ctx) return;
 		if (keyRef.current == null) {
 			keyRef.current = ctx.mount(children);
@@ -83,7 +110,7 @@ export function Portal({ children }: { children: ReactNode }) {
 		}
 	}, [children, ctx]);
 
-	React.useEffect(() => {
+	React.useLayoutEffect(() => {
 		return () => {
 			if (ctx && keyRef.current != null) {
 				ctx.unmount(keyRef.current);

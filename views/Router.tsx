@@ -12,12 +12,16 @@ import { NetRouter } from '@/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	Animated,
-	KeyboardAvoidingView,
+	findNodeHandle,
+	Keyboard,
 	Platform,
+	TextInput as RNTextInput,
 	StyleSheet,
 	useColorScheme,
+	useWindowDimensions,
 	View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Mode = 'add' | 'edit' | 'preview';
 
@@ -51,8 +55,16 @@ export default function RouterOverlay({
 }: Props) {
 	const colorScheme = useColorScheme() ?? 'light';
 	const { language, isAnimatable, keyboardVisible } = useGeneral();
+	useSafeAreaInsets();
 	const fadeAnim = useRef(new Animated.Value(0)).current;
 	const ddRef = useRef<View | null>(null);
+	const scrollRef = useRef<any | null>(null);
+	const nameInputRef = useRef<RNTextInput | null>(null);
+	const locationInputRef = useRef<RNTextInput | null>(null);
+	const ipInputRef = useRef<RNTextInput | null>(null);
+	const userInputRef = useRef<RNTextInput | null>(null);
+	const passwordInputRef = useRef<RNTextInput | null>(null);
+	useWindowDimensions();
 
 	const [name, setName] = useState(initial?.name ?? '');
 	const [location, setLocation] = useState(initial?.location ?? '');
@@ -87,6 +99,20 @@ export default function RouterOverlay({
 		}
 	}, [visible, initial, fadeAnim]);
 
+	// Track keyboard height to compute precise scroll delta
+	useEffect(() => {
+		const showEvent =
+			Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+		const hideEvent =
+			Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+		const s = Keyboard.addListener(showEvent, () => {});
+		const h = Keyboard.addListener(hideEvent, () => {});
+		return () => {
+			s.remove();
+			h.remove();
+		};
+	}, []);
+
 	const canSubmit = useMemo(() => {
 		const ipOk = validateIPv4(ipAddress.trim());
 		return (
@@ -108,181 +134,223 @@ export default function RouterOverlay({
 			: translations[language].categories.routers.newTitle;
 	}, [isPreview, mode, language]);
 
+	const scrollToInput = (
+		inputRef: React.RefObject<RNTextInput | null>,
+		extra: number = 64
+	) => {
+		const doScroll = () => {
+			try {
+				const node = findNodeHandle(inputRef.current);
+				if (!node) return;
+				const responder =
+					scrollRef.current?.getScrollResponder?.() ?? scrollRef.current;
+				responder?.scrollResponderScrollNativeHandleToKeyboard?.(
+					node,
+					extra,
+					true
+				);
+			} catch {}
+		};
+		// Try immediately, then again after the keyboard finishes animating
+		doScroll();
+		setTimeout(doScroll, Platform.OS === 'ios' ? 260 : 80);
+		setTimeout(doScroll, Platform.OS === 'ios' ? 420 : 150);
+	};
+
 	return (
 		<OverlayContainer
 			showOverlay={visible}
 			fadeAnim={fadeAnim}
 			position='center'
+			contentFill={true}
+			scrollable
+			autoKeyboardInset
+			bottomPadding={12}
+			getScrollRef={(r) => (scrollRef.current = r)}
+			centerLiftOnKeyboard
+			centerLiftRatio={0.9}
+			keyboardGap={20}
 		>
-			<KeyboardAvoidingView
-				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-				style={styles.kbContainer}
+			<ThemedView
+				style={[
+					styles.card,
+					{
+						paddingVertical: 30,
+						marginBottom: keyboardVisible ? 90 : 0,
+					},
+				]}
+				lightColor={Colors.light.background}
+				darkColor={Colors.dark.background}
 			>
-				<ThemedView
-					style={styles.card}
+				<ThemedText
+					style={styles.title}
+					lightColor={Colors.light.screenTitleText}
+					darkColor={Colors.dark.screenTitleText}
+				>
+					{title}
+				</ThemedText>
+
+				<ThemedInput
+					ref={nameInputRef as any}
+					label={translations[language].categories.dashboard.routerName}
+					placeholder={'eg. Router 01'}
+					value={name}
+					setValue={setName}
+					editable={isEditable}
+					onFocus={() => scrollToInput(nameInputRef)}
+					style={{
+						backgroundColor: Colors[colorScheme].background,
+						borderColor: Colors[colorScheme].inputBorder,
+						borderWidth: 1,
+					}}
+					containerStyle={{ marginBottom: 8 }}
+				/>
+
+				<ThemedInput
+					ref={locationInputRef as any}
+					label={translations[language].categories.dashboard.location}
+					placeholder={'eg. UCU Main Campus'}
+					value={location}
+					setValue={setLocation}
+					editable={isEditable}
+					onFocus={() => scrollToInput(locationInputRef)}
+					style={{
+						backgroundColor: Colors[colorScheme].background,
+						borderColor: Colors[colorScheme].inputBorder,
+						borderWidth: 1,
+					}}
+					containerStyle={{ marginBottom: 8 }}
+				/>
+
+				<ThemedDropdown
+					containerRef={ddRef}
 					lightColor={Colors.light.background}
 					darkColor={Colors.dark.background}
-				>
-					<ThemedText
-						style={styles.title}
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
-					>
-						{title}
-					</ThemedText>
+					placeholder={translations[language].categories.dashboard.routerType}
+					value={type}
+					label={translations[language].categories.routers.routerType}
+					showDropdown={opened === 'router-type'}
+					setShowDropdown={(v) => setOpened(v ? 'router-type' : undefined)}
+					multiselect={false}
+					onSelect={() =>
+						setOpened((prev) =>
+							prev === 'router-type' ? undefined : 'router-type'
+						)
+					}
+					setValue={setType}
+					style={{ marginBottom: 8 }}
+					isAnimatable={isAnimatable}
+					keyboardVisible={keyboardVisible}
+					options={['Mikrotik', 'TpLink', 'LinkSys', 'Cisco']}
+					active={isEditable}
+				/>
 
-					<ThemedInput
-						label={translations[language].categories.dashboard.routerName}
-						placeholder={'eg. Router 01'}
-						value={name}
-						setValue={setName}
-						editable={isEditable}
-						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
-							borderWidth: 1,
-						}}
-						containerStyle={{ marginBottom: 8 }}
-					/>
+				<ThemedInput
+					ref={ipInputRef as any}
+					label={translations[language].categories.dashboard.ipAddress}
+					placeholder={'eg. 10.0.0.1'}
+					value={ipAddress}
+					setValue={setIpAddress}
+					editable={isEditable}
+					onFocus={() => scrollToInput(ipInputRef)}
+					style={{
+						backgroundColor: Colors[colorScheme].background,
+						borderColor:
+							ipAddress.trim().length === 0
+								? Colors[colorScheme].inputBorder
+								: validateIPv4(ipAddress.trim())
+								? Colors[colorScheme].inputBorder
+								: Colors[colorScheme].error,
+						borderWidth: 1,
+					}}
+					containerStyle={{ marginBottom: 8 }}
+				/>
 
-					<ThemedInput
-						label={translations[language].categories.dashboard.location}
-						placeholder={'eg. UCU Main Campus'}
-						value={location}
-						setValue={setLocation}
-						editable={isEditable}
-						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
-							borderWidth: 1,
-						}}
-						containerStyle={{ marginBottom: 8 }}
-					/>
+				<ThemedInput
+					ref={userInputRef as any}
+					label={translations[language].categories.dashboard.routerUsername}
+					placeholder={'eg. admin'}
+					value={username}
+					setValue={setUsername}
+					editable={isEditable}
+					onFocus={() => scrollToInput(userInputRef)}
+					style={{
+						backgroundColor: Colors[colorScheme].background,
+						borderColor: Colors[colorScheme].inputBorder,
+						borderWidth: 1,
+					}}
+					containerStyle={{ marginBottom: 8 }}
+				/>
 
-					<ThemedDropdown
-						containerRef={ddRef}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
-						placeholder={translations[language].categories.dashboard.routerType}
-						value={type}
-						label={translations[language].categories.routers.routerType}
-						showDropdown={opened === 'router-type'}
-						setShowDropdown={(v) => setOpened(v ? 'router-type' : undefined)}
-						multiselect={false}
-						onSelect={() =>
-							setOpened((prev) =>
-								prev === 'router-type' ? undefined : 'router-type'
-							)
-						}
-						setValue={setType}
-						style={{ marginBottom: 8 }}
-						isAnimatable={isAnimatable}
-						keyboardVisible={keyboardVisible}
-						options={['Mikrotik', 'TpLink', 'LinkSys', 'Cisco']}
-						active={isEditable}
-					/>
+				<ThemedInput
+					ref={passwordInputRef as any}
+					label={translations[language].categories.dashboard.routerPassword}
+					placeholder={'******'}
+					value={password}
+					setValue={setPassword}
+					secureTextEntry
+					editable={isEditable}
+					onFocus={() => scrollToInput(passwordInputRef, 80)}
+					style={{
+						backgroundColor: Colors[colorScheme].background,
+						borderColor: Colors[colorScheme].inputBorder,
+						borderWidth: 1,
+					}}
+					containerStyle={{ marginBottom: 8 }}
+				/>
 
-					<ThemedInput
-						label={translations[language].categories.dashboard.ipAddress}
-						placeholder={'eg. 10.0.0.1'}
-						value={ipAddress}
-						setValue={setIpAddress}
-						editable={isEditable}
-						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor:
-								ipAddress.trim().length === 0
-									? Colors[colorScheme].inputBorder
-									: validateIPv4(ipAddress.trim())
-									? Colors[colorScheme].inputBorder
-									: Colors[colorScheme].error,
-							borderWidth: 1,
-						}}
-						containerStyle={{ marginBottom: 8 }}
-					/>
-
-					<ThemedInput
-						label={translations[language].categories.dashboard.routerUsername}
-						placeholder={'eg. admin'}
-						value={username}
-						setValue={setUsername}
-						editable={isEditable}
-						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
-							borderWidth: 1,
-						}}
-						containerStyle={{ marginBottom: 8 }}
-					/>
-
-					<ThemedInput
-						label={translations[language].categories.dashboard.routerPassword}
-						placeholder={'******'}
-						value={password}
-						setValue={setPassword}
-						secureTextEntry
-						editable={isEditable}
-						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
-							borderWidth: 1,
-						}}
-						containerStyle={{ marginBottom: 8 }}
-					/>
-
-					<View style={styles.actions}>
-						{isPreview ? (
-							<>
-								<ThemedButton
-									title={translations[language].categories.buttons.close}
-									onPress={onBack ?? onCancel}
-									lightColor={Colors.light.cancelButton}
-									darkColor={Colors.dark.cancelButton}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
-								/>
-								<ThemedButton
-									title={translations[language].categories.buttons.save}
-									onPress={onEdit ?? (() => {})}
-									lightColor={Colors.light.bim}
-									darkColor={Colors.dark.bim}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
-								/>
-							</>
-						) : (
-							<>
-								<ThemedButton
-									title={translations[language].categories.buttons.cancel}
-									onPress={onCancel}
-									lightColor={Colors.light.cancelButton}
-									darkColor={Colors.dark.cancelButton}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
-								/>
-								<ThemedButton
-									title={translations[language].categories.buttons.saveRouter}
-									onPress={() =>
-										onSubmit({
-											name,
-											location,
-											type,
-											ipAddress,
-											username,
-											password,
-										})
-									}
-									disabled={!canSubmit}
-									lightColor={Colors.light.bim}
-									darkColor={Colors.dark.bim}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
-								/>
-							</>
-						)}
-					</View>
-				</ThemedView>
-			</KeyboardAvoidingView>
+				<View style={styles.actions}>
+					{isPreview ? (
+						<>
+							<ThemedButton
+								title={translations[language].categories.buttons.close}
+								onPress={onBack ?? onCancel}
+								lightColor={Colors.light.cancelButton}
+								darkColor={Colors.dark.cancelButton}
+								lightTextColor={Colors.light.white}
+								darkTextColor={Colors.dark.white}
+							/>
+							<ThemedButton
+								title={translations[language].categories.buttons.save}
+								onPress={onEdit ?? (() => {})}
+								lightColor={Colors.light.bim}
+								darkColor={Colors.dark.bim}
+								lightTextColor={Colors.light.white}
+								darkTextColor={Colors.dark.white}
+							/>
+						</>
+					) : (
+						<>
+							<ThemedButton
+								title={translations[language].categories.buttons.cancel}
+								onPress={onCancel}
+								lightColor={Colors.light.cancelButton}
+								darkColor={Colors.dark.cancelButton}
+								lightTextColor={Colors.light.white}
+								darkTextColor={Colors.dark.white}
+							/>
+							<ThemedButton
+								title={translations[language].categories.buttons.saveRouter}
+								onPress={() =>
+									onSubmit({
+										name,
+										location,
+										type,
+										ipAddress,
+										username,
+										password,
+									})
+								}
+								disabled={!canSubmit}
+								lightColor={Colors.light.bim}
+								darkColor={Colors.dark.bim}
+								lightTextColor={Colors.light.white}
+								darkTextColor={Colors.dark.white}
+							/>
+						</>
+					)}
+				</View>
+			</ThemedView>
 		</OverlayContainer>
 	);
 }
@@ -291,7 +359,8 @@ const styles = StyleSheet.create({
 	kbContainer: { width: '100%' },
 	card: {
 		flexDirection: 'column',
-		padding: 20,
+		paddingVertical: 30,
+		paddingHorizontal: 20,
 		borderRadius: 10,
 		width: '100%',
 		gap: 12,

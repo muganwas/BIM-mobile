@@ -19,6 +19,7 @@ import { useTransaction } from '@/context/TransactionContext';
 import { formatMMDD, translateWithVariables } from '@/helpers';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { dayPurchase, MicroTransaction, VoucherUser } from '@/types';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { BarChart } from 'react-native-chart-kit';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -29,6 +30,7 @@ export default function HomeScreen() {
 	// explicitly track home page
 	useTrackHistory('/(authenticated)/home');
 	const width = Dimensions.get('window').width;
+	const router = useRouter();
 	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
 	const { purchases, voucherUsers, routers } = useTransaction();
 	const [dailyPurchasesTotal, setDailyPurchasesTotal] = useState(0);
@@ -570,7 +572,7 @@ export default function HomeScreen() {
 						title={translations[
 							language
 						].categories.buttons.allTransactions?.toUpperCase()}
-						onPress={() => {}}
+						onPress={() => router.push('/(authenticated)/transactions')}
 						style={{
 							borderRadius: 8,
 						}}
@@ -874,7 +876,7 @@ export default function HomeScreen() {
 						title={translations[
 							language
 						].categories.buttons.allVoucherUsers?.toUpperCase()}
-						onPress={() => {}}
+						onPress={() => router.push('/(authenticated)/vouchers')}
 						style={{
 							borderRadius: 8,
 						}}
