@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import TileContainer from '@/components/TileContainer';
 import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
+import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 // avoid importing navigation types from @react-navigation/drawer which may not export them in some versions
 import useTrackHistory from '@/hooks/useTrackHistory';
@@ -20,6 +21,7 @@ export default function ProfileScreen() {
 		| ((data: { name?: string; email?: string }) => void)
 		| undefined;
 	const colorScheme = useColorScheme() ?? 'light';
+	const { language } = useGeneral();
 	const navigation = useNavigation<any>();
 
 	useFocusEffect(() => {
@@ -103,7 +105,7 @@ export default function ProfileScreen() {
 					lightColor={Colors.light['heading.one']}
 					darkColor={Colors.dark['heading.one']}
 				>
-					Profile Details
+					{translations[language].categories.auth['profile.details.title']}
 				</ThemedText>
 
 				<ThemedText
@@ -116,26 +118,42 @@ export default function ProfileScreen() {
 					lightColor={Colors.light.headers}
 					darkColor={Colors.dark.headers}
 				>
-					Profile Information
+					{translations[language].categories.auth['profile.details.subtitle']}
 				</ThemedText>
 
 				<ThemedText style={{ color: Colors[colorScheme].text, marginTop: 8 }}>
-					Update your account information and email address.
+					{
+						translations[language].categories.auth[
+							'profile.details.description'
+						]
+					}
 				</ThemedText>
 
 				<View style={{ marginTop: 12 }}>
 					<ThemedInput
-						label={'Full name'}
+						label={
+							translations[language].categories.auth[
+								'profile.placeholder.fullName'
+							]
+						}
 						value={fullName}
 						setValue={setFullName}
 						placeholder={'John Doe'}
 						containerStyle={{ marginBottom: 8, width: '100%' }}
 					/>
 					<ThemedInput
-						label={'Email'}
+						label={
+							translations[language].categories.auth[
+								'profile.placeholder.email'
+							]
+						}
 						value={email}
 						setValue={setEmail}
-						placeholder={'you@example.com'}
+						placeholder={
+							translations[language].categories.auth[
+								'profile.placeholder.email'
+							]
+						}
 						keyboardType='email-address'
 						containerStyle={{ width: '100%' }}
 					/>
@@ -143,7 +161,9 @@ export default function ProfileScreen() {
 
 				<View style={{ marginTop: 12, alignItems: 'flex-end' }}>
 					<ThemedButton
-						title={'Save changes'}
+						title={
+							translations[language].categories.auth['profile.details.button']
+						}
 						onPress={handleSaveProfile}
 						lightColor={
 							profileChanged ? Colors.light.bim : Colors.light.secondaryButton
@@ -173,7 +193,7 @@ export default function ProfileScreen() {
 					lightColor={Colors.light['heading.one']}
 					darkColor={Colors.dark['heading.one']}
 				>
-					Change Password
+					{translations[language].categories.auth['profile.password.title']}
 				</ThemedText>
 
 				<ThemedText
@@ -186,18 +206,24 @@ export default function ProfileScreen() {
 					lightColor={Colors.light.headers}
 					darkColor={Colors.dark.headers}
 				>
-					Update Password
+					{translations[language].categories.auth['profile.password.subtitle']}
 				</ThemedText>
 
 				<ThemedText style={{ color: Colors[colorScheme].text, marginTop: 8 }}>
-					Ensure your account is using a complex password to stay secure.
-					Passwords should be at least 8 characters long and include letters,
-					numbers, and symbols.
+					{
+						translations[language].categories.auth[
+							'profile.password.description'
+						]
+					}
 				</ThemedText>
 
 				<View style={{ marginTop: 12 }}>
 					<ThemedInput
-						label={'Current password'}
+						label={
+							translations[language].categories.auth[
+								'profile.placeholder.currentPassword'
+							]
+						}
 						value={currentPassword}
 						setValue={setCurrentPassword}
 						placeholder={'••••••••'}
@@ -205,7 +231,11 @@ export default function ProfileScreen() {
 						containerStyle={{ marginBottom: 8, width: '100%' }}
 					/>
 					<ThemedInput
-						label={'New password'}
+						label={
+							translations[language].categories.auth[
+								'profile.placeholder.newPassword'
+							]
+						}
 						value={newPassword}
 						setValue={setNewPassword}
 						placeholder={'••••••••'}
@@ -213,7 +243,11 @@ export default function ProfileScreen() {
 						containerStyle={{ marginBottom: 8, width: '100%' }}
 					/>
 					<ThemedInput
-						label={'Confirm password'}
+						label={
+							translations[language].categories.auth[
+								'profile.placeholder.confirmPassword'
+							]
+						}
 						value={confirmPassword}
 						setValue={setConfirmPassword}
 						placeholder={'••••••••'}
@@ -224,7 +258,9 @@ export default function ProfileScreen() {
 
 				<View style={{ marginTop: 12, alignItems: 'flex-end' }}>
 					<ThemedButton
-						title={'Update Password'}
+						title={
+							translations[language].categories.auth['profile.password.button']
+						}
 						onPress={handleUpdatePassword}
 						lightColor={
 							passwordChangeValid
@@ -258,7 +294,7 @@ export default function ProfileScreen() {
 					lightColor={Colors.light['heading.one']}
 					darkColor={Colors.dark['heading.one']}
 				>
-					Delete Account
+					{translations[language].categories.auth['profile.delete.title']}
 				</ThemedText>
 
 				<ThemedText
@@ -271,18 +307,18 @@ export default function ProfileScreen() {
 					lightColor={Colors.light.headers}
 					darkColor={Colors.dark.headers}
 				>
-					Remove Account Information
+					{translations[language].categories.auth['profile.delete.subtitle']}
 				</ThemedText>
 
 				<ThemedText style={{ color: Colors[colorScheme].text, marginTop: 8 }}>
-					Once your account is deleted, all of its resources and data will be
-					permanently deleted. Before deleting your account, please download any
-					data that you wish to retain.
+					{translations[language].categories.auth['profile.delete.description']}
 				</ThemedText>
 
 				<View style={{ marginTop: 12, alignItems: 'flex-end' }}>
 					<ThemedButton
-						title={'Delete account'}
+						title={
+							translations[language].categories.auth['profile.delete.button']
+						}
 						onPress={handleDeleteAccount}
 						lightColor={Colors.light.dangerButton}
 						darkColor={Colors.dark.dangerButton}

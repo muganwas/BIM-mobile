@@ -23,6 +23,32 @@ const translations: Translations = {
 				enterOTP: 'Enter OTP',
 				haveAnAccount: 'Already have an account?',
 				forgotPassword: 'Forgot Password?',
+				// Profile screen
+				'profile.details.title': 'Profile Details',
+				'profile.details.subtitle': 'Profile Information',
+				'profile.details.description':
+					'Update your account information and email address.',
+				'profile.placeholder.fullName': 'Full name',
+				'profile.placeholder.email': 'you@example.com',
+				'profile.password.title': 'Change Password',
+				'profile.password.subtitle': 'Update Password',
+				'profile.password.description':
+					'Ensure your account is using a complex password to stay secure. Passwords should be at least 8 characters long and include letters, numbers, and symbols.',
+				'profile.placeholder.currentPassword': 'Current password',
+				'profile.placeholder.newPassword': 'New password',
+				'profile.placeholder.confirmPassword': 'Confirm password',
+				'profile.delete.title': 'Delete Account',
+				'profile.delete.subtitle': 'Remove Account Information',
+				'profile.delete.description':
+					'Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data that you wish to retain.',
+				'profile.details.button': 'Save changes',
+				'profile.password.button': 'Update password',
+				'profile.delete.button': 'Delete account',
+				'reset.title': 'Forgot Password? 🔒',
+				'reset.subtitle':
+					'Enter your email and we will send you instructions to reset your password',
+				'reset.sendLink': 'Send reset link',
+				'reset.backToLogin': 'Back to login',
 			},
 			buttons: {
 				verifyOTP: 'Verify OTP',

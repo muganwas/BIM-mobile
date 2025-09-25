@@ -332,7 +332,7 @@ export default function LoginsScreen() {
 											backgroundColor: 'transparent',
 											alignItems: 'center',
 										}}
-										onPress={() => router.push('/(auth)/login')}
+										onPress={() => router.push('/(auth)/reset')}
 									>
 										<ThemedText style={{ color: Colors[colorScheme].bim }}>
 											{translations[language].categories.auth['forgotPassword']}
