@@ -1,15 +1,24 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { ThemedButton } from '@/components/ThemedButton';
+import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
+import TileContainer from '@/components/TileContainer';
 import { Colors } from '@/constants/Colors';
+import { fontSize, fontWeight } from '@/constants/Font';
 import { useGeneral } from '@/context/GeneralContext';
 // avoid importing navigation types from @react-navigation/drawer which may not export them in some versions
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useFocusEffect, useNavigation } from 'expo-router';
-import { BackHandler, useColorScheme } from 'react-native';
+import { useMemo, useState } from 'react';
+import { BackHandler, useColorScheme, View } from 'react-native';
 
 export default function ProfileScreen() {
 	useTrackHistory('/(authenticated)/profile');
-	const { user } = useGeneral(); // Get user from context
+	const ctx = useGeneral();
+	const user = ctx.user;
+	const updateProfile = (ctx as any).updateProfile as
+		| ((data: { name?: string; email?: string }) => void)
+		| undefined;
 	const colorScheme = useColorScheme() ?? 'light';
 	const navigation = useNavigation<any>();
 
@@ -27,6 +36,49 @@ export default function ProfileScreen() {
 		return () => backHandler.remove();
 	});
 
+	// Tile 1: Profile details
+	const [fullName, setFullName] = useState(user?.name ?? '');
+	const [email, setEmail] = useState(user?.email ?? '');
+	const profileChanged = useMemo(
+		() => fullName !== (user?.name ?? '') || email !== (user?.email ?? ''),
+		[fullName, email, user?.name, user?.email]
+	);
+
+	// Tile 2: Change password
+	const [currentPassword, setCurrentPassword] = useState('');
+	const [newPassword, setNewPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
+
+	const passwordChangeValid = useMemo(() => {
+		return (
+			currentPassword.length > 0 &&
+			newPassword.length > 0 &&
+			newPassword === confirmPassword
+		);
+	}, [currentPassword, newPassword, confirmPassword]);
+
+	// Tile 3: Delete account (confirmation handled elsewhere)
+
+	const handleSaveProfile = () => {
+		if (typeof updateProfile === 'function') {
+			updateProfile({ name: fullName, email });
+		}
+	};
+
+	const handleUpdatePassword = () => {
+		// Implement password update flow (call API/context)
+		console.log('Update password', {
+			currentPassword,
+			newPassword,
+			confirmPassword,
+		});
+	};
+
+	const handleDeleteAccount = () => {
+		// Implement delete account flow (confirm modal + API call)
+		console.log('Delete account');
+	};
+
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
@@ -36,10 +88,209 @@ export default function ProfileScreen() {
 			containerStyle={{ flex: 1 }}
 			contentStyle={{ padding: 16 }}
 		>
-			<ThemedText style={{ color: Colors[colorScheme].text }}>
-				Welcome, {user?.name || 'User'}!
-			</ThemedText>
-			{/* Add more profile related components here */}
+			{/* Tile 1: Profile Details */}
+			<TileContainer
+				id={'profile-details'}
+				backgroundColor={Colors[colorScheme].background}
+				style={{ marginBottom: 16, alignItems: 'stretch' }}
+			>
+				<ThemedText
+					style={{
+						fontSize: fontSize['heading.three'],
+						fontWeight: fontWeight['heading.three'],
+						color: Colors[colorScheme]['heading.one'],
+					}}
+					lightColor={Colors.light['heading.one']}
+					darkColor={Colors.dark['heading.one']}
+				>
+					Profile Details
+				</ThemedText>
+
+				<ThemedText
+					style={{
+						fontSize: fontSize['heading.one'],
+						fontWeight: fontWeight['heading.one'],
+						color: Colors[colorScheme].headers,
+						marginTop: 4,
+					}}
+					lightColor={Colors.light.headers}
+					darkColor={Colors.dark.headers}
+				>
+					Profile Information
+				</ThemedText>
+
+				<ThemedText style={{ color: Colors[colorScheme].text, marginTop: 8 }}>
+					Update your account information and email address.
+				</ThemedText>
+
+				<View style={{ marginTop: 12 }}>
+					<ThemedInput
+						label={'Full name'}
+						value={fullName}
+						setValue={setFullName}
+						placeholder={'John Doe'}
+						containerStyle={{ marginBottom: 8, width: '100%' }}
+					/>
+					<ThemedInput
+						label={'Email'}
+						value={email}
+						setValue={setEmail}
+						placeholder={'you@example.com'}
+						keyboardType='email-address'
+						containerStyle={{ width: '100%' }}
+					/>
+				</View>
+
+				<View style={{ marginTop: 12, alignItems: 'flex-end' }}>
+					<ThemedButton
+						title={'Save changes'}
+						onPress={handleSaveProfile}
+						lightColor={
+							profileChanged ? Colors.light.bim : Colors.light.secondaryButton
+						}
+						darkColor={
+							profileChanged ? Colors.dark.bim : Colors.dark.secondaryButton
+						}
+						lightTextColor={Colors.light.authButtonText}
+						darkTextColor={Colors.dark.authButtonText}
+						disabled={!profileChanged}
+					/>
+				</View>
+			</TileContainer>
+
+			{/* Tile 2: Change Password */}
+			<TileContainer
+				id={'change-password'}
+				backgroundColor={Colors[colorScheme].background}
+				style={{ marginBottom: 16, alignItems: 'stretch' }}
+			>
+				<ThemedText
+					style={{
+						fontSize: fontSize['heading.three'],
+						fontWeight: fontWeight['heading.three'],
+						color: Colors[colorScheme]['heading.one'],
+					}}
+					lightColor={Colors.light['heading.one']}
+					darkColor={Colors.dark['heading.one']}
+				>
+					Change Password
+				</ThemedText>
+
+				<ThemedText
+					style={{
+						fontSize: fontSize['heading.one'],
+						fontWeight: fontWeight['heading.one'],
+						color: Colors[colorScheme].headers,
+						marginTop: 4,
+					}}
+					lightColor={Colors.light.headers}
+					darkColor={Colors.dark.headers}
+				>
+					Update Password
+				</ThemedText>
+
+				<ThemedText style={{ color: Colors[colorScheme].text, marginTop: 8 }}>
+					Ensure your account is using a complex password to stay secure.
+					Passwords should be at least 8 characters long and include letters,
+					numbers, and symbols.
+				</ThemedText>
+
+				<View style={{ marginTop: 12 }}>
+					<ThemedInput
+						label={'Current password'}
+						value={currentPassword}
+						setValue={setCurrentPassword}
+						placeholder={'••••••••'}
+						secureTextEntry
+						containerStyle={{ marginBottom: 8, width: '100%' }}
+					/>
+					<ThemedInput
+						label={'New password'}
+						value={newPassword}
+						setValue={setNewPassword}
+						placeholder={'••••••••'}
+						secureTextEntry
+						containerStyle={{ marginBottom: 8, width: '100%' }}
+					/>
+					<ThemedInput
+						label={'Confirm password'}
+						value={confirmPassword}
+						setValue={setConfirmPassword}
+						placeholder={'••••••••'}
+						secureTextEntry
+						containerStyle={{ width: '100%' }}
+					/>
+				</View>
+
+				<View style={{ marginTop: 12, alignItems: 'flex-end' }}>
+					<ThemedButton
+						title={'Update Password'}
+						onPress={handleUpdatePassword}
+						lightColor={
+							passwordChangeValid
+								? Colors.light.bim
+								: Colors.light.secondaryButton
+						}
+						darkColor={
+							passwordChangeValid
+								? Colors.dark.bim
+								: Colors.dark.secondaryButton
+						}
+						lightTextColor={Colors.light.authButtonText}
+						darkTextColor={Colors.dark.authButtonText}
+						disabled={!passwordChangeValid}
+					/>
+				</View>
+			</TileContainer>
+
+			{/* Tile 3: Delete Account */}
+			<TileContainer
+				id={'delete-account'}
+				backgroundColor={Colors[colorScheme].background}
+				style={{ marginBottom: 16, alignItems: 'stretch' }}
+			>
+				<ThemedText
+					style={{
+						fontSize: fontSize['heading.three'],
+						fontWeight: fontWeight['heading.three'],
+						color: Colors[colorScheme]['heading.one'],
+					}}
+					lightColor={Colors.light['heading.one']}
+					darkColor={Colors.dark['heading.one']}
+				>
+					Delete Account
+				</ThemedText>
+
+				<ThemedText
+					style={{
+						fontSize: fontSize['heading.one'],
+						fontWeight: fontWeight['heading.one'],
+						color: Colors[colorScheme].headers,
+						marginTop: 4,
+					}}
+					lightColor={Colors.light.headers}
+					darkColor={Colors.dark.headers}
+				>
+					Remove Account Information
+				</ThemedText>
+
+				<ThemedText style={{ color: Colors[colorScheme].text, marginTop: 8 }}>
+					Once your account is deleted, all of its resources and data will be
+					permanently deleted. Before deleting your account, please download any
+					data that you wish to retain.
+				</ThemedText>
+
+				<View style={{ marginTop: 12, alignItems: 'flex-end' }}>
+					<ThemedButton
+						title={'Delete account'}
+						onPress={handleDeleteAccount}
+						lightColor={Colors.light.dangerButton}
+						darkColor={Colors.dark.dangerButton}
+						lightTextColor={Colors.light.white}
+						darkTextColor={Colors.dark.white}
+					/>
+				</View>
+			</TileContainer>
 		</ParallaxScrollView>
 	);
 }
