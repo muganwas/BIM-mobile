@@ -81,6 +81,15 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// Load release signing properties from local.properties (ignored by default)
+def localPropertiesFile = rootProject.file('local.properties')
+def localProps = new Properties()
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { stream ->
+        localProps.load(stream)
+    }
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -102,6 +111,18 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            // Prefer values from local.properties; fall back to repo-local release.keystore
+            def storeFileProp = localProps.getProperty('MYAPP_RELEASE_STORE_FILE') ?: 'release.keystore'
+            def storePasswordProp = localProps.getProperty('MYAPP_RELEASE_STORE_PASSWORD') ?: ''
+            def keyAliasProp = localProps.getProperty('MYAPP_RELEASE_KEY_ALIAS') ?: ''
+            def keyPasswordProp = localProps.getProperty('MYAPP_RELEASE_KEY_PASSWORD') ?: ''
+
+            storeFile file(storeFileProp)
+            storePassword storePasswordProp
+            keyAlias keyAliasProp
+            keyPassword keyPasswordProp
+        }
     }
     buildTypes {
         debug {
@@ -110,7 +131,7 @@ android {
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
