@@ -43,6 +43,16 @@ export default function LoginsScreen() {
 	const { handleAuthentication, language } = useGeneral(); // Get authenticate function from context
 	const [phoneNumber, setPhoneNumber] = useState('');
 	const [password, setPassword] = useState('');
+
+	// Autofill credentials for local development manual testing.
+	// Guarded by __DEV__ so this never runs in production builds.
+	useEffect(() => {
+		if (typeof __DEV__ !== 'undefined' && __DEV__) {
+			// Development test credentials
+			handleSetPhone('0789244866');
+			handleSetPassword('mystBim1234.');
+		}
+	}, []);
 	const [loading, setLoading] = useState(false);
 	const [focusedInput, setFocusedInput] = useState<string | null>(null);
 	const [errors, setErrors] = useState({

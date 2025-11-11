@@ -1,4 +1,7 @@
+import Toast from '@/components/Toast';
+import { apiBaseUrl } from '@/constants/API';
 import { delay } from '@/helpers';
+import { apiFetch } from '@/helpers/api';
 import {
 	headerOptions,
 	langCode,
@@ -41,8 +44,18 @@ export interface AuthContextType {
 		number: string;
 		password?: string;
 	}) => Promise<void>;
+	// Phone number used for pending 2FA verification after initiating login/register
+	pendingPhone?: string | null;
 	online: boolean;
 	router: RouterType;
+	// Global app message (shown in Toast)
+	appMessage?: { type: 'error' | 'message'; message: string | null } | null;
+	setAppMessage: React.Dispatch<
+		React.SetStateAction<{
+			type: 'error' | 'message';
+			message: string | null;
+		} | null>
+	>;
 }
 
 const GeneralContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,6 +75,12 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const [user, setUser] = useState<UserProps | null>(null);
 	const [notifications, setNotifications] = useState<notifications[]>([]);
+	const [pendingPhone, setPendingPhone] = useState<string | null>(null);
+	// global message state shown as toast/modal
+	const [appMessage, setAppMessage] = useState<{
+		type: 'error' | 'message';
+		message: string | null;
+	} | null>(null);
 	const [language, setLanguage] = useState<langCode>('en');
 	const [online, setOnline] = useState<boolean>(true);
 	const [selectedOption, setSelectedOption] = useState<
@@ -334,21 +353,51 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const handleAuthentication = async ({
 		number,
+		password,
 	}: {
 		number: string;
 		password?: string;
 	}) => {
-		setUser({
-			id: '123doe',
-			name: 'J Doe',
-			email: 'jd@gmail.com',
-			phone: number,
-			avatarUrl: '',
-			userLanguage: 'en',
-			createdAt: new Date(),
-			updatedAt: new Date(),
-		} as any);
-		router.replace('/(auth)/verify');
+		// Initiate login which (per backend) sends a 2FA OTP to the provided phone
+		try {
+			const res = await apiFetch((apiBaseUrl || '') + '/login', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					phone: number.replaceAll(' ', ''),
+					password: password ?? '',
+				}),
+			});
+			if (!res.ok) {
+				// Prefer extracting JSON message, fallback to text, then generic HTTP code message
+				let text: string | null = null;
+				try {
+					const ct = res.headers.get('content-type') || '';
+					if (ct.includes('application/json')) {
+						const body = await res.json();
+						text =
+							(body && (body.message || body.error)) || JSON.stringify(body);
+					} else {
+						text = await res.text();
+					}
+				} catch {}
+				if (!text) text = `HTTP error ${res.status}`;
+				setAppMessage({ type: 'error', message: String(text) });
+				return;
+			}
+			const data = await res.json();
+			console.info('Login response data:', data);
+			// Store the pending phone so the verify screen can reference it if need
+			setPendingPhone(data?.phone || number);
+			// Navigate to verify screen for OTP entry
+			router.replace('/(auth)/verify');
+		} catch (error) {
+			// Surface unexpected/network errors via the global app message instead of throwing
+			const msg = (error && (error as any).message) || 'Login failed';
+			setAppMessage({ type: 'error', message: String(msg) });
+		}
 	};
 
 	const handleLogout = async () => {
@@ -382,10 +431,20 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setSelectedOption,
 				setNotifications,
 				handleAuthentication,
+				pendingPhone,
 				online,
+				appMessage,
+				setAppMessage,
 			}}
 		>
 			{children}
+			{/* Global toast for app messages/errors */}
+			<Toast
+				visible={!!appMessage}
+				type={appMessage?.type ?? 'message'}
+				message={appMessage?.message ?? ''}
+				onDismiss={() => setAppMessage(null)}
+			/>
 		</GeneralContext.Provider>
 	);
 };

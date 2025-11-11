@@ -1,5 +1,6 @@
 import { apiBaseUrl } from '@/constants/API';
 import { AuthRequest } from '@/types';
+import { apiFetch } from './api';
 
 export async function getAuthToken({
 	phone,
@@ -7,7 +8,7 @@ export async function getAuthToken({
 	password,
 }: AuthRequest): Promise<string | null> {
 	try {
-		const response = await fetch(
+		const response = await apiFetch(
 			apiBaseUrl + '/auth/token?phone=' + phone + '&&password?=' + password,
 			{
 				method: 'GET',
@@ -18,7 +19,23 @@ export async function getAuthToken({
 		);
 
 		if (!response.ok) {
-			throw new Error('Failed to fetch auth token');
+			// Try to extract server message for logging, but don't throw — return null
+			try {
+				const ct = response.headers.get('content-type') || '';
+				if (ct.includes('application/json')) {
+					const body = await response.json();
+					console.error(
+						'Failed to fetch auth token:',
+						body?.message || body?.error || body
+					);
+				} else {
+					const txt = await response.text();
+					console.error('Failed to fetch auth token:', txt);
+				}
+			} catch (e) {
+				console.error('Failed to fetch auth token: unknown error', e);
+			}
+			return null;
 		}
 
 		const data = await response.json();
@@ -31,7 +48,7 @@ export async function getAuthToken({
 
 export async function verifyToken(token: string): Promise<boolean> {
 	try {
-		const response = await fetch(apiBaseUrl + '/auth/verify', {
+		const response = await apiFetch(apiBaseUrl + '/auth/verify', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -40,7 +57,22 @@ export async function verifyToken(token: string): Promise<boolean> {
 		});
 
 		if (!response.ok) {
-			throw new Error('Token verification failed');
+			try {
+				const ct = response.headers.get('content-type') || '';
+				if (ct.includes('application/json')) {
+					const body = await response.json();
+					console.error(
+						'Token verification failed:',
+						body?.message || body?.error || body
+					);
+				} else {
+					const txt = await response.text();
+					console.error('Token verification failed:', txt);
+				}
+			} catch (e) {
+				console.error('Token verification failed: unknown error', e);
+			}
+			return false;
 		}
 
 		const data = await response.json();
