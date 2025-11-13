@@ -146,7 +146,7 @@ export default function Setup2FAScreen() {
 					</View>
 				) : (
 					<ThemedText style={styles.noQr}>
-						No QR available — use the secret below to add your account manually.
+						{translations[language].categories.auth['setupAuthenticator.noQr']}
 					</ThemedText>
 				)}
 
@@ -220,21 +220,24 @@ export default function Setup2FAScreen() {
 					/>
 				</ThemedView>
 
-				<ThemedText style={styles.instructionsTitle}>How to set up</ThemedText>
-				<ThemedText style={styles.instructions}>
-					1. Install an authenticator app (Google Authenticator, Authy, etc.).
+				<ThemedText style={styles.instructionsTitle}>
+					{
+						translations[language].categories.auth[
+							'setupAuthenticator.howToTitle'
+						]
+					}
 				</ThemedText>
 				<ThemedText style={styles.instructions}>
-					2. Scan the QR code above, or press the Copy Secret button and add the
-					secret manually in the app.
+					{translations[language].categories.auth['setupAuthenticator.step1']}
 				</ThemedText>
 				<ThemedText style={styles.instructions}>
-					3. After adding the account to your authenticator app, you will be
-					able to generate 6-digit codes for login.
+					{translations[language].categories.auth['setupAuthenticator.step2']}
 				</ThemedText>
 				<ThemedText style={styles.instructions}>
-					4. Keep the secret safe. If you lose access to your authenticator, you
-					will need this secret to restore access.
+					{translations[language].categories.auth['setupAuthenticator.step3']}
+				</ThemedText>
+				<ThemedText style={styles.instructions}>
+					{translations[language].categories.auth['setupAuthenticator.step4']}
 				</ThemedText>
 			</ScrollView>
 		</ThemedView>
