@@ -5,8 +5,8 @@ import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { phoneRegexWithSpaces } from '@/constants';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import { formatPhoneNumber } from '@/helpers';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, useColorScheme, View } from 'react-native';
 
@@ -113,7 +113,11 @@ export default function BankAccount({
 		>
 			<FormContainer style={styles.kbContainer}>
 				<ThemedView style={styles.card} lightColor={bg} darkColor={bg}>
-					<ThemedText style={styles.title} lightColor={screenTitleText} darkColor={screenTitleText}>
+					<ThemedText
+						style={styles.title}
+						lightColor={screenTitleText}
+						darkColor={screenTitleText}
+					>
 						{toTitleCase(
 							mode === 'view'
 								? 'account details'

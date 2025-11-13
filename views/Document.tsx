@@ -6,9 +6,9 @@ import ThemedFilePicker from '@/components/ThemedFilePicker';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { DocumentProps } from '@/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, useColorScheme, View } from 'react-native';
@@ -115,7 +115,11 @@ export default function Document({
 		>
 			<FormContainer style={styles.kbContainer}>
 				<ThemedView style={styles.card} lightColor={bg} darkColor={bg}>
-					<ThemedText style={styles.title} lightColor={screenTitleText} darkColor={screenTitleText}>
+					<ThemedText
+						style={styles.title}
+						lightColor={screenTitleText}
+						darkColor={screenTitleText}
+					>
 						{toTitleCase(
 							isPreview
 								? translations[language].categories.documents.documentDetails
@@ -192,42 +196,50 @@ export default function Document({
 					<View style={styles.actions}>
 						{isPreview ? (
 							<>
-										<ThemedButton
-											title={toTitleCase(translations[language].categories.buttons.close)}
-											onPress={onBack ?? onCancel}
-											lightColor={cancelButton}
-											darkColor={cancelButton}
-											lightTextColor={white}
-											darkTextColor={white}
-										/>
-										<ThemedButton
-											title={toTitleCase(translations[language].categories.buttons.save)}
-											onPress={onEdit ?? (() => {})}
-											lightColor={bim}
-											darkColor={bim}
-											lightTextColor={white}
-											darkTextColor={white}
-										/>
+								<ThemedButton
+									title={toTitleCase(
+										translations[language].categories.buttons.close
+									)}
+									onPress={onBack ?? onCancel}
+									lightColor={cancelButton}
+									darkColor={cancelButton}
+									lightTextColor={white}
+									darkTextColor={white}
+								/>
+								<ThemedButton
+									title={toTitleCase(
+										translations[language].categories.buttons.save
+									)}
+									onPress={onEdit ?? (() => {})}
+									lightColor={bim}
+									darkColor={bim}
+									lightTextColor={white}
+									darkTextColor={white}
+								/>
 							</>
 						) : (
 							<>
-										<ThemedButton
-											title={toTitleCase(translations[language].categories.buttons.cancel)}
-											onPress={onCancel}
-											lightColor={cancelButton}
-											darkColor={cancelButton}
-											lightTextColor={white}
-											darkTextColor={white}
-										/>
-										<ThemedButton
-											title={toTitleCase(translations[language].categories.buttons.save)}
-											onPress={handleSubmit}
-											disabled={!canSubmit}
-											lightColor={bim}
-											darkColor={bim}
-											lightTextColor={white}
-											darkTextColor={white}
-										/>
+								<ThemedButton
+									title={toTitleCase(
+										translations[language].categories.buttons.cancel
+									)}
+									onPress={onCancel}
+									lightColor={cancelButton}
+									darkColor={cancelButton}
+									lightTextColor={white}
+									darkTextColor={white}
+								/>
+								<ThemedButton
+									title={toTitleCase(
+										translations[language].categories.buttons.save
+									)}
+									onPress={handleSubmit}
+									disabled={!canSubmit}
+									lightColor={bim}
+									darkColor={bim}
+									lightTextColor={white}
+									darkTextColor={white}
+								/>
 							</>
 						)}
 					</View>
