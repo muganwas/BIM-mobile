@@ -1,5 +1,6 @@
 import bimTextImg from '@/assets/images/bim-text-img.png';
 import FormContainer from '@/components/FormContainer';
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
@@ -10,27 +11,29 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import * as Clipboard from 'expo-clipboard';
-import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+	Dimensions,
 	findNodeHandle,
 	Image,
 	Platform,
-	ScrollView,
 	StyleSheet,
 	TextInput,
 	View,
 } from 'react-native';
 
+const devWidth = Dimensions.get('window').width;
+
 export default function Setup2FAScreen() {
 	const {
 		pending2FASetup,
-		setPending2FASetup,
+		//setPending2FASetup,
 		setAppMessage,
 		language,
-		handleVerify2FA,
+		//handleVerify2FA,
+		handleSetupTotp,
 	} = useGeneral();
-	const router = useRouter();
+	//const router = useRouter();
 	const scrollRef = useRef<any>(null);
 	const [focusedInput, setFocusedInput] = useState<string | null>(null);
 	const bg = useThemeColor({}, 'background');
@@ -100,24 +103,69 @@ export default function Setup2FAScreen() {
 		}
 	};
 
-	const handleContinue = () => {
-		// Clear pending 2FA setup and continue to the authenticated area
-		setPending2FASetup?.(null);
-		router.replace('/(authenticated)/home');
-	};
+	// const handleContinue = () => {
+	// 	// Clear pending 2FA setup and continue to the authenticated area
+	// 	setPending2FASetup?.(null);
+	// 	router.replace('/(authenticated)/home');
+	// };
 
-	const handleOnVerify2FA = async () => {
-		if (!pending2FASetup?.phone) {
+	// const handleOnVerify2FA = async () => {
+	// 	// keep the existing verify handler available (not used on this screen anymore)
+	// 	if (!pending2FASetup?.phone) {
+	// 		setAppMessage?.({
+	// 			type: 'error',
+	// 			message:
+	// 				translations[language].categories.auth[
+	// 					'setupAuthenticator.missingPhone'
+	// 				] ?? 'Missing phone for 2FA verification',
+	// 		});
+	// 		return;
+	// 	}
+	// 	if (!code || code.trim().length === 0) {
+	// 		setAppMessage?.({
+	// 			type: 'error',
+	// 			message:
+	// 				translations[language].categories.auth[
+	// 					'setupAuthenticator.enterCodeError'
+	// 				] ?? 'Enter the code from your authenticator app',
+	// 		});
+	// 		return;
+	// 	}
+	// 	try {
+	// 		setLoading(true);
+	// 		const ok = await handleVerify2FA(code);
+	// 		if (ok) {
+	// 			setCode('');
+	// 		}
+	// 		return ok;
+	// 	} finally {
+	// 		setLoading(false);
+	// 	}
+	// };
+
+	const handleOnSetupTotp = async () => {
+		// Validate we have required values before calling context
+		if (!pending2FASetup?.setup_token) {
 			setAppMessage?.({
 				type: 'error',
 				message:
 					translations[language].categories.auth[
-						'setupAuthenticator.missingPhone'
-					] ?? 'Missing phone for 2FA verification',
+						'setupAuthenticator.missingSetupToken'
+					] ?? 'Missing setup token for TOTP setup',
 			});
-			return;
+			return null;
 		}
-		if (!code || code.trim().length === 0) {
+		if (!pending2FASetup?.secret) {
+			setAppMessage?.({
+				type: 'error',
+				message:
+					translations[language].categories.auth[
+						'setupAuthenticator.missingSecret'
+					] ?? 'Missing secret for TOTP setup',
+			});
+			return null;
+		}
+		if (!code || String(code).trim().length === 0) {
 			setAppMessage?.({
 				type: 'error',
 				message:
@@ -125,15 +173,18 @@ export default function Setup2FAScreen() {
 						'setupAuthenticator.enterCodeError'
 					] ?? 'Enter the code from your authenticator app',
 			});
-			return;
+			return null;
 		}
 		try {
 			setLoading(true);
-			const ok = await handleVerify2FA(code);
-			if (ok) {
-				// success handled by context (navigation). clear local code.
-				setCode('');
-			}
+			const result = await handleSetupTotp({
+				setup_token: pending2FASetup.setup_token ?? undefined,
+				secret: pending2FASetup.secret ?? undefined,
+				otp: code,
+			});
+			console.info('handleOnSetupTotp result', result);
+			// For now we log the response; further instructions will define behavior
+			return result;
 		} finally {
 			setLoading(false);
 		}
@@ -170,11 +221,23 @@ export default function Setup2FAScreen() {
 
 	return (
 		<FormContainer
-			style={styles.container}
+			style={{
+				flex: 1,
+				minWidth: devWidth,
+				minHeight: '100%',
+				padding: 0,
+				margin: 0,
+			}}
 			behavior={Platform.OS === 'ios' ? 'position' : 'padding'}
 		>
-			<ThemedView style={styles.container} lightColor={bg} darkColor={bg}>
-				<ScrollView ref={scrollRef} contentContainerStyle={styles.inner}>
+			<ParallaxScrollView
+				headerBackgroundColor={{
+					light: bg,
+					dark: bg,
+				}}
+				getScrollRef={(r) => (scrollRef.current = r)}
+			>
+				<ThemedView style={styles.container} lightColor={bg} darkColor={bg}>
 					<ThemedView style={styles.header} lightColor={bg} darkColor={bg}>
 						<Image
 							source={bimTextImg}
@@ -260,26 +323,23 @@ export default function Setup2FAScreen() {
 						<ThemedButton
 							title={
 								loading
-									? translations[language].categories.buttons?.['loading'] ??
-									  'Verifying...'
+									? translations[language].categories.auth[
+											'setupAuthenticator.settingUp'
+									  ]
 									: translations[language].categories.auth[
-											'setupAuthenticator.verify'
+											'setupAuthenticator.completeSetup'
 									  ]
 							}
-							onPress={handleOnVerify2FA}
+							onPress={handleOnSetupTotp}
 							textStyle={{ color: authButtonText }}
 							lightColor={bim}
 							darkColor={bim}
-							disabled={loading}
-						/>
-						<ThemedButton
-							title={
-								translations[language].categories.auth[
-									'setupAuthenticator.continue'
-								]
+							disabled={
+								loading ||
+								!pending2FASetup?.setup_token ||
+								!code ||
+								code.trim().length === 0
 							}
-							textStyle={{ color: authButtonText }}
-							onPress={handleContinue}
 						/>
 					</ThemedView>
 
@@ -302,8 +362,8 @@ export default function Setup2FAScreen() {
 					<ThemedText style={styles.instructions}>
 						{translations[language].categories.auth['setupAuthenticator.step4']}
 					</ThemedText>
-				</ScrollView>
-			</ThemedView>
+				</ThemedView>
+			</ParallaxScrollView>
 		</FormContainer>
 	);
 }
@@ -331,15 +391,13 @@ const styles = StyleSheet.create({
 	},
 	subtitle: {
 		fontSize: 14,
-		textAlign: 'center',
+		textAlign: 'left',
 		marginBottom: 12,
 	},
 	qrWrap: {
-		width: 260,
 		height: 260,
 		borderRadius: 8,
 		overflow: 'hidden',
-		backgroundColor: '#fff',
 		alignItems: 'center',
 		justifyContent: 'center',
 	},

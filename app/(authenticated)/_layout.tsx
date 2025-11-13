@@ -14,13 +14,11 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { TransactionProvider } from '@/context/TransactionContext';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
 // use a runtime require to access DrawerContentScrollView to avoid missing type exports
 import { Platform, TouchableOpacity, View } from 'react-native';
 
 function CustomDrawerContent(props: any) {
-	const colorScheme = useColorScheme() ?? 'light';
 	const drawerBackground = useThemeColor({}, 'drawerBackground');
 	const drawerActiveBackground = useThemeColor({}, 'drawerActiveBackground');
 	const drawerButtonBackground = useThemeColor({}, 'drawerButtonBackground');
@@ -197,7 +195,6 @@ export default function DrawerLayout() {
 		online,
 		handleGoBack,
 	} = useGeneral();
-	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
 	const drawerBackground = useThemeColor({}, 'drawerBackground');
 	const drawerActiveBackground = useThemeColor({}, 'drawerActiveBackground');
 	const drawerButtonBackground = useThemeColor({}, 'drawerButtonBackground');

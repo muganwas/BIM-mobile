@@ -32,6 +32,9 @@ const translations: Translations = {
 					'Enter code from authenticator',
 				'setupAuthenticator.copy': 'Copy Secret',
 				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.completeSetup': 'Complete Totp Setup',
+				'setupAuthenticator.settingUp': 'Setting up...',
+				'setupAuthenticator.setupSuccess': 'Two-factor authentication enabled.',
 				'setupAuthenticator.continue': 'Continue',
 				'setupAuthenticator.howToTitle': 'How to set up',
 				'setupAuthenticator.step1':
@@ -48,6 +51,7 @@ const translations: Translations = {
 				'setupAuthenticator.clipboardUnavailable':
 					'Clipboard not available on this platform',
 				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.missingSecret': 'Missing secret for TOTP setup',
 				'setupAuthenticator.enterCodeError':
 					'Enter the code from your authenticator app',
 				'setupAuthenticator.verifyFailed': '2FA verification failed',
@@ -318,6 +322,8 @@ const translations: Translations = {
 					'Enter code from authenticator',
 				'setupAuthenticator.copy': 'Copy Secret',
 				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.completeSetup': 'Complete Totp Setup',
+				'setupAuthenticator.settingUp': 'Setting up...',
 				'setupAuthenticator.continue': 'Continue',
 				'setupAuthenticator.howToTitle': 'How to set up',
 				'setupAuthenticator.step1':
@@ -333,6 +339,10 @@ const translations: Translations = {
 				'setupAuthenticator.clipboardUnavailable':
 					'Clipboard not available on this platform',
 				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.missingSecret':
+					'Secret manquant pour la configuration TOTP',
+				'setupAuthenticator.setupSuccess':
+					'Authentification à deux facteurs activée.',
 				'setupAuthenticator.enterCodeError':
 					'Enter the code from your authenticator app',
 				'setupAuthenticator.verifyFailed': '2FA verification failed',
@@ -358,6 +368,8 @@ const translations: Translations = {
 					'Enter code from authenticator',
 				'setupAuthenticator.copy': 'Copy Secret',
 				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.setup': 'Set Up',
+				'setupAuthenticator.settingUp': 'Setting up...',
 				'setupAuthenticator.continue': 'Continue',
 				'setupAuthenticator.howToTitle': 'How to set up',
 				'setupAuthenticator.step1':
@@ -373,6 +385,10 @@ const translations: Translations = {
 				'setupAuthenticator.clipboardUnavailable':
 					'Clipboard not available on this platform',
 				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.missingSecret':
+					'Falta el secreto para la configuración de TOTP',
+				'setupAuthenticator.setupSuccess':
+					'Autenticación de dos factores activada.',
 				'setupAuthenticator.enterCodeError':
 					'Enter the code from your authenticator app',
 				'setupAuthenticator.verifyFailed': '2FA verification failed',
@@ -397,6 +413,8 @@ const translations: Translations = {
 					'Enter code from authenticator',
 				'setupAuthenticator.copy': 'Copy Secret',
 				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.setup': 'Set Up',
+				'setupAuthenticator.settingUp': 'Setting up...',
 				'setupAuthenticator.continue': 'Continue',
 				'setupAuthenticator.howToTitle': 'How to set up',
 				'setupAuthenticator.step1':
@@ -412,6 +430,10 @@ const translations: Translations = {
 				'setupAuthenticator.clipboardUnavailable':
 					'Clipboard not available on this platform',
 				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.missingSecret':
+					'Fehlender Geheimschlüssel für die TOTP-Einrichtung',
+				'setupAuthenticator.setupSuccess':
+					'Zwei-Faktor-Authentifizierung aktiviert.',
 				'setupAuthenticator.enterCodeError':
 					'Enter the code from your authenticator app',
 				'setupAuthenticator.verifyFailed': '2FA verification failed',

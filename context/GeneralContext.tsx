@@ -10,9 +10,11 @@ import {
 	User as UserProps,
 } from '@/types';
 import { DEV_OTP } from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNetInfo } from '@react-native-community/netinfo';
 import * as DeviceInfo from 'expo-device';
 import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import React, {
 	createContext,
 	useCallback,
@@ -56,6 +58,12 @@ export interface AuthContextType {
 	handleVerify: (otp: string) => Promise<void>;
 	// Verify 2FA code (authenticator app) for pending 2FA setup. Returns true on success.
 	handleVerify2FA: (otp: string) => Promise<boolean>;
+	// Complete TOTP setup by sending backend the setup_token, secret and otp
+	handleSetupTotp: (params?: {
+		setup_token?: string;
+		secret?: string;
+		otp?: string;
+	}) => Promise<any>;
 	// Pending registration payload kept until OTP verification completes
 	pendingRegistration?: {
 		phone: string;
@@ -653,6 +661,128 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		}
 	};
 
+	const handleSetupTotp = async (params?: {
+		setup_token?: string;
+		secret?: string;
+		otp?: string;
+	}) => {
+		const setup_token = params?.setup_token ?? pending2FASetup?.setup_token;
+		const secret = params?.secret ?? pending2FASetup?.secret;
+		const otp = params?.otp ?? '';
+
+		if (!setup_token) {
+			setAppMessage?.({
+				type: 'error',
+				message:
+					translations[language].categories.auth[
+						'setupAuthenticator.missingSetupToken'
+					] ?? 'Missing setup token for TOTP setup',
+			});
+			return null;
+		}
+		if (!secret) {
+			setAppMessage?.({
+				type: 'error',
+				message:
+					translations[language].categories.auth[
+						'setupAuthenticator.missingSecret'
+					] ?? 'Missing secret for TOTP setup',
+			});
+			return null;
+		}
+		if (!otp || String(otp).trim().length === 0) {
+			setAppMessage?.({
+				type: 'error',
+				message:
+					translations[language].categories.auth[
+						'setupAuthenticator.enterCodeError'
+					] ?? 'Enter the code from your authenticator app',
+			});
+			return null;
+		}
+		try {
+			const res = await apiFetch((apiBaseUrl || '') + '/api/2fa-setup', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ setup_token, secret, otp: String(otp).trim() }),
+			});
+			if (!res.ok) {
+				const text = await parseApiError(res);
+				setAppMessage?.({
+					type: 'error',
+					message:
+						String(text) && String(text).trim()
+							? String(text)
+							: translations[language].categories.auth[
+									'setupAuthenticator.setupFailed'
+							  ] || 'TOTP setup failed',
+				});
+				return null;
+			}
+			const json = await (res.ok ? res.json() : null);
+
+			try {
+				// Persist token and selected user fields to AsyncStorage if present
+				if (json && json.token) {
+					// Store token securely
+					await SecureStore.setItemAsync('auth_token', String(json.token));
+				}
+				if (json && json.user) {
+					const user = json.user;
+					if (user.id !== undefined) {
+						await AsyncStorage.setItem('user_id', String(user.id));
+					}
+					if (user.email) {
+						await AsyncStorage.setItem('user_email', String(user.email));
+					}
+					if (user.phone) {
+						await AsyncStorage.setItem('user_phone', String(user.phone));
+					}
+					if (user.totp_secret) {
+						// Store TOTP secret securely
+						await SecureStore.setItemAsync(
+							'totp_secret',
+							String(user.totp_secret)
+						);
+					}
+					setUser(user as any);
+				}
+				// Show success toast if backend provided a message, then navigate
+				try {
+					const successMessage =
+						(json && (json as any).message) ||
+						translations[language].categories.auth[
+							'setupAuthenticator.setupSuccess'
+						] ||
+						'Two-factor authentication enabled.';
+					setAppMessage?.({ type: 'message', message: String(successMessage) });
+				} catch {
+					// ignore
+				}
+
+				// Clear pending setup and navigate into authenticated area
+				setPending2FASetup?.(null);
+				router.replace('/(authenticated)/home');
+			} catch (e) {
+				console.error('handleSetupTotp: error persisting auth state', e);
+			}
+
+			return { json };
+		} catch (err: any) {
+			console.error('handleSetupTotp error', err);
+			setAppMessage?.({
+				type: 'error',
+				message:
+					(err?.message as string) ||
+					translations[language].categories.auth[
+						'setupAuthenticator.setupFailed'
+					] ||
+					'TOTP setup failed',
+			});
+			return null;
+		}
+	};
+
 	const fetchNotifications = async () => {
 		const fetched: notifications[] = [];
 		setNotifications(fetched);
@@ -681,6 +811,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				handleRegistration,
 				handleVerify,
 				handleVerify2FA,
+				handleSetupTotp,
 				pendingPhone,
 				setPendingPhone,
 				online,
