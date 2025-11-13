@@ -4,17 +4,18 @@ import React from 'react';
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { Platform } from 'react-native';
 
 export default function AuthLayout() {
 	const colorScheme = useColorScheme();
+	const tint = useThemeColor({}, 'tint');
 
 	return (
 		<Tabs
 			screenOptions={{
-				tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+				tabBarActiveTintColor: tint,
 				headerShown: true,
 				tabBarButton: HapticTab,
 				tabBarBackground: TabBarBackground,

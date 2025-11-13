@@ -10,17 +10,22 @@ import Header from '@/components/Header';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { TransactionProvider } from '@/context/TransactionContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useThemeColor } from '@/hooks/useThemeColor';
 // use a runtime require to access DrawerContentScrollView to avoid missing type exports
 import { Platform, TouchableOpacity, View } from 'react-native';
 
 function CustomDrawerContent(props: any) {
 	const colorScheme = useColorScheme() ?? 'light';
+	const drawerBackground = useThemeColor({}, 'drawerBackground');
+	const drawerActiveBackground = useThemeColor({}, 'drawerActiveBackground');
+	const drawerButtonBackground = useThemeColor({}, 'drawerButtonBackground');
+	const drawerItem = useThemeColor({}, 'drawerItem');
+	const drawerInactiveItem = useThemeColor({}, 'drawerInactiveItem');
 	const { language } = useGeneral();
 	const { state, descriptors, navigation } = props;
 	const activeIndex = state.index;
@@ -51,7 +56,7 @@ function CustomDrawerContent(props: any) {
 			<View
 				style={{
 					paddingVertical: 5,
-					backgroundColor: Colors[colorScheme].drawerBackground,
+					backgroundColor: drawerBackground,
 				}}
 			>
 				<DrawerHeader navigation={navigation} />
@@ -72,15 +77,12 @@ function CustomDrawerContent(props: any) {
 					route.name;
 				const isActive = i === activeIndex;
 				const activeBg =
-					options.drawerActiveBackgroundColor ??
-					Colors[colorScheme].drawerActiveBackground;
+					options.drawerActiveBackgroundColor ?? drawerActiveBackground;
 				const inactiveBg =
-					options.drawerInactiveBackgroundColor ??
-					Colors[colorScheme].drawerButtonBackground;
+					options.drawerInactiveBackgroundColor ?? drawerButtonBackground;
 				const iconColor = isActive
-					? options.drawerActiveTintColor ?? Colors[colorScheme].drawerItem
-					: options.drawerInactiveTintColor ??
-					  Colors[colorScheme].drawerInactiveItem;
+					? options.drawerActiveTintColor ?? drawerItem
+					: options.drawerInactiveTintColor ?? drawerInactiveItem;
 				let icon: React.ReactNode = null;
 				switch (route.name) {
 					case 'home':
@@ -149,10 +151,8 @@ function CustomDrawerContent(props: any) {
 									<ThemedText
 										style={{
 											color: isActive
-												? options.drawerActiveTintColor ??
-												  Colors[colorScheme].drawerItem
-												: options.drawerInactiveTintColor ??
-												  Colors[colorScheme].drawerInactiveItem,
+												? options.drawerActiveTintColor ?? drawerItem
+												: options.drawerInactiveTintColor ?? drawerInactiveItem,
 											fontWeight: isActive
 												? options.drawerActiveFontWeight ??
 												  fontWeight['heading.one']
@@ -161,17 +161,13 @@ function CustomDrawerContent(props: any) {
 										}}
 										lightColor={
 											isActive
-												? options.drawerActiveTintColor ??
-												  Colors[colorScheme].drawerItem
-												: options.drawerInactiveTintColor ??
-												  Colors[colorScheme].drawerInactiveItem
+												? options.drawerActiveTintColor ?? drawerItem
+												: options.drawerInactiveTintColor ?? drawerInactiveItem
 										}
 										darkColor={
 											isActive
-												? options.drawerActiveTintColor ??
-												  Colors[colorScheme].drawerItem
-												: options.drawerInactiveTintColor ??
-												  Colors[colorScheme].drawerInactiveItem
+												? options.drawerActiveTintColor ?? drawerItem
+												: options.drawerInactiveTintColor ?? drawerInactiveItem
 										}
 									>
 										{label}
@@ -202,6 +198,11 @@ export default function DrawerLayout() {
 		handleGoBack,
 	} = useGeneral();
 	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
+	const drawerBackground = useThemeColor({}, 'drawerBackground');
+	const drawerActiveBackground = useThemeColor({}, 'drawerActiveBackground');
+	const drawerButtonBackground = useThemeColor({}, 'drawerButtonBackground');
+	const drawerItem = useThemeColor({}, 'drawerItem');
+	const drawerInactiveItem = useThemeColor({}, 'drawerInactiveItem');
 
 	return (
 		<TransactionProvider>
@@ -209,10 +210,9 @@ export default function DrawerLayout() {
 				drawerContent={(props: any) => <CustomDrawerContent {...props} />}
 				screenOptions={{
 					headerShown: true,
-					drawerActiveTintColor: Colors[colorScheme].drawerItem,
-					drawerInactiveTintColor: Colors[colorScheme].drawerInactiveItem,
-					drawerActiveBackgroundColor:
-						Colors[colorScheme].drawerActiveBackground,
+					drawerActiveTintColor: drawerItem,
+					drawerInactiveTintColor: drawerInactiveItem,
+					drawerActiveBackgroundColor: drawerActiveBackground,
 					header: (props: any) => {
 						// allow screens to pass a custom goback via options.headerProps?.goback
 						// fallback to the navigation back object when available
@@ -237,10 +237,10 @@ export default function DrawerLayout() {
 						);
 					},
 					drawerStyle: {
-						backgroundColor: Colors[colorScheme].drawerBackground,
+						backgroundColor: drawerBackground,
 					},
 					drawerItemStyle: {
-						backgroundColor: Colors[colorScheme].drawerButtonBackground,
+						backgroundColor: drawerButtonBackground,
 						borderRadius: 0,
 						marginLeft: -10,
 					},

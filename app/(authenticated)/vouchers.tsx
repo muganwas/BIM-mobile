@@ -3,11 +3,11 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef } from 'react';
@@ -17,6 +17,19 @@ import { ScrollView } from 'react-native-gesture-handler';
 export default function VouchersScreen() {
 	useTrackHistory('/(authenticated)/vouchers');
 	const colorScheme = useColorScheme() ?? 'light';
+	// Theme helpers
+	const background = useThemeColor({}, 'background');
+	const backgroundLight = useThemeColor({}, 'background', 'light');
+	const backgroundDark = useThemeColor({}, 'background', 'dark');
+	const textLight = useThemeColor({}, 'text', 'light');
+	const textDark = useThemeColor({}, 'text', 'dark');
+	const titleBgLight = useThemeColor({}, 'titleBg', 'light');
+	const titleBgDark = useThemeColor({}, 'titleBg', 'dark');
+	const borderDark = useThemeColor({}, 'borderDark');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const lightBlue = useThemeColor({}, 'lightBlue');
+	const whiteLight = useThemeColor({}, 'white', 'light');
+	const whiteDark = useThemeColor({}, 'white', 'dark');
 	const router = useRouter();
 	const { packages, fetchPackages, routers } = useTransaction();
 	const { user, language } = useGeneral();
@@ -77,20 +90,20 @@ export default function VouchersScreen() {
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
-				light: Colors.light.background,
-				dark: Colors.dark.background,
+				light: backgroundLight,
+				dark: backgroundDark,
 			}}
 			containerStyle={{ flex: 1 }}
 			contentStyle={{ padding: 16 }}
 		>
 			<ThemedView
 				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
+				lightColor={backgroundLight}
+				darkColor={backgroundDark}
 			>
 				<ThemedText
-					lightColor={Colors.light.text}
-					darkColor={Colors.dark.text}
+					lightColor={textLight}
+					darkColor={textDark}
 					style={{
 						width: '100%',
 						textTransform: 'capitalize',
@@ -104,8 +117,8 @@ export default function VouchersScreen() {
 					style={{
 						fontSize: fontSize['text.medium'],
 					}}
-					lightColor={Colors.light.text}
-					darkColor={Colors.dark.text}
+					lightColor={textLight}
+					darkColor={textDark}
 				>
 					{translations[language].categories.vouchers.mainSubtitle}
 				</ThemedText>
@@ -113,7 +126,7 @@ export default function VouchersScreen() {
 
 			<TileContainer
 				id={packageRouterListId.current}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{
 					flexDirection: 'column',
 					overflow: 'hidden',
@@ -128,8 +141,8 @@ export default function VouchersScreen() {
 				>
 					<ThemedView
 						style={{ flexDirection: 'column' }}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedView
 							id={packageRouterListHeaderId.current}
@@ -140,10 +153,10 @@ export default function VouchersScreen() {
 								paddingHorizontal: 10,
 								paddingVertical: 10,
 								borderBottomWidth: 1,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.titleBg}
-							darkColor={Colors.dark.titleBg}
+							lightColor={titleBgLight}
+							darkColor={titleBgDark}
 						>
 							{voucherHeaders.map((col) => (
 								<ThemedText
@@ -157,8 +170,8 @@ export default function VouchersScreen() {
 										paddingRight: 8,
 										...(col.textAlign ? { textAlign: col.textAlign } : {}),
 									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
+									lightColor={textLight}
+									darkColor={textDark}
 								>
 									{col.label}
 								</ThemedText>
@@ -168,7 +181,7 @@ export default function VouchersScreen() {
 							id={packageRouterListDetailsId.current}
 							style={{
 								flexDirection: 'column',
-								backgroundColor: Colors[colorScheme].background,
+								backgroundColor: background,
 							}}
 						>
 							{routers.map((r, index) => (
@@ -181,15 +194,13 @@ export default function VouchersScreen() {
 										paddingVertical: 5,
 										paddingHorizontal: 10,
 										backgroundColor:
-											index % 2 === 0
-												? Colors[colorScheme].listItemBackground
-												: Colors[colorScheme].background,
+											index % 2 === 0 ? listItemBackground : background,
 										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
-										borderBottomColor: Colors[colorScheme].borderDark,
+										borderBottomColor: borderDark,
 										justifyContent: 'space-between',
 									}}
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
+									lightColor={backgroundLight}
+									darkColor={backgroundDark}
 								>
 									<ThemedText
 										numberOfLines={1}
@@ -198,8 +209,8 @@ export default function VouchersScreen() {
 											paddingRight: 8,
 											overflow: 'hidden',
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{r.name}
 									</ThemedText>
@@ -209,8 +220,8 @@ export default function VouchersScreen() {
 											paddingRight: 8,
 											width: 120,
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{r.location}
 									</ThemedText>
@@ -220,8 +231,8 @@ export default function VouchersScreen() {
 											paddingRight: 8,
 											width: 120,
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{r?.networkInfo.ipv4}
 									</ThemedText>
@@ -231,8 +242,8 @@ export default function VouchersScreen() {
 											paddingRight: 8,
 											width: 120,
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{r.username}
 									</ThemedText>
@@ -250,10 +261,10 @@ export default function VouchersScreen() {
 												language
 											].categories.buttons.hotspots.toUpperCase()}
 											onPress={() => router.push(`/routers/vouchers/${r.id}`)}
-											lightColor={Colors.light.lightBlue}
-											darkColor={Colors.dark.lightBlue}
-											darkTextColor={Colors.dark.white}
-											lightTextColor={Colors.light.white}
+											lightColor={lightBlue}
+											darkColor={lightBlue}
+											darkTextColor={whiteDark}
+											lightTextColor={whiteLight}
 											style={{ flex: 1 }}
 										/>
 									</ThemedView>

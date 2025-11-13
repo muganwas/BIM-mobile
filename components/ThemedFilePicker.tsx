@@ -1,6 +1,5 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -99,6 +98,10 @@ export default function ThemedFilePicker({
 	const display = fileName || value || '';
 	const textColor = useThemeColor({}, 'text');
 	const mutedText = useThemeColor({}, 'mutedText');
+	const background = useThemeColor({}, 'background');
+	const inputBackground = useThemeColor({}, 'inputBackground');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const titleBg = useThemeColor({}, 'titleBg');
 
 	return (
 		<View style={[{ flexDirection: 'column' }, containerStyle]}>
@@ -113,13 +116,13 @@ export default function ThemedFilePicker({
 			) : null}
 
 			<ThemedView
-				lightColor={lightColor ?? Colors[colorScheme].background}
-				darkColor={darkColor ?? Colors[colorScheme].background}
+				lightColor={lightColor ?? background}
+				darkColor={darkColor ?? background}
 				style={[
 					styles.input,
 					{
-						backgroundColor: Colors[colorScheme].inputBackground,
-						borderColor: Colors[colorScheme].inputBorder,
+						backgroundColor: inputBackground,
+						borderColor: inputBorder,
 						borderWidth: 1,
 					},
 					style,
@@ -135,7 +138,7 @@ export default function ThemedFilePicker({
 					disabled={!active || disabled || busy}
 					style={[
 						styles.leftBtn,
-						{ backgroundColor: Colors[colorScheme].titleBg },
+						{ backgroundColor: titleBg },
 					]}
 				>
 					<IconSymbol name={'attachFile'} color={textColor} size={16} />

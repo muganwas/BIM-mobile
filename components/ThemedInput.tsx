@@ -6,13 +6,11 @@ import {
 	TouchableOpacity,
 	View,
 	ViewStyle,
-	useColorScheme,
 	type TextInputProps,
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
 import { useThemeColor } from '@/hooks/useThemeColor';
 // removed separate React hooks import; using React import above
 import { IconSymbol } from './ui/IconSymbol';
@@ -57,10 +55,12 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
 		}: ThemedInputProps,
 		ref
 	) {
-		const colorScheme = useColorScheme() ?? 'light';
 		const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+		const focusedInputColor = useThemeColor({}, 'focusedInput');
+		const inputBorderColor = useThemeColor({}, 'inputBorder');
+		const defaultPlaceholderColor = useThemeColor({}, 'mutedText');
 		const placeholderColor =
-			rest.placeholderTextColor ?? Colors[colorScheme].mutedText;
+			rest.placeholderTextColor ?? defaultPlaceholderColor;
 		const [showPassword, setShowPassword] = useState(false);
 		const [focused, setFocused] = useState(false);
 		// Extract user-provided focus handlers so we can call them along with internal state updates
@@ -115,10 +115,8 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
 							styles.input,
 							{
 								// Default theming for ALL inputs across the app
-								backgroundColor: Colors[colorScheme].inputBackground,
-								borderColor: focused
-									? Colors[colorScheme].focusedInput
-									: Colors[colorScheme].inputBorder,
+								backgroundColor: useThemeColor({}, 'inputBackground'),
+								borderColor: focused ? focusedInputColor : inputBorderColor,
 								borderWidth: 1,
 							},
 							secureTextEntry && {

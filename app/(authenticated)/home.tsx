@@ -11,12 +11,12 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { formatMMDD, translateWithVariables } from '@/helpers';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { dayPurchase, MicroTransaction, VoucherUser } from '@/types';
 import { useRouter } from 'expo-router';
@@ -31,7 +31,44 @@ export default function HomeScreen() {
 	useTrackHistory('/(authenticated)/home');
 	const width = Dimensions.get('window').width;
 	const router = useRouter();
-	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
+	useColorScheme();
+	// Theme helpers
+	const background = useThemeColor({}, 'background');
+	const backgroundLight = useThemeColor({}, 'background', 'light');
+	const backgroundDark = useThemeColor({}, 'background', 'dark');
+	const screenTitleTextLight = useThemeColor({}, 'screenTitleText', 'light');
+	const screenTitleTextDark = useThemeColor({}, 'screenTitleText', 'dark');
+	const textLight = useThemeColor({}, 'text', 'light');
+	const textDark = useThemeColor({}, 'text', 'dark');
+	const iconTint = useThemeColor({}, 'iconTint');
+	const dayText = useThemeColor({}, 'dayText');
+	const dayIconBackground = useThemeColor({}, 'dayIconBackground');
+	const dayTransactionsBackground = useThemeColor(
+		{},
+		'dayTransactionsBackground'
+	);
+	const weekText = useThemeColor({}, 'weekText');
+	const weekIconBackground = useThemeColor({}, 'weekIconBackground');
+	const weekTransactionsBackground = useThemeColor(
+		{},
+		'weekTransactionsBackground'
+	);
+	const monthText = useThemeColor({}, 'monthText');
+	const monthIconBackground = useThemeColor({}, 'monthIconBackground');
+	const monthTransactionsBackground = useThemeColor(
+		{},
+		'monthTransactionsBackground'
+	);
+	const borderDark = useThemeColor({}, 'borderDark');
+	const bim = useThemeColor({}, 'bim');
+	const darkBackgroundColor = useThemeColor({}, 'background', 'dark');
+	const lightBackgroundColor = useThemeColor({}, 'background', 'light');
+	const whiteLight = useThemeColor({}, 'white', 'light');
+	const whiteDark = useThemeColor({}, 'white', 'dark');
+	const bimLight = useThemeColor({}, 'bim', 'light');
+	const bimDark = useThemeColor({}, 'bim', 'dark');
+	const authButtonTextLight = useThemeColor({}, 'authButtonText', 'light');
+	const authButtonTextDark = useThemeColor({}, 'authButtonText', 'dark');
 	const { purchases, voucherUsers, routers } = useTransaction();
 	const [dailyPurchasesTotal, setDailyPurchasesTotal] = useState(0);
 	const [weeklyPurchasesTotal, setWeeklyPurchasesTotal] = useState(0);
@@ -248,8 +285,8 @@ export default function HomeScreen() {
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
-				light: Colors.light.background,
-				dark: Colors.dark.background,
+				light: backgroundLight,
+				dark: backgroundDark,
 			}}
 			contentStyle={{ paddingHorizontal: 10 }}
 			onTouchStart={(e: GestureResponderEvent) => {
@@ -259,8 +296,8 @@ export default function HomeScreen() {
 		>
 			<ThemedView style={styles.titleContainer}>
 				<ThemedText
-					lightColor={Colors.light.screenTitleText}
-					darkColor={Colors.dark.screenTitleText}
+					lightColor={screenTitleTextLight}
+					darkColor={screenTitleTextDark}
 					style={{ fontSize: 24, fontWeight: 'bold' }}
 				>
 					{translations[language].categories.dashboard.title}
@@ -271,10 +308,10 @@ export default function HomeScreen() {
 				amount={dailyPurchasesTotal}
 				title={translations[language].categories.dashboard.todaysTransactions}
 				iconName='cash'
-				iconColor={Colors[colorScheme].iconTint}
-				titleColor={Colors[colorScheme].dayText}
-				iconBackgroundColor={Colors[colorScheme].dayIconBackground}
-				backgroundColor={Colors[colorScheme].dayTransactionsBackground}
+				iconColor={iconTint}
+				titleColor={dayText}
+				iconBackgroundColor={dayIconBackground}
+				backgroundColor={dayTransactionsBackground}
 				iconSize={30}
 				language={language}
 			/>
@@ -283,10 +320,10 @@ export default function HomeScreen() {
 				amount={weeklyPurchasesTotal}
 				title={translations[language].categories.dashboard.weeksTransactions}
 				iconName='calendar'
-				iconColor={Colors[colorScheme].iconTint}
-				titleColor={Colors[colorScheme].weekText}
-				iconBackgroundColor={Colors[colorScheme].weekIconBackground}
-				backgroundColor={Colors[colorScheme].weekTransactionsBackground}
+				iconColor={iconTint}
+				titleColor={weekText}
+				iconBackgroundColor={weekIconBackground}
+				backgroundColor={weekTransactionsBackground}
 				iconSize={30}
 				language={language}
 			/>
@@ -295,10 +332,10 @@ export default function HomeScreen() {
 				amount={monthlyPurchasesTotal}
 				title={translations[language].categories.dashboard.monthsTransactions}
 				iconName='monthlyCalendar'
-				iconColor={Colors[colorScheme].iconTint}
-				titleColor={Colors[colorScheme].monthText}
-				iconBackgroundColor={Colors[colorScheme].monthIconBackground}
-				backgroundColor={Colors[colorScheme].monthTransactionsBackground}
+				iconColor={iconTint}
+				titleColor={monthText}
+				iconBackgroundColor={monthIconBackground}
+				backgroundColor={monthTransactionsBackground}
 				iconSize={30}
 				language={language}
 			/>
@@ -306,44 +343,44 @@ export default function HomeScreen() {
 				id='days-voucher-users'
 				amount={dailyVoucherUsersTotal}
 				amountType='number'
-				titleColor={Colors[colorScheme].dayText}
+				titleColor={dayText}
 				title={translations[language].categories.dashboard.todaysVouchers}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				language={language}
 			/>
 			<DashboardTile
 				id='weeks-voucher-users'
 				amount={weeklyVoucherUsersTotal}
 				amountType='number'
-				titleColor={Colors[colorScheme].weekText}
+				titleColor={weekText}
 				title={translations[language].categories.dashboard.weeksVouchers}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				language={language}
 			/>
 			<DashboardTile
 				id='months-voucher-users'
 				amount={monthlyVoucherUsersTotal}
 				amountType='number'
-				titleColor={Colors[colorScheme].monthText}
+				titleColor={monthText}
 				title={translations[language].categories.dashboard.monthsVouchers}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				language={language}
 			/>
 			<TileContainer
 				id='last-five-transactions'
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{
 					flexDirection: 'column',
 				}}
 			>
 				<ThemedView
 					style={{ flex: 1 }}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedText
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
+						lightColor={screenTitleTextLight}
+						darkColor={screenTitleTextDark}
 						style={{
 							width: '100%',
 							textTransform: 'capitalize',
@@ -364,8 +401,8 @@ export default function HomeScreen() {
 				>
 					<ThemedView
 						style={{ flexDirection: 'column', flex: 1 }}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedView
 							id='last-five-transactions-header'
@@ -376,15 +413,15 @@ export default function HomeScreen() {
 								paddingHorizontal: 5,
 								paddingVertical: 10,
 								borderBottomWidth: 1,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={backgroundLight}
+							darkColor={backgroundDark}
 						>
 							<ThemedText
 								style={{ width: 30 }}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								#
 							</ThemedText>
@@ -397,8 +434,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.amount}
 							</ThemedText>
@@ -411,8 +448,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.type}
 							</ThemedText>
@@ -425,8 +462,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.reason}
 							</ThemedText>
@@ -439,8 +476,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.routerName}
 							</ThemedText>
@@ -453,8 +490,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.date}
 							</ThemedText>
@@ -468,8 +505,8 @@ export default function HomeScreen() {
 								style={{
 									flexDirection: 'column',
 								}}
-								lightColor={Colors.light.background}
-								darkColor={Colors.dark.background}
+								lightColor={lightBackgroundColor}
+								darkColor={darkBackgroundColor}
 							>
 								{lastFiveTransactions.map((transaction, index) => (
 									<ThemedView
@@ -481,10 +518,10 @@ export default function HomeScreen() {
 											paddingHorizontal: 5,
 											paddingVertical: 10,
 											borderBottomWidth: 1,
-											borderBottomColor: Colors[colorScheme].borderDark,
+											borderBottomColor: borderDark,
 										}}
-										lightColor={Colors.light.background}
-										darkColor={Colors.dark.background}
+										lightColor={lightBackgroundColor}
+										darkColor={darkBackgroundColor}
 									>
 										<ThemedText
 											numberOfLines={1}
@@ -565,8 +602,8 @@ export default function HomeScreen() {
 						alignItems: 'center',
 						justifyContent: 'center',
 					}}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedButton
 						title={translations[
@@ -576,28 +613,28 @@ export default function HomeScreen() {
 						style={{
 							borderRadius: 8,
 						}}
-						darkColor={Colors['dark'].bim}
-						lightColor={Colors['light'].bim}
-						darkTextColor={Colors['dark'].authButtonText}
-						lightTextColor={Colors['light'].authButtonText}
+						darkColor={bimDark}
+						lightColor={bimLight}
+						darkTextColor={authButtonTextDark}
+						lightTextColor={authButtonTextLight}
 					/>
 				</ThemedView>
 			</TileContainer>
 			<TileContainer
 				id='user-created-vouchers'
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{
 					flexDirection: 'column',
 				}}
 			>
 				<ThemedView
 					style={{ flex: 1 }}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedText
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
+						lightColor={screenTitleTextLight}
+						darkColor={screenTitleTextDark}
 						style={{
 							width: '100%',
 							textTransform: 'capitalize',
@@ -618,8 +655,8 @@ export default function HomeScreen() {
 				>
 					<ThemedView
 						style={{ flexDirection: 'column', flex: 1 }}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedView
 							id='last-seven-voucher-users-header'
@@ -630,15 +667,15 @@ export default function HomeScreen() {
 								paddingHorizontal: 5,
 								paddingVertical: 10,
 								borderBottomWidth: 1,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={backgroundLight}
+							darkColor={backgroundDark}
 						>
 							<ThemedText
 								style={{ width: 30 }}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								#
 							</ThemedText>
@@ -651,8 +688,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.voucher}
 							</ThemedText>
@@ -665,8 +702,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.package}
 							</ThemedText>
@@ -679,8 +716,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.status}
 							</ThemedText>
@@ -693,8 +730,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.macAddress}
 							</ThemedText>
@@ -707,8 +744,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.uptime}
 							</ThemedText>
@@ -721,8 +758,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.bytesIn}
 							</ThemedText>
@@ -735,8 +772,8 @@ export default function HomeScreen() {
 									textTransform: 'uppercase',
 									paddingRight: 8,
 								}}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.dashboard.bytesOut}
 							</ThemedText>
@@ -750,8 +787,8 @@ export default function HomeScreen() {
 								style={{
 									flexDirection: 'column',
 								}}
-								lightColor={Colors.light.background}
-								darkColor={Colors.dark.background}
+								lightColor={backgroundLight}
+								darkColor={backgroundDark}
 							>
 								{lastSevenVoucherUsers.map((user, index) => (
 									<ThemedView
@@ -763,10 +800,10 @@ export default function HomeScreen() {
 											paddingHorizontal: 5,
 											paddingVertical: 10,
 											borderBottomWidth: 1,
-											borderBottomColor: Colors[colorScheme].borderDark,
+											borderBottomColor: borderDark,
 										}}
-										lightColor={Colors.light.background}
-										darkColor={Colors.dark.background}
+										lightColor={backgroundLight}
+										darkColor={backgroundDark}
 									>
 										<ThemedText
 											numberOfLines={1}
@@ -869,8 +906,8 @@ export default function HomeScreen() {
 						alignItems: 'center',
 						justifyContent: 'center',
 					}}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedButton
 						title={translations[
@@ -880,26 +917,26 @@ export default function HomeScreen() {
 						style={{
 							borderRadius: 8,
 						}}
-						darkColor={Colors['dark'].bim}
-						lightColor={Colors['light'].bim}
-						darkTextColor={Colors['dark'].authButtonText}
-						lightTextColor={Colors['light'].authButtonText}
+						darkColor={bimDark}
+						lightColor={bimLight}
+						darkTextColor={authButtonTextDark}
+						lightTextColor={authButtonTextLight}
 					/>
 				</ThemedView>
 			</TileContainer>
 			<TileContainer
 				id='transaction-volume-chart'
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{ flexDirection: 'column', overflow: 'hidden' }}
 			>
 				<ThemedView
 					style={{ flex: 1 }}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedText
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
+						lightColor={screenTitleTextLight}
+						darkColor={screenTitleTextDark}
 						style={{
 							width: '100%',
 							textTransform: 'capitalize',
@@ -914,8 +951,8 @@ export default function HomeScreen() {
 					</ThemedText>
 				</ThemedView>
 				<ThemedView
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 					style={{
 						position: 'relative',
 					}}
@@ -934,8 +971,8 @@ export default function HomeScreen() {
 						yAxisSuffix=''
 						yAxisLabel=''
 						chartConfig={{
-							backgroundGradientFrom: Colors[colorScheme].background,
-							backgroundGradientTo: Colors[colorScheme].background,
+							backgroundGradientFrom: background,
+							backgroundGradientTo: background,
 							decimalPlaces: 0,
 							color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
 							labelColor: (opacity = 1) => `rgba(0,0,0, ${opacity})`,
@@ -946,17 +983,17 @@ export default function HomeScreen() {
 			</TileContainer>
 			<TileContainer
 				id='router-balances'
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{ flexDirection: 'column', overflow: 'hidden' }}
 			>
 				<ThemedView
 					style={{ flex: 1 }}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedText
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
+						lightColor={screenTitleTextLight}
+						darkColor={screenTitleTextDark}
 						style={{
 							width: '100%',
 							textTransform: 'capitalize',
@@ -971,11 +1008,11 @@ export default function HomeScreen() {
 					style={{
 						flexDirection: 'column',
 						borderWidth: 2,
-						borderColor: Colors[colorScheme].borderDark,
+						borderColor: borderDark,
 						borderRadius: 5,
 					}}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					{purchasesPerRouter.map((router, index) => (
 						<ThemedView
@@ -987,27 +1024,27 @@ export default function HomeScreen() {
 								justifyContent: 'space-between',
 								borderBottomWidth:
 									index < purchasesPerRouter.length - 1 ? 1 : 0,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={backgroundLight}
+							darkColor={backgroundDark}
 						>
 							<ThemedText
 								numberOfLines={1}
 								style={{ width: 150, overflow: 'hidden' }}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{router.name}
 							</ThemedText>
 							<ThemedText
 								style={{
 									paddingHorizontal: 10,
-									backgroundColor: Colors[colorScheme].bim,
+									backgroundColor: bim,
 									borderRadius: 50,
 								}}
-								lightColor={Colors.light.white}
-								darkColor={Colors.dark.white}
+								lightColor={whiteLight}
+								darkColor={whiteDark}
 							>
 								{router.amount}
 							</ThemedText>

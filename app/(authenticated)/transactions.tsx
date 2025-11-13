@@ -5,12 +5,12 @@ import { ThemedDropdown } from '@/components/ThemedDropdown';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { formatAmount } from '@/helpers';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useColorScheme, View } from 'react-native';
@@ -19,6 +19,26 @@ import { ScrollView } from 'react-native-gesture-handler';
 export default function TransactionsScreen() {
 	useTrackHistory('/(authenticated)/transactions');
 	const colorScheme = useColorScheme() ?? 'light';
+	// Theme helpers
+	const background = useThemeColor({}, 'background');
+	const backgroundLight = useThemeColor({}, 'background', 'light');
+	const backgroundDark = useThemeColor({}, 'background', 'dark');
+	const bim = useThemeColor({}, 'bim');
+	const bimLight = useThemeColor({}, 'bim', 'light');
+	const bimDark = useThemeColor({}, 'bim', 'dark');
+	const textLight = useThemeColor({}, 'text', 'light');
+	const textDark = useThemeColor({}, 'text', 'dark');
+	const whiteLight = useThemeColor({}, 'white', 'light');
+	const whiteDark = useThemeColor({}, 'white', 'dark');
+	const titleBgLight = useThemeColor({}, 'titleBg', 'light');
+	const titleBgDark = useThemeColor({}, 'titleBg', 'dark');
+	const borderDark = useThemeColor({}, 'borderDark');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const actionButton = useThemeColor({}, 'actionButton');
+	const lime = useThemeColor({}, 'lime');
+	const dangerButton = useThemeColor({}, 'dangerButton');
+	const mutedTextLight = useThemeColor({}, 'mutedText', 'light');
+	const mutedTextDark = useThemeColor({}, 'mutedText', 'dark');
 	const { purchases, fetchPurchases } = useTransaction();
 	const { user, language } = useGeneral();
 	const t = translations[language].categories.transactions;
@@ -126,16 +146,16 @@ export default function TransactionsScreen() {
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
-				light: Colors.light.background,
-				dark: Colors.dark.background,
+				light: backgroundLight,
+				dark: backgroundDark,
 			}}
 			contentStyle={{ padding: 16 }}
 			containerStyle={{ flex: 1 }}
 		>
 			{/* Title */}
 			<ThemedText
-				lightColor={Colors.light.bim}
-				darkColor={Colors.dark.bim}
+				lightColor={bimLight}
+				darkColor={bimDark}
 				style={{
 					width: '100%',
 					textTransform: 'capitalize',
@@ -150,7 +170,7 @@ export default function TransactionsScreen() {
 			{/* Filters Row */}
 			<TileContainer
 				id='transactions-filters'
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{
 					flexDirection: 'column',
 					gap: 12,
@@ -164,14 +184,14 @@ export default function TransactionsScreen() {
 			>
 				<ThemedView
 					style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}
-					lightColor={Colors[colorScheme].background}
-					darkColor={Colors[colorScheme].background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					{/* Start Date */}
 					<ThemedView
 						style={{ flexBasis: '48%', flexGrow: 1 }}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedDatePicker
 							label={t.startDate}
@@ -179,14 +199,14 @@ export default function TransactionsScreen() {
 							value={startDate}
 							onChange={(d) => setStartDate(d)}
 							mode='date'
-							inputStyle={{ backgroundColor: Colors[colorScheme].background }}
+							inputStyle={{ backgroundColor: background }}
 						/>
 					</ThemedView>
 					{/* End Date */}
 					<ThemedView
 						style={{ flexBasis: '48%', flexGrow: 1 }}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedDatePicker
 							label={t.endDate}
@@ -194,15 +214,15 @@ export default function TransactionsScreen() {
 							value={endDate}
 							onChange={(d) => setEndDate(d)}
 							mode='date'
-							inputStyle={{ backgroundColor: Colors[colorScheme].background }}
+							inputStyle={{ backgroundColor: background }}
 						/>
 					</ThemedView>
 
 					{/* Status */}
 					<ThemedView
 						style={{ flexBasis: '48%', flexGrow: 1 }}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedDropdown
 							id='status-dd'
@@ -221,8 +241,8 @@ export default function TransactionsScreen() {
 					{/* Transaction Type */}
 					<ThemedView
 						style={{ flexBasis: '48%', flexGrow: 1 }}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedDropdown
 							id='type-dd'
@@ -242,20 +262,20 @@ export default function TransactionsScreen() {
 				{/* Actions row */}
 				<ThemedView
 					style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}
-					lightColor={Colors[colorScheme].background}
-					darkColor={Colors[colorScheme].background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedButton
 						title={t.applyFilters}
 						onPress={handleApplyFilters}
-						style={{ backgroundColor: Colors[colorScheme].bim }}
-						lightTextColor={Colors.light.white}
-						darkTextColor={Colors.dark.white}
+						style={{ backgroundColor: bim }}
+						lightTextColor={whiteLight}
+						darkTextColor={whiteDark}
 					/>
 					<ThemedView
 						style={{ flex: 1 }}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					/>
 				</ThemedView>
 
@@ -267,12 +287,12 @@ export default function TransactionsScreen() {
 						alignItems: 'center',
 						gap: 8,
 					}}
-					lightColor={Colors[colorScheme].background}
-					darkColor={Colors[colorScheme].background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedText
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textLight}
+						darkColor={textDark}
 						style={{
 							fontWeight: fontWeight['heading.two'],
 							fontSize: fontSize['heading.two'],
@@ -282,17 +302,17 @@ export default function TransactionsScreen() {
 					</ThemedText>
 					<ThemedView
 						style={{
-							backgroundColor: Colors[colorScheme].lime,
+							backgroundColor: lime,
 							borderRadius: 6,
 							paddingHorizontal: 8,
 							paddingVertical: 4,
 						}}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedText
-							lightColor={Colors.light.white}
-							darkColor={Colors.dark.white}
+							lightColor={whiteLight}
+							darkColor={whiteDark}
 							style={{
 								fontWeight: fontWeight['heading.two'],
 								fontSize: fontSize['heading.two'],
@@ -312,27 +332,27 @@ export default function TransactionsScreen() {
 					marginBottom: 12,
 					flexWrap: 'wrap',
 				}}
-				lightColor={Colors[colorScheme].background}
-				darkColor={Colors[colorScheme].background}
+				lightColor={backgroundLight}
+				darkColor={backgroundDark}
 			>
 				<ThemedButton
 					title={t.exportExcel}
 					onPress={handleExportExcel}
-					style={{ backgroundColor: Colors[colorScheme].lime }}
-					lightTextColor={Colors.light.white}
-					darkTextColor={Colors.dark.white}
+					style={{ backgroundColor: lime }}
+					lightTextColor={whiteLight}
+					darkTextColor={whiteDark}
 				/>
 				<ThemedButton
 					title={t.exportPdf}
 					onPress={handleExportPdf}
-					style={{ backgroundColor: Colors[colorScheme].dangerButton }}
-					lightTextColor={Colors.light.white}
-					darkTextColor={Colors.dark.white}
+					style={{ backgroundColor: dangerButton }}
+					lightTextColor={whiteLight}
+					darkTextColor={whiteDark}
 				/>
 			</ThemedView>
 			<TileContainer
 				id='router-balances'
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{ flexDirection: 'column', boxSizing: 'border-box', padding: 0 }}
 			>
 				{/* Table with horizontal scroll */}
@@ -341,10 +361,7 @@ export default function TransactionsScreen() {
 					showsHorizontalScrollIndicator
 					nestedScrollEnabled
 				>
-					<ThemedView
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
-					>
+					<ThemedView lightColor={backgroundLight} darkColor={backgroundDark}>
 						{/* Header Row */}
 						<ThemedView
 							id='transactions-header'
@@ -355,10 +372,10 @@ export default function TransactionsScreen() {
 								paddingVertical: 10,
 								paddingHorizontal: 5,
 								borderBottomWidth: 1,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.titleBg}
-							darkColor={Colors.dark.titleBg}
+							lightColor={titleBgLight}
+							darkColor={titleBgDark}
 						>
 							{txHeaders.map((col) => (
 								<ThemedText
@@ -372,8 +389,8 @@ export default function TransactionsScreen() {
 										textTransform: 'uppercase',
 										paddingRight: 8,
 									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
+									lightColor={textLight}
+									darkColor={textDark}
 								>
 									{col.label}
 								</ThemedText>
@@ -382,7 +399,7 @@ export default function TransactionsScreen() {
 						<ScrollView
 							style={{
 								flexDirection: 'column',
-								backgroundColor: Colors[colorScheme].background,
+								backgroundColor: background,
 							}}
 							nestedScrollEnabled
 						>
@@ -397,21 +414,19 @@ export default function TransactionsScreen() {
 										gap: 10,
 										alignItems: 'center',
 										backgroundColor:
-											index % 2 === 0
-												? Colors[colorScheme].listItemBackground
-												: Colors[colorScheme].background,
+											index % 2 === 0 ? listItemBackground : background,
 										borderBottomWidth: index < paged.length - 1 ? 1 : 0,
-										borderBottomColor: Colors[colorScheme].borderDark,
+										borderBottomColor: borderDark,
 									}}
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
+									lightColor={backgroundLight}
+									darkColor={backgroundDark}
 								>
 									{/* # */}
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 30, flexShrink: 0 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{(page - 1) * pageSize + index + 1}
 									</ThemedText>
@@ -419,8 +434,8 @@ export default function TransactionsScreen() {
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 120, flexShrink: 0 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{formatAmount(trans.amount, 2)}
 									</ThemedText>
@@ -428,8 +443,8 @@ export default function TransactionsScreen() {
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 120, flexShrink: 0 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{trans.method.type}
 									</ThemedText>
@@ -437,8 +452,8 @@ export default function TransactionsScreen() {
 									<ThemedText
 										style={{ width: 120, flexShrink: 0 }}
 										numberOfLines={1}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{trans.reason}
 									</ThemedText>
@@ -447,21 +462,21 @@ export default function TransactionsScreen() {
 										style={{
 											width: 120,
 											flexShrink: 0,
-											backgroundColor: Colors[colorScheme].actionButton,
+											backgroundColor: actionButton,
 											borderRadius: 2,
 											margin: 0,
 											padding: 0,
 											alignItems: 'center',
 											justifyContent: 'center',
 										}}
-										lightColor={Colors[colorScheme].background}
-										darkColor={Colors[colorScheme].background}
+										lightColor={backgroundLight}
+										darkColor={backgroundDark}
 									>
 										<ThemedText
 											numberOfLines={1}
 											style={{ textAlign: 'center' }}
-											lightColor={Colors.light.white}
-											darkColor={Colors.dark.white}
+											lightColor={whiteLight}
+											darkColor={whiteDark}
 										>
 											{trans.status}
 										</ThemedText>
@@ -470,8 +485,8 @@ export default function TransactionsScreen() {
 									<ThemedText
 										style={{ width: 120, flexShrink: 0 }}
 										numberOfLines={1}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{trans.routerName}
 									</ThemedText>
@@ -479,8 +494,8 @@ export default function TransactionsScreen() {
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 120, flexShrink: 0 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{new Date(trans.date).toLocaleDateString()}
 									</ThemedText>
@@ -497,37 +512,30 @@ export default function TransactionsScreen() {
 						marginTop: 8,
 						alignItems: 'center',
 					}}
-					lightColor={Colors[colorScheme].background}
-					darkColor={Colors[colorScheme].background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedButton
 						title={'Previous'}
 						onPress={handlePrevPage}
 						disabled={page <= 1}
-						darkColor={Colors.dark.background}
-						lightColor={Colors.light.background}
-						lightTextColor={page <= 1 ? Colors.light.mutedText : undefined}
-						darkTextColor={page <= 1 ? Colors.dark.mutedText : undefined}
+						darkColor={backgroundDark}
+						lightColor={backgroundLight}
+						lightTextColor={page <= 1 ? mutedTextLight : undefined}
+						darkTextColor={page <= 1 ? mutedTextDark : undefined}
 						textStyle={{ fontSize: 14 }}
 					/>
-					<ThemedText
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
-					>
+					<ThemedText lightColor={textLight} darkColor={textDark}>
 						{page} / {totalPages}
 					</ThemedText>
 					<ThemedButton
 						title={'Next'}
 						onPress={handleNextPage}
 						disabled={page >= totalPages}
-						darkColor={Colors.dark.background}
-						lightColor={Colors.light.background}
-						lightTextColor={
-							page >= totalPages ? Colors.light.mutedText : undefined
-						}
-						darkTextColor={
-							page >= totalPages ? Colors.dark.mutedText : undefined
-						}
+						darkColor={backgroundDark}
+						lightColor={backgroundLight}
+						lightTextColor={page >= totalPages ? mutedTextLight : undefined}
+						darkTextColor={page >= totalPages ? mutedTextDark : undefined}
 						textStyle={{ fontSize: 14 }}
 					/>
 				</ThemedView>

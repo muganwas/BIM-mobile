@@ -20,7 +20,6 @@ import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedRef } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
 import { fontWeight } from '@/constants/Font';
 import { delay } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -89,6 +88,8 @@ export const ThemedDropdown = ({
 		'background'
 	);
 	const textColor = useThemeColor({}, 'text');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const inputBackground = useThemeColor({}, 'inputBackground');
 	const dropdownAnimVal = useAnimatedValue(0);
 	// On web there's no native animated driver available. Only enable native driver when
 	// running in a true native environment (no document global).
@@ -186,8 +187,8 @@ export const ThemedDropdown = ({
 							{
 								borderWidth: 1,
 								borderRadius: 5,
-								borderColor: Colors[colorScheme].inputBorder,
-								backgroundColor: Colors[colorScheme].inputBackground,
+								borderColor: inputBorder,
+								backgroundColor: inputBackground,
 							},
 						]}
 					>

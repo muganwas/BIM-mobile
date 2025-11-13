@@ -3,7 +3,6 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import TileContainer from '@/components/TileContainer';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
@@ -12,7 +11,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { BackHandler, useColorScheme, View } from 'react-native';
+import { BackHandler, View } from 'react-native';
 
 export default function ProfileScreen() {
 	useTrackHistory('/(authenticated)/profile');
@@ -21,7 +20,6 @@ export default function ProfileScreen() {
 	const updateProfile = (ctx as any).updateProfile as
 		| ((data: { name?: string; email?: string }) => void)
 		| undefined;
-	const colorScheme = useColorScheme() ?? 'light';
 	const { language } = useGeneral();
 	const navigation = useNavigation<any>();
 
@@ -111,7 +109,6 @@ export default function ProfileScreen() {
 					style={{
 						fontSize: fontSize['heading.three'],
 						fontWeight: fontWeight['heading.three'],
-						color: Colors[colorScheme]['heading.one'],
 					}}
 					lightColor={headingOne}
 					darkColor={headingOne}
@@ -123,7 +120,6 @@ export default function ProfileScreen() {
 					style={{
 						fontSize: fontSize['heading.one'],
 						fontWeight: fontWeight['heading.one'],
-						color: Colors[colorScheme].headers,
 						marginTop: 4,
 					}}
 					lightColor={headers}
@@ -132,7 +128,11 @@ export default function ProfileScreen() {
 					{translations[language].categories.auth['profile.details.subtitle']}
 				</ThemedText>
 
-				<ThemedText style={{ color: Colors[colorScheme].text, marginTop: 8 }}>
+				<ThemedText
+					style={{ marginTop: 8 }}
+					lightColor={textColor}
+					darkColor={textColor}
+				>
 					{
 						translations[language].categories.auth[
 							'profile.details.description'
@@ -195,7 +195,6 @@ export default function ProfileScreen() {
 					style={{
 						fontSize: fontSize['heading.three'],
 						fontWeight: fontWeight['heading.three'],
-						color: Colors[colorScheme]['heading.one'],
 					}}
 					lightColor={headingOne}
 					darkColor={headingOne}
@@ -207,7 +206,6 @@ export default function ProfileScreen() {
 					style={{
 						fontSize: fontSize['heading.one'],
 						fontWeight: fontWeight['heading.one'],
-						color: Colors[colorScheme].headers,
 						marginTop: 4,
 					}}
 					lightColor={headers}
@@ -216,7 +214,11 @@ export default function ProfileScreen() {
 					{translations[language].categories.auth['profile.password.subtitle']}
 				</ThemedText>
 
-				<ThemedText style={{ color: Colors[colorScheme].text, marginTop: 8 }}>
+				<ThemedText
+					style={{ marginTop: 8 }}
+					lightColor={textColor}
+					darkColor={textColor}
+				>
 					{
 						translations[language].categories.auth[
 							'profile.password.description'
@@ -288,7 +290,6 @@ export default function ProfileScreen() {
 					style={{
 						fontSize: fontSize['heading.three'],
 						fontWeight: fontWeight['heading.three'],
-						color: Colors[colorScheme]['heading.one'],
 					}}
 					lightColor={headingOne}
 					darkColor={headingOne}
@@ -300,7 +301,6 @@ export default function ProfileScreen() {
 					style={{
 						fontSize: fontSize['heading.one'],
 						fontWeight: fontWeight['heading.one'],
-						color: Colors[colorScheme].headers,
 						marginTop: 4,
 					}}
 					lightColor={headers}
@@ -309,7 +309,11 @@ export default function ProfileScreen() {
 					{translations[language].categories.auth['profile.delete.subtitle']}
 				</ThemedText>
 
-				<ThemedText style={{ color: Colors[colorScheme].text, marginTop: 8 }}>
+				<ThemedText
+					style={{ marginTop: 8 }}
+					lightColor={textColor}
+					darkColor={textColor}
+				>
 					{translations[language].categories.auth['profile.delete.description']}
 				</ThemedText>
 

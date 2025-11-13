@@ -1,6 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
-import { StyleSheet, useColorScheme, ViewStyle } from 'react-native';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { StyleSheet, ViewStyle } from 'react-native';
 
 export default function DashboardTile({
 	id,
@@ -13,17 +13,13 @@ export default function DashboardTile({
 	style?: ViewStyle;
 	children: React.ReactNode;
 }) {
-	const colorScheme = useColorScheme() ?? 'light'; // Default to light mode if color scheme is not set
+	const dayTransactionsBackground = useThemeColor({}, 'dayTransactionsBackground');
 	return (
 		<ThemedView
 			id={id}
 			style={[styles.container, style]}
-			lightColor={
-				backgroundColor || Colors[colorScheme].dayTransactionsBackground
-			}
-			darkColor={
-				backgroundColor || Colors[colorScheme].dayTransactionsBackground
-			}
+			lightColor={backgroundColor || dayTransactionsBackground}
+			darkColor={backgroundColor || dayTransactionsBackground}
 		>
 			{children}
 		</ThemedView>

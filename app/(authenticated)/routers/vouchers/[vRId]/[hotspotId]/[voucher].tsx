@@ -4,12 +4,12 @@ import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { translateWithVariables } from '@/helpers';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import {
 	useFocusEffect,
 	useLocalSearchParams,
@@ -29,7 +29,17 @@ export default function EditVoucherScreen() {
 	};
 	const { language, handleUpdateHistory } = useGeneral();
 	const { routers } = useTransaction();
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
+	// Theme helpers
+	const background = useThemeColor({}, 'background');
+	const backgroundLight = useThemeColor({}, 'background', 'light');
+	const backgroundDark = useThemeColor({}, 'background', 'dark');
+	const yellow = useThemeColor({}, 'yellow');
+	const screenTitleText = useThemeColor({}, 'screenTitleText');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const bim = useThemeColor({}, 'bim');
+	const secondaryButton = useThemeColor({}, 'secondaryButton');
+	const white = useThemeColor({}, 'white');
 	const [profile, setProfile] = useState<string>('');
 	const [username, setUsername] = useState<string>('');
 	const [password, setPassword] = useState<string>('');
@@ -89,8 +99,8 @@ export default function EditVoucherScreen() {
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
-				light: Colors.light.background,
-				dark: Colors.dark.background,
+				light: backgroundLight,
+				dark: backgroundDark,
 			}}
 			contentStyle={{
 				paddingHorizontal: 10,
@@ -99,7 +109,7 @@ export default function EditVoucherScreen() {
 		>
 			<TileContainer
 				id={voucher ?? ''}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{
 					flexDirection: 'column',
 					boxSizing: 'border-box',
@@ -119,12 +129,12 @@ export default function EditVoucherScreen() {
 						justifyContent: 'center',
 						alignItems: 'center',
 					}}
-					lightColor={Colors.light.yellow}
-					darkColor={Colors.dark.yellow}
+					lightColor={yellow}
+					darkColor={yellow}
 				>
 					<ThemedText
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
+						lightColor={screenTitleText}
+						darkColor={screenTitleText}
 						style={{
 							fontSize: fontSize['heading.one'],
 							fontWeight: fontWeight['heading.one'],
@@ -138,8 +148,8 @@ export default function EditVoucherScreen() {
 				</ThemedView>
 				<ThemedView
 					id='router-form'
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 					style={{
 						width: '100%',
 						paddingHorizontal: 20,
@@ -155,9 +165,9 @@ export default function EditVoucherScreen() {
 							fontWeight: fontWeight['heading.two'],
 						}}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
+							backgroundColor: background,
 							borderWidth: 2,
-							borderColor: Colors[colorScheme].inputBorder,
+							borderColor: inputBorder,
 							marginBottom: 10,
 						}}
 					/>
@@ -170,9 +180,9 @@ export default function EditVoucherScreen() {
 							fontWeight: fontWeight['heading.two'],
 						}}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
+							backgroundColor: background,
 							borderWidth: 2,
-							borderColor: Colors[colorScheme].inputBorder,
+							borderColor: inputBorder,
 							marginBottom: 10,
 						}}
 					/>
@@ -185,9 +195,9 @@ export default function EditVoucherScreen() {
 							fontWeight: fontWeight['heading.two'],
 						}}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
+							backgroundColor: background,
 							borderWidth: 2,
-							borderColor: Colors[colorScheme].inputBorder,
+							borderColor: inputBorder,
 							marginBottom: 10,
 						}}
 					/>
@@ -198,17 +208,17 @@ export default function EditVoucherScreen() {
 							gap: 10,
 							marginTop: 10,
 						}}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedButton
 							title={translations[
 								language
 							].categories.buttons.saveChanges.toUpperCase()}
-							lightColor={Colors.light.bim}
-							darkColor={Colors.dark.bim}
-							darkTextColor={Colors.dark.white}
-							lightTextColor={Colors.light.white}
+							lightColor={bim}
+							darkColor={bim}
+							darkTextColor={white}
+							lightTextColor={white}
 							onPress={handleCreateRouter}
 							style={{ flex: 2 }}
 						/>
@@ -216,10 +226,10 @@ export default function EditVoucherScreen() {
 							title={translations[
 								language
 							].categories.buttons.cancel.toUpperCase()}
-							lightColor={Colors.light.secondaryButton}
-							darkColor={Colors.dark.secondaryButton}
-							darkTextColor={Colors.dark.white}
-							lightTextColor={Colors.light.white}
+							lightColor={secondaryButton}
+							darkColor={secondaryButton}
+							darkTextColor={white}
+							lightTextColor={white}
 							onPress={handleCancel}
 							style={{ flex: 1 }}
 						/>

@@ -5,7 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
@@ -31,7 +31,27 @@ export default function HotspotPackagesScreen() {
 	const { hotspotId } = useLocalSearchParams() as { hotspotId?: string };
 	const { handleUpdateHistory, user, language } = useGeneral();
 	const { packages, setPackages, fetchPackages, routers } = useTransaction();
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
+	// Theme helpers
+	const background = useThemeColor({}, 'background');
+	const backgroundLight = useThemeColor({}, 'background', 'light');
+	const backgroundDark = useThemeColor({}, 'background', 'dark');
+	const textLight = useThemeColor({}, 'text', 'light');
+	const textDark = useThemeColor({}, 'text', 'dark');
+	const titleBgLight = useThemeColor({}, 'titleBg', 'light');
+	const titleBgDark = useThemeColor({}, 'titleBg', 'dark');
+	const borderDark = useThemeColor({}, 'borderDark');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const lime = useThemeColor({}, 'lime');
+	const yellow = useThemeColor({}, 'yellow');
+	const error = useThemeColor({}, 'error');
+	const cancelButton = useThemeColor({}, 'cancelButton');
+	const dangerButton = useThemeColor({}, 'dangerButton');
+	const white = useThemeColor({}, 'white');
+	const actionButtonLight = useThemeColor({}, 'actionButton', 'light');
+	const actionButtonDark = useThemeColor({}, 'actionButton', 'dark');
+	const authButtonTextLight = useThemeColor({}, 'authButtonText', 'light');
+	const authButtonTextDark = useThemeColor({}, 'authButtonText', 'dark');
 
 	const [hotspotName, setHotspotName] = useState<string>('');
 	const [showOverlay, setShowOverlay] = useState(false);
@@ -202,20 +222,20 @@ export default function HotspotPackagesScreen() {
 		<>
 			<ParallaxScrollView
 				headerBackgroundColor={{
-					light: Colors.light.background,
-					dark: Colors.dark.background,
+					light: backgroundLight,
+					dark: backgroundDark,
 				}}
 				contentStyle={{ paddingHorizontal: 10 }}
 				containerStyle={{ flex: 1 }}
 			>
 				<ThemedView
 					style={{ flexDirection: 'column', gap: 10, marginBottom: 10 }}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 				>
 					<ThemedText
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textLight}
+						darkColor={textDark}
 						style={{
 							width: '100%',
 							textTransform: 'capitalize',
@@ -230,25 +250,25 @@ export default function HotspotPackagesScreen() {
 					</ThemedText>
 					<ThemedView
 						style={{ width: '100%', alignItems: 'flex-end' }}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedButton
 							title={t.buttons.createNewPackage.toUpperCase()}
 							onPress={handleCreateNew}
 							numberOfLines={1}
 							style={{ borderRadius: 8, width: 230 }}
-							darkColor={Colors.dark.actionButton}
-							lightColor={Colors.light.actionButton}
-							darkTextColor={Colors.dark.authButtonText}
-							lightTextColor={Colors.light.authButtonText}
+							darkColor={actionButtonDark}
+							lightColor={actionButtonLight}
+							darkTextColor={authButtonTextDark}
+							lightTextColor={authButtonTextLight}
 						/>
 					</ThemedView>
 				</ThemedView>
 
 				<TileContainer
 					id={hotspotId || 'hotspot-packages'}
-					backgroundColor={Colors[colorScheme].background}
+					backgroundColor={background}
 					style={{
 						flexDirection: 'column',
 						boxSizing: 'border-box',
@@ -263,8 +283,8 @@ export default function HotspotPackagesScreen() {
 					>
 						<ThemedView
 							style={{ flexDirection: 'column' }}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={backgroundLight}
+							darkColor={backgroundDark}
 						>
 							<ThemedView
 								id={`hotspot-packages-header-${hotspotId}`}
@@ -275,10 +295,10 @@ export default function HotspotPackagesScreen() {
 									paddingHorizontal: 10,
 									paddingVertical: 10,
 									borderBottomWidth: 1,
-									borderBottomColor: Colors[colorScheme].borderDark,
+									borderBottomColor: borderDark,
 								}}
-								lightColor={Colors.light.titleBg}
-								darkColor={Colors.dark.titleBg}
+								lightColor={titleBgLight}
+								darkColor={titleBgDark}
 							>
 								{headers.map((col) => (
 									<ThemedText
@@ -292,8 +312,8 @@ export default function HotspotPackagesScreen() {
 											paddingRight: 8,
 											...(col.textAlign ? { textAlign: col.textAlign } : {}),
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{col.label}
 									</ThemedText>
@@ -303,7 +323,7 @@ export default function HotspotPackagesScreen() {
 								nativeID={`hotspot-packages-details-${hotspotId}`}
 								style={{
 									flexDirection: 'column',
-									backgroundColor: Colors[colorScheme].background,
+									backgroundColor: background,
 								}}
 							>
 								{packages.map((p, index) => (
@@ -319,43 +339,43 @@ export default function HotspotPackagesScreen() {
 											justifyContent: 'space-between',
 											backgroundColor:
 												index % 2 === 0
-													? Colors[colorScheme].listItemBackground
-													: Colors[colorScheme].background,
+													? listItemBackground
+													: background,
 											borderBottomWidth: index < packages.length - 1 ? 1 : 0,
-											borderBottomColor: Colors[colorScheme].borderDark,
+											borderBottomColor: borderDark,
 										}}
-										lightColor={Colors.light.background}
-										darkColor={Colors.dark.background}
+										lightColor={backgroundLight}
+										darkColor={backgroundDark}
 									>
 										<ThemedText
 											numberOfLines={1}
 											style={styles.colInfo}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textLight}
+											darkColor={textDark}
 										>
 											{p.tag}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
 											style={styles.colInfo}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textLight}
+											darkColor={textDark}
 										>
 											{p.usersPerDevice}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
 											style={styles.colInfo}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textLight}
+											darkColor={textDark}
 										>
 											{p.bandwidth}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
 											style={styles.colInfo}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textLight}
+											darkColor={textDark}
 										>
 											{p.duration}
 										</ThemedText>
@@ -376,7 +396,7 @@ export default function HotspotPackagesScreen() {
 												<IconSymbol
 													name='eye.outline'
 													size={20}
-													color={Colors[colorScheme].lime}
+													color={lime}
 												/>
 											</TouchableOpacity>
 											<TouchableOpacity
@@ -386,7 +406,7 @@ export default function HotspotPackagesScreen() {
 												<IconSymbol
 													name='edit.outline'
 													size={20}
-													color={Colors[colorScheme].yellow}
+													color={yellow}
 												/>
 											</TouchableOpacity>
 											<TouchableOpacity
@@ -396,7 +416,7 @@ export default function HotspotPackagesScreen() {
 												<IconSymbol
 													name='delete.outline'
 													size={20}
-													color={Colors[colorScheme].error}
+													color={error}
 												/>
 											</TouchableOpacity>
 										</ThemedView>
@@ -426,17 +446,17 @@ export default function HotspotPackagesScreen() {
 				visible={showPrompt}
 				title={t.dashboard.confirmDeleteTitle}
 				message={t.packages.deleteMessage}
-				buttons={[
+					buttons={[
 					{
 						title: t.buttons.cancel,
-						color: Colors[colorScheme].cancelButton,
-						textColor: Colors[colorScheme].white,
+						color: cancelButton,
+						textColor: white,
 						action: () => setShowPrompt(false),
 					},
 					{
 						title: t.buttons.delete,
-						color: Colors[colorScheme].dangerButton,
-						textColor: Colors[colorScheme].white,
+						color: dangerButton,
+						textColor: white,
 						action: confirmDelete,
 					},
 				]}

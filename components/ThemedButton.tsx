@@ -2,7 +2,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import {
@@ -43,20 +42,8 @@ export function ThemedButton({
 	disabled,
 }: ThemedButtonProps) {
 	const colorScheme = useColorScheme() ?? 'light';
-	const presetBg = useThemeColor(
-		{
-			light: Colors[colorScheme].tint,
-			dark: Colors[colorScheme].tint,
-		},
-		'background'
-	);
-	const presetTxtColor = useThemeColor(
-		{
-			light: Colors[colorScheme].text,
-			dark: Colors[colorScheme].text,
-		},
-		'text'
-	);
+	const presetBg = useThemeColor({}, 'tint');
+	const presetTxtColor = useThemeColor({}, 'text');
 	const userSetBg = colorScheme === 'dark' ? darkColor : lightColor;
 	const backgroundColor = userSetBg ? userSetBg : presetBg;
 

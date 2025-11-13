@@ -1,5 +1,5 @@
 import bimTextImg from '@/assets/images/bim-text-img.png';
-import { Colors } from '@/constants/Colors';
+import { useThemeColor } from '@/hooks/useThemeColor';
 // @ts-ignore - some versions of @react-navigation/drawer may or may not export useDrawerStatus types
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { useEffect } from 'react';
@@ -38,8 +38,8 @@ export default function Header({
 	}, [drawerStatus, arrowAnimValue]);
 	return (
 		<ThemedView
-			lightColor={Colors['light'].headerBackground}
-			darkColor={Colors['dark'].headerBackground}
+			lightColor={useThemeColor({}, 'headerBackground')}
+			darkColor={useThemeColor({}, 'headerBackground')}
 			style={{
 				flexDirection: 'row',
 				flexWrap: 'nowrap',
@@ -67,7 +67,7 @@ export default function Header({
 					<IconSymbol
 						name='doubleRight'
 						size={24}
-						color={Colors['light'].text}
+						color={useThemeColor({}, 'text')}
 					/>
 				</Animated.View>
 			</TouchableOpacity>

@@ -150,6 +150,32 @@ export default function Header({
 
 	const headingOneColor = useThemeColor({}, 'heading.one');
 
+	// Theme-aware color helpers (replace direct Colors[...] usages)
+	const headerBackground = useThemeColor({}, 'headerBackground');
+	const textColor = useThemeColor({}, 'text');
+	const headerIcons = useThemeColor({}, 'headerIcons');
+	const inputBackground = useThemeColor({}, 'inputBackground');
+	const headerDropdownBackground = useThemeColor(
+		{},
+		'headerDropdownBackground'
+	);
+	const borderColor = useThemeColor({}, 'border');
+	const languageButtonBackground = useThemeColor(
+		{},
+		'languageButtonBackground'
+	);
+	const notificationsCountBackground = useThemeColor(
+		{},
+		'notificationsCountBackground'
+	);
+	const notificationsCountColor = useThemeColor({}, 'notificationsCount');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const bimColor = useThemeColor({}, 'bim');
+	const authButtonText = useThemeColor({}, 'authButtonText');
+	const focusedInput = useThemeColor({}, 'focusedInput');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const background = useThemeColor({}, 'background');
+
 	const toggleProfile = useCallback(
 		(v?: boolean) => {
 			setShowProfile((prev) => {
@@ -210,8 +236,8 @@ export default function Header({
 
 	return (
 		<ThemedView
-			lightColor={Colors[colorScheme].headerBackground}
-			darkColor={Colors[colorScheme].headerBackground}
+			lightColor={headerBackground}
+			darkColor={headerBackground}
 			style={[styles.container]}
 		>
 			<Animated.View
@@ -226,7 +252,7 @@ export default function Header({
 					<IconSymbol
 						name={goback ? 'chevron.left' : 'menu'}
 						size={24}
-						color={Colors[colorScheme].text}
+						color={textColor}
 						style={{ marginRight: 10 }}
 					/>
 				</TouchableOpacity>
@@ -240,7 +266,7 @@ export default function Header({
 					<IconSymbol
 						name='search.outline'
 						size={24}
-						color={Colors[colorScheme].headerIcons}
+						color={headerIcons}
 						style={{ marginRight: 10 }}
 					/>
 				</TouchableOpacity>
@@ -257,15 +283,15 @@ export default function Header({
 				}}
 			>
 				<ThemedInput
-					lightColor={Colors[colorScheme].text}
-					darkColor={Colors[colorScheme].text}
+					lightColor={textColor}
+					darkColor={textColor}
 					containerStyle={{ height: 40, flex: 1, marginLeft: 10 }}
 					style={{
 						display: showSearchInput ? 'flex' : 'none',
 						fontSize: fontSize['text.medium'],
 						height: 40,
 						paddingVertical: 0,
-						backgroundColor: Colors[colorScheme].inputBackground,
+						backgroundColor: inputBackground,
 					}}
 					placeholder='Search...'
 					value={searchValue}
@@ -293,7 +319,7 @@ export default function Header({
 					<IconSymbol
 						name='translate'
 						size={24}
-						color={Colors[colorScheme].headerIcons}
+						color={headerIcons}
 						style={{ marginRight: 10 }}
 					/>
 				</TouchableOpacity>
@@ -310,14 +336,14 @@ export default function Header({
 						<IconSymbol
 							name='notifications.outline.badge'
 							size={24}
-							color={Colors[colorScheme].headerIcons}
+							color={headerIcons}
 							style={{ marginRight: 10 }}
 						/>
 					) : (
 						<IconSymbol
 							name='notifications.outline'
 							size={24}
-							color={Colors[colorScheme].headerIcons}
+							color={headerIcons}
 							style={{ marginRight: 10 }}
 						/>
 					)}

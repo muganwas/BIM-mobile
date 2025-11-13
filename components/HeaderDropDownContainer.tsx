@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/Colors';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,6 +17,7 @@ export default function DropdownContainer({
 	const insets = useSafeAreaInsets();
 	const visibilityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const colorScheme = useColorScheme() ?? 'light';
+	const background = useThemeColor({}, 'background');
 	const [localVisible, setLocalVisible] = useState(false);
 	useEffect(() => {
 		visibilityTimeoutRef.current = setTimeout(() => {
@@ -45,7 +46,7 @@ export default function DropdownContainer({
 				left: 10,
 				right: 10,
 				top: 60 + insets.top,
-				backgroundColor: Colors[colorScheme].background,
+				backgroundColor: background,
 				padding: 10,
 				borderRadius: 10,
 				shadowColor: '#000',

@@ -2,17 +2,17 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { generateRandomInt, msToHms } from '@/helpers';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { NetRouter } from '@/types';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function RouterDetailsScreen() {
@@ -21,7 +21,21 @@ export default function RouterDetailsScreen() {
 	const { routerId } = useLocalSearchParams() as { routerId?: string };
 	const { handleUpdateHistory, language } = useGeneral();
 	const { routers } = useTransaction();
-	const colorScheme = useColorScheme() ?? 'light';
+	// Theme helpers
+	const background = useThemeColor({}, 'background');
+	const backgroundLight = useThemeColor({}, 'background', 'light');
+	const backgroundDark = useThemeColor({}, 'background', 'dark');
+	const headingOneLight = useThemeColor({}, 'heading.one', 'light');
+	const headingOneDark = useThemeColor({}, 'heading.one', 'dark');
+	const textLight = useThemeColor({}, 'text', 'light');
+	const textDark = useThemeColor({}, 'text', 'dark');
+	const titleBgLight = useThemeColor({}, 'titleBg', 'light');
+	const titleBgDark = useThemeColor({}, 'titleBg', 'dark');
+	const borderDark = useThemeColor({}, 'borderDark');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const bim = useThemeColor({}, 'bim');
+	const whiteLight = useThemeColor({}, 'white', 'light');
+	const whiteDark = useThemeColor({}, 'white', 'dark');
 	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
 
 	// Seed parent immediately on mount to guarantee ordering before current route push
@@ -58,8 +72,8 @@ export default function RouterDetailsScreen() {
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
-				light: Colors.light.background,
-				dark: Colors.dark.background,
+				light: backgroundLight,
+				dark: backgroundDark,
 			}}
 			contentStyle={{
 				paddingHorizontal: 10,
@@ -68,7 +82,7 @@ export default function RouterDetailsScreen() {
 		>
 			<TileContainer
 				id={routerId || 'new-router'}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{
 					flexDirection: 'column',
 					boxSizing: 'border-box',
@@ -78,8 +92,8 @@ export default function RouterDetailsScreen() {
 				}}
 			>
 				<ThemedView
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 					style={{ flexDirection: 'column' }}
 				>
 					<ThemedText
@@ -88,8 +102,8 @@ export default function RouterDetailsScreen() {
 							fontWeight: fontWeight['heading.two'],
 							marginBottom: 10,
 						}}
-						lightColor={Colors.light['heading.one']}
-						darkColor={Colors.dark['heading.one']}
+						lightColor={headingOneLight}
+						darkColor={headingOneDark}
 					>
 						{translations[language].categories.routers.routerHash}
 					</ThemedText>
@@ -98,7 +112,7 @@ export default function RouterDetailsScreen() {
 			</TileContainer>
 			<TileContainer
 				id={routerId || 'new-router-' + generateRandomInt(1000, 9999)}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{
 					flexDirection: 'column',
 					boxSizing: 'border-box',
@@ -108,8 +122,8 @@ export default function RouterDetailsScreen() {
 				}}
 			>
 				<ThemedView
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 					style={{ flexDirection: 'column', padding: 10 }}
 				>
 					<ThemedText
@@ -118,19 +132,19 @@ export default function RouterDetailsScreen() {
 							fontWeight: fontWeight['heading.two'],
 							marginBottom: 10,
 						}}
-						lightColor={Colors.light['heading.one']}
-						darkColor={Colors.dark['heading.one']}
+						lightColor={headingOneLight}
+						darkColor={headingOneDark}
 					>
 						{translations[language].categories.routers.routerStatus}
 					</ThemedText>
 					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 						style={{ flexDirection: 'row', alignItems: 'center' }}
 					>
 						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
+							lightColor={textLight}
+							darkColor={textDark}
 							style={styles.statusLabel}
 						>
 							{`${translations[language].categories.routers.uptime}:`}
@@ -141,13 +155,13 @@ export default function RouterDetailsScreen() {
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 						style={{ flexDirection: 'row', alignItems: 'center' }}
 					>
 						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
+							lightColor={textLight}
+							darkColor={textDark}
 							style={styles.statusLabel}
 						>
 							{`${translations[language].categories.routers.routerOS}:`}
@@ -157,13 +171,13 @@ export default function RouterDetailsScreen() {
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 						style={{ flexDirection: 'row', alignItems: 'center' }}
 					>
 						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
+							lightColor={textLight}
+							darkColor={textDark}
 							style={styles.statusLabel}
 						>
 							{`${translations[language].categories.routers.freeMemory}:`}
@@ -173,13 +187,13 @@ export default function RouterDetailsScreen() {
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 						style={{ flexDirection: 'row', alignItems: 'center' }}
 					>
 						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
+							lightColor={textLight}
+							darkColor={textDark}
 							style={styles.statusLabel}
 						>
 							{`${translations[language].categories.routers.totalMemory}:`}
@@ -189,13 +203,13 @@ export default function RouterDetailsScreen() {
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 						style={{ flexDirection: 'row', alignItems: 'center' }}
 					>
 						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
+							lightColor={textLight}
+							darkColor={textDark}
 							style={styles.statusLabel}
 						>
 							{`${translations[language].categories.routers.cpuFrequency}:`}
@@ -205,13 +219,13 @@ export default function RouterDetailsScreen() {
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 						style={{ flexDirection: 'row', alignItems: 'center' }}
 					>
 						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
+							lightColor={textLight}
+							darkColor={textDark}
 							style={styles.statusLabel}
 						>
 							{`${translations[language].categories.routers.cpuLoad}:`}
@@ -224,7 +238,7 @@ export default function RouterDetailsScreen() {
 			</TileContainer>
 			<TileContainer
 				id={routerId || 'new-router-' + generateRandomInt(1000, 9999)}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={background}
 				style={{
 					flexDirection: 'column',
 					boxSizing: 'border-box',
@@ -234,8 +248,8 @@ export default function RouterDetailsScreen() {
 				}}
 			>
 				<ThemedView
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
 					style={{
 						flexDirection: 'row',
 						paddingHorizontal: 10,
@@ -243,13 +257,13 @@ export default function RouterDetailsScreen() {
 					}}
 				>
 					<ThemedText
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textLight}
+						darkColor={textDark}
 						numberOfLines={1}
 					>
 						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
+							lightColor={textLight}
+							darkColor={textDark}
 							style={{
 								fontWeight: fontWeight['heading.three'],
 								fontSize: fontSize['heading.two'],
@@ -258,8 +272,8 @@ export default function RouterDetailsScreen() {
 							{`${translations[language].categories.routers.hotspotsTitle}: `}
 						</ThemedText>
 						<ThemedText
-							lightColor={Colors.light.text}
-							darkColor={Colors.dark.text}
+							lightColor={textLight}
+							darkColor={textDark}
 							style={{
 								fontWeight: fontWeight['heading.two'],
 								fontSize: fontSize['heading.two'],
@@ -276,8 +290,8 @@ export default function RouterDetailsScreen() {
 				>
 					<ThemedView
 						style={{ flexDirection: 'column' }}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={backgroundLight}
+						darkColor={backgroundDark}
 					>
 						<ThemedView
 							id={`hotspot-list-header-${routerId}`}
@@ -288,15 +302,15 @@ export default function RouterDetailsScreen() {
 								paddingHorizontal: 10,
 								paddingVertical: 10,
 								borderBottomWidth: 1,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.titleBg}
-							darkColor={Colors.dark.titleBg}
+							lightColor={titleBgLight}
+							darkColor={titleBgDark}
 						>
 							<ThemedText
 								style={{ width: 30 }}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.routers.id}
 							</ThemedText>
@@ -304,8 +318,8 @@ export default function RouterDetailsScreen() {
 								numberOfLines={1}
 								ellipsizeMode='tail'
 								style={styles.colTitle}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.routers.hotspotName}
 							</ThemedText>
@@ -313,8 +327,8 @@ export default function RouterDetailsScreen() {
 								numberOfLines={1}
 								ellipsizeMode='tail'
 								style={styles.colTitle}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.routers.interface}
 							</ThemedText>
@@ -322,8 +336,8 @@ export default function RouterDetailsScreen() {
 								numberOfLines={1}
 								ellipsizeMode='tail'
 								style={styles.colTitle}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.routers.profile}
 							</ThemedText>
@@ -331,8 +345,8 @@ export default function RouterDetailsScreen() {
 								numberOfLines={1}
 								ellipsizeMode='tail'
 								style={styles.colTitle}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.routers.status}
 							</ThemedText>
@@ -340,8 +354,8 @@ export default function RouterDetailsScreen() {
 								numberOfLines={1}
 								ellipsizeMode='tail'
 								style={[styles.colTitle, { textAlign: 'center' }]}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textLight}
+								darkColor={textDark}
 							>
 								{translations[language].categories.routers.actions}
 							</ThemedText>
@@ -350,7 +364,7 @@ export default function RouterDetailsScreen() {
 							nativeID={`hotspot-list-details-${routerId}`}
 							style={{
 								flexDirection: 'column',
-								backgroundColor: Colors[colorScheme].background,
+								backgroundColor: background,
 							}}
 						>
 							{netRouter?.networkInfo.hotspots.map((hotspot, index) => (
@@ -364,14 +378,12 @@ export default function RouterDetailsScreen() {
 										paddingHorizontal: 10,
 										justifyContent: 'space-between',
 										backgroundColor:
-											index % 2 === 0
-												? Colors[colorScheme].listItemBackground
-												: Colors[colorScheme].background,
+											index % 2 === 0 ? listItemBackground : background,
 										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
-										borderBottomColor: Colors[colorScheme].borderDark,
+										borderBottomColor: borderDark,
 									}}
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
+									lightColor={backgroundLight}
+									darkColor={backgroundDark}
 								>
 									<ThemedText
 										numberOfLines={1}
@@ -380,40 +392,40 @@ export default function RouterDetailsScreen() {
 											overflow: 'hidden',
 											paddingRight: 8,
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{index + 1}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
 										style={styles.colInfo}
-										lightColor={Colors.light.bim}
-										darkColor={Colors.dark.bim}
+										lightColor={bim}
+										darkColor={bim}
 									>
 										{hotspot.ssid}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
 										style={styles.colInfo}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{hotspot.interface}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
 										style={styles.colInfo}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{hotspot.profile}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
 										style={styles.colInfo}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textLight}
+										darkColor={textDark}
 									>
 										{hotspot.status}
 									</ThemedText>
@@ -424,22 +436,19 @@ export default function RouterDetailsScreen() {
 											gap: 5,
 											width: 120,
 										}}
-										lightColor={Colors.light.background}
-										darkColor={Colors.dark.background}
+										lightColor={backgroundLight}
+										darkColor={backgroundDark}
 									>
 										<TouchableOpacity
 											style={{
-												backgroundColor: Colors[colorScheme].bim,
+												backgroundColor: bim,
 												paddingVertical: 6,
 												paddingHorizontal: 12,
 												borderRadius: 8,
 											}}
 											onPress={() => handleViewHotspotUsers(hotspot.id)}
 										>
-											<ThemedText
-												lightColor={Colors.light.white}
-												darkColor={Colors.dark.white}
-											>
+											<ThemedText lightColor={whiteLight} darkColor={whiteDark}>
 												{translations[language].categories.buttons.viewUsers}
 											</ThemedText>
 										</TouchableOpacity>
