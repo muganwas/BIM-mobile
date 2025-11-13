@@ -561,7 +561,6 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				return;
 			}
 			const resJson = await res.json();
-			console.info('OTP verify response data:', resJson);
 			// If backend requests TOTP setup, store the setup payload and navigate to the setup screen
 			if (resJson && (resJson.qr || resJson.setup_token || resJson.qr_base64)) {
 				setPending2FASetup({

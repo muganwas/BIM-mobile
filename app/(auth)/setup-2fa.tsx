@@ -1,3 +1,5 @@
+import bimTextImg from '@/assets/images/bim-text-img.png';
+import FormContainer from '@/components/FormContainer';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
@@ -9,8 +11,16 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+	findNodeHandle,
+	Image,
+	Platform,
+	ScrollView,
+	StyleSheet,
+	TextInput,
+	View,
+} from 'react-native';
 
 export default function Setup2FAScreen() {
 	const {
@@ -21,8 +31,11 @@ export default function Setup2FAScreen() {
 		handleVerify2FA,
 	} = useGeneral();
 	const router = useRouter();
+	const scrollRef = useRef<any>(null);
+	const [focusedInput, setFocusedInput] = useState<string | null>(null);
 	const bg = useThemeColor({}, 'background');
 	const textColor = useThemeColor({}, 'text');
+	const authButtonText = useThemeColor({}, 'authButtonText');
 	const inputBackground = useThemeColor({}, 'inputBackground');
 	const bim = useThemeColor({}, 'bim');
 	const [code, setCode] = useState('');
@@ -126,121 +139,172 @@ export default function Setup2FAScreen() {
 		}
 	};
 
+	useEffect(() => {
+		if (!focusedInput || !scrollRef.current) return;
+		const responder: any =
+			(scrollRef.current as any)?.getScrollResponder?.() ?? scrollRef.current;
+		if (!responder?.scrollResponderScrollNativeHandleToKeyboard) return;
+		const doScroll = () => {
+			try {
+				const TI: any = TextInput as any;
+				let focused: any = null;
+				if (TI?.State && typeof TI.State.currentlyFocusedInput === 'function') {
+					focused = TI.State.currentlyFocusedInput();
+				} else if (typeof TI?.currentlyFocusedInput === 'function') {
+					focused = TI.currentlyFocusedInput();
+				}
+				if (!focused) return;
+				const handle = findNodeHandle(focused);
+				if (!handle) return;
+				responder.scrollResponderScrollNativeHandleToKeyboard(handle, 80, true);
+			} catch {}
+		};
+		doScroll();
+		const t1 = setTimeout(doScroll, 60);
+		const t2 = setTimeout(doScroll, 140);
+		return () => {
+			clearTimeout(t1);
+			clearTimeout(t2);
+		};
+	}, [focusedInput]);
+
 	return (
-		<ThemedView style={styles.container} lightColor={bg} darkColor={bg}>
-			<ScrollView contentContainerStyle={styles.inner}>
-				<ThemedText style={styles.title}>
-					{translations[language].categories.auth['setupAuthenticator'] ??
-						'Set up authenticator'}
-				</ThemedText>
-				<ThemedText style={[styles.subtitle, { color: textColor }]}>
-					{translations[language].categories.auth[
-						'setupAuthenticator.subtitle'
-					] ??
-						'Scan the QR code below with your authenticator app such as Google Authenticator or Authy, or copy the secret and add it manually.'}
-				</ThemedText>
-
-				{qrUri ? (
-					<View style={styles.qrWrap}>
-						<Image source={{ uri: qrUri }} style={styles.qr} />
-					</View>
-				) : (
-					<ThemedText style={styles.noQr}>
-						{translations[language].categories.auth['setupAuthenticator.noQr']}
+		<FormContainer
+			style={styles.container}
+			behavior={Platform.OS === 'ios' ? 'position' : 'padding'}
+		>
+			<ThemedView style={styles.container} lightColor={bg} darkColor={bg}>
+				<ScrollView ref={scrollRef} contentContainerStyle={styles.inner}>
+					<ThemedView style={styles.header} lightColor={bg} darkColor={bg}>
+						<Image
+							source={bimTextImg}
+							style={{ height: 35, resizeMode: 'contain' }}
+						/>
+					</ThemedView>
+					<ThemedText style={styles.title}>
+						{translations[language].categories.auth['setupAuthenticator'] ??
+							'Set up authenticator'}
 					</ThemedText>
-				)}
+					<ThemedText style={[styles.subtitle, { color: textColor }]}>
+						{translations[language].categories.auth[
+							'setupAuthenticator.subtitle'
+						] ??
+							'Scan the QR code below with your authenticator app such as Google Authenticator or Authy, or copy the secret and add it manually.'}
+					</ThemedText>
 
-				<ThemedView
-					style={styles.secretBox}
-					lightColor={inputBackground}
-					darkColor={inputBackground}
-				>
-					<ThemedText style={[styles.secretLabel, { color: textColor }]}>
+					{qrUri ? (
+						<View style={styles.qrWrap}>
+							<Image source={{ uri: qrUri }} style={styles.qr} />
+						</View>
+					) : (
+						<ThemedText style={styles.noQr}>
+							{
+								translations[language].categories.auth[
+									'setupAuthenticator.noQr'
+								]
+							}
+						</ThemedText>
+					)}
+
+					<ThemedView
+						style={styles.secretBox}
+						lightColor={inputBackground}
+						darkColor={inputBackground}
+					>
+						<ThemedText style={[styles.secretLabel, { color: textColor }]}>
+							{
+								translations[language].categories.auth[
+									'setupAuthenticator.secretLabel'
+								]
+							}
+						</ThemedText>
+						<ThemedText style={styles.secretValue}>
+							{pending2FASetup?.secret ?? '—'}
+						</ThemedText>
+					</ThemedView>
+
+					<ThemedInput
+						style={{
+							width: '100%',
+							marginTop: 12,
+							backgroundColor: inputBackground,
+							color: textColor,
+						}}
+						lightColor={textColor}
+						darkColor={textColor}
+						value={code}
+						onFocus={() => setFocusedInput('code')}
+						onBlur={() => setFocusedInput(null)}
+						setValue={(v: string) => {
+							if (v.length <= 6 && !isNaN(Number(v))) setCode(v);
+						}}
+						placeholder={
+							translations[language].categories.auth[
+								'setupAuthenticator.enterCodePlaceholder'
+							]
+						}
+						placeholderTextColor={textColor}
+						keyboardType='number-pad'
+					/>
+
+					<ThemedView style={{ gap: 12, width: '100%', marginTop: 20 }}>
+						<ThemedButton
+							title={
+								translations[language].categories.auth[
+									'setupAuthenticator.copy'
+								]
+							}
+							textStyle={{ color: authButtonText }}
+							onPress={handleCopySecret}
+						/>
+						<ThemedButton
+							title={
+								loading
+									? translations[language].categories.buttons?.['loading'] ??
+									  'Verifying...'
+									: translations[language].categories.auth[
+											'setupAuthenticator.verify'
+									  ]
+							}
+							onPress={handleOnVerify2FA}
+							textStyle={{ color: authButtonText }}
+							lightColor={bim}
+							darkColor={bim}
+							disabled={loading}
+						/>
+						<ThemedButton
+							title={
+								translations[language].categories.auth[
+									'setupAuthenticator.continue'
+								]
+							}
+							textStyle={{ color: authButtonText }}
+							onPress={handleContinue}
+						/>
+					</ThemedView>
+
+					<ThemedText style={styles.instructionsTitle}>
 						{
 							translations[language].categories.auth[
-								'setupAuthenticator.secretLabel'
+								'setupAuthenticator.howToTitle'
 							]
 						}
 					</ThemedText>
-					<ThemedText style={styles.secretValue}>
-						{pending2FASetup?.secret ?? '—'}
+					<ThemedText style={styles.instructions}>
+						{translations[language].categories.auth['setupAuthenticator.step1']}
 					</ThemedText>
-				</ThemedView>
-
-				<ThemedInput
-					style={{
-						width: '100%',
-						marginTop: 12,
-						backgroundColor: inputBackground,
-						color: textColor,
-					}}
-					lightColor={textColor}
-					darkColor={textColor}
-					value={code}
-					setValue={(v: string) => {
-						if (v.length <= 6 && !isNaN(Number(v))) setCode(v);
-					}}
-					placeholder={
-						translations[language].categories.auth[
-							'setupAuthenticator.enterCodePlaceholder'
-						]
-					}
-					placeholderTextColor={textColor}
-					keyboardType='number-pad'
-				/>
-
-				<ThemedView style={{ gap: 12, width: '100%', marginTop: 20 }}>
-					<ThemedButton
-						title={
-							translations[language].categories.auth['setupAuthenticator.copy']
-						}
-						onPress={handleCopySecret}
-					/>
-					<ThemedButton
-						title={
-							loading
-								? translations[language].categories.buttons?.['loading'] ??
-								  'Verifying...'
-								: translations[language].categories.auth[
-										'setupAuthenticator.verify'
-								  ]
-						}
-						onPress={handleOnVerify2FA}
-						lightColor={bim}
-						darkColor={bim}
-						disabled={loading}
-					/>
-					<ThemedButton
-						title={
-							translations[language].categories.auth[
-								'setupAuthenticator.continue'
-							]
-						}
-						onPress={handleContinue}
-					/>
-				</ThemedView>
-
-				<ThemedText style={styles.instructionsTitle}>
-					{
-						translations[language].categories.auth[
-							'setupAuthenticator.howToTitle'
-						]
-					}
-				</ThemedText>
-				<ThemedText style={styles.instructions}>
-					{translations[language].categories.auth['setupAuthenticator.step1']}
-				</ThemedText>
-				<ThemedText style={styles.instructions}>
-					{translations[language].categories.auth['setupAuthenticator.step2']}
-				</ThemedText>
-				<ThemedText style={styles.instructions}>
-					{translations[language].categories.auth['setupAuthenticator.step3']}
-				</ThemedText>
-				<ThemedText style={styles.instructions}>
-					{translations[language].categories.auth['setupAuthenticator.step4']}
-				</ThemedText>
-			</ScrollView>
-		</ThemedView>
+					<ThemedText style={styles.instructions}>
+						{translations[language].categories.auth['setupAuthenticator.step2']}
+					</ThemedText>
+					<ThemedText style={styles.instructions}>
+						{translations[language].categories.auth['setupAuthenticator.step3']}
+					</ThemedText>
+					<ThemedText style={styles.instructions}>
+						{translations[language].categories.auth['setupAuthenticator.step4']}
+					</ThemedText>
+				</ScrollView>
+			</ThemedView>
+		</FormContainer>
 	);
 }
 
@@ -248,6 +312,12 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		paddingTop: 20,
+	},
+	header: {
+		width: '100%',
+		justifyContent: 'center',
+		alignItems: 'center',
+		paddingVertical: 20,
 	},
 	inner: {
 		alignItems: 'center',
