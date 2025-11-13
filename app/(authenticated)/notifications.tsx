@@ -1,30 +1,34 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { StyleSheet } from 'react-native';
 
 export default function NotificationsScreen() {
 	useTrackHistory('/(authenticated)/notifications');
 	const { notifications, language } = useGeneral(); // Get notifications from context
+
+	const bg = useThemeColor({}, 'background');
+	const headers = useThemeColor({}, 'headers');
+	const inputContainerBackground = useThemeColor(
+		{},
+		'inputContainerBackground'
+	);
+	const textColor = useThemeColor({}, 'text');
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
-				light: Colors.light.background,
-				dark: Colors.dark.background,
+				light: bg,
+				dark: bg,
 			}}
 			containerStyle={{ flex: 1 }}
 			contentStyle={{ padding: 16 }}
 		>
-			<ThemedText
-				style={styles.title}
-				lightColor={Colors.light.headers}
-				darkColor={Colors.dark.headers}
-			>
+			<ThemedText style={styles.title} lightColor={headers} darkColor={headers}>
 				{translations[language].categories.notifications['title']}
 			</ThemedText>
 			<ThemedView style={styles.notificationsList}>
@@ -33,20 +37,20 @@ export default function NotificationsScreen() {
 						<ThemedView
 							key={index}
 							style={styles.notificationItem}
-							lightColor={Colors.light.inputContainerBackground}
-							darkColor={Colors.dark.inputContainerBackground}
+							lightColor={inputContainerBackground}
+							darkColor={inputContainerBackground}
 						>
 							<ThemedText
 								style={styles.notificationTitle}
-								lightColor={Colors.light.headers}
-								darkColor={Colors.dark.headers}
+								lightColor={headers}
+								darkColor={headers}
 							>
 								{notification.title}
 							</ThemedText>
 							<ThemedText
 								style={styles.notificationMessage}
-								lightColor={Colors.light.text}
-								darkColor={Colors.dark.text}
+								lightColor={textColor}
+								darkColor={textColor}
 							>
 								{notification.message}
 							</ThemedText>
@@ -55,8 +59,8 @@ export default function NotificationsScreen() {
 				) : (
 					<ThemedText
 						style={styles.noNotifications}
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textColor}
+						darkColor={textColor}
 					>
 						{translations[language].categories.notifications['noNotifications']}
 					</ThemedText>

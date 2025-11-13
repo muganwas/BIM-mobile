@@ -4,9 +4,9 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { useEffect, useRef, useState } from 'react';
 import {
 	Animated,
@@ -35,8 +35,14 @@ export default function WithdrawFunds({
 	onCancel,
 	onInitiate,
 }: Props) {
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
 	const { language } = useGeneral();
+	const bg = useThemeColor({}, 'background');
+	const screenTitleText = useThemeColor({}, 'screenTitleText');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const cancelButton = useThemeColor({}, 'cancelButton');
+	const bim = useThemeColor({}, 'bim');
+	const white = useThemeColor({}, 'white');
 
 	const [amount, setAmount] = useState('');
 	const [phone, setPhone] = useState('');
@@ -90,15 +96,11 @@ export default function WithdrawFunds({
 				behavior={Platform.OS === 'ios' ? 'padding' : undefined}
 				style={styles.kbContainer}
 			>
-				<ThemedView
-					style={styles.card}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
-				>
+				<ThemedView style={styles.card} lightColor={bg} darkColor={bg}>
 					<ThemedText
 						style={styles.title}
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
+						lightColor={screenTitleText}
+						darkColor={screenTitleText}
 					>
 						{title}
 					</ThemedText>
@@ -114,8 +116,8 @@ export default function WithdrawFunds({
 						value={amount}
 						setValue={setAmount}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
+							backgroundColor: bg,
+							borderColor: inputBorder,
 							borderWidth: 1,
 						}}
 						containerStyle={{ marginBottom: 8 }}
@@ -132,8 +134,8 @@ export default function WithdrawFunds({
 						value={phone}
 						setValue={setPhone}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
+							backgroundColor: bg,
+							borderColor: inputBorder,
 							borderWidth: 1,
 						}}
 						containerStyle={{ marginBottom: 8 }}
@@ -150,8 +152,8 @@ export default function WithdrawFunds({
 						setValue={setNarration}
 						multiline
 						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
+							backgroundColor: bg,
+							borderColor: inputBorder,
 							borderWidth: 1,
 							height: 80,
 						}}
@@ -162,20 +164,20 @@ export default function WithdrawFunds({
 						<ThemedButton
 							title={toTitleCase(t.buttons?.cancel ?? 'Cancel')}
 							onPress={onCancel}
-							lightColor={Colors.light.cancelButton}
-							darkColor={Colors.dark.cancelButton}
-							lightTextColor={Colors.light.white}
-							darkTextColor={Colors.dark.white}
+							lightColor={cancelButton}
+							darkColor={cancelButton}
+							lightTextColor={white}
+							darkTextColor={white}
 						/>
 						<ThemedButton
 							title={toTitleCase(
 								t.withdraw?.initiateWithdrawal ?? 'Initiate withdrawal'
 							)}
 							onPress={handleInitiate}
-							lightColor={Colors.light.bim}
-							darkColor={Colors.dark.bim}
-							lightTextColor={Colors.light.white}
-							darkTextColor={Colors.dark.white}
+							lightColor={bim}
+							darkColor={bim}
+							lightTextColor={white}
+							darkTextColor={white}
 						/>
 					</View>
 				</ThemedView>

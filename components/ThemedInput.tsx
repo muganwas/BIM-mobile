@@ -100,8 +100,8 @@ export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(
 			>
 				{label && (
 					<ThemedText
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={color}
+						darkColor={color}
 						style={[{ marginBottom: 8, textAlign: 'left' }, labelStyle]}
 					>
 						{label}

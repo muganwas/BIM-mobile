@@ -1,34 +1,46 @@
+import { useEffect, useMemo, useState } from 'react';
+import { ScrollView, TouchableOpacity } from 'react-native';
+
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { generateBank } from '@/helpers/factories';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { Bank as BankType } from '@/types';
 import BankAccount from '@/views/BankAccount';
-import { useEffect, useMemo, useState } from 'react';
-import { TouchableOpacity, useColorScheme } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 
 export default function BanksScreen() {
 	useTrackHistory('/(authenticated)/banks');
-	const colorScheme = useColorScheme() ?? 'light';
 	const { banks, fetchBanks, setBanks } = useTransaction();
 	const { user } = useGeneral();
+
+	const bg = useThemeColor({}, 'background');
+	const textColor = useThemeColor({}, 'text');
+	const bim = useThemeColor({}, 'bim');
+	const titleBg = useThemeColor({}, 'titleBg');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const borderDark = useThemeColor({}, 'borderDark');
+	const lime = useThemeColor({}, 'lime');
+	const yellow = useThemeColor({}, 'yellow');
+	const errorColor = useThemeColor({}, 'error');
+	const actionButton = useThemeColor({}, 'actionButton');
+	const authButtonText = useThemeColor({}, 'authButtonText');
+
 	const [page] = useState(1);
-	const pageSize = 50; // banks are typically few; keep high page size
+	const pageSize = 50;
+
 	const paged = useMemo(() => {
 		const start = (page - 1) * pageSize;
 		return banks.slice(start, start + pageSize);
 	}, [banks, page]);
 
-	// Pre-define table headers and their widths so consumers can rely on attributes (e.g., length)
 	const bankHeaders = useMemo(
 		() => [
 			{ key: 'row', label: '#', width: 30 },
@@ -42,16 +54,15 @@ export default function BanksScreen() {
 
 	useEffect(() => {
 		if (user && banks.length === 0) {
-			(async () => {
-				await fetchBanks(user);
-			})();
+			fetchBanks(user).catch(() => {});
 		}
-	}, [user, banks, fetchBanks]);
+	}, [user, banks.length, fetchBanks]);
 
 	const [showAdd, setShowAdd] = useState(false);
 	const [showEdit, setShowEdit] = useState(false);
 	const [showView, setShowView] = useState(false);
 	const [editBank, setEditBank] = useState<BankType | null>(null);
+
 	const handleAddAccount = () => setShowAdd(true);
 	const handleCancelAdd = () => setShowAdd(false);
 	const handleSaveAdd = ({
@@ -65,7 +76,6 @@ export default function BanksScreen() {
 		phone: string;
 		swift: string;
 	}) => {
-		// Create a new bank entry locally using factories; currency default UGX
 		const newBank = generateBank({
 			name,
 			accountNumber,
@@ -76,16 +86,19 @@ export default function BanksScreen() {
 		setBanks((prev) => [newBank, ...prev]);
 		setShowAdd(false);
 	};
+
 	const handleView = (id: string) => {
 		const found = banks.find((b) => b.id === id) ?? null;
 		setEditBank(found);
 		setShowView(!!found);
 	};
+
 	const handleEdit = (id: string) => {
 		const found = banks.find((b) => b.id === id) ?? null;
 		setEditBank(found);
 		setShowEdit(!!found);
 	};
+
 	const handleDelete = (id: string) => console.log('Delete bank', id);
 
 	const handleUpdateBank = ({
@@ -119,17 +132,13 @@ export default function BanksScreen() {
 
 	return (
 		<ParallaxScrollView
-			headerBackgroundColor={{
-				light: Colors.light.background,
-				dark: Colors.dark.background,
-			}}
+			headerBackgroundColor={{ light: bg, dark: bg }}
 			containerStyle={{ flex: 1 }}
 			contentStyle={{ padding: 16 }}
 		>
-			{/* Title row */}
 			<ThemedView
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
+				lightColor={bg}
+				darkColor={bg}
 				style={{
 					flexDirection: 'row',
 					alignItems: 'center',
@@ -138,8 +147,8 @@ export default function BanksScreen() {
 				}}
 			>
 				<ThemedText
-					lightColor={Colors.light.bim}
-					darkColor={Colors.dark.bim}
+					lightColor={bim}
+					darkColor={bim}
 					style={{
 						width: '100%',
 						textTransform: 'capitalize',
@@ -151,41 +160,30 @@ export default function BanksScreen() {
 				</ThemedText>
 			</ThemedView>
 
-			{/* Actions */}
 			<ThemedView
 				style={{ width: '100%', alignItems: 'flex-end', marginBottom: 12 }}
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
+				lightColor={bg}
+				darkColor={bg}
 			>
 				<ThemedButton
 					title={'Add account'.toUpperCase()}
 					numberOfLines={1}
 					onPress={handleAddAccount}
 					style={{ borderRadius: 8, width: 160 }}
-					darkColor={Colors.dark.actionButton}
-					lightColor={Colors.light.actionButton}
-					darkTextColor={Colors.dark.authButtonText}
-					lightTextColor={Colors.light.authButtonText}
+					darkColor={actionButton}
+					lightColor={actionButton}
+					darkTextColor={authButtonText}
+					lightTextColor={authButtonText}
 				/>
 			</ThemedView>
 
-			{/* Banks table */}
 			<TileContainer
 				id='banks-table'
-				backgroundColor={Colors[colorScheme].background}
-				style={{
-					flexDirection: 'column',
-					overflow: 'hidden',
-					boxSizing: 'border-box',
-					padding: 0,
-				}}
+				backgroundColor={bg}
+				style={{ flexDirection: 'column', overflow: 'hidden', padding: 0 }}
 			>
 				<ScrollView horizontal showsHorizontalScrollIndicator>
-					<ThemedView
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
-					>
-						{/* Header */}
+					<ThemedView lightColor={bg} darkColor={bg}>
 						<ThemedView
 							style={{
 								flexDirection: 'row',
@@ -194,10 +192,10 @@ export default function BanksScreen() {
 								paddingVertical: 10,
 								paddingHorizontal: 5,
 								borderBottomWidth: 1,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.titleBg}
-							darkColor={Colors.dark.titleBg}
+							lightColor={titleBg}
+							darkColor={titleBg}
 						>
 							{bankHeaders.map((col) => (
 								<ThemedText
@@ -211,15 +209,14 @@ export default function BanksScreen() {
 										textTransform: 'uppercase',
 										paddingRight: 8,
 									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
+									lightColor={textColor}
+									darkColor={textColor}
 								>
 									{col.label}
 								</ThemedText>
 							))}
 						</ThemedView>
 
-						{/* Rows */}
 						<ScrollView nestedScrollEnabled>
 							{paged.map((b, index) => (
 								<ThemedView
@@ -231,53 +228,42 @@ export default function BanksScreen() {
 										paddingHorizontal: 5,
 										gap: 10,
 										alignItems: 'center',
-										backgroundColor:
-											index % 2 === 0
-												? Colors[colorScheme].listItemBackground
-												: Colors[colorScheme].background,
-										borderBottomWidth: index < paged.length - 1 ? 1 : 0,
-										borderBottomColor: Colors[colorScheme].borderDark,
 									}}
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
+									lightColor={index % 2 === 0 ? listItemBackground : bg}
+									darkColor={index % 2 === 0 ? listItemBackground : bg}
 								>
-									{/* # */}
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 30, overflow: 'hidden', paddingRight: 8 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{index + 1}
 									</ThemedText>
-									{/* Bank name */}
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 120, paddingRight: 8, overflow: 'hidden' }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{b.name}
 									</ThemedText>
-									{/* Account number */}
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 120, paddingRight: 8 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{b.accountNumber}
 									</ThemedText>
-									{/* SWIFT code */}
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 120, paddingRight: 8 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{b.SWIFTCode}
 									</ThemedText>
-									{/* Actions */}
 									<ThemedView
 										style={{
 											flexDirection: 'row',
@@ -289,22 +275,13 @@ export default function BanksScreen() {
 										darkColor='transparent'
 									>
 										<TouchableOpacity onPress={() => handleView(b.id)}>
-											<IconSymbol
-												color={Colors[colorScheme].lime}
-												name='eye.outline'
-											/>
+											<IconSymbol color={lime} name='eye.outline' />
 										</TouchableOpacity>
 										<TouchableOpacity onPress={() => handleEdit(b.id)}>
-											<IconSymbol
-												color={Colors[colorScheme].yellow}
-												name='edit.outline'
-											/>
+											<IconSymbol color={yellow} name='edit.outline' />
 										</TouchableOpacity>
 										<TouchableOpacity onPress={() => handleDelete(b.id)}>
-											<IconSymbol
-												color={Colors[colorScheme].error}
-												name='delete.outline'
-											/>
+											<IconSymbol color={errorColor} name='delete.outline' />
 										</TouchableOpacity>
 									</ThemedView>
 								</ThemedView>
@@ -313,13 +290,12 @@ export default function BanksScreen() {
 					</ThemedView>
 				</ScrollView>
 			</TileContainer>
-			{/* Bank Account Modal (Add) */}
+
 			<BankAccount
 				visible={showAdd}
 				onCancel={handleCancelAdd}
 				onSave={handleSaveAdd}
 			/>
-			{/* Bank Account Modal (Edit) */}
 			<BankAccount
 				visible={showEdit}
 				mode='edit'
@@ -335,7 +311,6 @@ export default function BanksScreen() {
 				}}
 				onSave={handleUpdateBank}
 			/>
-			{/* Bank Account (View mode) */}
 			<BankAccount
 				visible={showView}
 				mode='view'

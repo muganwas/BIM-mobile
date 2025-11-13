@@ -4,11 +4,11 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import * as factories from '@/helpers/factories';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { DocumentProps } from '@/types';
 import DocumentOverlay from '@/views/Document';
@@ -21,6 +21,15 @@ export default function DocumentsScreen() {
 	// explicitly track documents page
 	useTrackHistory('/(authenticated)/documents');
 	const colorScheme = useColorScheme() ?? 'light';
+	const bg = useThemeColor({}, 'background');
+	const bimColor = useThemeColor({}, 'bim');
+	const titleBg = useThemeColor({}, 'titleBg');
+	const textColor = useThemeColor({}, 'text');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const borderDark = useThemeColor({}, 'borderDark');
+	const lime = useThemeColor({}, 'lime');
+	const yellow = useThemeColor({}, 'yellow');
+	const errorColor = useThemeColor({}, 'error');
 	const { documents, fetchDocuments, setDocuments } = useTransaction();
 	const { user } = useGeneral();
 
@@ -59,22 +68,9 @@ export default function DocumentsScreen() {
 
 	// Derive a simple status without changing types
 	const getStatusColor = (status: DocumentProps['status']) => {
-		if (status === 'approved') {
-			return {
-				light: Colors.light.lime,
-				dark: Colors.dark.lime,
-			};
-		}
-		if (status === 'pending') {
-			return {
-				light: Colors.light.yellow,
-				dark: Colors.dark.yellow,
-			};
-		}
-		return {
-			light: Colors.light.error,
-			dark: Colors.dark.error,
-		};
+		if (status === 'approved') return { light: lime, dark: lime };
+		if (status === 'pending') return { light: yellow, dark: yellow };
+		return { light: errorColor, dark: errorColor };
 	};
 
 	const handleAddDocument = () => {
@@ -161,16 +157,16 @@ export default function DocumentsScreen() {
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
-				light: Colors.light.background,
-				dark: Colors.dark.background,
+				light: bg,
+				dark: bg,
 			}}
 			containerStyle={{ flex: 1 }}
 			contentStyle={{ padding: 16 }}
 		>
 			{/* Title row */}
 			<ThemedView
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
+				lightColor={bg}
+				darkColor={bg}
 				style={{
 					flexDirection: 'row',
 					alignItems: 'center',
@@ -179,8 +175,8 @@ export default function DocumentsScreen() {
 				}}
 			>
 				<ThemedText
-					lightColor={Colors.light.bim}
-					darkColor={Colors.dark.bim}
+					lightColor={bimColor}
+					darkColor={bimColor}
 					style={{
 						width: '100%',
 						textTransform: 'capitalize',
@@ -195,25 +191,25 @@ export default function DocumentsScreen() {
 			{/* Actions */}
 			<ThemedView
 				style={{ width: '100%', alignItems: 'flex-end', marginBottom: 12 }}
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
+				lightColor={bg}
+				darkColor={bg}
 			>
 				<ThemedButton
 					title={'Add document'.toUpperCase()}
 					numberOfLines={1}
 					onPress={handleAddDocument}
 					style={{ borderRadius: 8, width: 200 }}
-					darkColor={Colors.dark.actionButton}
-					lightColor={Colors.light.actionButton}
-					darkTextColor={Colors.dark.authButtonText}
-					lightTextColor={Colors.light.authButtonText}
+					darkColor={useThemeColor({}, 'actionButton')}
+					lightColor={useThemeColor({}, 'actionButton')}
+					darkTextColor={useThemeColor({}, 'authButtonText')}
+					lightTextColor={useThemeColor({}, 'authButtonText')}
 				/>
 			</ThemedView>
 
 			{/* Documents table */}
 			<TileContainer
 				id='documents-table'
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={bg}
 				style={{
 					flexDirection: 'column',
 					overflow: 'hidden',
@@ -222,10 +218,7 @@ export default function DocumentsScreen() {
 				}}
 			>
 				<ScrollView horizontal showsHorizontalScrollIndicator>
-					<ThemedView
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
-					>
+					<ThemedView lightColor={bg} darkColor={bg}>
 						{/* Header */}
 						<ThemedView
 							style={{
@@ -235,10 +228,10 @@ export default function DocumentsScreen() {
 								paddingVertical: 10,
 								paddingHorizontal: 10,
 								borderBottomWidth: 1,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.titleBg}
-							darkColor={Colors.dark.titleBg}
+							lightColor={titleBg}
+							darkColor={titleBg}
 						>
 							{headers.map((col) => (
 								<ThemedText
@@ -253,8 +246,8 @@ export default function DocumentsScreen() {
 										textAlign: col.key === 'actions' ? 'center' : 'left',
 										paddingRight: 8,
 									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
+									lightColor={textColor}
+									darkColor={textColor}
 								>
 									{col.label}
 								</ThemedText>
@@ -273,22 +266,19 @@ export default function DocumentsScreen() {
 										paddingHorizontal: 10,
 										gap: 10,
 										alignItems: 'center',
-										backgroundColor:
-											index % 2 === 0
-												? Colors[colorScheme].listItemBackground
-												: Colors[colorScheme].background,
+										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
 										borderBottomWidth: index < paged.length - 1 ? 1 : 0,
-										borderBottomColor: Colors[colorScheme].borderDark,
+										borderBottomColor: borderDark,
 									}}
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
+									lightColor={bg}
+									darkColor={bg}
 								>
 									{/* # */}
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 30, overflow: 'hidden', paddingRight: 8 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{index + 1}
 									</ThemedText>
@@ -296,8 +286,8 @@ export default function DocumentsScreen() {
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 120, paddingRight: 8, overflow: 'hidden' }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{d.type.replace('-', ' ')}
 									</ThemedText>
@@ -305,8 +295,8 @@ export default function DocumentsScreen() {
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 140, paddingRight: 8 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{d.documentId}
 									</ThemedText>
@@ -323,8 +313,8 @@ export default function DocumentsScreen() {
 									>
 										<ThemedText
 											numberOfLines={1}
-											lightColor={Colors.light.bim}
-											darkColor={Colors.dark.bim}
+											lightColor={bimColor}
+											darkColor={bimColor}
 											style={{ textDecorationLine: 'underline' }}
 										>
 											Open
@@ -351,22 +341,13 @@ export default function DocumentsScreen() {
 										darkColor='transparent'
 									>
 										<TouchableOpacity onPress={() => handlePreview(d)}>
-											<IconSymbol
-												color={Colors[colorScheme].lime}
-												name='eye.outline'
-											/>
+											<IconSymbol color={lime} name='eye.outline' />
 										</TouchableOpacity>
 										<TouchableOpacity onPress={() => handleEdit(d)}>
-											<IconSymbol
-												color={Colors[colorScheme].yellow}
-												name='edit.outline'
-											/>
+											<IconSymbol color={yellow} name='edit.outline' />
 										</TouchableOpacity>
 										<TouchableOpacity onPress={() => handleDelete(d)}>
-											<IconSymbol
-												color={Colors[colorScheme].error}
-												name='delete.outline'
-											/>
+											<IconSymbol color={errorColor} name='delete.outline' />
 										</TouchableOpacity>
 									</ThemedView>
 								</ThemedView>

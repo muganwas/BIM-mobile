@@ -7,10 +7,10 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { emailRegex } from '@/constants';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -36,7 +36,16 @@ export default function ResetPasswordScreen() {
 		return () => {};
 	}, [navigation]);
 	const { language } = useGeneral();
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
+	const bg = useThemeColor({}, 'background');
+	const headers = useThemeColor({}, 'headers');
+	const textColor = useThemeColor({}, 'text');
+	const inputContainerBackground = useThemeColor(
+		{},
+		'inputContainerBackground'
+	);
+	const bim = useThemeColor({}, 'bim');
+	const authButtonText = useThemeColor({}, 'authButtonText');
 
 	const [email, setEmail] = useState('');
 	const [error, setError] = useState(false);
@@ -60,46 +69,34 @@ export default function ResetPasswordScreen() {
 		>
 			<ParallaxScrollView
 				headerBackgroundColor={{
-					light: Colors.light.background,
-					dark: Colors.dark.background,
+					light: bg,
+					dark: bg,
 				}}
 			>
-				<ThemedView
-					style={styles.container}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
-				>
-					<ThemedView
-						style={styles.header}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
-					>
+				<ThemedView style={styles.container} lightColor={bg} darkColor={bg}>
+					<ThemedView style={styles.header} lightColor={bg} darkColor={bg}>
 						<Image
 							source={bimTextImg}
 							style={{ height: 35, resizeMode: 'contain' }}
 						/>
 					</ThemedView>
 
-					<ThemedView
-						style={styles.formHeader}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
-					>
+					<ThemedView style={styles.formHeader} lightColor={bg} darkColor={bg}>
 						<ThemedText
 							style={{
 								fontWeight: fontWeight['heading.one'],
 								fontSize: fontSize['heading.one'],
-								color: Colors[colorScheme].headers,
+								color: headers,
 							}}
-							lightColor={Colors.light.headers}
-							darkColor={Colors.dark.headers}
+							lightColor={headers}
+							darkColor={headers}
 						>
 							{translations[language].categories.auth['reset.title']}
 						</ThemedText>
 						<ThemedText
 							style={{
 								marginTop: 10,
-								color: Colors[colorScheme].text,
+								color: textColor,
 							}}
 						>
 							{translations[language].categories.auth['reset.subtitle']}
@@ -107,9 +104,14 @@ export default function ResetPasswordScreen() {
 					</ThemedView>
 
 					<ThemedView
-						style={styles.formInputs}
-						lightColor={Colors.light.inputContainerBackground}
-						darkColor={Colors.dark.inputContainerBackground}
+						style={[
+							styles.formInputs,
+							{
+								backgroundColor: inputContainerBackground,
+							},
+						]}
+						lightColor={inputContainerBackground}
+						darkColor={inputContainerBackground}
 					>
 						<ThemedInput
 							value={email}
@@ -118,7 +120,7 @@ export default function ResetPasswordScreen() {
 								if (error) setError(false);
 							}}
 							placeholder={translations[language].categories.auth.email}
-							placeholderTextColor={Colors[colorScheme].text}
+							placeholderTextColor={textColor}
 							keyboardType='email-address'
 							containerStyle={{ width: '100%' }}
 						/>
@@ -127,10 +129,10 @@ export default function ResetPasswordScreen() {
 							title={translations[language].categories.auth['reset.sendLink']}
 							onPress={handleSendReset}
 							style={{ borderRadius: 8 }}
-							lightColor={Colors.light.bim}
-							darkColor={Colors.dark.bim}
-							lightTextColor={Colors.light.authButtonText}
-							darkTextColor={Colors.dark.authButtonText}
+							lightColor={bim}
+							darkColor={bim}
+							lightTextColor={authButtonText}
+							darkTextColor={authButtonText}
 							disabled={email.length === 0}
 						/>
 
@@ -143,18 +145,12 @@ export default function ResetPasswordScreen() {
 						>
 							<TouchableOpacity onPress={() => router.push('/(auth)/login')}>
 								<ThemedView
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
+									lightColor={bg}
+									darkColor={bg}
 									style={{ flexDirection: 'row', alignItems: 'center' }}
 								>
-									<IconSymbol
-										name={'chevron.left'}
-										size={16}
-										color={Colors[colorScheme].bim}
-									/>
-									<ThemedText
-										style={{ color: Colors[colorScheme].bim, marginLeft: 8 }}
-									>
+									<IconSymbol name={'chevron.left'} size={16} color={bim} />
+									<ThemedText style={{ color: bim, marginLeft: 8 }}>
 										{
 											translations[language].categories.auth[
 												'reset.backToLogin'

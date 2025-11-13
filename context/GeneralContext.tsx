@@ -1,13 +1,15 @@
 import Toast from '@/components/Toast';
 import { apiBaseUrl } from '@/constants/API';
+import translations from '@/constants/Trans';
 import { delay } from '@/helpers';
-import { apiFetch } from '@/helpers/api';
+import { apiFetch, parseApiError } from '@/helpers/api';
 import {
 	headerOptions,
 	langCode,
 	notifications,
 	User as UserProps,
 } from '@/types';
+import { DEV_OTP } from '@env';
 import { useNetInfo } from '@react-native-community/netinfo';
 import * as DeviceInfo from 'expo-device';
 import { useRouter } from 'expo-router';
@@ -44,8 +46,54 @@ export interface AuthContextType {
 		number: string;
 		password?: string;
 	}) => Promise<void>;
+	handleRegistration: (payload: {
+		phone: string;
+		password: string;
+		name?: string;
+		email?: string;
+	}) => Promise<void>;
+	// Verify OTP for a pending phone/registration. Accepts the OTP the user entered.
+	handleVerify: (otp: string) => Promise<void>;
+	// Verify 2FA code (authenticator app) for pending 2FA setup. Returns true on success.
+	handleVerify2FA: (otp: string) => Promise<boolean>;
+	// Pending registration payload kept until OTP verification completes
+	pendingRegistration?: {
+		phone: string;
+		password: string;
+		fullName?: string;
+		email?: string;
+	} | null;
+	// Pending 2FA setup info returned by the backend after verification when TOTP setup is required
+	pending2FASetup?: {
+		qr?: string | null;
+		qr_base64?: string | null;
+		secret?: string | null;
+		setup_token?: string | null;
+		phone?: string | null;
+		user?: any;
+	} | null;
 	// Phone number used for pending 2FA verification after initiating login/register
 	pendingPhone?: string | null;
+	setPendingPhone?: React.Dispatch<React.SetStateAction<string | null>>;
+
+	setPendingRegistration?: React.Dispatch<
+		React.SetStateAction<{
+			phone: string;
+			password: string;
+			fullName?: string;
+			email?: string;
+		} | null>
+	>;
+	setPending2FASetup?: React.Dispatch<
+		React.SetStateAction<{
+			qr?: string | null;
+			qr_base64?: string | null;
+			secret?: string | null;
+			setup_token?: string | null;
+			phone?: string | null;
+			user?: any;
+		} | null>
+	>;
 	online: boolean;
 	router: RouterType;
 	// Global app message (shown in Toast)
@@ -76,6 +124,22 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [user, setUser] = useState<UserProps | null>(null);
 	const [notifications, setNotifications] = useState<notifications[]>([]);
 	const [pendingPhone, setPendingPhone] = useState<string | null>(null);
+	// Pending registration payload kept until OTP verification completes
+	const [pendingRegistration, setPendingRegistration] = useState<{
+		phone: string;
+		password: string;
+		fullName?: string;
+		email?: string;
+	} | null>(null);
+	// pending 2FA setup information returned by backend after verify when TOTP setup required
+	const [pending2FASetup, setPending2FASetup] = useState<{
+		qr?: string | null;
+		qr_base64?: string | null;
+		secret?: string | null;
+		setup_token?: string | null;
+		phone?: string | null;
+		user?: any;
+	} | null>(null);
 	// global message state shown as toast/modal
 	const [appMessage, setAppMessage] = useState<{
 		type: 'error' | 'message';
@@ -371,20 +435,15 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				}),
 			});
 			if (!res.ok) {
-				// Prefer extracting JSON message, fallback to text, then generic HTTP code message
-				let text: string | null = null;
-				try {
-					const ct = res.headers.get('content-type') || '';
-					if (ct.includes('application/json')) {
-						const body = await res.json();
-						text =
-							(body && (body.message || body.error)) || JSON.stringify(body);
-					} else {
-						text = await res.text();
-					}
-				} catch {}
-				if (!text) text = `HTTP error ${res.status}`;
-				setAppMessage({ type: 'error', message: String(text) });
+				const text = await parseApiError(res);
+				setAppMessage({
+					type: 'error',
+					message:
+						String(text) && String(text).trim()
+							? String(text)
+							: translations[language].categories.auth['loginFailed'] ||
+							  'Login failed',
+				});
 				return;
 			}
 			const data = await res.json();
@@ -395,8 +454,70 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			router.replace('/(auth)/verify');
 		} catch (error) {
 			// Surface unexpected/network errors via the global app message instead of throwing
-			const msg = (error && (error as any).message) || 'Login failed';
-			setAppMessage({ type: 'error', message: String(msg) });
+			const msg = (error && (error as any).message) || '';
+			setAppMessage({
+				type: 'error',
+				message:
+					String(msg) && String(msg).trim()
+						? String(msg)
+						: translations[language].categories.auth['loginFailed'] ||
+						  'Login failed',
+			});
+		}
+	};
+
+	const handleRegistration = async ({
+		phone,
+		password,
+		name,
+		email,
+	}: {
+		phone: string;
+		password: string;
+		name?: string;
+		email?: string;
+	}) => {
+		try {
+			const res = await apiFetch((apiBaseUrl || '') + '/register', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					phone: phone.replaceAll(' ', ''),
+					password: password || '',
+					password_confirmation: password || '',
+					name: name || undefined,
+					email: email || undefined,
+				}),
+			});
+			if (!res.ok) {
+				const text = await parseApiError(res);
+				console.info('Registration error response:', text);
+				setAppMessage({
+					type: 'error',
+					message:
+						String(text) && String(text).trim()
+							? String(text)
+							: translations[language].categories.auth['registrationFailed'] ||
+							  'Registration failed',
+				});
+				return;
+			}
+			const data = await res.json();
+			console.info('Registration response data:', data);
+			setPendingPhone(data?.phone || phone);
+			setPendingRegistration({ phone, password, fullName: name, email });
+			router.replace('/(auth)/verify');
+		} catch (error: any) {
+			console.info('Registration error:', error?.message);
+			const msg = (error && (error as any).message) || '';
+			setAppMessage({
+				type: 'error',
+				message:
+					String(msg) && String(msg).trim()
+						? String(msg)
+						: translations[language].categories.auth['registrationFailed'] ||
+						  'Registration failed',
+			});
 		}
 	};
 
@@ -404,6 +525,133 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		setUser(null);
 		setNotifications([]);
 		router.replace('/(auth)/login');
+	};
+
+	const handleVerify = async (otp: string) => {
+		// Determine OTP to send. In development, backend expects a fixed DEV_OTP; otherwise use the
+		// code passed in.
+		const otpToSend =
+			typeof DEV_OTP !== 'undefined' && DEV_OTP ? String(DEV_OTP) : otp;
+
+		const payload = {
+			name: pendingRegistration?.fullName || pendingRegistration?.phone || '',
+			email: pendingRegistration?.email || '',
+			phone: pendingRegistration?.phone || pendingPhone || '',
+			password: pendingRegistration?.password || '',
+			otp: otpToSend,
+		};
+
+		try {
+			const res = await apiFetch((apiBaseUrl || '') + '/verify-otp', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload),
+			});
+			if (!res.ok) {
+				const text = await parseApiError(res);
+				setAppMessage({
+					type: 'error',
+					message:
+						String(text) && String(text).trim()
+							? String(text)
+							: translations[language].categories.auth[
+									'otpVerificationFailed'
+							  ] || 'OTP verification failed',
+				});
+				return;
+			}
+			const resJson = await res.json();
+			console.info('OTP verify response data:', resJson);
+			// If backend requests TOTP setup, store the setup payload and navigate to the setup screen
+			if (resJson && (resJson.qr || resJson.setup_token || resJson.qr_base64)) {
+				setPending2FASetup({
+					qr: resJson.qr ?? null,
+					qr_base64: resJson.qr_base64 ?? null,
+					secret: resJson.secret ?? null,
+					setup_token: resJson.setup_token ?? null,
+					phone: resJson.phone ?? payload.phone,
+					user: resJson.user ?? null,
+				});
+				// navigate to the authenticator setup screen
+				navigateToPath('/(auth)/setup-2fa');
+				return;
+			}
+			// Success - clear pending state and navigate to home
+			setPendingRegistration?.(null);
+			setPendingPhone?.(null);
+			router.push('/(authenticated)/home');
+		} catch (err: any) {
+			const msg = (err && err.message) || '';
+			setAppMessage({
+				type: 'error',
+				message:
+					String(msg) && String(msg).trim()
+						? String(msg)
+						: translations[language].categories.auth['otpVerificationFailed'] ||
+						  'OTP verification failed',
+			});
+		}
+	};
+
+	const handleVerify2FA = async (otp: string) => {
+		if (!pending2FASetup?.phone) {
+			setAppMessage({
+				type: 'error',
+				message:
+					translations[language].categories.auth[
+						'setupAuthenticator.missingPhone'
+					] ?? 'Missing phone for 2FA verification',
+			});
+			return false;
+		}
+		if (!otp || String(otp).trim().length === 0) {
+			setAppMessage({
+				type: 'error',
+				message:
+					translations[language].categories.auth[
+						'setupAuthenticator.enterCodeError'
+					] ?? 'Enter the code from your authenticator app',
+			});
+			return false;
+		}
+		try {
+			const res = await apiFetch((apiBaseUrl || '') + '/2fa-verify', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					phone: String(pending2FASetup.phone),
+					otp: String(otp).trim(),
+				}),
+			});
+			if (!res.ok) {
+				const text = await parseApiError(res);
+				setAppMessage({
+					type: 'error',
+					message:
+						String(text) && String(text).trim()
+							? String(text)
+							: translations[language].categories.auth[
+									'setupAuthenticator.verifyFailed'
+							  ] || '2FA verification failed',
+				});
+				return false;
+			}
+			// success — clear pending setup and navigate to home
+			setPending2FASetup?.(null);
+			router.replace('/(authenticated)/home');
+			return true;
+		} catch (err: any) {
+			setAppMessage({
+				type: 'error',
+				message:
+					(err?.message as string) ||
+					translations[language].categories.auth[
+						'setupAuthenticator.verifyFailed'
+					] ||
+					'2FA verification failed',
+			});
+			return false;
+		}
 	};
 
 	const fetchNotifications = async () => {
@@ -431,10 +679,18 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setSelectedOption,
 				setNotifications,
 				handleAuthentication,
+				handleRegistration,
+				handleVerify,
+				handleVerify2FA,
 				pendingPhone,
+				setPendingPhone,
 				online,
 				appMessage,
 				setAppMessage,
+				pendingRegistration,
+				setPendingRegistration,
+				pending2FASetup,
+				setPending2FASetup,
 			}}
 		>
 			{children}

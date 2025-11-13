@@ -14,9 +14,9 @@ import { ThemedDropdown } from '@/components/ThemedDropdown';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { Hotspot } from '@/types';
 
 type Props = {
@@ -52,8 +52,15 @@ export default function CreateVouchers({
 	generateVouchers,
 	onRequestClose,
 }: Props) {
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
 	const { language, keyboardVisible } = useGeneral();
+
+	const bg = useThemeColor({}, 'background');
+	const screenTitleText = useThemeColor({}, 'screenTitleText');
+	const cancelButton = useThemeColor({}, 'cancelButton');
+	const bim = useThemeColor({}, 'bim');
+	const white = useThemeColor({}, 'white');
+	const inputBorder = useThemeColor({}, 'inputBorder');
 
 	const [numberOfUsers, setNumberOfUsers] = useState('1');
 	const [pkg, setPkg] = useState(initialPkg || '');
@@ -143,19 +150,19 @@ export default function CreateVouchers({
 			<ThemedView
 				style={{
 					flexDirection: 'column',
-					backgroundColor: 'white',
+					backgroundColor: bg,
 					padding: 20,
 					borderRadius: 10,
 					width: '100%',
 					gap: 12,
 				}}
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
+				lightColor={bg}
+				darkColor={bg}
 			>
 				<ThemedText
 					style={{ fontSize: 18, fontWeight: '600', marginBottom: 8 }}
-					lightColor={Colors.light.screenTitleText}
-					darkColor={Colors.dark.screenTitleText}
+					lightColor={screenTitleText}
+					darkColor={screenTitleText}
 				>
 					{headerTitle}
 				</ThemedText>
@@ -167,8 +174,8 @@ export default function CreateVouchers({
 					setValue={() => {}}
 					editable={false}
 					style={{
-						backgroundColor: Colors[colorScheme].background,
-						borderColor: Colors[colorScheme].inputBorder,
+						backgroundColor: bg,
+						borderColor: inputBorder,
 						borderWidth: 1,
 					}}
 					containerStyle={{ marginBottom: 4 }}
@@ -184,8 +191,8 @@ export default function CreateVouchers({
 					onFocus={() => scrollToInput(numberInputRef)}
 					editable={true}
 					style={{
-						backgroundColor: Colors[colorScheme].background,
-						borderColor: Colors[colorScheme].inputBorder,
+						backgroundColor: bg,
+						borderColor: inputBorder,
 						borderWidth: 1,
 					}}
 					containerStyle={{ marginBottom: 4 }}
@@ -224,19 +231,19 @@ export default function CreateVouchers({
 						onPress={onCancel}
 						numberOfLines={1}
 						style={{ maxWidth: '35%' }}
-						lightColor={Colors.light.cancelButton}
-						darkColor={Colors.dark.cancelButton}
-						lightTextColor={Colors.light.white}
-						darkTextColor={Colors.dark.white}
+						lightColor={cancelButton}
+						darkColor={cancelButton}
+						lightTextColor={white}
+						darkTextColor={white}
 					/>
 					<ThemedButton
 						title={primaryButtonTitle}
 						numberOfLines={1}
 						style={{ maxWidth: '60%' }}
-						lightColor={Colors.light.bim}
-						darkColor={Colors.dark.bim}
-						lightTextColor={Colors.light.white}
-						darkTextColor={Colors.dark.white}
+						lightColor={bim}
+						darkColor={bim}
+						lightTextColor={white}
+						darkTextColor={white}
 						onPress={onGenerate}
 					/>
 				</ThemedView>

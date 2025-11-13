@@ -6,11 +6,13 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
+// apiBaseUrl and network calls are handled in GeneralContext
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { useRouter } from 'expo-router';
+// no direct router usage here; GeneralContext performs navigation after successful verify
+import { DEV_OTP } from '@env';
 import { useEffect, useRef, useState } from 'react';
 import {
 	Animated,
@@ -28,12 +30,20 @@ const devWidth = Dimensions.get('window').width;
 
 export default function VerifyTokenScreen() {
 	useTrackHistory('/(auth)/verify');
-	const colorScheme = useColorScheme() ?? 'light';
-	const router = useRouter();
+	useColorScheme();
+	const bg = useThemeColor({}, 'background');
+	const headers = useThemeColor({}, 'headers');
+	const textColor = useThemeColor({}, 'text');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const errorColor = useThemeColor({}, 'error');
+	const bim = useThemeColor({}, 'bim');
+	const buttonError = useThemeColor({}, 'buttonError');
+	const authButtonText = useThemeColor({}, 'authButtonText');
+	// router not needed here; navigation handled in GeneralContext after verify
 	// timeout ref
 	const otpTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const loaderFadeAnim = useAnimatedValue(0);
-	const { language } = useGeneral(); // Get language from context
+	const { language, handleVerify } = useGeneral(); // Get language and verify handler from context
 	const [code, setCode] = useState('');
 	const [focusedInput, setFocusedInput] = useState<string | null>(null);
 	const scrollRef = useRef<any>(null);
@@ -43,12 +53,19 @@ export default function VerifyTokenScreen() {
 		login: false,
 	});
 
+	// Prefill OTP in development when DEV_OTP is provided in local .env
+	useEffect(() => {
+		if (typeof __DEV__ !== 'undefined' && __DEV__ && DEV_OTP) {
+			setCode(String(DEV_OTP));
+			setErrors((prev) => ({ ...prev, code: false }));
+		}
+	}, []);
+
 	// Clean up on unmount
 	useEffect(() => {
+		const t = otpTimeoutRef.current;
 		return () => {
-			if (otpTimeoutRef.current) {
-				clearTimeout(otpTimeoutRef.current);
-			}
+			if (t) clearTimeout(t);
 		};
 	}, []);
 
@@ -110,7 +127,7 @@ export default function VerifyTokenScreen() {
 		}
 	};
 
-	const handleVerifyCode = () => {
+	const handleOnVerifyCode = async () => {
 		handleToggleLoader(true);
 		if (otpTimeoutRef.current) {
 			clearTimeout(otpTimeoutRef.current);
@@ -119,13 +136,11 @@ export default function VerifyTokenScreen() {
 			setErrors((prev) => ({ ...prev, code: true }));
 			return handleToggleLoader(false);
 		}
-		// Simulate verification process
-		otpTimeoutRef.current = setTimeout(() => {
-			// If verification is successful, redirect to home screen
-			setCode('');
+		try {
+			await handleVerify(code);
+		} finally {
 			handleToggleLoader(false);
-			router.push('/(authenticated)/home'); // Uncomment when ready
-		}, 1000);
+		}
 	};
 	return (
 		<>
@@ -141,44 +156,32 @@ export default function VerifyTokenScreen() {
 			>
 				<ParallaxScrollView
 					headerBackgroundColor={{
-						light: Colors[colorScheme].background,
-						dark: Colors[colorScheme].background,
+						light: bg,
+						dark: bg,
 					}}
 					getScrollRef={(r) => (scrollRef.current = r)}
 				>
-					<ThemedView
-						style={styles.container}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
-					>
-						<ThemedView
-							style={styles.header}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
-						>
+					<ThemedView style={styles.container} lightColor={bg} darkColor={bg}>
+						<ThemedView style={styles.header} lightColor={bg} darkColor={bg}>
 							<Image
 								source={bimTextImg}
 								style={{ height: 35, resizeMode: 'contain' }}
 							/>
 						</ThemedView>
-						<ThemedView
-							style={styles.form}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
-						>
+						<ThemedView style={styles.form} lightColor={bg} darkColor={bg}>
 							<ThemedView
 								style={styles.formHeader}
-								lightColor={Colors.light.background}
-								darkColor={Colors.dark.background}
+								lightColor={bg}
+								darkColor={bg}
 							>
 								<ThemedText
 									style={{
 										fontWeight: 500,
 										fontSize: 22,
-										color: Colors[colorScheme].headers,
+										color: headers,
 									}}
-									lightColor={Colors.light.headers}
-									darkColor={Colors.dark.headers}
+									lightColor={headers}
+									darkColor={headers}
 								>
 									{translations[language].categories.buttons['verifyOTP']}
 								</ThemedText>
@@ -186,37 +189,35 @@ export default function VerifyTokenScreen() {
 									style={{
 										fontWeight: 400,
 										fontSize: 16,
-										color: Colors.light.text,
+										color: textColor,
 										marginTop: 10,
 									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
+									lightColor={textColor}
+									darkColor={textColor}
 								>
 									{translations[language].categories.auth['verify.subtitle']}
 								</ThemedText>
 							</ThemedView>
 							<ThemedView
 								style={styles.formInputs}
-								lightColor={Colors.light.background}
-								darkColor={Colors.dark.background}
+								lightColor={bg}
+								darkColor={bg}
 							>
 								<ThemedInput
 									style={[
 										styles.formInput,
 										{
-											borderColor: errors.code
-												? Colors[colorScheme].error
-												: Colors[colorScheme].inputBorder,
+											borderColor: errors.code ? errorColor : inputBorder,
 										},
 									]}
-									lightColor={Colors.light.text}
-									darkColor={Colors.light.text}
+									lightColor={textColor}
+									darkColor={textColor}
 									value={code}
 									setValue={handleSetCode}
 									placeholder={
 										translations[language].categories.auth['enterOTP']
 									}
-									placeholderTextColor={Colors[colorScheme].text}
+									placeholderTextColor={textColor}
 									keyboardType='number-pad'
 									onFocus={() => setFocusedInput('code')}
 									onBlur={() => setFocusedInput(null)}
@@ -225,22 +226,14 @@ export default function VerifyTokenScreen() {
 									title={translations[language].categories.buttons[
 										'verifyOTP'
 									]?.toUpperCase()}
-									onPress={handleVerifyCode}
+									onPress={handleOnVerifyCode}
 									style={{
 										borderRadius: 8,
 									}}
-									darkColor={
-										errors['login']
-											? Colors['dark'].buttonError
-											: Colors['dark'].bim
-									}
-									lightColor={
-										errors['login']
-											? Colors['light'].buttonError
-											: Colors['light'].bim
-									}
-									darkTextColor={Colors['dark'].authButtonText}
-									lightTextColor={Colors['light'].authButtonText}
+									darkColor={errors['login'] ? buttonError : bim}
+									lightColor={errors['login'] ? buttonError : bim}
+									darkTextColor={authButtonText}
+									lightTextColor={authButtonText}
 								/>
 							</ThemedView>
 						</ThemedView>
@@ -283,16 +276,16 @@ const styles = StyleSheet.create({
 		flexDirection: 'column',
 		width: '100%',
 		marginVertical: 50,
-		backgroundColor: Colors.light.inputContainerBackground,
+		// backgroundColor moved inline to respect current colorScheme
 		gap: 15,
 	},
 	formInput: {
 		width: '100%',
 		fontSize: 16,
-		backgroundColor: Colors.light.inputBackground,
+		backgroundColor: undefined,
 		borderRadius: 8,
-		borderColor: Colors.light.inputBorder,
+		borderColor: undefined,
 		borderWidth: 1,
-		color: Colors.light.text,
+		// color moved inline to respect current colorScheme
 	},
 });

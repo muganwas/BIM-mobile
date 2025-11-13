@@ -11,6 +11,7 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import * as factories from '@/helpers/factories';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { NetRouter } from '@/types';
 import RouterOverlay from '@/views/Router';
@@ -26,6 +27,19 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 export default function RoutersScreen() {
 	const colorScheme = useColorScheme() ?? 'light';
+
+	const bg = useThemeColor({}, 'background');
+	const bimColor = useThemeColor({}, 'bim');
+	const titleBg = useThemeColor({}, 'titleBg');
+	const textColor = useThemeColor({}, 'text');
+	const actionButton = useThemeColor({}, 'actionButton');
+	const authButtonText = useThemeColor({}, 'authButtonText');
+	const lime = useThemeColor({}, 'lime');
+	const yellow = useThemeColor({}, 'yellow');
+	const errorColor = useThemeColor({}, 'error');
+	const borderDark = useThemeColor({}, 'borderDark');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const borderColor = useThemeColor({}, 'border');
 	const router = useRouter();
 	const { routers, setRouters, fetchRouters } = useTransaction();
 	const promptFadeAnim = useAnimatedValue(0);
@@ -154,19 +168,16 @@ export default function RoutersScreen() {
 		<>
 			<ParallaxScrollView
 				headerBackgroundColor={{
-					light: Colors.light.background,
-					dark: Colors.dark.background,
+					light: bg,
+					dark: bg,
 				}}
 				containerStyle={{ flex: 1 }}
 				contentStyle={{ padding: 16 }}
 			>
-				<ThemedView
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
-				>
+				<ThemedView lightColor={bg} darkColor={bg}>
 					<ThemedText
-						lightColor={Colors.light.bim}
-						darkColor={Colors.dark.bim}
+						lightColor={bimColor}
+						darkColor={bimColor}
 						style={{
 							width: '100%',
 							textTransform: 'capitalize',
@@ -183,8 +194,8 @@ export default function RoutersScreen() {
 						paddingVertical: 16,
 						alignItems: 'flex-end',
 					}}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={bg}
+					darkColor={bg}
 				>
 					<ThemedButton
 						title={translations[
@@ -195,15 +206,15 @@ export default function RoutersScreen() {
 							borderRadius: 8,
 							width: 150,
 						}}
-						darkColor={Colors['dark'].actionButton}
-						lightColor={Colors['light'].actionButton}
-						darkTextColor={Colors['dark'].authButtonText}
-						lightTextColor={Colors['light'].authButtonText}
+						darkColor={actionButton}
+						lightColor={actionButton}
+						darkTextColor={authButtonText}
+						lightTextColor={authButtonText}
 					/>
 				</ThemedView>
 				<TileContainer
 					id={routerListId.current}
-					backgroundColor={Colors[colorScheme].background}
+					backgroundColor={bg}
 					style={{
 						flexDirection: 'column',
 						overflow: 'hidden',
@@ -218,8 +229,8 @@ export default function RoutersScreen() {
 					>
 						<ThemedView
 							style={{ flexDirection: 'column' }}
-							lightColor={Colors.light.background}
-							darkColor={Colors.dark.background}
+							lightColor={bg}
+							darkColor={bg}
 						>
 							<ThemedView
 								id={routerListHeaderId.current}
@@ -232,8 +243,8 @@ export default function RoutersScreen() {
 									borderBottomWidth: 1,
 									borderBottomColor: Colors[colorScheme].borderDark,
 								}}
-								lightColor={Colors.light.titleBg}
-								darkColor={Colors.dark.titleBg}
+								lightColor={titleBg}
+								darkColor={titleBg}
 							>
 								{routerHeaders.map((col) => (
 									<ThemedText
@@ -247,8 +258,8 @@ export default function RoutersScreen() {
 											paddingRight: 8,
 											...(col.textAlign ? { textAlign: col.textAlign } : {}),
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{col.label}
 									</ThemedText>
@@ -258,7 +269,7 @@ export default function RoutersScreen() {
 								id={routerListDetailsId.current}
 								style={{
 									flexDirection: 'column',
-									backgroundColor: Colors[colorScheme].background,
+									backgroundColor: bg,
 								}}
 							>
 								{routers.map((router, index) => (
@@ -272,14 +283,12 @@ export default function RoutersScreen() {
 											paddingHorizontal: 10,
 											justifyContent: 'space-between',
 											backgroundColor:
-												index % 2 === 0
-													? Colors[colorScheme].listItemBackground
-													: Colors[colorScheme].background,
+												index % 2 === 0 ? listItemBackground : bg,
 											borderBottomWidth: index < routers.length - 1 ? 1 : 0,
-											borderBottomColor: Colors[colorScheme].borderDark,
+											borderBottomColor: borderDark,
 										}}
-										lightColor={Colors.light.background}
-										darkColor={Colors.dark.background}
+										lightColor={bg}
+										darkColor={bg}
 									>
 										<ThemedText
 											numberOfLines={1}
@@ -288,8 +297,8 @@ export default function RoutersScreen() {
 												overflow: 'hidden',
 												paddingRight: 8,
 											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textColor}
+											darkColor={textColor}
 										>
 											{index + 1}
 										</ThemedText>
@@ -300,8 +309,8 @@ export default function RoutersScreen() {
 												paddingRight: 8,
 												overflow: 'hidden',
 											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textColor}
+											darkColor={textColor}
 										>
 											{router.name}
 										</ThemedText>
@@ -311,8 +320,8 @@ export default function RoutersScreen() {
 												paddingRight: 8,
 												width: 120,
 											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textColor}
+											darkColor={textColor}
 										>
 											{router.location}
 										</ThemedText>
@@ -322,8 +331,8 @@ export default function RoutersScreen() {
 												paddingRight: 8,
 												width: 120,
 											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textColor}
+											darkColor={textColor}
 										>
 											{router.type}
 										</ThemedText>
@@ -333,8 +342,8 @@ export default function RoutersScreen() {
 												paddingRight: 8,
 												width: 120,
 											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textColor}
+											darkColor={textColor}
 										>
 											{router?.networkInfo.ipv4}
 										</ThemedText>
@@ -344,8 +353,8 @@ export default function RoutersScreen() {
 												paddingRight: 8,
 												width: 120,
 											}}
-											lightColor={Colors.light.text}
-											darkColor={Colors.dark.text}
+											lightColor={textColor}
+											darkColor={textColor}
 										>
 											{router.transactionBalance}
 										</ThemedText>
@@ -362,18 +371,12 @@ export default function RoutersScreen() {
 											<TouchableOpacity
 												onPress={() => handleViewRouter(router?.id as string)}
 											>
-												<IconSymbol
-													color={Colors[colorScheme].lime}
-													name='eye.outline'
-												/>
+												<IconSymbol color={lime} name='eye.outline' />
 											</TouchableOpacity>
 											<TouchableOpacity
 												onPress={() => handleEditRouter(router?.id as string)}
 											>
-												<IconSymbol
-													color={Colors[colorScheme].yellow}
-													name='edit.outline'
-												/>
+												<IconSymbol color={yellow} name='edit.outline' />
 											</TouchableOpacity>
 											<TouchableOpacity
 												onPress={() => {
@@ -385,10 +388,7 @@ export default function RoutersScreen() {
 													toggleShowPrompt(true);
 												}}
 											>
-												<IconSymbol
-													color={Colors[colorScheme].error}
-													name='delete.outline'
-												/>
+												<IconSymbol color={errorColor} name='delete.outline' />
 											</TouchableOpacity>
 										</ThemedView>
 									</ThemedView>

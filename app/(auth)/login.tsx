@@ -7,11 +7,11 @@ import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { passwordRegex, phoneRegexWithSpaces } from '@/constants';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -35,24 +35,25 @@ export default function LoginsScreen() {
 	useTrackHistory('/(auth)/login');
 	const router = useRouter();
 	const navigation = useNavigation();
-	// timeout ref
-	const loginTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const loaderFadeAnim = useAnimatedValue(0);
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
+	const bg = useThemeColor({}, 'background');
+	const headers = useThemeColor({}, 'headers');
+	const textColor = useThemeColor({}, 'text');
+	const inputContainerBackground = useThemeColor(
+		{},
+		'inputContainerBackground'
+	);
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const inputBackground = useThemeColor({}, 'inputBackground');
+	const bim = useThemeColor({}, 'bim');
+	const errorColor = useThemeColor({}, 'error');
+	const buttonError = useThemeColor({}, 'buttonError');
+	const authButtonText = useThemeColor({}, 'authButtonText');
 	const scrollRef = useRef<any>(null);
 	const { handleAuthentication, language } = useGeneral(); // Get authenticate function from context
 	const [phoneNumber, setPhoneNumber] = useState('');
 	const [password, setPassword] = useState('');
-
-	// Autofill credentials for local development manual testing.
-	// Guarded by __DEV__ so this never runs in production builds.
-	useEffect(() => {
-		if (typeof __DEV__ !== 'undefined' && __DEV__) {
-			// Development test credentials
-			handleSetPhone('0789244866');
-			handleSetPassword('mystBim1234.');
-		}
-	}, []);
 	const [loading, setLoading] = useState(false);
 	const [focusedInput, setFocusedInput] = useState<string | null>(null);
 	const [errors, setErrors] = useState({
@@ -60,6 +61,16 @@ export default function LoginsScreen() {
 		password: false,
 		login: false,
 	});
+
+	// Autofill credentials for local development manual testing.
+	// Guarded by __DEV__ so this never runs in production builds.
+	useEffect(() => {
+		if (typeof __DEV__ !== 'undefined' && __DEV__) {
+			// Development test credentials
+			setPhoneNumber(formatPhoneNumber('0789244866'));
+			setPassword('mystBim1234.');
+		}
+	}, []);
 
 	useFocusEffect(() => {
 		const sub = () => {
@@ -114,6 +125,7 @@ export default function LoginsScreen() {
 			clearTimeout(t2);
 		};
 	}, [focusedInput]);
+
 	const handleSetPhone = (value: string): void => {
 		const phoneNumber = formatPhoneNumber(value);
 		if (!phoneNumber || !phoneRegexWithSpaces.test(phoneNumber)) {
@@ -123,7 +135,6 @@ export default function LoginsScreen() {
 		}
 		setPhoneNumber(phoneNumber);
 	};
-
 	const handleSetPassword = (value: string): void => {
 		if ((passwordRegex.test(password) && password) || !password) {
 			setErrors((prev) => ({ ...prev, password: false }));
@@ -131,7 +142,7 @@ export default function LoginsScreen() {
 		setPassword(value);
 	};
 
-	const handleOnLogin = () => {
+	const handleOnLogin = async () => {
 		if (
 			!phoneRegexWithSpaces.test(phoneNumber) ||
 			!passwordRegex.test(password)
@@ -143,23 +154,18 @@ export default function LoginsScreen() {
 			});
 			return;
 		}
+		handleToggleLoader(true);
 		try {
-			handleToggleLoader(true);
-			if (loginTimeoutRef.current) {
-				clearTimeout(loginTimeoutRef.current);
-			}
-			loginTimeoutRef.current = setTimeout(() => {
-				handleToggleLoader(false);
-				// Call your signup API here
-				handleAuthentication({
-					number: phoneNumber,
-					password,
-				});
-			}, 1000);
+			// Call your signup API here
+			await handleAuthentication({
+				number: phoneNumber,
+				password,
+			});
 		} catch (error) {
 			setErrors((prev) => ({ ...prev, signup: true }));
 			console.error('Login error:', error);
 		}
+		handleToggleLoader(false);
 	};
 
 	const handleToggleLoader = (show?: boolean) => {
@@ -205,44 +211,32 @@ export default function LoginsScreen() {
 			>
 				<ParallaxScrollView
 					headerBackgroundColor={{
-						light: Colors[colorScheme].background,
-						dark: Colors[colorScheme].background,
+						light: bg,
+						dark: bg,
 					}}
 					getScrollRef={(r) => (scrollRef.current = r)}
 				>
-					<ThemedView
-						style={styles.container}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
-					>
-						<ThemedView
-							style={styles.header}
-							lightColor={Colors[colorScheme].background}
-							darkColor={Colors[colorScheme].background}
-						>
+					<ThemedView style={styles.container} lightColor={bg} darkColor={bg}>
+						<ThemedView style={styles.header} lightColor={bg} darkColor={bg}>
 							<Image
 								source={bimTextImg}
 								style={{ height: 35, resizeMode: 'contain' }}
 							/>
 						</ThemedView>
-						<ThemedView
-							style={styles.form}
-							lightColor={Colors[colorScheme].background}
-							darkColor={Colors[colorScheme].background}
-						>
+						<ThemedView style={styles.form} lightColor={bg} darkColor={bg}>
 							<ThemedView
 								style={styles.formHeader}
-								lightColor={Colors[colorScheme].background}
-								darkColor={Colors[colorScheme].background}
+								lightColor={bg}
+								darkColor={bg}
 							>
 								<ThemedText
 									style={{
 										fontWeight: fontWeight['heading.one'],
 										fontSize: fontSize['heading.one'],
-										color: Colors[colorScheme].headers,
+										color: headers,
 									}}
-									lightColor={Colors.light.headers}
-									darkColor={Colors.dark.headers}
+									lightColor={headers}
+									darkColor={headers}
 								>
 									{translations[language].categories.auth['signIn.title']}
 								</ThemedText>
@@ -250,59 +244,63 @@ export default function LoginsScreen() {
 									style={{
 										fontWeight: fontWeight['heading.three'],
 										fontSize: fontSize['heading.three'],
-										color: Colors.light.text,
+										color: textColor,
 										marginTop: 10,
 									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
+									lightColor={textColor}
+									darkColor={textColor}
 								>
 									{translations[language].categories.auth['signIn.subtitle']}
 								</ThemedText>
 							</ThemedView>
 							<ThemedView
-								style={styles.formInputs}
-								lightColor={Colors.light.background}
-								darkColor={Colors.dark.background}
+								style={[
+									styles.formInputs,
+									{
+										backgroundColor: inputContainerBackground,
+									},
+								]}
+								lightColor={bg}
+								darkColor={bg}
 							>
 								<ThemedInput
 									style={[
 										styles.formInput,
 										{
-											borderColor: errors.phone
-												? Colors[colorScheme].error
-												: Colors[colorScheme].inputBorder,
+											borderColor: errors.phone ? errorColor : inputBorder,
 										},
 									]}
-									lightColor={Colors.light.text}
-									darkColor={Colors.light.text}
+									lightColor={textColor}
+									darkColor={textColor}
 									value={phoneNumber}
 									setValue={handleSetPhone}
 									placeholder={
 										translations[language].categories.auth['phoneNumber']
 									}
-									placeholderTextColor={Colors[colorScheme].text}
+									placeholderTextColor={textColor}
 									keyboardType='number-pad'
-									onFocus={() => setFocusedInput('phoneNumber')}
+									onFocus={() => setFocusedInput('phone')}
 									onBlur={() => setFocusedInput(null)}
 								/>
 								<ThemedInput
 									style={[
 										styles.formInput,
 										{
-											borderColor: errors.password
-												? Colors[colorScheme].error
-												: Colors[colorScheme].inputBorder,
+											borderColor: errors.password ? errorColor : inputBorder,
+
+											backgroundColor: inputBackground,
+											color: textColor,
 										},
 									]}
-									lightColor={Colors.light.text}
-									darkColor={Colors.light.text}
+									lightColor={textColor}
+									darkColor={textColor}
 									value={password}
 									secureTextEntry={true}
 									setValue={handleSetPassword}
 									placeholder={
 										translations[language].categories.auth['password']
 									}
-									placeholderTextColor={Colors[colorScheme].text}
+									placeholderTextColor={textColor}
 									keyboardType='default'
 									onFocus={() => setFocusedInput('password')}
 									onBlur={() => setFocusedInput(null)}
@@ -315,18 +313,10 @@ export default function LoginsScreen() {
 									style={{
 										borderRadius: 8,
 									}}
-									darkColor={
-										errors['login']
-											? Colors['dark'].buttonError
-											: Colors['dark'].bim
-									}
-									lightColor={
-										errors['login']
-											? Colors['light'].buttonError
-											: Colors['light'].bim
-									}
-									darkTextColor={Colors['dark'].authButtonText}
-									lightTextColor={Colors['light'].authButtonText}
+									darkColor={errors['login'] ? buttonError : bim}
+									lightColor={errors['login'] ? buttonError : bim}
+									darkTextColor={authButtonText}
+									lightTextColor={authButtonText}
 								/>
 								<ThemedView
 									style={{
@@ -344,7 +334,7 @@ export default function LoginsScreen() {
 										}}
 										onPress={() => router.push('/(auth)/reset')}
 									>
-										<ThemedText style={{ color: Colors[colorScheme].bim }}>
+										<ThemedText style={{ color: bim }}>
 											{translations[language].categories.auth['forgotPassword']}
 										</ThemedText>
 									</TouchableOpacity>
@@ -356,7 +346,7 @@ export default function LoginsScreen() {
 										}}
 										onPress={() => router.push('/(auth)')}
 									>
-										<ThemedText style={{ color: Colors[colorScheme].bim }}>
+										<ThemedText style={{ color: bim }}>
 											{translations[language].categories.auth['signUp']}
 										</ThemedText>
 									</TouchableOpacity>
@@ -402,16 +392,12 @@ const styles = StyleSheet.create({
 		flexDirection: 'column',
 		width: '100%',
 		marginVertical: 50,
-		backgroundColor: Colors.light.inputContainerBackground,
 		gap: 15,
 	},
 	formInput: {
 		width: '100%',
 		fontSize: fontSize['input.large'],
-		backgroundColor: Colors.light.inputBackground,
 		borderRadius: 8,
-		borderColor: Colors.light.inputBorder,
 		borderWidth: 1,
-		color: Colors.light.text,
 	},
 });

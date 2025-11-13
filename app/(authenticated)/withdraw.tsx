@@ -2,19 +2,26 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import WithdrawFunds from '@/views/WithdrawFunds';
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function WithdrawScreen() {
-	const colorScheme = useColorScheme() ?? 'light';
+	const bg = useThemeColor({}, 'background');
+	const textColor = useThemeColor({}, 'text');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const borderDark = useThemeColor({}, 'borderDark');
+	const lime = useThemeColor({}, 'lime');
+	const white = useThemeColor({}, 'white');
+	const titleBg = useThemeColor({}, 'titleBg');
+	const screenTitleText = useThemeColor({}, 'screenTitleText');
 	const { routers, fetchRouters } = useTransaction();
 	const { user, language } = useGeneral();
 
@@ -95,19 +102,15 @@ export default function WithdrawScreen() {
 	};
 
 	return (
-		<ThemedView
-			lightColor={Colors.light.background}
-			darkColor={Colors.dark.background}
-			style={styles.container}
-		>
+		<ThemedView lightColor={bg} darkColor={bg} style={styles.container}>
 			<ThemedView
 				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
+				lightColor={bg}
+				darkColor={bg}
 			>
 				<ThemedText
-					lightColor={Colors.light.text}
-					darkColor={Colors.dark.text}
+					lightColor={textColor}
+					darkColor={textColor}
 					style={{
 						width: '100%',
 						textTransform: 'capitalize',
@@ -118,8 +121,8 @@ export default function WithdrawScreen() {
 					{translations[language].categories.withdraw.title}
 				</ThemedText>
 				<ThemedText
-					lightColor={Colors.light.screenTitleText}
-					darkColor={Colors.dark.screenTitleText}
+					lightColor={screenTitleText}
+					darkColor={screenTitleText}
 					style={{
 						width: '100%',
 						textTransform: 'capitalize',
@@ -132,7 +135,7 @@ export default function WithdrawScreen() {
 			</ThemedView>
 			<TileContainer
 				id={'withdraw-router-list'}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={bg}
 				style={{
 					flexDirection: 'column',
 					overflow: 'hidden',
@@ -148,8 +151,8 @@ export default function WithdrawScreen() {
 				>
 					<ThemedView
 						style={{ flexDirection: 'column' }}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={bg}
+						darkColor={bg}
 					>
 						<ThemedView
 							style={{
@@ -159,10 +162,10 @@ export default function WithdrawScreen() {
 								paddingHorizontal: 5,
 								paddingVertical: 10,
 								borderBottomWidth: 1,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.titleBg}
-							darkColor={Colors.dark.titleBg}
+							lightColor={titleBg}
+							darkColor={titleBg}
 						>
 							{withdrawHeaders.map((col) => (
 								<ThemedText
@@ -176,8 +179,8 @@ export default function WithdrawScreen() {
 										paddingRight: 8,
 										...(col.textAlign ? { textAlign: col.textAlign } : {}),
 									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
+									lightColor={textColor}
+									darkColor={textColor}
 								>
 									{col.label}
 								</ThemedText>
@@ -187,7 +190,7 @@ export default function WithdrawScreen() {
 						<ScrollView
 							style={{
 								flexDirection: 'column',
-								backgroundColor: Colors[colorScheme].background,
+								backgroundColor: bg,
 							}}
 						>
 							{routers.map((r, index) => (
@@ -199,54 +202,51 @@ export default function WithdrawScreen() {
 										alignItems: 'center',
 										paddingVertical: 5,
 										paddingHorizontal: 5,
-										backgroundColor:
-											index % 2 === 0
-												? Colors[colorScheme].listItemBackground
-												: Colors[colorScheme].background,
+										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
 										justifyContent: 'space-between',
 										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
-										borderBottomColor: Colors[colorScheme].borderDark,
+										borderBottomColor: borderDark,
 									}}
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
+									lightColor={bg}
+									darkColor={bg}
 								>
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 30, overflow: 'hidden', paddingRight: 8 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{index + 1}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
 										style={{ width: 120, paddingRight: 8, overflow: 'hidden' }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{r.name}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
 										style={{ paddingRight: 8, width: 120 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{r.location}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
 										style={{ paddingRight: 8, width: 120 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{r?.networkInfo.ipv4}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
 										style={{ paddingRight: 8, width: 120 }}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{r.transactionBalance}
 									</ThemedText>
@@ -259,12 +259,12 @@ export default function WithdrawScreen() {
 											title={translations[language].categories.buttons.withdraw}
 											onPress={() => handleWithdrawRouter(r.id)}
 											style={{
-												backgroundColor: Colors[colorScheme].lime,
+												backgroundColor: lime,
 												borderRadius: 6,
 												minWidth: 120,
 											}}
-											lightTextColor={Colors.light.white}
-											darkTextColor={Colors.dark.white}
+											lightTextColor={white}
+											darkTextColor={white}
 										/>
 									</ThemedView>
 								</ThemedView>

@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/Colors';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { useEffect } from 'react';
 import {
 	Animated,
@@ -18,7 +18,9 @@ interface Props {
 }
 
 export default function Toast({ visible, type, message, onDismiss }: Props) {
-	const bg = type === 'error' ? Colors.light.error : Colors.light.lime;
+	const errorColor = useThemeColor({}, 'error');
+	const limeColor = useThemeColor({}, 'lime');
+	const bg = type === 'error' ? errorColor : limeColor;
 
 	useEffect(() => {
 		if (!visible) return;

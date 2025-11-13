@@ -1,8 +1,8 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import TileContainer from './TileContainer';
 
 export default function DashboardTile({
@@ -29,6 +29,9 @@ export default function DashboardTile({
 	amountType?: 'double' | 'number';
 	language: string;
 }) {
+	const dayIconBg = useThemeColor({}, 'dayIconBackground');
+	const dayText = useThemeColor({}, 'dayText');
+	const valueText = useThemeColor({}, 'valueText');
 	return (
 		<TileContainer id={id} backgroundColor={backgroundColor}>
 			<ThemedView
@@ -41,8 +44,8 @@ export default function DashboardTile({
 					padding: 5,
 					overflow: 'hidden',
 				}}
-				lightColor={iconBackgroundColor || Colors.light.dayIconBackground}
-				darkColor={iconBackgroundColor || Colors.dark.dayIconBackground}
+				lightColor={iconBackgroundColor || dayIconBg}
+				darkColor={iconBackgroundColor || dayIconBg}
 			>
 				{iconName && (
 					<IconSymbol
@@ -63,8 +66,8 @@ export default function DashboardTile({
 						fontSize: fontSize['text.large'],
 						fontWeight: fontWeight['heading.two'],
 					}}
-					lightColor={titleColor || Colors.light.dayText}
-					darkColor={titleColor || Colors.dark.dayText}
+					lightColor={titleColor || dayText}
+					darkColor={titleColor || dayText}
 				>
 					{title}
 				</ThemedText>
@@ -73,8 +76,8 @@ export default function DashboardTile({
 						fontSize: fontSize['heading.one'],
 						fontWeight: fontWeight['heading.two'],
 					}}
-					lightColor={Colors.light.valueText}
-					darkColor={Colors.dark.valueText}
+					lightColor={valueText}
+					darkColor={valueText}
 				>
 					{amountType === 'double'
 						? typeof amount === 'number'

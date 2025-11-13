@@ -4,10 +4,10 @@ import { ThemedDropdown } from '@/components/ThemedDropdown';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { validateIPv4 } from '@/helpers';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { NetRouter } from '@/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -53,8 +53,15 @@ export default function RouterOverlay({
 	onBack,
 	onEdit,
 }: Props) {
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
 	const { language, isAnimatable, keyboardVisible } = useGeneral();
+	const bg = useThemeColor({}, 'background');
+	const screenTitleText = useThemeColor({}, 'screenTitleText');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const errorColor = useThemeColor({}, 'error');
+	const cancelButton = useThemeColor({}, 'cancelButton');
+	const bim = useThemeColor({}, 'bim');
+	const white = useThemeColor({}, 'white');
 	useSafeAreaInsets();
 	const fadeAnim = useRef(new Animated.Value(0)).current;
 	const ddRef = useRef<View | null>(null);
@@ -179,13 +186,13 @@ export default function RouterOverlay({
 						marginBottom: keyboardVisible ? 90 : 0,
 					},
 				]}
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
+				lightColor={bg}
+				darkColor={bg}
 			>
 				<ThemedText
 					style={styles.title}
-					lightColor={Colors.light.screenTitleText}
-					darkColor={Colors.dark.screenTitleText}
+					lightColor={screenTitleText}
+					darkColor={screenTitleText}
 				>
 					{title}
 				</ThemedText>
@@ -199,8 +206,8 @@ export default function RouterOverlay({
 					editable={isEditable}
 					onFocus={() => scrollToInput(nameInputRef)}
 					style={{
-						backgroundColor: Colors[colorScheme].background,
-						borderColor: Colors[colorScheme].inputBorder,
+						backgroundColor: bg,
+						borderColor: inputBorder,
 						borderWidth: 1,
 					}}
 					containerStyle={{ marginBottom: 8 }}
@@ -215,8 +222,8 @@ export default function RouterOverlay({
 					editable={isEditable}
 					onFocus={() => scrollToInput(locationInputRef)}
 					style={{
-						backgroundColor: Colors[colorScheme].background,
-						borderColor: Colors[colorScheme].inputBorder,
+						backgroundColor: bg,
+						borderColor: inputBorder,
 						borderWidth: 1,
 					}}
 					containerStyle={{ marginBottom: 8 }}
@@ -224,8 +231,8 @@ export default function RouterOverlay({
 
 				<ThemedDropdown
 					containerRef={ddRef}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={bg}
+					darkColor={bg}
 					placeholder={translations[language].categories.dashboard.routerType}
 					value={type}
 					label={translations[language].categories.routers.routerType}
@@ -254,13 +261,13 @@ export default function RouterOverlay({
 					editable={isEditable}
 					onFocus={() => scrollToInput(ipInputRef)}
 					style={{
-						backgroundColor: Colors[colorScheme].background,
+						backgroundColor: bg,
 						borderColor:
 							ipAddress.trim().length === 0
-								? Colors[colorScheme].inputBorder
+								? inputBorder
 								: validateIPv4(ipAddress.trim())
-								? Colors[colorScheme].inputBorder
-								: Colors[colorScheme].error,
+								? inputBorder
+								: errorColor,
 						borderWidth: 1,
 					}}
 					containerStyle={{ marginBottom: 8 }}
@@ -275,8 +282,8 @@ export default function RouterOverlay({
 					editable={isEditable}
 					onFocus={() => scrollToInput(userInputRef)}
 					style={{
-						backgroundColor: Colors[colorScheme].background,
-						borderColor: Colors[colorScheme].inputBorder,
+						backgroundColor: bg,
+						borderColor: inputBorder,
 						borderWidth: 1,
 					}}
 					containerStyle={{ marginBottom: 8 }}
@@ -292,8 +299,8 @@ export default function RouterOverlay({
 					editable={isEditable}
 					onFocus={() => scrollToInput(passwordInputRef, 80)}
 					style={{
-						backgroundColor: Colors[colorScheme].background,
-						borderColor: Colors[colorScheme].inputBorder,
+						backgroundColor: bg,
+						borderColor: inputBorder,
 						borderWidth: 1,
 					}}
 					containerStyle={{ marginBottom: 8 }}
@@ -305,18 +312,18 @@ export default function RouterOverlay({
 							<ThemedButton
 								title={translations[language].categories.buttons.close}
 								onPress={onBack ?? onCancel}
-								lightColor={Colors.light.cancelButton}
-								darkColor={Colors.dark.cancelButton}
-								lightTextColor={Colors.light.white}
-								darkTextColor={Colors.dark.white}
+								lightColor={cancelButton}
+								darkColor={cancelButton}
+								lightTextColor={white}
+								darkTextColor={white}
 							/>
 							<ThemedButton
 								title={translations[language].categories.buttons.save}
 								onPress={onEdit ?? (() => {})}
-								lightColor={Colors.light.bim}
-								darkColor={Colors.dark.bim}
-								lightTextColor={Colors.light.white}
-								darkTextColor={Colors.dark.white}
+								lightColor={bim}
+								darkColor={bim}
+								lightTextColor={white}
+								darkTextColor={white}
 							/>
 						</>
 					) : (
@@ -324,10 +331,10 @@ export default function RouterOverlay({
 							<ThemedButton
 								title={translations[language].categories.buttons.cancel}
 								onPress={onCancel}
-								lightColor={Colors.light.cancelButton}
-								darkColor={Colors.dark.cancelButton}
-								lightTextColor={Colors.light.white}
-								darkTextColor={Colors.dark.white}
+								lightColor={cancelButton}
+								darkColor={cancelButton}
+								lightTextColor={white}
+								darkTextColor={white}
 							/>
 							<ThemedButton
 								title={translations[language].categories.buttons.saveRouter}
@@ -342,10 +349,10 @@ export default function RouterOverlay({
 									})
 								}
 								disabled={!canSubmit}
-								lightColor={Colors.light.bim}
-								darkColor={Colors.dark.bim}
-								lightTextColor={Colors.light.white}
-								darkTextColor={Colors.dark.white}
+								lightColor={bim}
+								darkColor={bim}
+								lightTextColor={white}
+								darkTextColor={white}
 							/>
 						</>
 					)}

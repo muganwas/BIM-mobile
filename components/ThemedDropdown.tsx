@@ -88,6 +88,7 @@ export const ThemedDropdown = ({
 		{ light: lightColor, dark: darkColor },
 		'background'
 	);
+	const textColor = useThemeColor({}, 'text');
 	const dropdownAnimVal = useAnimatedValue(0);
 	// On web there's no native animated driver available. Only enable native driver when
 	// running in a true native environment (no document global).
@@ -144,8 +145,8 @@ export const ThemedDropdown = ({
 			>
 				{label && (
 					<ThemedText
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textColor}
+						darkColor={textColor}
 						style={[
 							{
 								marginBottom: 8,

@@ -21,6 +21,41 @@ const translations: Translations = {
 				signIn: 'Sign In instead',
 				signUp: 'Sign Up instead',
 				enterOTP: 'Enter OTP',
+				// Setup authenticator / 2FA screen
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app (Google Authenticator, Authy) or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.noQr':
+					'No QR available — use the secret below to add your account manually.',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or press the Copy Secret button and add the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. After adding the account to your authenticator app, you will be able to generate 6-digit codes for login.',
+				'setupAuthenticator.step4':
+					'4. Keep the secret safe. If you lose access to your authenticator, you will need this secret to restore access.',
+				// Setup screen localised messages
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic/fallback app messages
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
 				haveAnAccount: 'Already have an account?',
 				forgotPassword: 'Forgot Password?',
 				// Profile screen
@@ -273,28 +308,158 @@ const translations: Translations = {
 		name: 'Français',
 		active: false,
 		categories: {
-			auth: {},
+			auth: {
+				// Setup authenticator placeholders
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or copy the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. You can now generate 6-digit codes for login.',
+				'setupAuthenticator.step4': '4. Keep the secret safe.',
+				// Localised messages (placeholders)
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic placeholders
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
+			},
 		},
 	},
 	es: {
 		name: 'Español',
 		active: false,
 		categories: {
-			auth: {},
+			auth: {
+				// Placeholder Spanish translations (copying English)
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or copy the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. You can now generate 6-digit codes for login.',
+				'setupAuthenticator.step4': '4. Keep the secret safe.',
+				// Localised messages (placeholders)
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic placeholders
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
+			},
 		},
 	},
 	de: {
 		name: 'Deutsch',
 		active: false,
 		categories: {
-			auth: {},
+			auth: {
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or copy the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. You can now generate 6-digit codes for login.',
+				'setupAuthenticator.step4': '4. Keep the secret safe.',
+				// Localised messages (placeholders)
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic placeholders
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
+			},
 		},
 	},
 	it: {
 		name: 'Italiano',
 		active: false,
 		categories: {
-			auth: {},
+			auth: {
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or copy the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. You can now generate 6-digit codes for login.',
+				'setupAuthenticator.step4': '4. Keep the secret safe.',
+				// Localised messages (placeholders)
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic placeholders
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
+			},
 		},
 	},
 	// Add other required languages with minimal structure
@@ -302,35 +467,191 @@ const translations: Translations = {
 		name: 'Português',
 		active: false,
 		categories: {
-			auth: {},
+			auth: {
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or copy the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. You can now generate 6-digit codes for login.',
+				'setupAuthenticator.step4': '4. Keep the secret safe.',
+				// Localised messages (placeholders)
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic placeholders
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
+			},
 		},
 	},
 	ru: {
 		name: 'Русский',
 		active: false,
 		categories: {
-			auth: {},
+			auth: {
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or copy the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. You can now generate 6-digit codes for login.',
+				'setupAuthenticator.step4': '4. Keep the secret safe.',
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic placeholders
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
+			},
 		},
 	},
 	zh: {
 		name: '中文',
 		active: false,
 		categories: {
-			auth: {},
+			auth: {
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or copy the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. You can now generate 6-digit codes for login.',
+				'setupAuthenticator.step4': '4. Keep the secret safe.',
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic placeholders
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
+			},
 		},
 	},
 	ar: {
 		name: 'العربية',
 		active: false,
 		categories: {
-			auth: {},
+			auth: {
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or copy the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. You can now generate 6-digit codes for login.',
+				'setupAuthenticator.step4': '4. Keep the secret safe.',
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic placeholders
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
+			},
 		},
 	},
 	ja: {
 		name: '日本語',
 		active: false,
 		categories: {
-			auth: {},
+			auth: {
+				setupAuthenticator: 'Set up authenticator',
+				'setupAuthenticator.subtitle':
+					'Scan the QR code with an authenticator app or copy the secret and add it manually.',
+				'setupAuthenticator.secretLabel': 'Secret',
+				'setupAuthenticator.enterCodePlaceholder':
+					'Enter code from authenticator',
+				'setupAuthenticator.copy': 'Copy Secret',
+				'setupAuthenticator.verify': 'Verify',
+				'setupAuthenticator.continue': 'Continue',
+				'setupAuthenticator.howToTitle': 'How to set up',
+				'setupAuthenticator.step1':
+					'1. Install an authenticator app (Google Authenticator, Authy, etc.).',
+				'setupAuthenticator.step2':
+					'2. Scan the QR code above, or copy the secret manually in the app.',
+				'setupAuthenticator.step3':
+					'3. You can now generate 6-digit codes for login.',
+				'setupAuthenticator.step4': '4. Keep the secret safe.',
+				'setupAuthenticator.copiedToast': 'Secret copied to clipboard',
+				'setupAuthenticator.copyFailed': 'Failed to copy secret',
+				'setupAuthenticator.clipboardUnavailable':
+					'Clipboard not available on this platform',
+				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
+				'setupAuthenticator.enterCodeError':
+					'Enter the code from your authenticator app',
+				'setupAuthenticator.verifyFailed': '2FA verification failed',
+				// Generic placeholders
+				loginFailed: 'Login failed',
+				registrationFailed: 'Registration failed',
+				otpVerificationFailed: 'OTP verification failed',
+				unexpectedError: 'An unexpected error occurred',
+			},
 		},
 	},
 };

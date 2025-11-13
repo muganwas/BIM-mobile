@@ -7,13 +7,14 @@ import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { emailRegex, passwordRegex, phoneRegexWithSpaces } from '@/constants';
-import { Colors } from '@/constants/Colors';
+// theme colors are provided via `useThemeColor`
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
 import { verifyToken } from '@/helpers/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -41,8 +42,23 @@ export default function RegisterScreen() {
 	const signupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const loaderFadeAnim = useAnimatedValue(0);
 	const scrollRef = useRef<any>(null);
-	const colorScheme = useColorScheme() ?? 'light';
-	const { language } = useGeneral();
+	useColorScheme();
+	const { language, handleRegistration } = useGeneral();
+
+	const bg = useThemeColor({}, 'background');
+	const headers = useThemeColor({}, 'headers');
+	const textColor = useThemeColor({}, 'text');
+	const inputContainerBackground = useThemeColor(
+		{},
+		'inputContainerBackground'
+	);
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const inputBackground = useThemeColor({}, 'inputBackground');
+	const bim = useThemeColor({}, 'bim');
+	const errorColor = useThemeColor({}, 'error');
+	const buttonError = useThemeColor({}, 'buttonError');
+	const authButtonText = useThemeColor({}, 'authButtonText');
+	const tint = useThemeColor({}, 'tint');
 	const [fullName, setFullName] = useState('');
 	const [phoneNumber, setPhoneNumber] = useState('');
 	const [email, setEmail] = useState('');
@@ -77,6 +93,27 @@ export default function RegisterScreen() {
 		);
 		return () => subscription.remove();
 	});
+
+	// Autofill registration fields for local development manual testing.
+	// Guarded by __DEV__ so this never runs in production builds.
+	useEffect(() => {
+		if (typeof __DEV__ !== 'undefined' && __DEV__) {
+			// Development test credentials for registration (direct setters to avoid hook deps)
+			setFullName('Test User');
+			setPhoneNumber(formatPhoneNumber('0789244866'));
+			setEmail('test@example.com');
+			setPassword('mystBim1234.');
+			setConfirmPassword('mystBim1234.');
+			setErrors((prev) => ({
+				...prev,
+				phoneNumber: false,
+				fullName: false,
+				email: false,
+				password: false,
+				confirmPassword: false,
+			}));
+		}
+	}, []);
 
 	useEffect(() => {
 		const subscription = navigation.addListener('blur', () => {
@@ -201,18 +238,21 @@ export default function RegisterScreen() {
 		}
 		try {
 			handleToggleLoader(true);
-			// Call your signup API here
-			// If successful, redirect to the home screen
 			if (signupTimeoutRef.current) {
 				clearTimeout(signupTimeoutRef.current);
 			}
-			signupTimeoutRef.current = setTimeout(() => {
-				handleToggleLoader(false);
-				router.replace('/(authenticated)/home');
-			}, 1000);
+			// Delegate to global registration handler which will set appMessage on error
+			await handleRegistration({
+				phone: phoneNumber,
+				password,
+				name: fullName,
+				email,
+			});
 		} catch (error) {
 			setErrors((prev) => ({ ...prev, signup: true }));
 			console.error('Signup error:', error);
+		} finally {
+			handleToggleLoader(false);
 		}
 	};
 
@@ -265,44 +305,32 @@ export default function RegisterScreen() {
 			>
 				<ParallaxScrollView
 					headerBackgroundColor={{
-						light: Colors[colorScheme].background,
-						dark: Colors[colorScheme].background,
+						light: bg,
+						dark: bg,
 					}}
 					getScrollRef={(r) => (scrollRef.current = r)}
 				>
-					<ThemedView
-						style={styles.container}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
-					>
-						<ThemedView
-							style={styles.header}
-							lightColor={Colors[colorScheme].background}
-							darkColor={Colors[colorScheme].background}
-						>
+					<ThemedView style={styles.container} lightColor={bg} darkColor={bg}>
+						<ThemedView style={styles.header} lightColor={bg} darkColor={bg}>
 							<Image
 								source={bimTextImg}
 								style={{ height: 35, resizeMode: 'contain' }}
 							/>
 						</ThemedView>
-						<ThemedView
-							style={styles.form}
-							lightColor={Colors[colorScheme].background}
-							darkColor={Colors[colorScheme].background}
-						>
+						<ThemedView style={styles.form} lightColor={bg} darkColor={bg}>
 							<ThemedView
 								style={styles.formHeader}
-								lightColor={Colors[colorScheme].background}
-								darkColor={Colors[colorScheme].background}
+								lightColor={bg}
+								darkColor={bg}
 							>
 								<ThemedText
 									style={{
 										fontWeight: fontWeight['heading.one'],
 										fontSize: fontSize['heading.one'],
-										color: Colors[colorScheme].headers,
+										color: headers,
 									}}
-									lightColor={Colors.light.headers}
-									darkColor={Colors.dark.headers}
+									lightColor={headers}
+									darkColor={headers}
 								>
 									{translations[language].categories.auth['signUp.title']}
 								</ThemedText>
@@ -310,37 +338,36 @@ export default function RegisterScreen() {
 									style={{
 										fontWeight: fontWeight['heading.three'],
 										fontSize: fontSize['heading.three'],
-										color: Colors.light.text,
+										color: textColor,
 										marginTop: 10,
 									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
+									lightColor={textColor}
+									darkColor={textColor}
 								>
 									{translations[language].categories.auth['signUp.subtitle']}
 								</ThemedText>
 							</ThemedView>
 							<ThemedView
+								testID='TID-reg-form'
 								style={styles.formInputs}
-								lightColor={Colors[colorScheme].inputContainerBackground}
-								darkColor={Colors[colorScheme].inputContainerBackground}
+								lightColor={inputContainerBackground}
+								darkColor={inputContainerBackground}
 							>
 								<ThemedInput
 									style={[
 										styles.formInput,
 										{
-											borderColor: errors.fullName
-												? Colors[colorScheme].error
-												: Colors[colorScheme].inputBorder,
+											borderColor: errors.fullName ? errorColor : inputBorder,
 										},
 									]}
-									lightColor={Colors.light.text}
-									darkColor={Colors.light.text}
+									lightColor={textColor}
+									darkColor={textColor}
 									value={fullName}
 									setValue={handleSetFullName}
 									placeholder={
 										translations[language].categories.auth['fullName']
 									}
-									placeholderTextColor={Colors[colorScheme].text}
+									placeholderTextColor={textColor}
 									keyboardType='default'
 									onFocus={() => setFocusedInput('fullName')}
 									onBlur={() => setFocusedInput(null)}
@@ -350,18 +377,18 @@ export default function RegisterScreen() {
 										styles.formInput,
 										{
 											borderColor: errors.phoneNumber
-												? Colors[colorScheme].error
-												: Colors[colorScheme].inputBorder,
+												? errorColor
+												: inputBorder,
 										},
 									]}
-									lightColor={Colors.light.text}
-									darkColor={Colors.light.text}
+									lightColor={textColor}
+									darkColor={textColor}
 									value={phoneNumber}
 									setValue={handleSetPhone}
 									placeholder={
 										translations[language].categories.auth['phoneNumber']
 									}
-									placeholderTextColor={Colors[colorScheme].text}
+									placeholderTextColor={textColor}
 									keyboardType='number-pad'
 									onFocus={() => setFocusedInput('phoneNumber')}
 									onBlur={() => setFocusedInput(null)}
@@ -370,17 +397,15 @@ export default function RegisterScreen() {
 									style={[
 										styles.formInput,
 										{
-											borderColor: errors.email
-												? Colors[colorScheme].error
-												: Colors[colorScheme].inputBorder,
+											borderColor: errors.email ? errorColor : inputBorder,
 										},
 									]}
-									lightColor={Colors.light.text}
-									darkColor={Colors.light.text}
+									lightColor={textColor}
+									darkColor={textColor}
 									value={email}
 									setValue={handleSetEmail}
 									placeholder={translations[language].categories.auth['email']}
-									placeholderTextColor={Colors[colorScheme].text}
+									placeholderTextColor={textColor}
 									keyboardType='email-address'
 									onFocus={() => setFocusedInput('email')}
 									onBlur={() => setFocusedInput(null)}
@@ -389,20 +414,18 @@ export default function RegisterScreen() {
 									style={[
 										styles.formInput,
 										{
-											borderColor: errors.password
-												? Colors[colorScheme].error
-												: Colors[colorScheme].inputBorder,
+											borderColor: errors.password ? errorColor : inputBorder,
 										},
 									]}
-									lightColor={Colors.light.text}
-									darkColor={Colors.light.text}
+									lightColor={textColor}
+									darkColor={textColor}
 									value={password}
 									secureTextEntry={true}
 									setValue={handleSetPassword}
 									placeholder={
 										translations[language].categories.auth['password']
 									}
-									placeholderTextColor={Colors[colorScheme].text}
+									placeholderTextColor={textColor}
 									keyboardType='default'
 									onFocus={() => setFocusedInput('password')}
 									onBlur={() => setFocusedInput(null)}
@@ -413,21 +436,24 @@ export default function RegisterScreen() {
 										{
 											borderColor:
 												focusedInput === 'confirmPassword'
-													? Colors[colorScheme].tint
+													? tint
 													: errors.confirmPassword
-													? Colors[colorScheme].error
-													: Colors[colorScheme].inputBorder,
+													? errorColor
+													: inputBorder,
+
+											backgroundColor: inputBackground,
+											color: textColor,
 										},
 									]}
-									lightColor={Colors.light.text}
-									darkColor={Colors.light.text}
+									lightColor={textColor}
+									darkColor={textColor}
 									value={confirmPassword}
 									secureTextEntry={true}
 									setValue={handleSetConfirmPassword}
 									placeholder={
 										translations[language].categories.auth['confirmPassword']
 									}
-									placeholderTextColor={Colors[colorScheme].text}
+									placeholderTextColor={textColor}
 									keyboardType='default'
 									onFocus={() => setFocusedInput('confirmPassword')}
 									onBlur={() => setFocusedInput(null)}
@@ -440,18 +466,10 @@ export default function RegisterScreen() {
 									style={{
 										borderRadius: 8,
 									}}
-									darkColor={
-										errors['signup']
-											? Colors['dark'].buttonError
-											: Colors['dark'].bim
-									}
-									lightColor={
-										errors['signup']
-											? Colors['light'].buttonError
-											: Colors['light'].bim
-									}
-									darkTextColor={Colors['dark'].authButtonText}
-									lightTextColor={Colors['light'].authButtonText}
+									darkColor={errors['signup'] ? buttonError : bim}
+									lightColor={errors['signup'] ? buttonError : bim}
+									darkTextColor={authButtonText}
+									lightTextColor={authButtonText}
 								/>
 								<ThemedView
 									style={{
@@ -460,17 +478,17 @@ export default function RegisterScreen() {
 										alignItems: 'center',
 										justifyContent: 'center',
 									}}
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
+									lightColor={bg}
+									darkColor={bg}
 								>
 									<ThemedText
 										style={{
 											fontSize: fontSize['text.large'],
-											color: Colors[colorScheme].text,
+											color: textColor,
 											textAlign: 'center',
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{translations[language].categories.auth['haveAnAccount']}{' '}
 									</ThemedText>
@@ -482,7 +500,7 @@ export default function RegisterScreen() {
 										}}
 										onPress={() => router.push('/(auth)/login')}
 									>
-										<ThemedText style={{ color: Colors[colorScheme].bim }}>
+										<ThemedText style={{ color: bim }}>
 											{translations[language].categories.auth['signIn']}
 										</ThemedText>
 									</TouchableOpacity>
@@ -533,10 +551,7 @@ const styles = StyleSheet.create({
 	formInput: {
 		width: '100%',
 		fontSize: fontSize['input.large'],
-		backgroundColor: Colors.light.inputBackground,
 		borderRadius: 8,
-		borderColor: Colors.light.inputBorder,
 		borderWidth: 1,
-		color: Colors.light.text,
 	},
 });

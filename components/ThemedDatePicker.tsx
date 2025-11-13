@@ -2,7 +2,7 @@ import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import DateTimePicker, {
 	DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
@@ -47,7 +47,12 @@ export default function ThemedDatePicker({
 	showClearButton = true,
 }: ThemedDatePickerProps) {
 	const [open, setOpen] = useState(false);
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
+	const bg = useThemeColor({}, 'background');
+	const textColor = useThemeColor({}, 'text');
+	const inputBackground = useThemeColor({}, 'inputBackground');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const bim = useThemeColor({}, 'bim');
 	const iconName = mode === 'time' ? 'clock' : 'calendar';
 
 	const formatted = useMemo(() => {
@@ -90,14 +95,14 @@ export default function ThemedDatePicker({
 
 	return (
 		<ThemedView
-			lightColor={Colors[colorScheme].background}
-			darkColor={Colors[colorScheme].background}
+			lightColor={bg}
+			darkColor={bg}
 			style={[{ flexDirection: 'column' }, containerStyle]}
 		>
 			{label ? (
 				<ThemedText
-					lightColor={Colors.light.text}
-					darkColor={Colors.dark.text}
+					lightColor={textColor}
+					darkColor={textColor}
 					style={[{ marginBottom: 8 }, labelStyle]}
 				>
 					{label}
@@ -110,8 +115,8 @@ export default function ThemedDatePicker({
 				disabled={disabled}
 			>
 				<ThemedView
-					lightColor={Colors[colorScheme].background}
-					darkColor={Colors[colorScheme].background}
+					lightColor={bg}
+					darkColor={bg}
 					style={{ position: 'relative' }}
 				>
 					<ThemedInput
@@ -122,8 +127,8 @@ export default function ThemedDatePicker({
 						style={[
 							{
 								paddingRight: 44,
-								backgroundColor: Colors[colorScheme].inputBackground,
-								borderColor: Colors[colorScheme].inputBorder,
+								backgroundColor: inputBackground,
+								borderColor: inputBorder,
 								borderWidth: 1,
 							},
 							inputStyle,
@@ -139,7 +144,7 @@ export default function ThemedDatePicker({
 						<IconSymbol
 							name={iconName as 'clock' | 'calendar'}
 							size={20}
-							color={Colors[colorScheme].text}
+							color={textColor}
 						/>
 					</ThemedView>
 				</ThemedView>
@@ -147,14 +152,12 @@ export default function ThemedDatePicker({
 
 			{showClearButton && !!value && (
 				<ThemedView
-					lightColor={Colors[colorScheme].background}
-					darkColor={Colors[colorScheme].background}
+					lightColor={bg}
+					darkColor={bg}
 					style={{ alignItems: 'flex-end', marginTop: 6 }}
 				>
 					<TouchableOpacity onPress={() => onChange(null)}>
-						<ThemedText style={{ color: Colors[colorScheme].bim }}>
-							Clear
-						</ThemedText>
+						<ThemedText style={{ color: bim }}>Clear</ThemedText>
 					</TouchableOpacity>
 				</ThemedView>
 			)}

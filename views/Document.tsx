@@ -6,7 +6,7 @@ import ThemedFilePicker from '@/components/ThemedFilePicker';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { DocumentProps } from '@/types';
@@ -40,8 +40,15 @@ export default function Document({
 	onBack,
 	onEdit,
 }: Props) {
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
 	const { language } = useGeneral();
+	const bg = useThemeColor({}, 'background');
+	const screenTitleText = useThemeColor({}, 'screenTitleText');
+	const inputBackground = useThemeColor({}, 'inputBackground');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const cancelButton = useThemeColor({}, 'cancelButton');
+	const bim = useThemeColor({}, 'bim');
+	const white = useThemeColor({}, 'white');
 	const fadeAnim = useRef(new Animated.Value(0)).current;
 	const ddRef = useRef<View>(null);
 
@@ -107,16 +114,8 @@ export default function Document({
 			position='center'
 		>
 			<FormContainer style={styles.kbContainer}>
-				<ThemedView
-					style={styles.card}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
-				>
-					<ThemedText
-						style={styles.title}
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
-					>
+				<ThemedView style={styles.card} lightColor={bg} darkColor={bg}>
+					<ThemedText style={styles.title} lightColor={screenTitleText} darkColor={screenTitleText}>
 						{toTitleCase(
 							isPreview
 								? translations[language].categories.documents.documentDetails
@@ -150,8 +149,8 @@ export default function Document({
 						setShowDropdown={setShowTypeDd}
 						dropDownStyle={{ backgroundColor: '#fff', width: 280 }}
 						active={isEditable}
-						lightColor={Colors[colorScheme].background}
-						darkColor={Colors[colorScheme].background}
+						lightColor={bg}
+						darkColor={bg}
 						openDirection='down'
 						style={{ marginBottom: 8 }}
 					/>
@@ -165,8 +164,8 @@ export default function Document({
 						setValue={setDocumentId}
 						editable={isEditable}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
+							backgroundColor: bg,
+							borderColor: inputBorder,
 							borderWidth: 1,
 						}}
 						containerStyle={{ marginBottom: 8 }}
@@ -193,50 +192,42 @@ export default function Document({
 					<View style={styles.actions}>
 						{isPreview ? (
 							<>
-								<ThemedButton
-									title={toTitleCase(
-										translations[language].categories.buttons.close
-									)}
-									onPress={onBack ?? onCancel}
-									lightColor={Colors.light.cancelButton}
-									darkColor={Colors.dark.cancelButton}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
-								/>
-								<ThemedButton
-									title={toTitleCase(
-										translations[language].categories.buttons.save
-									)}
-									onPress={onEdit ?? (() => {})}
-									lightColor={Colors.light.bim}
-									darkColor={Colors.dark.bim}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
-								/>
+										<ThemedButton
+											title={toTitleCase(translations[language].categories.buttons.close)}
+											onPress={onBack ?? onCancel}
+											lightColor={cancelButton}
+											darkColor={cancelButton}
+											lightTextColor={white}
+											darkTextColor={white}
+										/>
+										<ThemedButton
+											title={toTitleCase(translations[language].categories.buttons.save)}
+											onPress={onEdit ?? (() => {})}
+											lightColor={bim}
+											darkColor={bim}
+											lightTextColor={white}
+											darkTextColor={white}
+										/>
 							</>
 						) : (
 							<>
-								<ThemedButton
-									title={toTitleCase(
-										translations[language].categories.buttons.cancel
-									)}
-									onPress={onCancel}
-									lightColor={Colors.light.cancelButton}
-									darkColor={Colors.dark.cancelButton}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
-								/>
-								<ThemedButton
-									title={toTitleCase(
-										translations[language].categories.buttons.save
-									)}
-									onPress={handleSubmit}
-									disabled={!canSubmit}
-									lightColor={Colors.light.bim}
-									darkColor={Colors.dark.bim}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
-								/>
+										<ThemedButton
+											title={toTitleCase(translations[language].categories.buttons.cancel)}
+											onPress={onCancel}
+											lightColor={cancelButton}
+											darkColor={cancelButton}
+											lightTextColor={white}
+											darkTextColor={white}
+										/>
+										<ThemedButton
+											title={toTitleCase(translations[language].categories.buttons.save)}
+											onPress={handleSubmit}
+											disabled={!canSubmit}
+											lightColor={bim}
+											darkColor={bim}
+											lightTextColor={white}
+											darkTextColor={white}
+										/>
 							</>
 						)}
 					</View>

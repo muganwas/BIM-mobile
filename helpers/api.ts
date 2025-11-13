@@ -37,3 +37,60 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 }
 
 export default apiFetch;
+
+/**
+ * Parse a non-OK Response into a human readable error string.
+ * Handles flattened JSON from our API like:
+ * { errors: { name: ["..."], password: ["..."] } }
+ */
+export async function parseApiError(res: Response): Promise<string> {
+	try {
+		const ct = res.headers.get('content-type') || '';
+		if (ct.includes('application/json')) {
+			const body = await res.json();
+			// If API uses { errors: { field: [..] } }
+			if (body && typeof body === 'object') {
+				if (body.errors && typeof body.errors === 'object') {
+					const parts: string[] = [];
+					for (const key of Object.keys(body.errors)) {
+						const val = body.errors[key];
+						if (Array.isArray(val)) {
+							// join array messages for the field
+							parts.push(`${key}: ${val.join('; ')}`);
+						} else if (typeof val === 'string') {
+							parts.push(`${key}: ${val}`);
+						} else if (val && typeof val === 'object') {
+							try {
+								parts.push(`${key}: ${Object.values(val).flat().join('; ')}`);
+							} catch {
+								parts.push(`${key}: ${JSON.stringify(val)}`);
+							}
+						}
+					}
+					if (parts.length) return parts.join(' \n');
+				}
+
+				// Fallbacks: common message keys
+				if (body.message && typeof body.message === 'string')
+					return body.message;
+				if (body.error && typeof body.error === 'string') return body.error;
+
+				// If body is simple object, stringify a concise form
+				try {
+					return JSON.stringify(body);
+				} catch {
+					// pass through
+				}
+			}
+		} else {
+			// Non-json: return text
+			try {
+				const text = await res.text();
+				if (text) return text;
+			} catch {}
+		}
+	} catch {
+		// ignore and continue to generic fallback
+	}
+	return `HTTP error ${res.status}`;
+}

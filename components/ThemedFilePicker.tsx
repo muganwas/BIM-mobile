@@ -3,6 +3,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import * as DocumentPicker from 'expo-document-picker';
 import { useMemo, useState } from 'react';
 import {
@@ -96,13 +97,15 @@ export default function ThemedFilePicker({
 	};
 
 	const display = fileName || value || '';
+	const textColor = useThemeColor({}, 'text');
+	const mutedText = useThemeColor({}, 'mutedText');
 
 	return (
 		<View style={[{ flexDirection: 'column' }, containerStyle]}>
 			{label ? (
 				<ThemedText
-					lightColor={Colors.light.text}
-					darkColor={Colors.dark.text}
+					lightColor={textColor}
+					darkColor={textColor}
 					style={{ marginBottom: 8, textAlign: 'left' }}
 				>
 					{label}
@@ -135,15 +138,11 @@ export default function ThemedFilePicker({
 						{ backgroundColor: Colors[colorScheme].titleBg },
 					]}
 				>
-					<IconSymbol
-						name={'attachFile'}
-						color={Colors[colorScheme].text}
-						size={16}
-					/>
+					<IconSymbol name={'attachFile'} color={textColor} size={16} />
 					<ThemedText
 						style={{ marginLeft: 6, fontSize: 13 }}
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textColor}
+						darkColor={textColor}
 					>
 						{busy ? tSelecting : tAttach}
 					</ThemedText>
@@ -154,8 +153,8 @@ export default function ThemedFilePicker({
 					numberOfLines={1}
 					ellipsizeMode='middle'
 					style={{ flex: 1, fontSize: 14 }}
-					lightColor={display ? Colors.light.text : Colors.light.mutedText}
-					darkColor={display ? Colors.dark.text : Colors.dark.mutedText}
+					lightColor={display ? textColor : mutedText}
+					darkColor={display ? textColor : mutedText}
 				>
 					{display || placeholder || tNoFile}
 				</ThemedText>

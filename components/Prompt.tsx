@@ -1,5 +1,5 @@
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { PromptButton } from '@/types';
 import { TouchableOpacity } from 'react-native';
 import OverlayContainer from './OverlayContainer';
@@ -25,6 +25,9 @@ export default function Prompt({
 	visible: boolean;
 	buttons: PromptButton[];
 }) {
+	const bg = useThemeColor({}, 'background');
+	const titleColor = useThemeColor({}, 'screenTitleText');
+	const textColor = useThemeColor({}, 'text');
 	return (
 		<OverlayContainer
 			position='top'
@@ -44,8 +47,8 @@ export default function Prompt({
 				}}
 			>
 				<ThemedView
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={bg}
+					darkColor={bg}
 					style={{
 						width: '100%',
 						marginBottom: 10,
@@ -62,21 +65,21 @@ export default function Prompt({
 							textAlign: 'left',
 							alignSelf: 'flex-start',
 						}}
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
+						lightColor={titleColor}
+						darkColor={titleColor}
 					>
 						{title}
 					</ThemedText>
 					{!!onClose && (
 						<TouchableOpacity onPress={onClose}>
-							<IconSymbol name='close' size={24} color={Colors.light.text} />
+							<IconSymbol name='close' size={24} color={textColor} />
 						</TouchableOpacity>
 					)}
 				</ThemedView>
 				<ThemedText
 					style={{ fontSize: 16, marginBottom: 20 }}
-					lightColor={Colors.light.text}
-					darkColor={Colors.dark.text}
+					lightColor={textColor}
+					darkColor={textColor}
 				>
 					{message}
 				</ThemedText>

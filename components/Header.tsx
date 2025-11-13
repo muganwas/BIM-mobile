@@ -2,6 +2,7 @@ import avatarMaleImg from '@/assets/images/avatar-male.png';
 import { Colors } from '@/constants/Colors';
 import { fontSize } from '@/constants/Font';
 import translations from '@/constants/Trans';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import {
 	headerOptions,
 	langCode,
@@ -146,6 +147,8 @@ export default function Header({
 		},
 		[notificationsAnimValue]
 	);
+
+	const headingOneColor = useThemeColor({}, 'heading.one');
 
 	const toggleProfile = useCallback(
 		(v?: boolean) => {
@@ -428,8 +431,8 @@ export default function Header({
 						darkColor={Colors[colorScheme].headerDropdownBackground}
 					>
 						<ThemedText
-							lightColor={Colors.light['heading.one']}
-							darkColor={Colors.dark['heading.one']}
+							lightColor={headingOneColor}
+							darkColor={headingOneColor}
 							style={{
 								fontSize: fontSize['text.medium'],
 							}}

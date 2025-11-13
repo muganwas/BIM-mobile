@@ -2,11 +2,12 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { Colors } from '@/constants/Colors';
+// colors handled via useThemeColor
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef } from 'react';
@@ -16,6 +17,13 @@ import { ScrollView } from 'react-native-gesture-handler';
 export default function PackagesScreen() {
 	useTrackHistory('/(authenticated)/packages');
 	const colorScheme = useColorScheme() ?? 'light';
+	const bg = useThemeColor({}, 'background');
+	const textColor = useThemeColor({}, 'text');
+	const titleBg = useThemeColor({}, 'titleBg');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const borderDark = useThemeColor({}, 'borderDark');
+	const lime = useThemeColor({}, 'lime');
+	const white = useThemeColor({}, 'white');
 	const router = useRouter();
 	const { packages, fetchPackages, routers } = useTransaction();
 	const { user, language } = useGeneral();
@@ -74,19 +82,15 @@ export default function PackagesScreen() {
 	);
 
 	return (
-		<ThemedView
-			lightColor={Colors.light.background}
-			darkColor={Colors.dark.background}
-			style={styles.container}
-		>
+		<ThemedView lightColor={bg} darkColor={bg} style={styles.container}>
 			<ThemedView
 				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
-				lightColor={Colors.light.background}
-				darkColor={Colors.dark.background}
+				lightColor={bg}
+				darkColor={bg}
 			>
 				<ThemedText
-					lightColor={Colors.light.text}
-					darkColor={Colors.dark.text}
+					lightColor={textColor}
+					darkColor={textColor}
 					style={{
 						width: '100%',
 						textTransform: 'capitalize',
@@ -100,8 +104,8 @@ export default function PackagesScreen() {
 					style={{
 						fontSize: fontSize['text.medium'],
 					}}
-					lightColor={Colors.light.text}
-					darkColor={Colors.dark.text}
+					lightColor={textColor}
+					darkColor={textColor}
 				>
 					{translations[language].categories.packages.subtitle}
 				</ThemedText>
@@ -109,7 +113,7 @@ export default function PackagesScreen() {
 
 			<TileContainer
 				id={packageRouterListId.current}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={bg}
 				style={{
 					flexDirection: 'column',
 					overflow: 'hidden',
@@ -124,8 +128,8 @@ export default function PackagesScreen() {
 				>
 					<ThemedView
 						style={{ flexDirection: 'column' }}
-						lightColor={Colors.light.background}
-						darkColor={Colors.dark.background}
+						lightColor={bg}
+						darkColor={bg}
 					>
 						<ThemedView
 							id={packageRouterListHeaderId.current}
@@ -136,10 +140,10 @@ export default function PackagesScreen() {
 								paddingHorizontal: 10,
 								paddingVertical: 10,
 								borderBottomWidth: 1,
-								borderBottomColor: Colors[colorScheme].borderDark,
+								borderBottomColor: borderDark,
 							}}
-							lightColor={Colors.light.titleBg}
-							darkColor={Colors.dark.titleBg}
+							lightColor={titleBg}
+							darkColor={titleBg}
 						>
 							{packageHeaders.map((col) => (
 								<ThemedText
@@ -153,8 +157,8 @@ export default function PackagesScreen() {
 										paddingRight: 8,
 										...(col.textAlign ? { textAlign: col.textAlign } : {}),
 									}}
-									lightColor={Colors.light.text}
-									darkColor={Colors.dark.text}
+									lightColor={textColor}
+									darkColor={textColor}
 								>
 									{col.label}
 								</ThemedText>
@@ -164,7 +168,7 @@ export default function PackagesScreen() {
 							id={packageRouterListDetailsId.current}
 							style={{
 								flexDirection: 'column',
-								backgroundColor: Colors[colorScheme].background,
+								backgroundColor: bg,
 							}}
 						>
 							{routers.map((r, index) => (
@@ -176,16 +180,13 @@ export default function PackagesScreen() {
 										alignItems: 'center',
 										paddingVertical: 5,
 										paddingHorizontal: 10,
-										backgroundColor:
-											index % 2 === 0
-												? Colors[colorScheme].listItemBackground
-												: Colors[colorScheme].background,
+										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
 										justifyContent: 'space-between',
 										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
-										borderBottomColor: Colors[colorScheme].borderDark,
+										borderBottomColor: borderDark,
 									}}
-									lightColor={Colors.light.background}
-									darkColor={Colors.dark.background}
+									lightColor={bg}
+									darkColor={bg}
 								>
 									<ThemedText
 										numberOfLines={1}
@@ -194,8 +195,8 @@ export default function PackagesScreen() {
 											paddingRight: 8,
 											overflow: 'hidden',
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{r.name}
 									</ThemedText>
@@ -205,8 +206,8 @@ export default function PackagesScreen() {
 											paddingRight: 8,
 											width: 120,
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{r.location}
 									</ThemedText>
@@ -216,8 +217,8 @@ export default function PackagesScreen() {
 											paddingRight: 8,
 											width: 120,
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{r?.networkInfo.ipv4}
 									</ThemedText>
@@ -227,8 +228,8 @@ export default function PackagesScreen() {
 											paddingRight: 8,
 											width: 120,
 										}}
-										lightColor={Colors.light.text}
-										darkColor={Colors.dark.text}
+										lightColor={textColor}
+										darkColor={textColor}
 									>
 										{r.username}
 									</ThemedText>
@@ -246,10 +247,10 @@ export default function PackagesScreen() {
 												language
 											].categories.buttons.hotspots.toUpperCase()}
 											onPress={() => router.push(`/routers/hotspots/${r.id}`)}
-											lightColor={Colors.light.lime}
-											darkColor={Colors.dark.lime}
-											darkTextColor={Colors.dark.white}
-											lightTextColor={Colors.light.white}
+											lightColor={lime}
+											darkColor={lime}
+											darkTextColor={white}
+											lightTextColor={white}
 											style={{ flex: 1 }}
 										/>
 									</ThemedView>

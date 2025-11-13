@@ -5,7 +5,7 @@ import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { phoneRegexWithSpaces } from '@/constants';
-import { Colors } from '@/constants/Colors';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { formatPhoneNumber } from '@/helpers';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, useColorScheme, View } from 'react-native';
@@ -36,7 +36,14 @@ export default function BankAccount({
 	onBack,
 	onEdit,
 }: Props) {
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
+	const bg = useThemeColor({}, 'background');
+	const screenTitleText = useThemeColor({}, 'screenTitleText');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const errorColor = useThemeColor({}, 'error');
+	const cancelButton = useThemeColor({}, 'cancelButton');
+	const bim = useThemeColor({}, 'bim');
+	const white = useThemeColor({}, 'white');
 
 	const [name, setName] = useState(initial?.name ?? '');
 	const [accountNumber, setAccountNumber] = useState(
@@ -105,16 +112,8 @@ export default function BankAccount({
 			position='center'
 		>
 			<FormContainer style={styles.kbContainer}>
-				<ThemedView
-					style={styles.card}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
-				>
-					<ThemedText
-						style={styles.title}
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
-					>
+				<ThemedView style={styles.card} lightColor={bg} darkColor={bg}>
+					<ThemedText style={styles.title} lightColor={screenTitleText} darkColor={screenTitleText}>
 						{toTitleCase(
 							mode === 'view'
 								? 'account details'
@@ -131,8 +130,8 @@ export default function BankAccount({
 						setValue={setName}
 						editable={mode !== 'view'}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
+							backgroundColor: bg,
+							borderColor: inputBorder,
 							borderWidth: 1,
 						}}
 						containerStyle={{ marginBottom: 8 }}
@@ -146,8 +145,8 @@ export default function BankAccount({
 						setValue={setAccountNumber}
 						editable={mode !== 'view'}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
+							backgroundColor: bg,
+							borderColor: inputBorder,
 							borderWidth: 1,
 						}}
 						containerStyle={{ marginBottom: 8 }}
@@ -161,10 +160,8 @@ export default function BankAccount({
 						setValue={handleSetPhone}
 						editable={mode !== 'view'}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: phoneError
-								? Colors[colorScheme].error
-								: Colors[colorScheme].inputBorder,
+							backgroundColor: bg,
+							borderColor: phoneError ? errorColor : inputBorder,
 							borderWidth: 1,
 						}}
 						containerStyle={{ marginBottom: 8 }}
@@ -178,8 +175,8 @@ export default function BankAccount({
 						setValue={setSwift}
 						editable={mode !== 'view'}
 						style={{
-							backgroundColor: Colors[colorScheme].background,
-							borderColor: Colors[colorScheme].inputBorder,
+							backgroundColor: bg,
+							borderColor: inputBorder,
 							borderWidth: 1,
 						}}
 						containerStyle={{ marginBottom: 8 }}
@@ -191,18 +188,18 @@ export default function BankAccount({
 								<ThemedButton
 									title={toTitleCase('back')}
 									onPress={onBack ?? onCancel}
-									lightColor={Colors.light.cancelButton}
-									darkColor={Colors.dark.cancelButton}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
+									lightColor={cancelButton}
+									darkColor={cancelButton}
+									lightTextColor={white}
+									darkTextColor={white}
 								/>
 								<ThemedButton
 									title={toTitleCase('edit')}
 									onPress={onEdit ?? (() => {})}
-									lightColor={Colors.light.bim}
-									darkColor={Colors.dark.bim}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
+									lightColor={bim}
+									darkColor={bim}
+									lightTextColor={white}
+									darkTextColor={white}
 								/>
 							</>
 						) : (
@@ -210,18 +207,18 @@ export default function BankAccount({
 								<ThemedButton
 									title={toTitleCase('cancel')}
 									onPress={onCancel}
-									lightColor={Colors.light.cancelButton}
-									darkColor={Colors.dark.cancelButton}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
+									lightColor={cancelButton}
+									darkColor={cancelButton}
+									lightTextColor={white}
+									darkTextColor={white}
 								/>
 								<ThemedButton
 									title={toTitleCase(mode === 'edit' ? 'update' : 'save')}
 									onPress={handleSave}
-									lightColor={Colors.light.bim}
-									darkColor={Colors.dark.bim}
-									lightTextColor={Colors.light.white}
-									darkTextColor={Colors.dark.white}
+									lightColor={bim}
+									darkColor={bim}
+									lightTextColor={white}
+									darkTextColor={white}
 								/>
 							</>
 						)}

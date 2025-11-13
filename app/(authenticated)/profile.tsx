@@ -7,6 +7,7 @@ import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 // avoid importing navigation types from @react-navigation/drawer which may not export them in some versions
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useFocusEffect, useNavigation } from 'expo-router';
@@ -23,6 +24,16 @@ export default function ProfileScreen() {
 	const colorScheme = useColorScheme() ?? 'light';
 	const { language } = useGeneral();
 	const navigation = useNavigation<any>();
+
+	const bg = useThemeColor({}, 'background');
+	const headingOne = useThemeColor({}, 'heading.one');
+	const headers = useThemeColor({}, 'headers');
+	const textColor = useThemeColor({}, 'text');
+	const bim = useThemeColor({}, 'bim');
+	const secondaryButton = useThemeColor({}, 'secondaryButton');
+	const authButtonText = useThemeColor({}, 'authButtonText');
+	const dangerButton = useThemeColor({}, 'dangerButton');
+	const white = useThemeColor({}, 'white');
 
 	useFocusEffect(() => {
 		const backHandler = BackHandler.addEventListener(
@@ -84,8 +95,8 @@ export default function ProfileScreen() {
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
-				light: Colors.light.background,
-				dark: Colors.dark.background,
+				light: bg,
+				dark: bg,
 			}}
 			containerStyle={{ flex: 1 }}
 			contentStyle={{ padding: 16 }}
@@ -93,7 +104,7 @@ export default function ProfileScreen() {
 			{/* Tile 1: Profile Details */}
 			<TileContainer
 				id={'profile-details'}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={bg}
 				style={{ marginBottom: 16, alignItems: 'stretch' }}
 			>
 				<ThemedText
@@ -102,8 +113,8 @@ export default function ProfileScreen() {
 						fontWeight: fontWeight['heading.three'],
 						color: Colors[colorScheme]['heading.one'],
 					}}
-					lightColor={Colors.light['heading.one']}
-					darkColor={Colors.dark['heading.one']}
+					lightColor={headingOne}
+					darkColor={headingOne}
 				>
 					{translations[language].categories.auth['profile.details.title']}
 				</ThemedText>
@@ -115,8 +126,8 @@ export default function ProfileScreen() {
 						color: Colors[colorScheme].headers,
 						marginTop: 4,
 					}}
-					lightColor={Colors.light.headers}
-					darkColor={Colors.dark.headers}
+					lightColor={headers}
+					darkColor={headers}
 				>
 					{translations[language].categories.auth['profile.details.subtitle']}
 				</ThemedText>
@@ -165,14 +176,10 @@ export default function ProfileScreen() {
 							translations[language].categories.auth['profile.details.button']
 						}
 						onPress={handleSaveProfile}
-						lightColor={
-							profileChanged ? Colors.light.bim : Colors.light.secondaryButton
-						}
-						darkColor={
-							profileChanged ? Colors.dark.bim : Colors.dark.secondaryButton
-						}
-						lightTextColor={Colors.light.authButtonText}
-						darkTextColor={Colors.dark.authButtonText}
+						lightColor={profileChanged ? bim : secondaryButton}
+						darkColor={profileChanged ? bim : secondaryButton}
+						lightTextColor={authButtonText}
+						darkTextColor={authButtonText}
 						disabled={!profileChanged}
 					/>
 				</View>
@@ -181,7 +188,7 @@ export default function ProfileScreen() {
 			{/* Tile 2: Change Password */}
 			<TileContainer
 				id={'change-password'}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={bg}
 				style={{ marginBottom: 16, alignItems: 'stretch' }}
 			>
 				<ThemedText
@@ -190,8 +197,8 @@ export default function ProfileScreen() {
 						fontWeight: fontWeight['heading.three'],
 						color: Colors[colorScheme]['heading.one'],
 					}}
-					lightColor={Colors.light['heading.one']}
-					darkColor={Colors.dark['heading.one']}
+					lightColor={headingOne}
+					darkColor={headingOne}
 				>
 					{translations[language].categories.auth['profile.password.title']}
 				</ThemedText>
@@ -203,8 +210,8 @@ export default function ProfileScreen() {
 						color: Colors[colorScheme].headers,
 						marginTop: 4,
 					}}
-					lightColor={Colors.light.headers}
-					darkColor={Colors.dark.headers}
+					lightColor={headers}
+					darkColor={headers}
 				>
 					{translations[language].categories.auth['profile.password.subtitle']}
 				</ThemedText>
@@ -262,18 +269,10 @@ export default function ProfileScreen() {
 							translations[language].categories.auth['profile.password.button']
 						}
 						onPress={handleUpdatePassword}
-						lightColor={
-							passwordChangeValid
-								? Colors.light.bim
-								: Colors.light.secondaryButton
-						}
-						darkColor={
-							passwordChangeValid
-								? Colors.dark.bim
-								: Colors.dark.secondaryButton
-						}
-						lightTextColor={Colors.light.authButtonText}
-						darkTextColor={Colors.dark.authButtonText}
+						lightColor={passwordChangeValid ? bim : secondaryButton}
+						darkColor={passwordChangeValid ? bim : secondaryButton}
+						lightTextColor={authButtonText}
+						darkTextColor={authButtonText}
 						disabled={!passwordChangeValid}
 					/>
 				</View>
@@ -282,7 +281,7 @@ export default function ProfileScreen() {
 			{/* Tile 3: Delete Account */}
 			<TileContainer
 				id={'delete-account'}
-				backgroundColor={Colors[colorScheme].background}
+				backgroundColor={bg}
 				style={{ marginBottom: 16, alignItems: 'stretch' }}
 			>
 				<ThemedText
@@ -291,8 +290,8 @@ export default function ProfileScreen() {
 						fontWeight: fontWeight['heading.three'],
 						color: Colors[colorScheme]['heading.one'],
 					}}
-					lightColor={Colors.light['heading.one']}
-					darkColor={Colors.dark['heading.one']}
+					lightColor={headingOne}
+					darkColor={headingOne}
 				>
 					{translations[language].categories.auth['profile.delete.title']}
 				</ThemedText>
@@ -304,8 +303,8 @@ export default function ProfileScreen() {
 						color: Colors[colorScheme].headers,
 						marginTop: 4,
 					}}
-					lightColor={Colors.light.headers}
-					darkColor={Colors.dark.headers}
+					lightColor={headers}
+					darkColor={headers}
 				>
 					{translations[language].categories.auth['profile.delete.subtitle']}
 				</ThemedText>
@@ -320,10 +319,10 @@ export default function ProfileScreen() {
 							translations[language].categories.auth['profile.delete.button']
 						}
 						onPress={handleDeleteAccount}
-						lightColor={Colors.light.dangerButton}
-						darkColor={Colors.dark.dangerButton}
-						lightTextColor={Colors.light.white}
-						darkTextColor={Colors.dark.white}
+						lightColor={dangerButton}
+						darkColor={dangerButton}
+						lightTextColor={white}
+						darkTextColor={white}
 					/>
 				</View>
 			</TileContainer>

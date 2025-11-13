@@ -7,10 +7,10 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { InternetPackage } from '@/types';
 
 export type InternetPackageOverlayMode = 'create' | 'view' | 'edit';
@@ -39,8 +39,16 @@ export default function InternetPackageOverlay({
 	onSubmit,
 	onRequestClose,
 }: Props) {
-	const colorScheme = useColorScheme() ?? 'light';
+	useColorScheme();
 	const { language } = useGeneral();
+
+	const bg = useThemeColor({}, 'background');
+	const screenTitleText = useThemeColor({}, 'screenTitleText');
+	const textColor = useThemeColor({}, 'text');
+	const cancelButton = useThemeColor({}, 'cancelButton');
+	const white = useThemeColor({}, 'white');
+	const lime = useThemeColor({}, 'lime');
+	const bim = useThemeColor({}, 'bim');
 	const readOnly = mode === 'view';
 
 	const [name, setName] = useState('');
@@ -93,8 +101,7 @@ export default function InternetPackageOverlay({
 		mode === 'create'
 			? t.buttons.createPackage.toUpperCase()
 			: t.buttons.saveChanges.toUpperCase();
-	const primaryColor =
-		mode === 'create' ? Colors[colorScheme].lime : Colors[colorScheme].bim;
+	const primaryColor = mode === 'create' ? lime : bim;
 
 	const handleSubmit = () => {
 		if (readOnly) return onClose();
@@ -118,17 +125,17 @@ export default function InternetPackageOverlay({
 				<ThemedView
 					style={{
 						flexDirection: 'column',
-						backgroundColor: 'white',
+						backgroundColor: bg,
 						padding: 20,
 						borderRadius: 10,
 						width: '100%',
 					}}
-					lightColor={Colors.light.background}
-					darkColor={Colors.dark.background}
+					lightColor={bg}
+					darkColor={bg}
 				>
 					<ThemedText
-						lightColor={Colors.light.screenTitleText}
-						darkColor={Colors.dark.screenTitleText}
+						lightColor={screenTitleText}
+						darkColor={screenTitleText}
 						style={{
 							fontSize: fontSize['heading.two'],
 							fontWeight: fontWeight['heading.two'],
@@ -145,8 +152,8 @@ export default function InternetPackageOverlay({
 						setValue={handleChangeName}
 						editable={!readOnly}
 						style={{ marginBottom: 10 }}
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textColor}
+						darkColor={textColor}
 					/>
 					<ThemedInput
 						label={t.internetPackage.usersPerDevice}
@@ -156,8 +163,8 @@ export default function InternetPackageOverlay({
 						setValue={handleChangeUsersPerDevice}
 						editable={!readOnly}
 						style={{ marginBottom: 10 }}
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textColor}
+						darkColor={textColor}
 					/>
 					<ThemedInput
 						label={t.internetPackage.bandwidth}
@@ -166,8 +173,8 @@ export default function InternetPackageOverlay({
 						setValue={handleChangeBandwidth}
 						editable={!readOnly}
 						style={{ marginBottom: 10 }}
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textColor}
+						darkColor={textColor}
 					/>
 					<ThemedInput
 						label={t.internetPackage.durationHours}
@@ -177,8 +184,8 @@ export default function InternetPackageOverlay({
 						setValue={handleChangeDuration}
 						editable={!readOnly}
 						style={{ marginBottom: 18 }}
-						lightColor={Colors.light.text}
-						darkColor={Colors.dark.text}
+						lightColor={textColor}
+						darkColor={textColor}
 					/>
 
 					<View
@@ -192,10 +199,10 @@ export default function InternetPackageOverlay({
 							title={t.buttons.cancel.toUpperCase()}
 							onPress={onClose}
 							numberOfLines={1}
-							lightColor={Colors.light.cancelButton}
-							darkColor={Colors.dark.cancelButton}
-							lightTextColor={Colors.light.white}
-							darkTextColor={Colors.dark.white}
+							lightColor={cancelButton}
+							darkColor={cancelButton}
+							lightTextColor={white}
+							darkTextColor={white}
 						/>
 						{mode !== 'view' && (
 							<ThemedButton
@@ -204,8 +211,8 @@ export default function InternetPackageOverlay({
 								numberOfLines={1}
 								lightColor={primaryColor}
 								darkColor={primaryColor}
-								lightTextColor={Colors.light.white}
-								darkTextColor={Colors.dark.white}
+								lightTextColor={white}
+								darkTextColor={white}
 							/>
 						)}
 					</View>
