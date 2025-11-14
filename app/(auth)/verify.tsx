@@ -43,7 +43,8 @@ export default function VerifyTokenScreen() {
 	// timeout ref
 	const otpTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const loaderFadeAnim = useAnimatedValue(0);
-	const { language, handleVerify } = useGeneral(); // Get language and verify handler from context
+	const { language, handleVerify, handleVerify2FA, pending2FAMethod } =
+		useGeneral(); // Get language and verify handlers + 2FA method from context
 	const [code, setCode] = useState('');
 	const [focusedInput, setFocusedInput] = useState<string | null>(null);
 	const scrollRef = useRef<any>(null);
@@ -55,11 +56,18 @@ export default function VerifyTokenScreen() {
 
 	// Prefill OTP in development when DEV_OTP is provided in local .env
 	useEffect(() => {
-		if (typeof __DEV__ !== 'undefined' && __DEV__ && DEV_OTP) {
+		// Prefill OTP in development when DEV_OTP is provided in local .env
+		// Do NOT prefill when the app expects a TOTP from an authenticator app
+		if (
+			typeof __DEV__ !== 'undefined' &&
+			__DEV__ &&
+			DEV_OTP &&
+			pending2FAMethod !== 'totp'
+		) {
 			setCode(String(DEV_OTP));
 			setErrors((prev) => ({ ...prev, code: false }));
 		}
-	}, []);
+	}, [pending2FAMethod]);
 
 	// Clean up on unmount
 	useEffect(() => {
@@ -186,6 +194,7 @@ export default function VerifyTokenScreen() {
 									{translations[language].categories.buttons['verifyOTP']}
 								</ThemedText>
 								<ThemedText
+									testID='verify-otp-subtitle'
 									style={{
 										fontWeight: 400,
 										fontSize: 16,
@@ -195,7 +204,11 @@ export default function VerifyTokenScreen() {
 									lightColor={textColor}
 									darkColor={textColor}
 								>
-									{translations[language].categories.auth['verify.subtitle']}
+									{pending2FAMethod === 'totp'
+										? translations[language].categories.auth[
+												'setupAuthenticator.enterCodePlaceholder'
+										  ] ?? 'Please enter code from your authenticator app'
+										: translations[language].categories.auth['verify.subtitle']}
 								</ThemedText>
 							</ThemedView>
 							<ThemedView
@@ -215,26 +228,51 @@ export default function VerifyTokenScreen() {
 									value={code}
 									setValue={handleSetCode}
 									placeholder={
-										translations[language].categories.auth['enterOTP']
+										pending2FAMethod === 'totp'
+											? translations[language].categories.auth[
+													'setupAuthenticator.enterCodePlaceholder'
+											  ]
+											: translations[language].categories.auth['enterOTP']
 									}
 									placeholderTextColor={textColor}
 									keyboardType='number-pad'
 									onFocus={() => setFocusedInput('code')}
 									onBlur={() => setFocusedInput(null)}
 								/>
-								<ThemedButton
-									title={translations[language].categories.buttons[
-										'verifyOTP'
-									]?.toUpperCase()}
-									onPress={handleOnVerifyCode}
-									style={{
-										borderRadius: 8,
-									}}
-									darkColor={errors['login'] ? buttonError : bim}
-									lightColor={errors['login'] ? buttonError : bim}
-									darkTextColor={authButtonText}
-									lightTextColor={authButtonText}
-								/>
+
+								{pending2FAMethod === 'totp' ? (
+									<ThemedButton
+										title={translations[language].categories.buttons[
+											'verifyOTP'
+										]?.toUpperCase()}
+										onPress={async () => {
+											// call TOTP verify handler
+											handleToggleLoader(true);
+											try {
+												await handleVerify2FA(code);
+											} finally {
+												handleToggleLoader(false);
+											}
+										}}
+										style={{ borderRadius: 8 }}
+										darkColor={errors['login'] ? buttonError : bim}
+										lightColor={errors['login'] ? buttonError : bim}
+										darkTextColor={authButtonText}
+										lightTextColor={authButtonText}
+									/>
+								) : (
+									<ThemedButton
+										title={translations[language].categories.buttons[
+											'verifyOTP'
+										]?.toUpperCase()}
+										onPress={handleOnVerifyCode}
+										style={{ borderRadius: 8 }}
+										darkColor={errors['login'] ? buttonError : bim}
+										lightColor={errors['login'] ? buttonError : bim}
+										darkTextColor={authButtonText}
+										lightTextColor={authButtonText}
+									/>
+								)}
 							</ThemedView>
 						</ThemedView>
 					</ThemedView>

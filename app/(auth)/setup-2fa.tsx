@@ -177,14 +177,11 @@ export default function Setup2FAScreen() {
 		}
 		try {
 			setLoading(true);
-			const result = await handleSetupTotp({
+			return await handleSetupTotp({
 				setup_token: pending2FASetup.setup_token ?? undefined,
 				secret: pending2FASetup.secret ?? undefined,
 				otp: code,
 			});
-			console.info('handleOnSetupTotp result', result);
-			// For now we log the response; further instructions will define behavior
-			return result;
 		} finally {
 			setLoading(false);
 		}

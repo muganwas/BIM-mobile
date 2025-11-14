@@ -84,6 +84,13 @@ export interface AuthContextType {
 	pendingPhone?: string | null;
 	setPendingPhone?: React.Dispatch<React.SetStateAction<string | null>>;
 
+	// Which 2FA method is expected for the current pending verification
+	// 'sms' = SMS OTP, 'totp' = authenticator app code
+	pending2FAMethod?: 'sms' | 'totp' | null;
+	setPending2FAMethod?: React.Dispatch<
+		React.SetStateAction<'sms' | 'totp' | null>
+	>;
+
 	setPendingRegistration?: React.Dispatch<
 		React.SetStateAction<{
 			phone: string;
@@ -132,6 +139,11 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [user, setUser] = useState<UserProps | null>(null);
 	const [notifications, setNotifications] = useState<notifications[]>([]);
 	const [pendingPhone, setPendingPhone] = useState<string | null>(null);
+	// Which 2FA method is expected for the current pending verification
+	// 'sms' = SMS OTP, 'totp' = authenticator app code
+	const [pending2FAMethod, setPending2FAMethod] = useState<
+		'sms' | 'totp' | null
+	>(null);
 	// Pending registration payload kept until OTP verification completes
 	const [pendingRegistration, setPendingRegistration] = useState<{
 		phone: string;
@@ -456,6 +468,29 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			}
 			const data = await res.json();
 			console.info('Login response data:', data);
+
+			// Determine which 2FA method the backend expects when redirecting to verify
+			try {
+				const msg = String(data?.message || '').toLowerCase();
+				if (msg.includes('totp setup required')) {
+					if (data && (data.qr || data.setup_token || data.qr_base64)) {
+						setPending2FASetup({
+							qr: data.qr ?? null,
+							qr_base64: data.qr_base64 ?? null,
+							secret: data.secret ?? null,
+							setup_token: data.setup_token ?? null,
+							phone: data.phone ?? number.replaceAll(' ', ''),
+							user: data.user ?? null,
+						});
+						// navigate to the authenticator setup screen
+						return navigateToPath('/(auth)/setup-2fa');
+					}
+				} else {
+					setPending2FAMethod('totp');
+				}
+			} catch {
+				setPending2FAMethod(null);
+			}
 			// Store the pending phone so the verify screen can reference it if need
 			setPendingPhone(data?.phone || number);
 			// Navigate to verify screen for OTP entry
@@ -586,6 +621,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			// Success - clear pending state and navigate to home
 			setPendingRegistration?.(null);
 			setPendingPhone?.(null);
+			setPending2FAMethod?.(null);
 			router.push('/(authenticated)/home');
 		} catch (err: any) {
 			const msg = (err && err.message) || '';
@@ -645,6 +681,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			}
 			// success — clear pending setup and navigate to home
 			setPending2FASetup?.(null);
+			setPending2FAMethod?.(null);
 			router.replace('/(authenticated)/home');
 			return true;
 		} catch (err: any) {
@@ -762,6 +799,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 				// Clear pending setup and navigate into authenticated area
 				setPending2FASetup?.(null);
+				setPending2FAMethod?.(null);
 				router.replace('/(authenticated)/home');
 			} catch (e) {
 				console.error('handleSetupTotp: error persisting auth state', e);
@@ -769,7 +807,6 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			return { json };
 		} catch (err: any) {
-			console.error('handleSetupTotp error', err);
 			setAppMessage?.({
 				type: 'error',
 				message:
@@ -812,6 +849,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				handleVerify,
 				handleVerify2FA,
 				handleSetupTotp,
+				pending2FAMethod,
+				setPending2FAMethod,
 				pendingPhone,
 				setPendingPhone,
 				online,
