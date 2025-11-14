@@ -24,6 +24,11 @@ import React, {
 } from 'react';
 import { Keyboard, Platform } from 'react-native';
 
+// TODO: Shelved — refine server dashboard payload mapping and types.
+// We merged server dashboard payloads into `user` temporarily. Revisit
+// and replace merge logic with a strict typed `serverDashboard` model
+// and proper mapping to `TransactionContext` when we implement full API.
+
 type RouterType = ReturnType<typeof useRouter>;
 
 export interface AuthContextType {
@@ -469,6 +474,27 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			const data = await res.json();
 			console.info('Login response data:', data);
 
+			// If the server returned pre-computed dashboard data (no TOTP required),
+			// forward that payload into `user` so TransactionContext can pick it up.
+			try {
+				const hasDashboard = !!(
+					data &&
+					typeof data === 'object' &&
+					(Array.isArray(data.recentTransactions) ||
+						data.todayTransactions !== undefined ||
+						Array.isArray(data.routerBalances) ||
+						Array.isArray(data.chartData))
+				);
+				if (hasDashboard) {
+					// Merge user info (if any) with dashboard payload so consumers can access both.
+					const mergedUser = {
+						...(data.user || {}),
+						...data,
+					};
+					setUser(mergedUser as any);
+				}
+			} catch {}
+
 			// Determine which 2FA method the backend expects when redirecting to verify
 			try {
 				const msg = String(data?.message || '').toLowerCase();
@@ -565,9 +591,77 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	};
 
 	const handleLogout = async () => {
-		setUser(null);
-		setNotifications([]);
-		router.replace('/(auth)/login');
+		let backendSuccess = false;
+		let backendMessage: string | null = null;
+		try {
+			const token = await SecureStore.getItemAsync('auth_token');
+			if (token) {
+				try {
+					const res = await apiFetch((apiBaseUrl || '') + '/api/logout', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: `Bearer ${token}`,
+						},
+					});
+					if (res && res.ok) {
+						backendSuccess = true;
+						try {
+							const json = await res.json();
+							backendMessage = json?.message ?? null;
+						} catch {}
+					} else if (res) {
+						const text = await parseApiError(res);
+						backendMessage = String(text) || null;
+					}
+				} catch (e) {
+					console.warn('logout: backend call failed', e);
+					backendMessage = (e && (e as any).message) || 'Logout failed';
+				}
+			}
+		} catch (e) {
+			console.warn('logout: token lookup failed', e);
+			backendMessage = 'Logout failed';
+		} finally {
+			// Always clear local state/credentials for security, but show different toasts
+			try {
+				await SecureStore.deleteItemAsync('auth_token');
+				await SecureStore.deleteItemAsync('totp_secret');
+			} catch (e) {
+				console.warn('logout: secure store clear failed', e);
+			}
+			try {
+				await AsyncStorage.removeItem('user_id');
+				await AsyncStorage.removeItem('user_email');
+				await AsyncStorage.removeItem('user_phone');
+			} catch (e) {
+				console.warn('logout: async storage clear failed', e);
+			}
+			setUser(null);
+			setNotifications([]);
+			setPendingRegistration?.(null);
+			setPending2FASetup?.(null);
+			setPendingPhone?.(null);
+			setPending2FAMethod?.(null);
+			if (backendSuccess) {
+				setAppMessage?.({
+					type: 'message',
+					message:
+						backendMessage ||
+						translations[language].categories.auth['logoutSuccess'] ||
+						'Logged out',
+				});
+			} else {
+				setAppMessage?.({
+					type: 'error',
+					message:
+						backendMessage ||
+						translations[language].categories.auth['logoutFailed'] ||
+						'Logout failed',
+				});
+			}
+			router.replace('/(auth)/login');
+		}
 	};
 
 	const handleVerify = async (otp: string) => {
@@ -637,7 +731,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	};
 
 	const handleVerify2FA = async (otp: string) => {
-		if (!pending2FASetup?.phone) {
+		if (!pending2FASetup?.phone && !pendingPhone) {
 			setAppMessage({
 				type: 'error',
 				message:
@@ -662,7 +756,10 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					phone: String(pending2FASetup.phone),
+					phone: String(pending2FASetup?.phone ?? pendingPhone).replaceAll(
+						' ',
+						''
+					),
 					otp: String(otp).trim(),
 				}),
 			});
@@ -678,6 +775,61 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 							  ] || '2FA verification failed',
 				});
 				return false;
+			}
+			const resJson = await res.json();
+			console.info('2FA verification response data:', resJson);
+			// If server returned token/user/dashboard, persist and merge into app state
+			try {
+				if (resJson && (resJson as any).token) {
+					await SecureStore.setItemAsync(
+						'auth_token',
+						String((resJson as any).token)
+					);
+				}
+				if (resJson && (resJson as any).user) {
+					const u = (resJson as any).user;
+					if (u.id !== undefined) {
+						await AsyncStorage.setItem('user_id', String(u.id));
+					}
+					if (u.email)
+						await AsyncStorage.setItem('user_email', String(u.email));
+					if (u.phone)
+						await AsyncStorage.setItem('user_phone', String(u.phone));
+					if (u.totp_secret) {
+						await SecureStore.setItemAsync(
+							'totp_secret',
+							String(u.totp_secret)
+						);
+					}
+					setUser(u as any);
+				}
+				// If server provided dashboard-like fields at top-level, merge into user
+				if (
+					resJson &&
+					typeof resJson === 'object' &&
+					(Array.isArray((resJson as any).recentTransactions) ||
+						(resJson as any).todayTransactions !== undefined ||
+						Array.isArray((resJson as any).routerBalances) ||
+						Array.isArray((resJson as any).chartData))
+				) {
+					const mergedUser = {
+						...((resJson as any).user || {}),
+						...(resJson as any),
+					};
+					setUser(mergedUser as any);
+				}
+				// Show success toast if backend provided a message
+				try {
+					const successMessage =
+						(resJson && (resJson as any).message) ||
+						translations[language].categories.auth[
+							'setupAuthenticator.loginSuccess'
+						] ||
+						'Login successful';
+					setAppMessage?.({ type: 'message', message: String(successMessage) });
+				} catch {}
+			} catch (e) {
+				console.error('handleVerify2FA: error persisting auth state', e);
 			}
 			// success — clear pending setup and navigate to home
 			setPending2FASetup?.(null);

@@ -35,6 +35,7 @@ const translations: Translations = {
 				'setupAuthenticator.completeSetup': 'Complete Totp Setup',
 				'setupAuthenticator.settingUp': 'Setting up...',
 				'setupAuthenticator.setupSuccess': 'Two-factor authentication enabled.',
+				'setupAuthenticator.loginSuccess': 'You logged in successfully.',
 				'setupAuthenticator.continue': 'Continue',
 				'setupAuthenticator.howToTitle': 'How to set up',
 				'setupAuthenticator.step1':
@@ -57,6 +58,8 @@ const translations: Translations = {
 				'setupAuthenticator.verifyFailed': '2FA verification failed',
 				// Generic/fallback app messages
 				loginFailed: 'Login failed',
+				logoutSuccess: 'Logged out',
+				logoutFailed: 'Logout failed',
 				registrationFailed: 'Registration failed',
 				otpVerificationFailed: 'OTP verification failed',
 				unexpectedError: 'An unexpected error occurred',
@@ -341,6 +344,8 @@ const translations: Translations = {
 				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
 				'setupAuthenticator.missingSecret':
 					'Secret manquant pour la configuration TOTP',
+				logoutSuccess: 'Déconnexion réussie',
+				logoutFailed: 'La déconnexion a échoué',
 				'setupAuthenticator.setupSuccess':
 					'Authentification à deux facteurs activée.',
 				'setupAuthenticator.enterCodeError':
@@ -387,6 +392,8 @@ const translations: Translations = {
 				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
 				'setupAuthenticator.missingSecret':
 					'Falta el secreto para la configuración de TOTP',
+				logoutSuccess: 'Cierre de sesión exitoso',
+				logoutFailed: 'Error al cerrar sesión',
 				'setupAuthenticator.setupSuccess':
 					'Autenticación de dos factores activada.',
 				'setupAuthenticator.enterCodeError':
@@ -432,6 +439,8 @@ const translations: Translations = {
 				'setupAuthenticator.missingPhone': 'Missing phone for 2FA verification',
 				'setupAuthenticator.missingSecret':
 					'Fehlender Geheimschlüssel für die TOTP-Einrichtung',
+				logoutSuccess: 'Erfolgreich abgemeldet',
+				logoutFailed: 'Abmeldung fehlgeschlagen',
 				'setupAuthenticator.setupSuccess':
 					'Zwei-Faktor-Authentifizierung aktiviert.',
 				'setupAuthenticator.enterCodeError':

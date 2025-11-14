@@ -1,6 +1,5 @@
 import { packages as defaultPackages } from '@/constants';
 import { ShowAlert } from '@/helpers';
-import * as factories from '@/helpers/factories';
 import {
 	Bank,
 	DocumentProps,
@@ -45,6 +44,10 @@ export interface TransactionContextType {
 		user: User | null,
 		routersOverride?: NetRouter[]
 	) => Promise<void>;
+
+	// Optional dashboard data provided by the server on successful login
+	serverDashboard?: any | null;
+	setServerDashboard?: React.Dispatch<React.SetStateAction<any | null>>;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(
@@ -66,89 +69,69 @@ export const TransactionProvider = ({
 	const [banks, setBanks] = useState<Bank[]>([]);
 	const [documents, setDocuments] = useState<DocumentProps[]>([]);
 
+	// Dashboard payload returned by server after login (optional)
+	const [serverDashboard, setServerDashboard] = useState<any | null>(null);
+
 	const fetchDocuments = useCallback(async (user: User | null) => {
 		if (!user) return;
-		try {
-			// Fetch documents from the server
-			const data = factories.generateDocuments(2);
-			setDocuments(data);
-		} catch (error: any) {
-			ShowAlert(`Failed to fetch documents: ${error.message}`, 'Error');
+		// If server provided dashboard data, use it
+		const sd = (user as any) || null;
+		if (sd && Array.isArray(sd.documents)) {
+			setDocuments(sd.documents as DocumentProps[]);
+			return;
 		}
+		// No client-side mocks — leave documents empty if not provided by server
+		setDocuments([]);
 	}, []);
 
 	const fetchBanks = useCallback(async (user: User | null) => {
 		if (!user) return;
-		try {
-			// Fetch banks from the server
-			const data = factories.generateBanks(2);
-			setBanks(data);
-		} catch (error: any) {
-			ShowAlert(`Failed to fetch banks: ${error.message}`, 'Error');
+		const sd = (user as any) || null;
+		if (sd && Array.isArray(sd.banks)) {
+			setBanks(sd.banks as Bank[]);
+			return;
 		}
+		setBanks([]);
 	}, []);
 
 	const fetchRouters = useCallback(
 		async (user: User | null): Promise<NetRouter[]> => {
 			if (!user) return [];
-			try {
-				const data = factories.generateNetRouters(3);
-				setRouters(data);
-				return data;
-			} catch (error: any) {
-				ShowAlert(`Failed to fetch routers: ${error.message}`, 'Error');
-				return [];
+			const sd = (user as any) || null;
+			if (sd && Array.isArray(sd.routerBalances)) {
+				setRouters(sd.routerBalances as NetRouter[]);
+				return sd.routerBalances as NetRouter[];
 			}
+			setRouters([]);
+			return [];
 		},
 		[]
 	);
 
 	const fetchPackages = useCallback(async (user: User | null) => {
 		if (!user) return;
-		try {
-			// Fetch internet packages from the server
-			// Use project's default packages by default but allow factories to generate if needed
-			setPackages(
-				defaultPackages.length
-					? defaultPackages
-					: factories.generateInternetPackages()
-			);
-		} catch (error: any) {
-			ShowAlert(`Failed to fetch internet packages: ${error.message}`, 'Error');
+		const sd = (user as any) || null;
+		if (sd && Array.isArray(sd.packages)) {
+			setPackages(sd.packages as InternetPackage[]);
+			return;
 		}
+		// Fallback to project defaults
+		setPackages(defaultPackages || []);
 	}, []);
 
 	const fetchPurchases = useCallback(
 		async (user: User | null, routersOverride?: NetRouter[]) => {
 			if (!user) return;
-			try {
-				// Generate purchases and related voucher users using factories
-				let data = factories.generateMicroTransactions(20);
-
-				// If routers are provided, reconcile purchases so each
-				// purchase.routerName references an existing router id.
-				const availableRouters =
-					routersOverride && routersOverride.length ? routersOverride : [];
-				if (availableRouters.length) {
-					// Assign each purchase to a router deterministically to avoid
-					// format mismatches. Use modulo so counts differ safely.
-					data = data.map((p, idx) => ({
-						...p,
-						routerName: availableRouters[idx % availableRouters.length].id,
-					}));
-				}
-				const vocherUsers = factories.generateVoucherUsersFromPurchases(
-					data,
-					defaultPackages
-				);
-				setVoucherUsers(vocherUsers);
-				setPurchases(data);
-			} catch (error: any) {
-				ShowAlert(
-					`Failed to fetch micro transactions: ${error.message}`,
-					'Error'
-				);
+			const sd = (user as any) || null;
+			if (sd) {
+				if (Array.isArray(sd.purchases))
+					setPurchases(sd.purchases as MicroTransaction[]);
+				if (Array.isArray(sd.voucherUsers))
+					setVoucherUsers(sd.voucherUsers as VoucherUser[]);
+				return;
 			}
+			setPurchases([]);
+			setVoucherUsers([]);
 		},
 		[]
 	);
@@ -156,6 +139,25 @@ export const TransactionProvider = ({
 	useEffect(() => {
 		(async () => {
 			if (user) {
+				// If the backend returned pre-computed dashboard data with the user
+				// prefer it as the initial state rather than generating local mock data.
+				const sd = (user as any) || null;
+				if (
+					sd &&
+					(sd.recentTransactions ||
+						sd.todayTransactions !== undefined ||
+						sd.routerBalances ||
+						sd.chartData)
+				) {
+					setServerDashboard(sd);
+					if (Array.isArray(sd.recentTransactions))
+						setTransactions(sd.recentTransactions as Transaction[]);
+					if (Array.isArray(sd.routerBalances))
+						setRouters(sd.routerBalances as NetRouter[]);
+					// The server may have provided aggregate numbers and chartData that
+					// the rest of the app can consume later via `serverDashboard`.
+				}
+
 				setLoading(true);
 				try {
 					// Ensure routers are fetched first so purchases can reference them.
@@ -233,6 +235,8 @@ export const TransactionProvider = ({
 				fetchRouters,
 				fetchPackages,
 				fetchPurchases,
+				serverDashboard,
+				setServerDashboard,
 			}}
 		>
 			{children}
