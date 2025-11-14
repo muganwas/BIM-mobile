@@ -33,6 +33,8 @@ type RouterType = ReturnType<typeof useRouter>;
 
 export interface AuthContextType {
 	user: UserProps | null;
+	authToken?: string | null;
+	setAuthToken?: React.Dispatch<React.SetStateAction<string | null>>;
 	language: langCode;
 	setLanguage: (l: langCode) => void;
 	handleLogout: () => Promise<void>;
@@ -142,6 +144,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const navigatingBackRef = React.useRef(false);
 
 	const [user, setUser] = useState<UserProps | null>(null);
+	// Keep an in-memory copy of the auth token for fast checks and guards
+	const [authToken, setAuthToken] = useState<string | null>(null);
 	const [notifications, setNotifications] = useState<notifications[]>([]);
 	const [pendingPhone, setPendingPhone] = useState<string | null>(null);
 	// Which 2FA method is expected for the current pending verification
@@ -216,6 +220,18 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			show.remove();
 			hide.remove();
 		};
+	}, []);
+
+	// Load auth token from SecureStore on mount so guards can rely on it
+	useEffect(() => {
+		(async () => {
+			try {
+				const t = await SecureStore.getItemAsync('auth_token');
+				if (t) setAuthToken(String(t));
+			} catch {
+				// ignore
+			}
+		})();
 	}, []);
 
 	useEffect(() => {
@@ -492,6 +508,13 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						...data,
 					};
 					setUser(mergedUser as any);
+					// If server returned a token as part of the login payload, persist it
+					if (data && data.token) {
+						try {
+							await SecureStore.setItemAsync('auth_token', String(data.token));
+							setAuthToken(String(data.token));
+						} catch {}
+					}
 				}
 			} catch {}
 
@@ -785,6 +808,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						'auth_token',
 						String((resJson as any).token)
 					);
+					setAuthToken(String((resJson as any).token));
 				}
 				if (resJson && (resJson as any).user) {
 					const u = (resJson as any).user;
@@ -915,6 +939,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				if (json && json.token) {
 					// Store token securely
 					await SecureStore.setItemAsync('auth_token', String(json.token));
+					setAuthToken(String(json.token));
 				}
 				if (json && json.user) {
 					const user = json.user;
@@ -1012,6 +1037,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setPendingRegistration,
 				pending2FASetup,
 				setPending2FASetup,
+				authToken,
+				setAuthToken,
 			}}
 		>
 			{children}

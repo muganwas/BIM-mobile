@@ -15,8 +15,10 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { TransactionProvider } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { useRouter } from 'expo-router';
 // use a runtime require to access DrawerContentScrollView to avoid missing type exports
-import { Platform, TouchableOpacity, View } from 'react-native';
+import Loader from '@/components/Loader';
+import { Animated, Platform, TouchableOpacity, View } from 'react-native';
 
 function CustomDrawerContent(props: any) {
 	const drawerBackground = useThemeColor({}, 'drawerBackground');
@@ -24,6 +26,7 @@ function CustomDrawerContent(props: any) {
 	const drawerButtonBackground = useThemeColor({}, 'drawerButtonBackground');
 	const drawerItem = useThemeColor({}, 'drawerItem');
 	const drawerInactiveItem = useThemeColor({}, 'drawerInactiveItem');
+
 	const { language } = useGeneral();
 	const { state, descriptors, navigation } = props;
 	const activeIndex = state.index;
@@ -194,12 +197,37 @@ export default function DrawerLayout() {
 		setSelectedOption,
 		online,
 		handleGoBack,
+		authToken,
 	} = useGeneral();
 	const drawerBackground = useThemeColor({}, 'drawerBackground');
 	const drawerActiveBackground = useThemeColor({}, 'drawerActiveBackground');
 	const drawerButtonBackground = useThemeColor({}, 'drawerButtonBackground');
 	const drawerItem = useThemeColor({}, 'drawerItem');
 	const drawerInactiveItem = useThemeColor({}, 'drawerInactiveItem');
+
+	// Fade animation value used by the shared Loader component while redirecting
+	const fadeAnimRef = React.useRef(new Animated.Value(1));
+
+	const router = useRouter();
+
+	// Redirect to login if no auth token is present. Render nothing while redirecting
+	// to avoid flashing protected UI. useRouter is safe to call at top-level in the
+	// component body and React.useEffect handles the navigation side-effect.
+	React.useEffect(() => {
+		if (!authToken) {
+			router.replace('/(auth)/login');
+		}
+	}, [authToken, router]);
+
+	if (!authToken) {
+		return (
+			<Loader
+				showOverlay={true}
+				fadeAnim={fadeAnimRef.current}
+				toggleShowOverlay={() => {}}
+			/>
+		);
+	}
 
 	return (
 		<TransactionProvider>
