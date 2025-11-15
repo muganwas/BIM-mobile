@@ -21,7 +21,7 @@ SplashScreen.preventAutoHideAsync();
 function RootLayoutContent() {
 	const colorScheme = useColorScheme();
 	const Anim = useAnimatedValue(0); // Example of using an animated value
-	const { online } = useGeneral(); // Get online status from context
+	const { online, verifyingAuth } = useGeneral(); // Get online and auth verifying status from context
 	const [loaded] = useFonts({
 		SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
 	});
@@ -45,10 +45,13 @@ function RootLayoutContent() {
 	}, [online, Anim]); // Example effect using animated value
 
 	useEffect(() => {
-		if (loaded) {
+		// Hide the splash screen only once fonts are loaded and auth verification
+		// has completed. This avoids briefly showing the index page before the
+		// loader or navigation completes.
+		if (loaded && verifyingAuth === false) {
 			SplashScreen.hideAsync();
 		}
-	}, [loaded]);
+	}, [loaded, verifyingAuth]);
 
 	if (!loaded) {
 		return null;
@@ -91,11 +94,11 @@ function RootLayoutContent() {
 export default function RootLayout() {
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
-			<GeneralProvider>
-				<PortalProvider>
+			<PortalProvider>
+				<GeneralProvider>
 					<RootLayoutContent />
-				</PortalProvider>
-			</GeneralProvider>
+				</GeneralProvider>
+			</PortalProvider>
 		</GestureHandlerRootView>
 	);
 }

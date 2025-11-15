@@ -1,3 +1,4 @@
+import Loader from '@/components/Loader';
 import Toast from '@/components/Toast';
 // apiBaseUrl removed — use service layer for endpoints
 import translations from '@/constants/Trans';
@@ -22,9 +23,10 @@ import React, {
 	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useState,
 } from 'react';
-import { Keyboard, Platform } from 'react-native';
+import { Animated, Keyboard, Platform } from 'react-native';
 
 type RouterType = ReturnType<typeof useRouter>;
 
@@ -132,6 +134,7 @@ export interface AuthContextType {
 	>;
 
 	retryRefresh?: () => Promise<boolean>;
+	verifyingAuth?: boolean;
 }
 
 const GeneralContext = createContext<AuthContextType | undefined>(undefined);
@@ -192,16 +195,39 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		action?: (() => Promise<void>) | (() => void);
 	} | null>(null);
 	const [language, setLanguage] = useState<langCode>('en');
+	// Local typed alias for current language translations to avoid TS indexing errors
+	// Memoize so it's stable for hook dependency arrays.
+	const tr = useMemo(
+		() => (translations as any)[language] ?? translations.en,
+		[language]
+	);
 	const [online, setOnline] = useState<boolean>(true);
 	const [selectedOption, setSelectedOption] = useState<
 		headerOptions | undefined
 	>(undefined);
 	const [mounted, setMounted] = useState<boolean>(false);
+	// Keep loader visible until we've checked SecureStore for an existing token
+	const [verifyingAuth, setVerifyingAuth] = useState<boolean>(true);
+	// Flag to indicate we've finished the initial token load from SecureStore
+	const [initialTokenChecked, setInitialTokenChecked] =
+		useState<boolean>(false);
+	const loaderFadeAnimRef = React.useRef(new Animated.Value(0));
 	const [isAnimatable, setIsAnimatable] = useState<boolean>(false);
 	const [isHighEndDevice, setIsHighEndDevice] = useState<boolean>(false);
 	const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
 
 	const [history, setHistory] = useState<string[]>([]);
+
+	// Animate loader fade when verifyingAuth changes so overlay is actually visible
+	useEffect(() => {
+		try {
+			Animated.timing(loaderFadeAnimRef.current, {
+				toValue: verifyingAuth ? 1 : 0,
+				duration: 220,
+				useNativeDriver: true,
+			}).start();
+		} catch {}
+	}, [verifyingAuth]);
 
 	// Determine whether to enable detailed auth lifecycle debug. Sources:
 	// - build-time env: `process.env.BIM_AUTH_DEBUG` === 'true'
@@ -324,7 +350,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					type: 'message',
 					message:
 						backendMessage ||
-						translations[language].categories.auth['logoutSuccess'] ||
+						tr.categories.auth['logoutSuccess'] ||
 						'Logged out',
 				});
 			} else {
@@ -332,13 +358,13 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					type: 'error',
 					message:
 						backendMessage ||
-						translations[language].categories.auth['logoutFailed'] ||
+						tr.categories.auth['logoutFailed'] ||
 						'Logout failed',
 				});
 			}
 			router.replace('/(auth)/login');
 		}
-	}, [language, router]);
+	}, [tr, router]);
 
 	// Attempt a single token refresh on demand. Returns true on success.
 	const attemptRefresh = React.useCallback(async (): Promise<boolean> => {
@@ -387,16 +413,23 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		let expiryTimer: ReturnType<typeof setTimeout> | null = null;
 		let canceled = false;
 		const verifyAndSchedule = async () => {
-			if (authDebug)
-				console.debug('verifyAndSchedule: starting; authToken=', authToken);
-			if (!authToken) {
-				if (expiryTimer) {
-					clearTimeout(expiryTimer);
-					expiryTimer = null;
-				}
+			if (!initialTokenChecked) {
+				if (authDebug)
+					console.debug('verifyAndSchedule: waiting for initial token load');
 				return;
 			}
+			if (authDebug)
+				console.debug('verifyAndSchedule: starting; authToken=', authToken);
+			setVerifyingAuth(true);
 			try {
+				if (!authToken) {
+					if (expiryTimer) {
+						clearTimeout(expiryTimer);
+						expiryTimer = null;
+					}
+					return;
+				}
+
 				const res = await AuthService.verifyToken(String(authToken));
 				if (authDebug)
 					console.debug(
@@ -413,15 +446,14 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					await handleLogout();
 					return;
 				}
+
 				const json = await res.json().catch(() => null);
 				if (authDebug) console.debug('verifyAndSchedule: verify json', json);
 				if (!json) return;
+
 				// Merge returned user object into state when present
 				if (json && (json as any).user) {
 					setUser((json as any).user as any);
-					// If verification happened during app startup and the user
-					// is currently on an auth/root route, redirect into the
-					// authenticated home so the app behaves like an already-logged-in user.
 					try {
 						const anyRouter = router as any;
 						const currentPath =
@@ -434,9 +466,6 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 							currentPath === '/' ||
 							currentPath.startsWith('/(auth)')
 						) {
-							// Router may not be ready at provider mount time; attempt
-							// a few quick retries locally (avoid referencing
-							// `navigateToPath` which is declared later).
 							if (anyRouter?.replace) {
 								try {
 									anyRouter.replace('/(authenticated)/home');
@@ -491,28 +520,19 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					const msUntilExpiry = expMs - now;
 					if (authDebug)
 						console.debug('verifyAndSchedule: msUntilExpiry=', msUntilExpiry);
-					// Attempt to refresh the token shortly before expiry; do a single
-					// attempt only. If refresh fails, show a user-facing message with
-					// an explicit Retry action so the user can re-run the refresh.
+
 					const REFRESH_BEFORE_MS = 30000; // try refresh 30s before expiry
 
 					const scheduleRefresh = async (immediate = false) => {
 						const doRefresh = async () => {
 							const ok = await attemptRefresh();
 							if (!ok) {
-								// Surface a clear retry action to the user. The toast's
-								// action will call `attemptRefresh` again when pressed.
 								setAppMessage({
 									type: 'error',
 									message:
-										(translations[language] &&
-											translations[language].categories?.auth
-												?.sessionRefreshFailed) ||
+										(tr && tr.categories?.auth?.sessionRefreshFailed) ||
 										'Session refresh failed. Tap Retry to attempt refresh or log in again.',
-									actionLabel:
-										(translations[language] &&
-											translations[language].categories?.buttons?.retry) ||
-										'Retry',
+									actionLabel: (tr && tr.categories?.buttons?.retry) || 'Retry',
 									action: async () => {
 										setAppMessage(null);
 										const ok2 = await attemptRefresh();
@@ -520,9 +540,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 											setAppMessage({
 												type: 'error',
 												message:
-													(translations[language] &&
-														translations[language].categories?.auth
-															?.retryFailedPleaseLogin) ||
+													(tr && tr.categories?.auth?.retryFailedPleaseLogin) ||
 													'Retry failed — please log in again',
 											});
 										}
@@ -558,7 +576,6 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					};
 
 					if (msUntilExpiry <= 0) {
-						// Already expired — try refresh immediately
 						if (authDebug)
 							console.debug(
 								'verifyAndSchedule: token already expired, attempting immediate refresh'
@@ -571,6 +588,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				}
 			} catch (e) {
 				console.error('token verification failed', e);
+			} finally {
+				setVerifyingAuth(false);
 			}
 		};
 
@@ -580,7 +599,15 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			canceled = true;
 			if (expiryTimer) clearTimeout(expiryTimer);
 		};
-	}, [authToken, handleLogout, authDebug, attemptRefresh, language, router]);
+	}, [
+		authToken,
+		handleLogout,
+		authDebug,
+		attemptRefresh,
+		tr,
+		router,
+		initialTokenChecked,
+	]);
 
 	// Load auth token from SecureStore on mount so guards can rely on it
 	useEffect(() => {
@@ -601,6 +628,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			} catch (e) {
 				if (authDebug)
 					console.debug('GeneralContext: SecureStore.getItemAsync error', e);
+			} finally {
+				// Mark that initial token load has completed so verification can proceed
+				setInitialTokenChecked(true);
 			}
 		})();
 	}, [authDebug]);
@@ -868,8 +898,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					message:
 						String(text) && String(text).trim()
 							? String(text)
-							: translations[language].categories.auth['loginFailed'] ||
-							  'Login failed',
+							: tr.categories.auth['loginFailed'] || 'Login failed',
 				});
 				return;
 			}
@@ -971,8 +1000,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				message:
 					String(msg) && String(msg).trim()
 						? String(msg)
-						: translations[language].categories.auth['loginFailed'] ||
-						  'Login failed',
+						: tr.categories.auth['loginFailed'] || 'Login failed',
 			});
 		}
 	};
@@ -1003,7 +1031,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					message:
 						String(text) && String(text).trim()
 							? String(text)
-							: translations[language].categories.auth['registrationFailed'] ||
+							: tr.categories.auth['registrationFailed'] ||
 							  'Registration failed',
 				});
 				return;
@@ -1021,8 +1049,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				message:
 					String(msg) && String(msg).trim()
 						? String(msg)
-						: translations[language].categories.auth['registrationFailed'] ||
-						  'Registration failed',
+						: tr.categories.auth['registrationFailed'] || 'Registration failed',
 			});
 		}
 	};
@@ -1053,9 +1080,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					message:
 						String(text) && String(text).trim()
 							? String(text)
-							: translations[language].categories.auth[
-									'otpVerificationFailed'
-							  ] || 'OTP verification failed',
+							: tr.categories.auth['otpVerificationFailed'] ||
+							  'OTP verification failed',
 				});
 				return;
 			}
@@ -1086,7 +1112,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				message:
 					String(msg) && String(msg).trim()
 						? String(msg)
-						: translations[language].categories.auth['otpVerificationFailed'] ||
+						: tr.categories.auth['otpVerificationFailed'] ||
 						  'OTP verification failed',
 			});
 		}
@@ -1097,9 +1123,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			setAppMessage({
 				type: 'error',
 				message:
-					translations[language].categories.auth[
-						'setupAuthenticator.missingPhone'
-					] ?? 'Missing phone for 2FA verification',
+					tr.categories.auth['setupAuthenticator.missingPhone'] ??
+					'Missing phone for 2FA verification',
 			});
 			return false;
 		}
@@ -1107,9 +1132,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			setAppMessage({
 				type: 'error',
 				message:
-					translations[language].categories.auth[
-						'setupAuthenticator.enterCodeError'
-					] ?? 'Enter the code from your authenticator app',
+					tr.categories.auth['setupAuthenticator.enterCodeError'] ??
+					'Enter the code from your authenticator app',
 			});
 			return false;
 		}
@@ -1125,9 +1149,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					message:
 						String(text) && String(text).trim()
 							? String(text)
-							: translations[language].categories.auth[
-									'setupAuthenticator.verifyFailed'
-							  ] || '2FA verification failed',
+							: tr.categories.auth['setupAuthenticator.verifyFailed'] ||
+							  '2FA verification failed',
 				});
 				return false;
 			}
@@ -1178,9 +1201,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				try {
 					const successMessage =
 						(resJson && (resJson as any).message) ||
-						translations[language].categories.auth[
-							'setupAuthenticator.loginSuccess'
-						] ||
+						tr.categories.auth['setupAuthenticator.loginSuccess'] ||
 						'Login successful';
 					setAppMessage?.({ type: 'message', message: String(successMessage) });
 				} catch {}
@@ -1197,9 +1218,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				type: 'error',
 				message:
 					(err?.message as string) ||
-					translations[language].categories.auth[
-						'setupAuthenticator.verifyFailed'
-					] ||
+					tr.categories.auth['setupAuthenticator.verifyFailed'] ||
 					'2FA verification failed',
 			});
 			return false;
@@ -1219,9 +1238,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			setAppMessage?.({
 				type: 'error',
 				message:
-					translations[language].categories.auth[
-						'setupAuthenticator.missingSetupToken'
-					] ?? 'Missing setup token for TOTP setup',
+					tr.categories.auth['setupAuthenticator.missingSetupToken'] ??
+					'Missing setup token for TOTP setup',
 			});
 			return null;
 		}
@@ -1229,9 +1247,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			setAppMessage?.({
 				type: 'error',
 				message:
-					translations[language].categories.auth[
-						'setupAuthenticator.missingSecret'
-					] ?? 'Missing secret for TOTP setup',
+					tr.categories.auth['setupAuthenticator.missingSecret'] ??
+					'Missing secret for TOTP setup',
 			});
 			return null;
 		}
@@ -1239,9 +1256,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			setAppMessage?.({
 				type: 'error',
 				message:
-					translations[language].categories.auth[
-						'setupAuthenticator.enterCodeError'
-					] ?? 'Enter the code from your authenticator app',
+					tr.categories.auth['setupAuthenticator.enterCodeError'] ??
+					'Enter the code from your authenticator app',
 			});
 			return null;
 		}
@@ -1258,9 +1274,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					message:
 						String(text) && String(text).trim()
 							? String(text)
-							: translations[language].categories.auth[
-									'setupAuthenticator.setupFailed'
-							  ] || 'TOTP setup failed',
+							: tr.categories.auth['setupAuthenticator.setupFailed'] ||
+							  'TOTP setup failed',
 				});
 				return null;
 			}
@@ -1297,9 +1312,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				try {
 					const successMessage =
 						(json && (json as any).message) ||
-						translations[language].categories.auth[
-							'setupAuthenticator.setupSuccess'
-						] ||
+						tr.categories.auth['setupAuthenticator.setupSuccess'] ||
 						'Two-factor authentication enabled.';
 					setAppMessage?.({ type: 'message', message: String(successMessage) });
 				} catch {
@@ -1320,9 +1333,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				type: 'error',
 				message:
 					(err?.message as string) ||
-					translations[language].categories.auth[
-						'setupAuthenticator.setupFailed'
-					] ||
+					tr.categories.auth['setupAuthenticator.setupFailed'] ||
 					'TOTP setup failed',
 			});
 			return null;
@@ -1372,9 +1383,16 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				authToken,
 				setAuthToken,
 				retryRefresh: attemptRefresh,
+				verifyingAuth,
 			}}
 		>
 			{children}
+			{/* Global loader shown while auth token is being verified */}
+			<Loader
+				showOverlay={verifyingAuth}
+				fadeAnim={loaderFadeAnimRef.current}
+				toggleShowOverlay={() => setVerifyingAuth(false)}
+			/>
 			{/* Global toast for app messages/errors */}
 			<Toast
 				visible={!!appMessage}

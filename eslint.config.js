@@ -4,6 +4,15 @@ const expoConfig = require('eslint-config-expo/flat');
 
 module.exports = defineConfig([
   expoConfig,
+  // Ensure parser supports modern ECMAScript features (optional catch binding)
+  {
+    languageOptions: {
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+      },
+    },
+  },
   {
     ignores: ['dist/*'],
     rules: {
