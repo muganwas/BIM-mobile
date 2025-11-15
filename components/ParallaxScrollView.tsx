@@ -1,12 +1,13 @@
 import type { PropsWithChildren, ReactElement } from 'react';
 import { useEffect } from 'react';
 import {
+	findNodeHandle,
 	GestureResponderEvent,
+	RefreshControl,
 	ScrollView,
 	StyleProp,
 	StyleSheet,
 	ViewStyle,
-	findNodeHandle,
 } from 'react-native';
 import Animated, {
 	interpolate,
@@ -29,6 +30,9 @@ type Props = PropsWithChildren<{
 	onTouchStart?: (e: GestureResponderEvent) => void; // Optional callback for touch start events
 	/** Optional callback to receive the internal ScrollView ref (useful to scroll to focused inputs) */
 	getScrollRef?: (ref: ScrollView | null) => void;
+	/** Optional pull-to-refresh handler and state */
+	onRefresh?: () => void | Promise<void>;
+	refreshing?: boolean;
 }>;
 
 export default function ParallaxScrollView({
@@ -39,6 +43,8 @@ export default function ParallaxScrollView({
 	onTouchStart,
 	headerBackgroundColor,
 	getScrollRef,
+	onRefresh,
+	refreshing,
 }: Props) {
 	const colorScheme = useColorScheme() ?? 'light';
 	const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -111,6 +117,18 @@ export default function ParallaxScrollView({
 				scrollIndicatorInsets={{ bottom }}
 				contentContainerStyle={{ paddingBottom: bottom }}
 				nestedScrollEnabled={true}
+				refreshControl={
+					onRefresh ? (
+						<RefreshControl
+							refreshing={!!refreshing}
+							onRefresh={() => {
+								try {
+									void onRefresh();
+								} catch {}
+							}}
+						/>
+					) : undefined
+				}
 			>
 				<Animated.View
 					style={[

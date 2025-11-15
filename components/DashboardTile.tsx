@@ -2,6 +2,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { fontSize, fontWeight } from '@/constants/Font';
+import { formatAmount } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import TileContainer from './TileContainer';
 
@@ -80,10 +81,11 @@ export default function DashboardTile({
 					darkColor={valueText}
 				>
 					{amountType === 'double'
-						? typeof amount === 'number'
-							? amount.toFixed(2)
-							: '0.00'
-						: amount ?? 0}
+						? formatAmount(typeof amount === 'number' ? amount : 0, 2)
+						: formatAmount(
+								typeof amount === 'number' ? amount : Number(amount ?? 0),
+								0
+						  )}
 				</ThemedText>
 			</ThemedView>
 		</TileContainer>

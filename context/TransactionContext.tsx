@@ -52,6 +52,19 @@ export interface TransactionContextType {
 	// Optional dashboard data provided by the server on successful login
 	serverDashboard?: any | null;
 	setServerDashboard?: React.Dispatch<React.SetStateAction<any | null>>;
+
+	// Server-provided dashboard metrics exposed for the UI (populated when server dashboard present)
+	dailyPurchasesTotal?: number;
+	weeklyPurchasesTotal?: number;
+	monthlyPurchasesTotal?: number;
+	lastSevenDaysPurchases?: { date: Date; day: string; amount: number }[];
+	lastFiveTransactions?: MicroTransaction[];
+	purchasesPerRouter?: { name: string; location: string; amount: number }[];
+	// Voucher metrics
+	dailyVoucherUsersTotal?: number;
+	weeklyVoucherUsersTotal?: number;
+	monthlyVoucherUsersTotal?: number;
+	lastSevenVoucherUsers?: VoucherUser[];
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(
@@ -75,6 +88,39 @@ export const TransactionProvider = ({
 
 	// Dashboard payload returned by server after login (optional)
 	const [serverDashboard, setServerDashboard] = useState<any | null>(null);
+
+	// UI-friendly metrics derived from server dashboard (if provided)
+	const [dailyPurchasesTotal, setDailyPurchasesTotal] = useState<number>(0);
+	const [weeklyPurchasesTotal, setWeeklyPurchasesTotal] = useState<number>(0);
+	const [monthlyPurchasesTotal, setMonthlyPurchasesTotal] = useState<number>(0);
+	const [lastSevenDaysPurchases, setLastSevenDaysPurchases] = useState<
+		{
+			date: Date;
+			day: string;
+			amount: number;
+		}[]
+	>([]);
+	const [lastFiveTransactions, setLastFiveTransactions] = useState<
+		MicroTransaction[]
+	>([]);
+	const [purchasesPerRouter, setPurchasesPerRouter] = useState<
+		{
+			name: string;
+			location: string;
+			amount: number;
+		}[]
+	>([]);
+
+	// Voucher metrics
+	const [dailyVoucherUsersTotal, setDailyVoucherUsersTotal] =
+		useState<number>(0);
+	const [weeklyVoucherUsersTotal, setWeeklyVoucherUsersTotal] =
+		useState<number>(0);
+	const [monthlyVoucherUsersTotal, setMonthlyVoucherUsersTotal] =
+		useState<number>(0);
+	const [lastSevenVoucherUsers, setLastSevenVoucherUsers] = useState<
+		VoucherUser[]
+	>([]);
 
 	const fetchDocuments = useCallback(
 		async (user: User | null) => {
@@ -230,6 +276,62 @@ export const TransactionProvider = ({
 						setRouters(sd.routerBalances as NetRouter[]);
 					// The server may have provided aggregate numbers and chartData that
 					// the rest of the app can consume later via `serverDashboard`.
+					// Populate UI-friendly dashboard metrics when provided by server
+					try {
+						setDailyPurchasesTotal(Number(sd.todayTransactions) || 0);
+						setWeeklyPurchasesTotal(Number(sd.weekTransactions) || 0);
+						setMonthlyPurchasesTotal(Number(sd.monthTransactions) || 0);
+						if (Array.isArray(sd.chartData)) {
+							setLastSevenDaysPurchases(
+								sd.chartData.map((c: any) => ({
+									date: new Date(c.date),
+									day: new Date(c.date).toLocaleDateString('en-US', {
+										weekday: 'long',
+									}),
+									amount: Number(c.total) || 0,
+								}))
+							);
+						}
+						if (Array.isArray(sd.recentTransactions)) {
+							setLastFiveTransactions(
+								sd.recentTransactions.slice(0, 5).map((rt: any) => ({
+									id: rt.id ?? String(rt.created_at || Math.random()),
+									amount: Number(rt.amount) || 0,
+									status: (rt.status as any) || ('completed' as any),
+									routerName:
+										(rt.router && (rt.router as any).name) ||
+										rt.router_id ||
+										'',
+									date: rt.created_at ? new Date(rt.created_at) : new Date(),
+									reason: rt.reason || 'other',
+									description: undefined,
+									method: { type: (rt.type as any) || 'mobile-money' },
+								}))
+							);
+						}
+						if (Array.isArray(sd.routerBalances)) {
+							setPurchasesPerRouter(
+								sd.routerBalances.map((rb: any) => ({
+									name: rb.name,
+									location: rb.location ?? '',
+									amount: Number(rb.balance) || 0,
+								}))
+							);
+						}
+						setDailyVoucherUsersTotal(Number(sd.todayUsers) || 0);
+						setWeeklyVoucherUsersTotal(Number(sd.weekUsers) || 0);
+						setMonthlyVoucherUsersTotal(Number(sd.monthUsers) || 0);
+						if (Array.isArray(sd.voucherUsers)) {
+							setLastSevenVoucherUsers(
+								sd.voucherUsers.slice(0, 7) as VoucherUser[]
+							);
+						}
+					} catch (e) {
+						console.error(
+							'TransactionContext: failed to map server dashboard metrics',
+							e
+						);
+					}
 				}
 
 				setLoading(true);
@@ -311,6 +413,18 @@ export const TransactionProvider = ({
 				fetchPurchases,
 				serverDashboard,
 				setServerDashboard,
+				// Dashboard-derived UI metrics
+				dailyPurchasesTotal,
+				weeklyPurchasesTotal,
+				monthlyPurchasesTotal,
+				lastSevenDaysPurchases,
+				lastFiveTransactions,
+				purchasesPerRouter,
+				// Voucher metrics
+				dailyVoucherUsersTotal,
+				weeklyVoucherUsersTotal,
+				monthlyVoucherUsersTotal,
+				lastSevenVoucherUsers,
 			}}
 		>
 			{children}

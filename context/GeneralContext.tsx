@@ -5,6 +5,7 @@ import translations from '@/constants/Trans';
 import { delay, normalizePhoneForApi, parseAmount } from '@/helpers';
 import { parseApiError } from '@/helpers/api';
 import * as AuthService from '@/services/AuthService';
+import { fetchDashboard } from '@/services/UserService';
 import {
 	DashboardSummary,
 	headerOptions,
@@ -134,6 +135,8 @@ export interface AuthContextType {
 	>;
 
 	retryRefresh?: () => Promise<boolean>;
+	refreshDashboard?: (force?: boolean) => Promise<boolean>;
+	lastDashboardUpdated?: number | null;
 	verifyingAuth?: boolean;
 }
 
@@ -208,6 +211,10 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [mounted, setMounted] = useState<boolean>(false);
 	// Keep loader visible until we've checked SecureStore for an existing token
 	const [verifyingAuth, setVerifyingAuth] = useState<boolean>(true);
+	// Timestamp (ms since epoch) when the dashboard was last updated from server
+	const [lastDashboardUpdated, setLastDashboardUpdated] = useState<
+		number | null
+	>(null);
 	// Flag to indicate we've finished the initial token load from SecureStore
 	const [initialTokenChecked, setInitialTokenChecked] =
 		useState<boolean>(false);
@@ -958,6 +965,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					dashboard,
 				};
 				setUser(mergedUser as any);
+				try {
+					setLastDashboardUpdated(Date.now());
+				} catch {}
 				// If server returned a token as part of the login payload, persist it
 				if (data && data.token) {
 					await SecureStore.setItemAsync('auth_token', String(data.token));
@@ -1004,6 +1014,91 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			});
 		}
 	};
+
+	// Shared helper that actually performs the dashboard fetch and merges
+	// the result into `user.dashboard`. Returns true on success.
+	const refreshDashboard = React.useCallback(
+		async (force = false): Promise<boolean> => {
+			if (!user || !authToken) return false;
+
+			// If not forced, skip fetching when dashboard-like data already exists
+			if (!force) {
+				try {
+					const existing = (user as any).dashboard;
+					if (
+						existing &&
+						typeof existing === 'object' &&
+						(Array.isArray((existing as any).recentTransactions) ||
+							(existing as any).todayTransactions !== undefined ||
+							Array.isArray((existing as any).routerBalances) ||
+							Array.isArray((existing as any).chartData))
+					) {
+						return false;
+					}
+				} catch {
+					// fallthrough
+				}
+			}
+
+			try {
+				const resp = await fetchDashboard(String(authToken));
+				console.debug('[GeneralContext] refreshDashboard raw response:', resp);
+				try {
+					const json = await (resp as any).json?.();
+					if (json !== undefined) {
+						console.debug('[GeneralContext] refreshDashboard JSON:', json);
+						const hasDashboard = !!(
+							json &&
+							typeof json === 'object' &&
+							(Array.isArray((json as any).recentTransactions) ||
+								(json as any).todayTransactions !== undefined ||
+								Array.isArray((json as any).routerBalances) ||
+								Array.isArray((json as any).chartData))
+						);
+						if (hasDashboard) {
+							setUser((prev) => {
+								try {
+									const base = prev && typeof prev === 'object' ? prev : {};
+									const out = { ...base, dashboard: json } as any;
+									try {
+										setLastDashboardUpdated(Date.now());
+									} catch {}
+									return out;
+								} catch {
+									return prev;
+								}
+							});
+							return true;
+						}
+					}
+				} catch (e) {
+					console.debug('[GeneralContext] refreshDashboard parse failed:', e);
+				}
+				return false;
+			} catch (e) {
+				console.warn('[GeneralContext] refreshDashboard failed:', e);
+				return false;
+			}
+		},
+		[authToken, user]
+	);
+
+	// Initial fetch when we become authenticated — do not re-run on unrelated
+	// `user` object changes. The helper will avoid duplicate fetching.
+	useEffect(() => {
+		if (!user?.id || !authToken) return;
+		void refreshDashboard(false);
+	}, [authToken, user?.id, refreshDashboard]);
+
+	// Auto-refresh dashboard every 2 minutes while authenticated.
+	useEffect(() => {
+		if (!user?.id || !authToken) return undefined;
+		const INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+		const id = setInterval(() => {
+			void refreshDashboard(true);
+		}, INTERVAL_MS);
+		return () => clearInterval(id);
+	}, [authToken, user?.id, refreshDashboard]);
 
 	const handleRegistration = async ({
 		phone,
@@ -1196,6 +1291,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						...(resJson as any),
 					};
 					setUser(mergedUser as any);
+					try {
+						setLastDashboardUpdated(Date.now());
+					} catch {}
 				}
 				// Show success toast if backend provided a message
 				try {
@@ -1384,6 +1482,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setAuthToken,
 				retryRefresh: attemptRefresh,
 				verifyingAuth,
+				lastDashboardUpdated,
 			}}
 		>
 			{children}
