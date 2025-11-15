@@ -18,14 +18,19 @@ import { useTransaction } from '@/context/TransactionContext';
 import { formatMMDD, translateWithVariables } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { dayPurchase, MicroTransaction, VoucherUser } from '@/types';
+import {
+	dayPurchase,
+	MicroTransaction,
+	TransactionStatus,
+	VoucherUser,
+} from '@/types';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { BarChart } from 'react-native-chart-kit';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function HomeScreen() {
-	const { setSelectedOption, language } = useGeneral();
+	const { setSelectedOption, language, user } = useGeneral();
 
 	// explicitly track home page
 	useTrackHistory('/(authenticated)/home');
@@ -88,6 +93,24 @@ export default function HomeScreen() {
 	const [lastFiveTransactions, setLastFiveTransactions] = useState<
 		MicroTransaction[]
 	>([]);
+
+	// Prefer server-provided recent transactions when available; map to the
+	// MicroTransaction shape expected by the UI. Fall back to client-side
+	// `lastFiveTransactions` computed from purchases.
+	const renderTransactions: MicroTransaction[] = user?.dashboard
+		?.recentTransactions
+		? user.dashboard.recentTransactions.map((rt) => ({
+				id: rt.id ?? String(rt.created_at || Math.random()),
+				amount: Number(rt.amount) || 0,
+				status: (rt.status as any as TransactionStatus) || 'completed',
+				routerName:
+					(rt.router && (rt.router as any).name) || (rt.router_id ?? ''),
+				date: rt.created_at ? new Date(rt.created_at) : new Date(),
+				reason: (rt.reason as any) || 'other',
+				description: undefined,
+				method: { type: (rt.type as any) || 'mobile-money' },
+		  }))
+		: lastFiveTransactions;
 
 	useEffect(() => {
 		if (purchases && routers) {
@@ -508,7 +531,7 @@ export default function HomeScreen() {
 								lightColor={lightBackgroundColor}
 								darkColor={darkBackgroundColor}
 							>
-								{lastFiveTransactions.map((transaction, index) => (
+								{renderTransactions.map((transaction, index) => (
 									<ThemedView
 										key={index}
 										style={{
@@ -960,10 +983,20 @@ export default function HomeScreen() {
 					<BarChart
 						data={{
 							labels: [
-								...lastSevenDaysPurchases.map((p) => formatMMDD(p.date)),
+								...(user?.dashboard?.chartData
+									? user.dashboard.chartData.map((c) =>
+											formatMMDD(new Date(c.date))
+									  )
+									: lastSevenDaysPurchases.map((p) => formatMMDD(p.date))),
 							],
 							datasets: [
-								{ data: [...lastSevenDaysPurchases.map((p) => p.amount)] },
+								{
+									data: [
+										...(user?.dashboard?.chartData
+											? user.dashboard.chartData.map((c) => c.total)
+											: lastSevenDaysPurchases.map((p) => p.amount)),
+									],
+								},
 							],
 						}}
 						width={width - 30}
@@ -1014,7 +1047,14 @@ export default function HomeScreen() {
 					lightColor={backgroundLight}
 					darkColor={backgroundDark}
 				>
-					{purchasesPerRouter.map((router, index) => (
+					{(user?.dashboard?.routerBalances
+						? user.dashboard.routerBalances.map((rb) => ({
+								name: rb.name,
+								location: '',
+								amount: rb.balance,
+						  }))
+						: purchasesPerRouter
+					).map((router, index) => (
 						<ThemedView
 							key={index}
 							style={{

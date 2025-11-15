@@ -74,8 +74,8 @@ export const TransactionProvider = ({
 
 	const fetchDocuments = useCallback(async (user: User | null) => {
 		if (!user) return;
-		// If server provided dashboard data, use it
-		const sd = (user as any) || null;
+		// Prefer typed dashboard data attached to user.dashboard; fall back to root-level payload for compatibility
+		const sd = ((user as any)?.dashboard ?? (user as any)) || null;
 		if (sd && Array.isArray(sd.documents)) {
 			setDocuments(sd.documents as DocumentProps[]);
 			return;
@@ -86,7 +86,7 @@ export const TransactionProvider = ({
 
 	const fetchBanks = useCallback(async (user: User | null) => {
 		if (!user) return;
-		const sd = (user as any) || null;
+		const sd = ((user as any)?.dashboard ?? (user as any)) || null;
 		if (sd && Array.isArray(sd.banks)) {
 			setBanks(sd.banks as Bank[]);
 			return;
@@ -97,7 +97,7 @@ export const TransactionProvider = ({
 	const fetchRouters = useCallback(
 		async (user: User | null): Promise<NetRouter[]> => {
 			if (!user) return [];
-			const sd = (user as any) || null;
+			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
 			if (sd && Array.isArray(sd.routerBalances)) {
 				setRouters(sd.routerBalances as NetRouter[]);
 				return sd.routerBalances as NetRouter[];
@@ -110,7 +110,7 @@ export const TransactionProvider = ({
 
 	const fetchPackages = useCallback(async (user: User | null) => {
 		if (!user) return;
-		const sd = (user as any) || null;
+		const sd = ((user as any)?.dashboard ?? (user as any)) || null;
 		if (sd && Array.isArray(sd.packages)) {
 			setPackages(sd.packages as InternetPackage[]);
 			return;
@@ -122,7 +122,7 @@ export const TransactionProvider = ({
 	const fetchPurchases = useCallback(
 		async (user: User | null, routersOverride?: NetRouter[]) => {
 			if (!user) return;
-			const sd = (user as any) || null;
+			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
 			if (sd) {
 				if (Array.isArray(sd.purchases))
 					setPurchases(sd.purchases as MicroTransaction[]);
@@ -141,7 +141,7 @@ export const TransactionProvider = ({
 			if (user) {
 				// If the backend returned pre-computed dashboard data with the user
 				// prefer it as the initial state rather than generating local mock data.
-				const sd = (user as any) || null;
+				const sd = ((user as any)?.dashboard ?? (user as any)) || null;
 				if (
 					sd &&
 					(sd.recentTransactions ||

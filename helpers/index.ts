@@ -1,4 +1,7 @@
-import { phoneNumberLength } from '@/constants';
+import {
+	countryCode as defaultCountryCode,
+	phoneNumberLength,
+} from '@/constants';
 import { Alert, AlertButton, Platform, ToastAndroid } from 'react-native';
 
 export function filterCharacters(
@@ -55,6 +58,61 @@ export function formatPhoneNumber(phoneNumber: string, len?: number): string {
 	}
 
 	return interimValue;
+}
+
+/**
+ * Normalize a phone number for sending to backend APIs in E.164 format.
+ * - Returns a string beginning with country code without '+' (e.g. 2567...) API doesn't expect the +
+ * - Removes spaces and non-digit characters
+ * - Converts numbers starting with '00' to international form
+ * - Removes local trunk leading zeros before prepending default country code
+ * - Returns an empty string for falsy input
+ */
+export function normalizePhoneForApi(phone?: string | null): string {
+	if (!phone) return '';
+	const raw = String(phone).trim();
+
+	// If user already provided a leading '+', keep international digits and return
+	if (raw.startsWith('+')) {
+		const digits = filterCharacters(raw, 'number');
+		return digits ?? '';
+	}
+
+	// Treat leading '00' as international prefix (convert to +)
+	const leading00 = raw.startsWith('00');
+	let digits = filterCharacters(raw, 'number');
+	if (!digits) return '';
+
+	if (leading00) {
+		// remove the leading 00 and return as +<digits>
+		digits = digits.replace(/^00+/, '');
+		return digits;
+	}
+
+	// Remove local trunk zeros (e.g., 0789... -> 789...)
+	digits = digits.replace(/^0+/, '');
+
+	// Determine default country code digits (e.g. '+256' -> '256')
+	const cc = String(defaultCountryCode ?? '').replace(/[^0-9]/g, '');
+	if (cc) {
+		const userProvided = digits.startsWith(cc);
+		if (!userProvided) digits = `${cc}${digits}`;
+	}
+
+	return digits;
+}
+
+/**
+ * Parse an amount value returned by the server into a number.
+ * Accepts numeric strings (with optional commas) or numbers.
+ * Returns NaN if the input cannot be parsed.
+ */
+export function parseAmount(value?: string | number | null): number {
+	if (value === null || typeof value === 'undefined') return NaN;
+	if (typeof value === 'number') return value;
+	const cleaned = String(value).replace(/[,\s]/g, '');
+	const n = Number(cleaned);
+	return Number.isFinite(n) ? n : NaN;
 }
 
 export function ShowAlert(

@@ -1,3 +1,5 @@
+import { DashboardSummary } from './dashboard';
+
 export interface User {
 	id: string;
 	name: string;
@@ -7,6 +9,8 @@ export interface User {
 	userLanguage?: langCode; // Optional, can be used to store user's preferred language
 	createdAt: Date;
 	updatedAt: Date;
+	// Optional typed dashboard data returned by some login/refresh endpoints
+	dashboard?: DashboardSummary;
 }
 
 export type headerOptions =
@@ -227,3 +231,5 @@ export type langCode =
 	| 'zh'
 	| 'ja'
 	| 'ar';
+
+export * from './dashboard';

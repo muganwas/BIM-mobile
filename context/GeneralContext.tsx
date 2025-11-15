@@ -1,9 +1,10 @@
 import Toast from '@/components/Toast';
 import { apiBaseUrl } from '@/constants/API';
 import translations from '@/constants/Trans';
-import { delay } from '@/helpers';
+import { delay, normalizePhoneForApi, parseAmount } from '@/helpers';
 import { apiFetch, parseApiError } from '@/helpers/api';
 import {
+	DashboardSummary,
 	headerOptions,
 	langCode,
 	notifications,
@@ -465,13 +466,16 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	}) => {
 		// Initiate login which (per backend) sends a 2FA OTP to the provided phone
 		try {
+			const normalizedNumber = normalizePhoneForApi(number);
+			console.info('Normalized phone for login:', normalizedNumber);
+			console.info({ apiBaseUrl });
 			const res = await apiFetch((apiBaseUrl || '') + '/login', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					phone: number.replaceAll(' ', ''),
+					phone: normalizedNumber,
 					password: password ?? '',
 				}),
 			});
@@ -492,31 +496,65 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			// If the server returned pre-computed dashboard data (no TOTP required),
 			// forward that payload into `user` so TransactionContext can pick it up.
-			try {
-				const hasDashboard = !!(
-					data &&
-					typeof data === 'object' &&
-					(Array.isArray(data.recentTransactions) ||
-						data.todayTransactions !== undefined ||
-						Array.isArray(data.routerBalances) ||
-						Array.isArray(data.chartData))
-				);
-				if (hasDashboard) {
-					// Merge user info (if any) with dashboard payload so consumers can access both.
-					const mergedUser = {
-						...(data.user || {}),
-						...data,
-					};
-					setUser(mergedUser as any);
-					// If server returned a token as part of the login payload, persist it
-					if (data && data.token) {
-						try {
-							await SecureStore.setItemAsync('auth_token', String(data.token));
-							setAuthToken(String(data.token));
-						} catch {}
-					}
+			const hasDashboard = !!(
+				data &&
+				typeof data === 'object' &&
+				(Array.isArray(data.recentTransactions) ||
+					data.todayTransactions !== undefined ||
+					Array.isArray(data.routerBalances) ||
+					Array.isArray(data.chartData))
+			);
+			if (hasDashboard) {
+				// Map server-provided dashboard fields into typed structures and coerce numeric strings to numbers
+				const dashboard: DashboardSummary = {
+					chartData: Array.isArray(data.chartData)
+						? data.chartData.map((c: any) => ({
+								date: String(c.date),
+								total: parseAmount(c.total),
+						  }))
+						: undefined,
+					monthTransactions: parseAmount(data.monthTransactions),
+					monthUsers:
+						typeof data.monthUsers !== 'undefined'
+							? Number(data.monthUsers)
+							: undefined,
+					recentTransactions: Array.isArray(data.recentTransactions)
+						? data.recentTransactions.map((t: any) => ({
+								...t,
+								amount: parseAmount(t.amount),
+						  }))
+						: undefined,
+					routerBalances: Array.isArray(data.routerBalances)
+						? data.routerBalances.map((r: any) => ({
+								...r,
+								balance: parseAmount(r.balance),
+						  }))
+						: undefined,
+					todayTransactions: parseAmount(data.todayTransactions),
+					todayUsers:
+						typeof data.todayUsers !== 'undefined'
+							? Number(data.todayUsers)
+							: undefined,
+					weekTransactions: parseAmount(data.weekTransactions),
+					weekUsers:
+						typeof data.weekUsers !== 'undefined'
+							? Number(data.weekUsers)
+							: undefined,
+				};
+
+				// Merge user info (if any) with typed dashboard payload so consumers can access both.
+				const mergedUser = {
+					...(data.user || {}),
+					dashboard,
+				};
+				setUser(mergedUser as any);
+				// If server returned a token as part of the login payload, persist it
+				if (data && data.token) {
+					await SecureStore.setItemAsync('auth_token', String(data.token));
+					setAuthToken(String(data.token));
 				}
-			} catch {}
+				return navigateToPath('/(authenticated)/home');
+			}
 
 			// Determine which 2FA method the backend expects when redirecting to verify
 			try {
@@ -528,7 +566,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 							qr_base64: data.qr_base64 ?? null,
 							secret: data.secret ?? null,
 							setup_token: data.setup_token ?? null,
-							phone: data.phone ?? number.replaceAll(' ', ''),
+							phone: normalizePhoneForApi(data.phone ?? number),
 							user: data.user ?? null,
 						});
 						// navigate to the authenticator setup screen
@@ -574,7 +612,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					phone: phone.replaceAll(' ', ''),
+					phone: normalizePhoneForApi(phone),
 					password: password || '',
 					password_confirmation: password || '',
 					name: name || undefined,
@@ -701,6 +739,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			otp: otpToSend,
 		};
 
+		// Normalize phone before sending to backend
+		payload.phone = normalizePhoneForApi(payload.phone);
+
 		try {
 			const res = await apiFetch((apiBaseUrl || '') + '/verify-otp', {
 				method: 'POST',
@@ -779,9 +820,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					phone: String(pending2FASetup?.phone ?? pendingPhone).replaceAll(
-						' ',
-						''
+					phone: normalizePhoneForApi(
+						String(pending2FASetup?.phone ?? pendingPhone)
 					),
 					otp: String(otp).trim(),
 				}),
