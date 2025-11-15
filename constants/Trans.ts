@@ -58,6 +58,9 @@ const translations: Translations = {
 				'setupAuthenticator.verifyFailed': '2FA verification failed',
 				// Generic/fallback app messages
 				loginFailed: 'Login failed',
+				sessionRefreshFailed:
+					'Session refresh failed. Tap Retry to attempt refresh or log in again.',
+				retryFailedPleaseLogin: 'Retry failed — please log in again',
 				logoutSuccess: 'Logged out',
 				logoutFailed: 'Logout failed',
 				registrationFailed: 'Registration failed',
@@ -124,6 +127,7 @@ const translations: Translations = {
 				withdraw: 'withdraw',
 				createPackage: 'Create package',
 				createNewPackage: 'Create new package',
+				retry: 'Retry',
 			},
 			navigation: {
 				home: 'Dashboard',

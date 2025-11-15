@@ -11,7 +11,6 @@ import {
 	TouchableHighlight,
 	TouchableOpacity,
 	useAnimatedValue,
-	useColorScheme,
 	View,
 	type ViewProps,
 	ViewStyle,
@@ -94,7 +93,6 @@ export const ThemedDropdown = ({
 	// On web there's no native animated driver available. Only enable native driver when
 	// running in a true native environment (no document global).
 	const canUseNativeDriver = typeof document === 'undefined';
-	const colorScheme = useColorScheme() ?? 'light';
 	const scrollRef = useAnimatedRef<Animated.ScrollView>();
 	const setValDelay = useRef<NodeJS.Timeout | null>(null);
 

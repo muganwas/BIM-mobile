@@ -11,7 +11,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { DocumentProps } from '@/types';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, StyleSheet, useColorScheme, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 
 type DocumentPayload = {
 	type: DocumentProps['type'];
@@ -40,11 +40,9 @@ export default function Document({
 	onBack,
 	onEdit,
 }: Props) {
-	useColorScheme();
 	const { language } = useGeneral();
 	const bg = useThemeColor({}, 'background');
 	const screenTitleText = useThemeColor({}, 'screenTitleText');
-	const inputBackground = useThemeColor({}, 'inputBackground');
 	const inputBorder = useThemeColor({}, 'inputBorder');
 	const cancelButton = useThemeColor({}, 'cancelButton');
 	const bim = useThemeColor({}, 'bim');

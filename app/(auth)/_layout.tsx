@@ -1,15 +1,13 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
-import { useColorScheme } from '@/hooks/useColorScheme';
+// useColorScheme not required here
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Platform } from 'react-native';
 
 export default function AuthLayout() {
-	const colorScheme = useColorScheme();
 	const tint = useThemeColor({}, 'tint');
 
 	return (

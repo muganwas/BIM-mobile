@@ -39,7 +39,7 @@ export default function RoutersScreen() {
 	const errorColor = useThemeColor({}, 'error');
 	const borderDark = useThemeColor({}, 'borderDark');
 	const listItemBackground = useThemeColor({}, 'listItemBackground');
-	const borderColor = useThemeColor({}, 'border');
+	// borderColor unused; Colors[colorScheme] is used directly where needed
 	const router = useRouter();
 	const { routers, setRouters, fetchRouters } = useTransaction();
 	const promptFadeAnim = useAnimatedValue(0);

@@ -26,26 +26,26 @@ describe('normalizePhoneForApi', () => {
 	});
 
 	test('preserves already E.164 formatted numbers (leading +)', () => {
-		expect(normalizePhoneForApi('+256789244866')).toBe('+256789244866');
+		expect(normalizePhoneForApi('+256789244866')).toBe('256789244866');
 		// with spaces and symbols
-		expect(normalizePhoneForApi('+256 789 244 866')).toBe('+256789244866');
+		expect(normalizePhoneForApi('+256 789 244 866')).toBe('256789244866');
 	});
 
 	test("converts numbers starting with '00' to +international", () => {
-		expect(normalizePhoneForApi('00256789244866')).toBe('+256789244866');
-		expect(normalizePhoneForApi('00 256 789 244 866')).toBe('+256789244866');
+		expect(normalizePhoneForApi('00256789244866')).toBe('256789244866');
+		expect(normalizePhoneForApi('00 256 789 244 866')).toBe('256789244866');
 	});
 
 	test('strips local trunk 0 and prepends default country code', () => {
-		expect(normalizePhoneForApi('0789244866')).toBe('+256789244866');
-		expect(normalizePhoneForApi(' 0789 244 866 ')).toBe('+256789244866');
+		expect(normalizePhoneForApi('0789244866')).toBe('256789244866');
+		expect(normalizePhoneForApi(' 0789 244 866 ')).toBe('256789244866');
 	});
 
 	test('prepends country code when missing and number not starting with local 0', () => {
-		expect(normalizePhoneForApi('789244866')).toBe('+256789244866');
+		expect(normalizePhoneForApi('789244866')).toBe('256789244866');
 	});
 
 	test('if digits already start with country code (no +), just add +', () => {
-		expect(normalizePhoneForApi('256789244866')).toBe('+256789244866');
+		expect(normalizePhoneForApi('256789244866')).toBe('256789244866');
 	});
 });

@@ -11,12 +11,10 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef } from 'react';
-import { useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function VouchersScreen() {
 	useTrackHistory('/(authenticated)/vouchers');
-	const colorScheme = useColorScheme() ?? 'light';
 	// Theme helpers
 	const background = useThemeColor({}, 'background');
 	const backgroundLight = useThemeColor({}, 'background', 'light');

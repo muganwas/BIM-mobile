@@ -18,7 +18,9 @@ describe('BankService', () => {
 	test('fetchBanks calls apiFetch with correct url and headers', async () => {
 		await BankService.fetchBanks();
 		expect(mockApiFetch).toHaveBeenCalledTimes(1);
-		const [url, init] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const url = call[0] as string;
+		const init = call[1] as any;
 		expect(url).toBe('https://api.example/banks');
 		expect(init.method).toBe('GET');
 		expect(init.headers['Content-Type']).toBe('application/json');
@@ -28,7 +30,8 @@ describe('BankService', () => {
 	test('fetchBanks includes Authorization when token provided', async () => {
 		await BankService.fetchBanks('btoken');
 		expect(mockApiFetch).toHaveBeenCalledTimes(1);
-		const [, init] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const init = call[1] as any;
 		expect(init.headers.Authorization).toBe('Bearer btoken');
 	});
 });

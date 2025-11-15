@@ -4,7 +4,6 @@ import { StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
 
 export function Collapsible({
@@ -12,7 +11,6 @@ export function Collapsible({
 	title,
 }: PropsWithChildren & { title: string }) {
 	const [isOpen, setIsOpen] = useState(false);
-	const theme = useColorScheme() ?? 'light';
 	const iconColor = useThemeColor({}, 'headerIcons');
 
 	return (

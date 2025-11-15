@@ -18,7 +18,9 @@ describe('PackageService', () => {
 	test('fetchPackages calls apiFetch with correct url and headers', async () => {
 		await PackageService.fetchPackages();
 		expect(mockApiFetch).toHaveBeenCalledTimes(1);
-		const [url, init] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const url = call[0] as string;
+		const init = call[1] as any;
 		expect(url).toBe('https://api.example/packages');
 		expect(init.method).toBe('GET');
 		expect(init.headers['Content-Type']).toBe('application/json');
@@ -28,7 +30,8 @@ describe('PackageService', () => {
 	test('fetchPackages includes Authorization when token provided', async () => {
 		await PackageService.fetchPackages('ptoken');
 		expect(mockApiFetch).toHaveBeenCalledTimes(1);
-		const [, init] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const init = call[1] as any;
 		expect(init.headers.Authorization).toBe('Bearer ptoken');
 	});
 });

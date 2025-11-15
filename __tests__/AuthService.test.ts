@@ -18,10 +18,12 @@ describe('AuthService', () => {
 	test('login posts to /login with phone and password', async () => {
 		await AuthService.login('+256789244866', 'pass');
 		expect(mockApiFetch).toHaveBeenCalledTimes(1);
-		const [url, init] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const url = call[0];
+		const init = call[1] as any;
 		expect(url).toBe('https://api.example/login');
 		expect(init.method).toBe('POST');
-		const body = JSON.parse(init.body);
+		const body = JSON.parse(init.body as string);
 		expect(body.phone).toBe('+256789244866');
 		expect(body.password).toBe('pass');
 	});
@@ -33,8 +35,9 @@ describe('AuthService', () => {
 			name: 'Bob',
 			email: 'b@b',
 		});
-		const [, init] = mockApiFetch.mock.calls[0];
-		const body = JSON.parse(init.body);
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const init = call[1] as any;
+		const body = JSON.parse(init.body as string);
 		expect(body.phone).toBe('+2561');
 		expect(body.password).toBe('p');
 		expect(body.password_confirmation).toBe('p');
@@ -45,20 +48,26 @@ describe('AuthService', () => {
 	test('verifyOtp posts to /verify-otp', async () => {
 		const payload = { phone: '+1', otp: '1234' };
 		await AuthService.verifyOtp(payload);
-		const [, init] = mockApiFetch.mock.calls[0];
-		expect(JSON.parse(init.body)).toMatchObject(payload);
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const init = call[1] as any;
+		expect(JSON.parse(init.body as string)).toMatchObject(payload);
 	});
 
 	test('verify2fa posts to /2fa-verify', async () => {
 		await AuthService.verify2fa('+1', '0000');
-		const [, init] = mockApiFetch.mock.calls[0];
-		expect(JSON.parse(init.body)).toMatchObject({ phone: '+1', otp: '0000' });
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const init = call[1] as any;
+		expect(JSON.parse(init.body as string)).toMatchObject({
+			phone: '+1',
+			otp: '0000',
+		});
 	});
 
 	test('setupTotp posts to /api/2fa-setup', async () => {
 		await AuthService.setupTotp({ setup_token: 't', secret: 's', otp: 'o' });
-		const [, init] = mockApiFetch.mock.calls[0];
-		expect(JSON.parse(init.body)).toMatchObject({
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const init = call[1] as any;
+		expect(JSON.parse(init.body as string)).toMatchObject({
 			setup_token: 't',
 			secret: 's',
 			otp: 'o',
@@ -67,21 +76,27 @@ describe('AuthService', () => {
 
 	test('logout posts to /api/logout with Authorization header', async () => {
 		await AuthService.logout('token-x');
-		const [, init] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const init = call[1] as any;
 		expect(init.headers.Authorization).toBe('Bearer token-x');
 	});
 
 	test('getAuthToken builds query url with phone and password', async () => {
 		await AuthService.getAuthToken({ phone: '+1', password: 'pw' });
-		const [url] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const url = call[0] as string;
 		expect(url).toContain('/auth/token');
 		expect(url).toContain('phone=+1');
 		expect(url).toContain('password?=pw');
 	});
 
-	test('verifyToken posts to /auth/verify with Authorization header', async () => {
+	test('verifyToken calls GET /api/token/verify with Authorization header', async () => {
 		await AuthService.verifyToken('tok-1');
-		const [, init] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const url = call[0] as string;
+		const init = call[1] as any;
+		expect(url).toBe('https://api.example/api/token/verify');
+		expect(init.method).toBe('GET');
 		expect(init.headers.Authorization).toBe('Bearer tok-1');
 	});
 });

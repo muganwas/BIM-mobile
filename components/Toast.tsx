@@ -15,9 +15,18 @@ interface Props {
 	type: ToastType;
 	message: string;
 	onDismiss: () => void;
+	onAction?: () => void;
+	actionLabel?: string;
 }
 
-export default function Toast({ visible, type, message, onDismiss }: Props) {
+export default function Toast({
+	visible,
+	type,
+	message,
+	onDismiss,
+	onAction,
+	actionLabel,
+}: Props) {
 	const errorColor = useThemeColor({}, 'error');
 	const limeColor = useThemeColor({}, 'lime');
 	const bg = type === 'error' ? errorColor : limeColor;
@@ -36,15 +45,18 @@ export default function Toast({ visible, type, message, onDismiss }: Props) {
 
 	if (!visible) return null;
 
-	const requireDismiss = type === 'error';
+	const requireDismiss = Boolean(onAction) || type === 'error';
 
 	return (
 		<View style={styles.container} pointerEvents='box-none'>
 			<Animated.View style={[styles.toast, { backgroundColor: bg }]}>
 				<Text style={styles.message}>{message}</Text>
 				{requireDismiss && (
-					<TouchableOpacity onPress={onDismiss} style={styles.button}>
-						<Text style={styles.buttonText}>Dismiss</Text>
+					<TouchableOpacity
+						onPress={() => (onAction ? onAction() : onDismiss())}
+						style={styles.button}
+					>
+						<Text style={styles.buttonText}>{actionLabel || 'Dismiss'}</Text>
 					</TouchableOpacity>
 				)}
 			</Animated.View>

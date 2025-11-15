@@ -22,7 +22,9 @@ describe('UserService', () => {
 	test('fetchDashboard calls apiFetch with correct url and headers', async () => {
 		await UserService.fetchDashboard();
 		expect(mockApiFetch).toHaveBeenCalledTimes(1);
-		const [url, init] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const url = call[0] as string;
+		const init = call[1] as any;
 		expect(url).toBe('https://api.example/dashboard');
 		expect(init).toBeDefined();
 		expect(init.method).toBe('GET');
@@ -34,7 +36,8 @@ describe('UserService', () => {
 	test('fetchDashboard includes Authorization when token provided', async () => {
 		await UserService.fetchDashboard('mytoken');
 		expect(mockApiFetch).toHaveBeenCalledTimes(1);
-		const [, init] = mockApiFetch.mock.calls[0];
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const init = call[1] as any;
 		expect(init.headers.Authorization).toBe('Bearer mytoken');
 	});
 
@@ -43,11 +46,15 @@ describe('UserService', () => {
 		await UserService.fetchDocuments('t2');
 		expect(mockApiFetch).toHaveBeenCalledTimes(2);
 
-		const [purchasesUrl, purchasesInit] = mockApiFetch.mock.calls[0];
+		const call0 = (mockApiFetch.mock.calls[0] as any[]) || [];
+		const purchasesUrl = call0[0] as string;
+		const purchasesInit = call0[1] as any;
 		expect(purchasesUrl).toBe('https://api.example/purchases');
 		expect(purchasesInit.headers.Authorization).toBe('Bearer t1');
 
-		const [docsUrl, docsInit] = mockApiFetch.mock.calls[1];
+		const call1 = (mockApiFetch.mock.calls[1] as any[]) || [];
+		const docsUrl = call1[0] as string;
+		const docsInit = call1[1] as any;
 		expect(docsUrl).toBe('https://api.example/documents');
 		expect(docsInit.headers.Authorization).toBe('Bearer t2');
 	});

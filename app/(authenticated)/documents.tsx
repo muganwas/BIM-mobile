@@ -14,13 +14,12 @@ import { DocumentProps } from '@/types';
 import DocumentOverlay from '@/views/Document';
 import { openBrowserAsync } from 'expo-web-browser';
 import { useEffect, useMemo, useState } from 'react';
-import { TouchableOpacity, useColorScheme } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function DocumentsScreen() {
 	// explicitly track documents page
 	useTrackHistory('/(authenticated)/documents');
-	const colorScheme = useColorScheme() ?? 'light';
 	const bg = useThemeColor({}, 'background');
 	const bimColor = useThemeColor({}, 'bim');
 	const titleBg = useThemeColor({}, 'titleBg');

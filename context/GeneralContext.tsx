@@ -116,19 +116,37 @@ export interface AuthContextType {
 	online: boolean;
 	router: RouterType;
 	// Global app message (shown in Toast)
-	appMessage?: { type: 'error' | 'message'; message: string | null } | null;
+	appMessage?: {
+		type: 'error' | 'message';
+		message: string | null;
+		actionLabel?: string | null;
+		action?: (() => Promise<void>) | (() => void);
+	} | null;
 	setAppMessage: React.Dispatch<
 		React.SetStateAction<{
 			type: 'error' | 'message';
 			message: string | null;
+			actionLabel?: string | null;
+			action?: (() => Promise<void>) | (() => void);
 		} | null>
 	>;
+
+	retryRefresh?: () => Promise<boolean>;
 }
 
 const GeneralContext = createContext<AuthContextType | undefined>(undefined);
 
 const HISTORY_KEY = 'BIM_history_v1';
 const MAX_HISTORY = 5;
+
+// Cross-platform runtime global for React Native (no browser `window` fallback)
+// Use `globalThis` when available, otherwise `global` (Node-like runtimes).
+const runtime: any =
+	typeof globalThis !== 'undefined'
+		? globalThis
+		: typeof global !== 'undefined'
+		? global
+		: {};
 
 export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
@@ -166,10 +184,12 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		phone?: string | null;
 		user?: any;
 	} | null>(null);
-	// global message state shown as toast/modal
+	// global message state shown as toast/modal; can include an optional action
 	const [appMessage, setAppMessage] = useState<{
 		type: 'error' | 'message';
 		message: string | null;
+		actionLabel?: string | null;
+		action?: (() => Promise<void>) | (() => void);
 	} | null>(null);
 	const [language, setLanguage] = useState<langCode>('en');
 	const [online, setOnline] = useState<boolean>(true);
@@ -181,22 +201,53 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [isHighEndDevice, setIsHighEndDevice] = useState<boolean>(false);
 	const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
 
-	const [history, setHistory] = useState<string[]>(() => {
-		try {
-			if (typeof window !== 'undefined' && window.sessionStorage) {
-				const raw =
-					window.sessionStorage.getItem(HISTORY_KEY) ||
-					window.localStorage.getItem(HISTORY_KEY);
+	const [history, setHistory] = useState<string[]>([]);
+
+	// Determine whether to enable detailed auth lifecycle debug. Sources:
+	// - build-time env: `process.env.BIM_AUTH_DEBUG` === 'true'
+	// Optional TTL (minutes) can be provided via `process.env.BIM_AUTH_DEBUG_TTL_MIN`
+	// is deterministic across the session.
+	const _envDebug =
+		typeof process !== 'undefined' && process.env?.BIM_AUTH_DEBUG === 'true';
+	const _envTtlMin =
+		typeof process !== 'undefined' && process.env?.BIM_AUTH_DEBUG_TTL_MIN
+			? Number(process.env.BIM_AUTH_DEBUG_TTL_MIN)
+			: 0;
+	const _winDebug = Boolean(runtime && runtime.__BIM_AUTH_DEBUG__);
+	const _winTtlMin = runtime
+		? Number(runtime.__BIM_AUTH_DEBUG_TTL_MIN__ ?? 0)
+		: 0;
+
+	if (runtime && (_envDebug || _winDebug)) {
+		// record when debugging was first enabled in this session so TTL is stable
+		if (!runtime.__BIM_AUTH_DEBUG_ENABLED_AT__) {
+			runtime.__BIM_AUTH_DEBUG_ENABLED_AT__ = Date.now();
+		}
+	}
+
+	const _enabledAt = runtime ? runtime.__BIM_AUTH_DEBUG_ENABLED_AT__ : 0;
+	const _ttlMin = _winTtlMin || _envTtlMin || 0;
+	const _ttlMs = _ttlMin > 0 ? _ttlMin * 60 * 1000 : 0;
+
+	const authDebug = Boolean(
+		(_envDebug || _winDebug) &&
+			(!_ttlMs || Date.now() - (_enabledAt || 0) < _ttlMs)
+	);
+
+	// Load persisted history from AsyncStorage on mount (React Native compatible)
+	useEffect(() => {
+		(async () => {
+			try {
+				const raw = await AsyncStorage.getItem(HISTORY_KEY);
 				if (raw) {
 					const parsed = JSON.parse(raw);
-					if (Array.isArray(parsed)) return parsed as string[];
+					if (Array.isArray(parsed)) setHistory(parsed as string[]);
 				}
+			} catch {
+				// ignore
 			}
-		} catch {
-			// ignore
-		}
-		return [];
-	});
+		})();
+	}, []);
 
 	// Keep an up-to-date ref of history so we can read it synchronously
 	// without causing re-renders or relying on setState updaters.
@@ -219,17 +270,340 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		};
 	}, []);
 
+	// Logout handler: revoke token (if present), clear storage and app state,
+	// then redirect to the login screen.
+	const handleLogout = React.useCallback(async () => {
+		let backendSuccess = false;
+		let backendMessage: string | null = null;
+		try {
+			const token = await SecureStore.getItemAsync('auth_token');
+			if (token) {
+				try {
+					const res = await AuthService.logout(String(token));
+					if (res && res.ok) {
+						backendSuccess = true;
+						try {
+							const json = await res.json();
+							backendMessage = json?.message ?? null;
+						} catch {}
+					} else if (res) {
+						const text = await parseApiError(res);
+						backendMessage = String(text) || null;
+					}
+				} catch (e) {
+					console.warn('logout: backend call failed', e);
+					backendMessage = (e && (e as any).message) || 'Logout failed';
+				}
+			}
+		} catch (e) {
+			console.warn('logout: token lookup failed', e);
+			backendMessage = 'Logout failed';
+		} finally {
+			// Always clear local state/credentials for security, but show different toasts
+			try {
+				await SecureStore.deleteItemAsync('auth_token');
+				await SecureStore.deleteItemAsync('totp_secret');
+			} catch (e) {
+				console.warn('logout: secure store clear failed', e);
+			}
+			try {
+				await AsyncStorage.removeItem('user_id');
+				await AsyncStorage.removeItem('user_email');
+				await AsyncStorage.removeItem('user_phone');
+			} catch (e) {
+				console.warn('logout: async storage clear failed', e);
+			}
+			setUser(null);
+			setNotifications([]);
+			setPendingRegistration?.(null);
+			setPending2FASetup?.(null);
+			setPendingPhone?.(null);
+			setPending2FAMethod?.(null);
+			if (backendSuccess) {
+				setAppMessage?.({
+					type: 'message',
+					message:
+						backendMessage ||
+						translations[language].categories.auth['logoutSuccess'] ||
+						'Logged out',
+				});
+			} else {
+				setAppMessage?.({
+					type: 'error',
+					message:
+						backendMessage ||
+						translations[language].categories.auth['logoutFailed'] ||
+						'Logout failed',
+				});
+			}
+			router.replace('/(auth)/login');
+		}
+	}, [language, router]);
+
+	// Attempt a single token refresh on demand. Returns true on success.
+	const attemptRefresh = React.useCallback(async (): Promise<boolean> => {
+		if (!authToken) return false;
+		try {
+			const tokenVal = String(authToken);
+			if (authDebug)
+				console.debug(
+					'attemptRefresh: calling refresh endpoint, token prefix=',
+					tokenVal?.slice?.(0, 8)
+				);
+			const refreshRes = await AuthService.refreshToken(tokenVal);
+			if (authDebug)
+				console.debug(
+					'attemptRefresh: refresh response',
+					refreshRes && refreshRes.status,
+					'ok=',
+					refreshRes && refreshRes.ok
+				);
+			if (!refreshRes || !refreshRes.ok) return false;
+			const refJson = await refreshRes.json().catch(() => null);
+			if (refJson && (refJson as any).token) {
+				try {
+					await SecureStore.setItemAsync(
+						'auth_token',
+						String((refJson as any).token)
+					);
+				} catch {}
+				setAuthToken(String((refJson as any).token));
+			}
+			if (refJson && (refJson as any).user) {
+				setUser((refJson as any).user as any);
+			}
+			return true;
+		} catch (e) {
+			if (authDebug) console.error('attemptRefresh: error', e);
+			return false;
+		}
+	}, [authToken, authDebug]);
+
+	// When an auth token is present in memory, verify it with the backend. If
+	// the token is invalid, perform a logout to clear local state. If the
+	// verify response includes an expiry timestamp, schedule an automatic
+	// logout when the token expires.
+	useEffect(() => {
+		let expiryTimer: ReturnType<typeof setTimeout> | null = null;
+		let canceled = false;
+		const verifyAndSchedule = async () => {
+			if (authDebug)
+				console.debug('verifyAndSchedule: starting; authToken=', authToken);
+			if (!authToken) {
+				if (expiryTimer) {
+					clearTimeout(expiryTimer);
+					expiryTimer = null;
+				}
+				return;
+			}
+			try {
+				const res = await AuthService.verifyToken(String(authToken));
+				if (authDebug)
+					console.debug(
+						'verifyAndSchedule: verify response',
+						res && res.status,
+						'ok=',
+						res && res.ok
+					);
+				if (!res || !res.ok) {
+					if (authDebug)
+						console.debug(
+							'verifyAndSchedule: verify failed, calling handleLogout'
+						);
+					await handleLogout();
+					return;
+				}
+				const json = await res.json().catch(() => null);
+				if (authDebug) console.debug('verifyAndSchedule: verify json', json);
+				if (!json) return;
+				// Merge returned user object into state when present
+				if (json && (json as any).user) {
+					setUser((json as any).user as any);
+					// If verification happened during app startup and the user
+					// is currently on an auth/root route, redirect into the
+					// authenticated home so the app behaves like an already-logged-in user.
+					try {
+						const anyRouter = router as any;
+						const currentPath =
+							anyRouter?.pathname ||
+							anyRouter?.asPath ||
+							anyRouter?.route ||
+							'';
+						if (
+							!currentPath ||
+							currentPath === '/' ||
+							currentPath.startsWith('/(auth)')
+						) {
+							// Router may not be ready at provider mount time; attempt
+							// a few quick retries locally (avoid referencing
+							// `navigateToPath` which is declared later).
+							if (anyRouter?.replace) {
+								try {
+									anyRouter.replace('/(authenticated)/home');
+								} catch {}
+							} else if (anyRouter?.push) {
+								try {
+									anyRouter.push('/(authenticated)/home');
+								} catch {}
+							} else {
+								let attempts = 0;
+								const maxAttempts = 12;
+								const tryNav = () => {
+									const ar = router as any;
+									if (ar?.replace) {
+										try {
+											ar.replace('/(authenticated)/home');
+											return;
+										} catch {}
+									}
+									if (ar?.push) {
+										try {
+											ar.push('/(authenticated)/home');
+											return;
+										} catch {}
+									}
+									attempts++;
+									if (attempts < maxAttempts) setTimeout(tryNav, 100);
+									else if (runtime && runtime.__BIM_HISTORY_DEBUG__)
+										console.warn(
+											'verifyAndSchedule: router not ready, aborting redirect to authenticated home'
+										);
+								};
+								tryNav();
+							}
+						}
+					} catch {}
+				}
+
+				// Support token expiry from either token_meta.expires_at or top-level expires_at
+				const expiresAt =
+					(json &&
+						(json as any).token_meta &&
+						(json as any).token_meta.expires_at) ||
+					(json && (json as any).expires_at) ||
+					null;
+				if (expiresAt) {
+					if (authDebug)
+						console.debug('verifyAndSchedule: token expiresAt=', expiresAt);
+					const expMs = Date.parse(String(expiresAt));
+					if (!Number.isFinite(expMs)) return;
+					const now = Date.now();
+					const msUntilExpiry = expMs - now;
+					if (authDebug)
+						console.debug('verifyAndSchedule: msUntilExpiry=', msUntilExpiry);
+					// Attempt to refresh the token shortly before expiry; do a single
+					// attempt only. If refresh fails, show a user-facing message with
+					// an explicit Retry action so the user can re-run the refresh.
+					const REFRESH_BEFORE_MS = 30000; // try refresh 30s before expiry
+
+					const scheduleRefresh = async (immediate = false) => {
+						const doRefresh = async () => {
+							const ok = await attemptRefresh();
+							if (!ok) {
+								// Surface a clear retry action to the user. The toast's
+								// action will call `attemptRefresh` again when pressed.
+								setAppMessage({
+									type: 'error',
+									message:
+										(translations[language] &&
+											translations[language].categories?.auth
+												?.sessionRefreshFailed) ||
+										'Session refresh failed. Tap Retry to attempt refresh or log in again.',
+									actionLabel:
+										(translations[language] &&
+											translations[language].categories?.buttons?.retry) ||
+										'Retry',
+									action: async () => {
+										setAppMessage(null);
+										const ok2 = await attemptRefresh();
+										if (!ok2) {
+											setAppMessage({
+												type: 'error',
+												message:
+													(translations[language] &&
+														translations[language].categories?.auth
+															?.retryFailedPleaseLogin) ||
+													'Retry failed — please log in again',
+											});
+										}
+									},
+								});
+							}
+						};
+
+						if (immediate) {
+							await doRefresh();
+							return;
+						}
+
+						const msUntilRefresh = Math.max(
+							0,
+							msUntilExpiry - REFRESH_BEFORE_MS
+						);
+						if (authDebug)
+							console.debug(
+								'verifyAndSchedule: scheduling refresh in ms',
+								msUntilRefresh
+							);
+						expiryTimer = setTimeout(async () => {
+							if (canceled) return;
+							try {
+								if (authDebug)
+									console.debug('verifyAndSchedule: scheduled refresh firing');
+								await doRefresh();
+							} catch (e) {
+								console.error('scheduled token refresh failed', e);
+							}
+						}, msUntilRefresh);
+					};
+
+					if (msUntilExpiry <= 0) {
+						// Already expired — try refresh immediately
+						if (authDebug)
+							console.debug(
+								'verifyAndSchedule: token already expired, attempting immediate refresh'
+							);
+						await scheduleRefresh(true);
+						return;
+					}
+
+					await scheduleRefresh(false);
+				}
+			} catch (e) {
+				console.error('token verification failed', e);
+			}
+		};
+
+		verifyAndSchedule();
+
+		return () => {
+			canceled = true;
+			if (expiryTimer) clearTimeout(expiryTimer);
+		};
+	}, [authToken, handleLogout, authDebug, attemptRefresh, language, router]);
+
 	// Load auth token from SecureStore on mount so guards can rely on it
 	useEffect(() => {
 		(async () => {
 			try {
 				const t = await SecureStore.getItemAsync('auth_token');
-				if (t) setAuthToken(String(t));
-			} catch {
-				// ignore
+				if (t) {
+					if (authDebug)
+						console.debug(
+							'GeneralContext: loaded auth_token from SecureStore',
+							t
+						);
+					setAuthToken(String(t));
+				} else {
+					if (authDebug)
+						console.debug('GeneralContext: no auth_token found in SecureStore');
+				}
+			} catch (e) {
+				if (authDebug)
+					console.debug('GeneralContext: SecureStore.getItemAsync error', e);
 			}
 		})();
-	}, []);
+	}, [authDebug]);
 
 	useEffect(() => {
 		if (!totalMemory) return;
@@ -280,19 +654,20 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const persist = (arr: string[]) => {
 		try {
-			if (typeof window !== 'undefined' && window.sessionStorage) {
-				const payload = JSON.stringify(arr);
-				window.sessionStorage.setItem(HISTORY_KEY, payload);
-				window.localStorage.setItem(HISTORY_KEY, payload);
-			}
+			const payload = JSON.stringify(arr);
+			// AsyncStorage is used for React Native and web compatibility
+			AsyncStorage.setItem(HISTORY_KEY, payload).catch((e) => {
+				if (runtime?.__BIM_HISTORY_DEBUG__)
+					console.debug('GeneralContext: persist failed', e);
+			});
 		} catch (e) {
-			if ((window as any)?.__BIM_HISTORY_DEBUG__)
+			if (runtime?.__BIM_HISTORY_DEBUG__)
 				console.debug('GeneralContext: persist failed', e);
 		}
 	};
 
 	const handleUpdateHistory = useCallback((current: string) => {
-		const debug = (window as any)?.__BIM_HISTORY_DEBUG__;
+		const debug = runtime?.__BIM_HISTORY_DEBUG__;
 		if (debug) console.debug('handleUpdateHistory called with', current);
 		setHistory((prev) => {
 			if (debug) console.debug('handleUpdateHistory prev', prev);
@@ -371,12 +746,20 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	}, []);
 
 	useEffect(() => {
-		if (typeof window !== 'undefined') {
-			(window as any).__BIM_DUMP_HISTORY__ = () =>
-				console.log('BIM_HISTORY_DUMP', history);
+		if (runtime) {
+			// Expose a debug helper that reads persisted history and logs it.
+			(runtime as any).__BIM_DUMP_HISTORY__ = async () => {
+				try {
+					const raw = await AsyncStorage.getItem(HISTORY_KEY);
+					const parsed = raw ? JSON.parse(raw) : history;
+					console.log('BIM_HISTORY_DUMP', parsed);
+				} catch (e) {
+					console.log('BIM_HISTORY_DUMP error', e);
+				}
+			};
 			return () => {
 				try {
-					delete (window as any).__BIM_DUMP_HISTORY__;
+					delete (runtime as any).__BIM_DUMP_HISTORY__;
 				} catch {}
 			};
 		}
@@ -384,17 +767,31 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const navigateToPath = useCallback(
 		(path: string) => {
-			try {
-				(router.replace as any)(path);
-				return;
-			} catch {}
-			try {
-				(router.push as any)(path);
-				return;
-			} catch {}
-			try {
-				router.replace(path as any);
-			} catch {}
+			// router may not be ready at provider mount time. Retry briefly
+			// until router methods are available before giving up.
+			const tryNavigate = (attempt = 0) => {
+				const maxAttempts = 12; // ~1.2s
+				if ((router as any)?.replace) {
+					try {
+						(router.replace as any)(path);
+						return;
+					} catch {}
+				}
+				if ((router as any)?.push) {
+					try {
+						(router.push as any)(path);
+						return;
+					} catch {}
+				}
+				if (attempt < maxAttempts) {
+					setTimeout(() => tryNavigate(attempt + 1), 100);
+				} else if (runtime && runtime.__BIM_HISTORY_DEBUG__)
+					console.warn(
+						'navigateToPath: router not ready, aborting navigation to',
+						path
+					);
+			};
+			tryNavigate();
 		},
 		[router]
 	);
@@ -404,7 +801,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		const prev = historyRef.current || [];
 		let action: () => void = () => {};
 
-		if ((window as any)?.__BIM_HISTORY_DEBUG__)
+		if (runtime?.__BIM_HISTORY_DEBUG__)
 			console.debug('handleGoBack using history', prev);
 
 		if (prev.length <= 1 || !prev[prev.length - 2]) {
@@ -627,74 +1024,6 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						: translations[language].categories.auth['registrationFailed'] ||
 						  'Registration failed',
 			});
-		}
-	};
-
-	const handleLogout = async () => {
-		let backendSuccess = false;
-		let backendMessage: string | null = null;
-		try {
-			const token = await SecureStore.getItemAsync('auth_token');
-			if (token) {
-				try {
-					const res = await AuthService.logout(String(token));
-					if (res && res.ok) {
-						backendSuccess = true;
-						try {
-							const json = await res.json();
-							backendMessage = json?.message ?? null;
-						} catch {}
-					} else if (res) {
-						const text = await parseApiError(res);
-						backendMessage = String(text) || null;
-					}
-				} catch (e) {
-					console.warn('logout: backend call failed', e);
-					backendMessage = (e && (e as any).message) || 'Logout failed';
-				}
-			}
-		} catch (e) {
-			console.warn('logout: token lookup failed', e);
-			backendMessage = 'Logout failed';
-		} finally {
-			// Always clear local state/credentials for security, but show different toasts
-			try {
-				await SecureStore.deleteItemAsync('auth_token');
-				await SecureStore.deleteItemAsync('totp_secret');
-			} catch (e) {
-				console.warn('logout: secure store clear failed', e);
-			}
-			try {
-				await AsyncStorage.removeItem('user_id');
-				await AsyncStorage.removeItem('user_email');
-				await AsyncStorage.removeItem('user_phone');
-			} catch (e) {
-				console.warn('logout: async storage clear failed', e);
-			}
-			setUser(null);
-			setNotifications([]);
-			setPendingRegistration?.(null);
-			setPending2FASetup?.(null);
-			setPendingPhone?.(null);
-			setPending2FAMethod?.(null);
-			if (backendSuccess) {
-				setAppMessage?.({
-					type: 'message',
-					message:
-						backendMessage ||
-						translations[language].categories.auth['logoutSuccess'] ||
-						'Logged out',
-				});
-			} else {
-				setAppMessage?.({
-					type: 'error',
-					message:
-						backendMessage ||
-						translations[language].categories.auth['logoutFailed'] ||
-						'Logout failed',
-				});
-			}
-			router.replace('/(auth)/login');
 		}
 	};
 
@@ -1042,6 +1371,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setPending2FASetup,
 				authToken,
 				setAuthToken,
+				retryRefresh: attemptRefresh,
 			}}
 		>
 			{children}
@@ -1051,6 +1381,17 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				type={appMessage?.type ?? 'message'}
 				message={appMessage?.message ?? ''}
 				onDismiss={() => setAppMessage(null)}
+				onAction={() => {
+					if (appMessage && appMessage.action) {
+						// fire-and-forget the action; it will update app state/message as needed
+						try {
+							void appMessage.action();
+						} catch {}
+					} else {
+						setAppMessage(null);
+					}
+				}}
+				actionLabel={appMessage?.actionLabel ?? undefined}
 			/>
 		</GeneralContext.Provider>
 	);
@@ -1064,11 +1405,9 @@ export const useGeneral = () => {
 };
 
 export function enableHistoryDebug() {
-	if (typeof window !== 'undefined')
-		(window as any).__BIM_HISTORY_DEBUG__ = true;
+	if (runtime) (runtime as any).__BIM_HISTORY_DEBUG__ = true;
 }
 
 export function disableHistoryDebug() {
-	if (typeof window !== 'undefined')
-		(window as any).__BIM_HISTORY_DEBUG__ = false;
+	if (runtime) (runtime as any).__BIM_HISTORY_DEBUG__ = false;
 }

@@ -98,7 +98,17 @@ export async function getAuthToken({
 }
 
 export async function verifyToken(token: string) {
-	return apiFetch((apiBaseUrl || '') + '/auth/verify', {
+	return apiFetch((apiBaseUrl || '') + '/api/token/verify', {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`,
+		},
+	});
+}
+
+export async function refreshToken(token: string) {
+	return apiFetch((apiBaseUrl || '') + '/api/token/refresh', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -116,4 +126,5 @@ export default {
 	logout,
 	getAuthToken,
 	verifyToken,
+	refreshToken,
 };

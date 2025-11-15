@@ -68,6 +68,10 @@ export function formatPhoneNumber(phoneNumber: string, len?: number): string {
  * - Removes local trunk leading zeros before prepending default country code
  * - Returns an empty string for falsy input
  */
+// IMPORTANT: The backend API expects phone tokens without a leading '+' character.
+// This function intentionally returns only the numeric digits (e.g. '25677...'),
+// not '+25677...'. Do NOT change this behavior — many endpoints require the
+// token without the plus character.
 export function normalizePhoneForApi(phone?: string | null): string {
 	if (!phone) return '';
 	const raw = String(phone).trim();

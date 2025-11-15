@@ -2,12 +2,11 @@ import { Tabs } from 'expo-router';
 
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
-import { useColorScheme } from '@/hooks/useColorScheme';
+// useColorScheme not required in onboarding layout
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 
 export default function AuthLayout() {
-	const colorScheme = useColorScheme();
 	const tint = useThemeColor({}, 'tint');
 
 	// track onboarding layout group

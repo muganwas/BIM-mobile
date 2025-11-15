@@ -12,7 +12,6 @@ import {
 	TouchableOpacity,
 	View,
 	ViewStyle,
-	useColorScheme,
 } from 'react-native';
 import { IconSymbol } from './ui/IconSymbol';
 
@@ -51,7 +50,7 @@ export default function ThemedFilePicker({
 	darkColor,
 	active = true,
 }: ThemedFilePickerProps) {
-	const colorScheme = useColorScheme() ?? 'light';
+	// colorScheme not required here
 	const [busy, setBusy] = useState(false);
 	const { language } = useGeneral();
 
@@ -136,10 +135,7 @@ export default function ThemedFilePicker({
 					}}
 					activeOpacity={0.8}
 					disabled={!active || disabled || busy}
-					style={[
-						styles.leftBtn,
-						{ backgroundColor: titleBg },
-					]}
+					style={[styles.leftBtn, { backgroundColor: titleBg }]}
 				>
 					<IconSymbol name={'attachFile'} color={textColor} size={16} />
 					<ThemedText

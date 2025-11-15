@@ -11,12 +11,11 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackagesScreen() {
 	useTrackHistory('/(authenticated)/packages');
-	const colorScheme = useColorScheme() ?? 'light';
 	const bg = useThemeColor({}, 'background');
 	const textColor = useThemeColor({}, 'text');
 	const titleBg = useThemeColor({}, 'titleBg');

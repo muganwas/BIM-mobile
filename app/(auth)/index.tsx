@@ -16,6 +16,7 @@ import { verifyToken } from '@/helpers/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -127,13 +128,17 @@ export default function RegisterScreen() {
 
 	useEffect(() => {
 		const verify = async () => {
-			const token = localStorage.getItem('bim-token');
-			const isValid = await verifyToken(token || '');
-			if (isValid) {
-				router.replace({
-					pathname: '/(authenticated)/home',
-					params: { token },
-				});
+			try {
+				const token = await AsyncStorage.getItem('bim-token');
+				const isValid = await verifyToken(token || '');
+				if (isValid) {
+					router.replace({
+						pathname: '/(authenticated)/home',
+						params: { token },
+					});
+				}
+			} catch {
+				// ignore verification errors on startup
 			}
 		};
 		verify();

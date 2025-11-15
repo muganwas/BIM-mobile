@@ -155,26 +155,6 @@ export default function Header({
 	const textColor = useThemeColor({}, 'text');
 	const headerIcons = useThemeColor({}, 'headerIcons');
 	const inputBackground = useThemeColor({}, 'inputBackground');
-	const headerDropdownBackground = useThemeColor(
-		{},
-		'headerDropdownBackground'
-	);
-	const borderColor = useThemeColor({}, 'border');
-	const languageButtonBackground = useThemeColor(
-		{},
-		'languageButtonBackground'
-	);
-	const notificationsCountBackground = useThemeColor(
-		{},
-		'notificationsCountBackground'
-	);
-	const notificationsCountColor = useThemeColor({}, 'notificationsCount');
-	const listItemBackground = useThemeColor({}, 'listItemBackground');
-	const bimColor = useThemeColor({}, 'bim');
-	const authButtonText = useThemeColor({}, 'authButtonText');
-	const focusedInput = useThemeColor({}, 'focusedInput');
-	const inputBorder = useThemeColor({}, 'inputBorder');
-	const background = useThemeColor({}, 'background');
 
 	const toggleProfile = useCallback(
 		(v?: boolean) => {
