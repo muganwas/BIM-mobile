@@ -1,5 +1,9 @@
 import { packages as defaultPackages } from '@/constants';
 import { ShowAlert } from '@/helpers';
+import { fetchBanks as serviceFetchBanks } from '@/services/BankService';
+import { fetchPackages as serviceFetchPackages } from '@/services/PackageService';
+import { fetchRouters as serviceFetchRouters } from '@/services/RouterService';
+import * as UserService from '@/services/UserService';
 import {
 	Bank,
 	DocumentProps,
@@ -59,7 +63,7 @@ export const TransactionProvider = ({
 }: {
 	children: React.ReactNode;
 }) => {
-	const { user } = useGeneral();
+	const { user, authToken } = useGeneral();
 	const [transactions, setTransactions] = useState<Transaction[]>([]);
 	const [purchases, setPurchases] = useState<MicroTransaction[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -72,27 +76,57 @@ export const TransactionProvider = ({
 	// Dashboard payload returned by server after login (optional)
 	const [serverDashboard, setServerDashboard] = useState<any | null>(null);
 
-	const fetchDocuments = useCallback(async (user: User | null) => {
-		if (!user) return;
-		// Prefer typed dashboard data attached to user.dashboard; fall back to root-level payload for compatibility
-		const sd = ((user as any)?.dashboard ?? (user as any)) || null;
-		if (sd && Array.isArray(sd.documents)) {
-			setDocuments(sd.documents as DocumentProps[]);
-			return;
-		}
-		// No client-side mocks — leave documents empty if not provided by server
-		setDocuments([]);
-	}, []);
+	const fetchDocuments = useCallback(
+		async (user: User | null) => {
+			if (!user) return;
+			// Prefer typed dashboard data attached to user.dashboard; fall back to root-level payload for compatibility
+			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
+			if (sd && Array.isArray(sd.documents)) {
+				setDocuments(sd.documents as DocumentProps[]);
+				return;
+			}
+			// Try to fetch from backend if available
+			try {
+				const res = await UserService.fetchDocuments(authToken ?? undefined);
+				if (res && res.ok) {
+					const json = await res.json();
+					if (Array.isArray(json)) {
+						setDocuments(json as DocumentProps[]);
+						return;
+					}
+				}
+			} catch (e) {
+				console.error('fetchDocuments: failed to fetch from API', e);
+			}
+			setDocuments([]);
+		},
+		[authToken]
+	);
 
-	const fetchBanks = useCallback(async (user: User | null) => {
-		if (!user) return;
-		const sd = ((user as any)?.dashboard ?? (user as any)) || null;
-		if (sd && Array.isArray(sd.banks)) {
-			setBanks(sd.banks as Bank[]);
-			return;
-		}
-		setBanks([]);
-	}, []);
+	const fetchBanks = useCallback(
+		async (user: User | null) => {
+			if (!user) return;
+			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
+			if (sd && Array.isArray(sd.banks)) {
+				setBanks(sd.banks as Bank[]);
+				return;
+			}
+			try {
+				const res = await serviceFetchBanks(authToken ?? undefined);
+				if (res && res.ok) {
+					const json = await res.json();
+					if (Array.isArray(json)) {
+						setBanks(json as Bank[]);
+						return;
+					}
+				}
+			} catch (e) {
+				console.error('fetchBanks: failed to fetch from API', e);
+			}
+			setBanks([]);
+		},
+		[authToken]
+	);
 
 	const fetchRouters = useCallback(
 		async (user: User | null): Promise<NetRouter[]> => {
@@ -102,22 +136,49 @@ export const TransactionProvider = ({
 				setRouters(sd.routerBalances as NetRouter[]);
 				return sd.routerBalances as NetRouter[];
 			}
+			try {
+				const res = await serviceFetchRouters(authToken ?? undefined);
+				if (res && res.ok) {
+					const json = await res.json();
+					if (Array.isArray(json)) {
+						setRouters(json as NetRouter[]);
+						return json as NetRouter[];
+					}
+				}
+			} catch (e) {
+				console.error('fetchRouters: failed to fetch from API', e);
+			}
 			setRouters([]);
 			return [];
 		},
-		[]
+		[authToken]
 	);
 
-	const fetchPackages = useCallback(async (user: User | null) => {
-		if (!user) return;
-		const sd = ((user as any)?.dashboard ?? (user as any)) || null;
-		if (sd && Array.isArray(sd.packages)) {
-			setPackages(sd.packages as InternetPackage[]);
-			return;
-		}
-		// Fallback to project defaults
-		setPackages(defaultPackages || []);
-	}, []);
+	const fetchPackages = useCallback(
+		async (user: User | null) => {
+			if (!user) return;
+			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
+			if (sd && Array.isArray(sd.packages)) {
+				setPackages(sd.packages as InternetPackage[]);
+				return;
+			}
+			try {
+				const res = await serviceFetchPackages(authToken ?? undefined);
+				if (res && res.ok) {
+					const json = await res.json();
+					if (Array.isArray(json)) {
+						setPackages(json as InternetPackage[]);
+						return;
+					}
+				}
+			} catch (e) {
+				console.error('fetchPackages: failed to fetch from API', e);
+			}
+			// Fallback to project defaults
+			setPackages(defaultPackages || []);
+		},
+		[authToken]
+	);
 
 	const fetchPurchases = useCallback(
 		async (user: User | null, routersOverride?: NetRouter[]) => {
@@ -130,10 +191,23 @@ export const TransactionProvider = ({
 					setVoucherUsers(sd.voucherUsers as VoucherUser[]);
 				return;
 			}
+			try {
+				const res = await UserService.fetchPurchases(authToken ?? undefined);
+				if (res && res.ok) {
+					const json = await res.json();
+					if (Array.isArray(json.purchases))
+						setPurchases(json.purchases as MicroTransaction[]);
+					if (Array.isArray(json.voucherUsers))
+						setVoucherUsers(json.voucherUsers as VoucherUser[]);
+					return;
+				}
+			} catch (e) {
+				console.error('fetchPurchases: failed to fetch from API', e);
+			}
 			setPurchases([]);
 			setVoucherUsers([]);
 		},
-		[]
+		[authToken]
 	);
 
 	useEffect(() => {

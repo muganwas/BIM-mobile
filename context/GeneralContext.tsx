@@ -1,8 +1,9 @@
 import Toast from '@/components/Toast';
-import { apiBaseUrl } from '@/constants/API';
+// apiBaseUrl removed — use service layer for endpoints
 import translations from '@/constants/Trans';
 import { delay, normalizePhoneForApi, parseAmount } from '@/helpers';
-import { apiFetch, parseApiError } from '@/helpers/api';
+import { parseApiError } from '@/helpers/api';
+import * as AuthService from '@/services/AuthService';
 import {
 	DashboardSummary,
 	headerOptions,
@@ -24,11 +25,6 @@ import React, {
 	useState,
 } from 'react';
 import { Keyboard, Platform } from 'react-native';
-
-// TODO: Shelved — refine server dashboard payload mapping and types.
-// We merged server dashboard payloads into `user` temporarily. Revisit
-// and replace merge logic with a strict typed `serverDashboard` model
-// and proper mapping to `TransactionContext` when we implement full API.
 
 type RouterType = ReturnType<typeof useRouter>;
 
@@ -467,18 +463,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		// Initiate login which (per backend) sends a 2FA OTP to the provided phone
 		try {
 			const normalizedNumber = normalizePhoneForApi(number);
-			console.info('Normalized phone for login:', normalizedNumber);
-			console.info({ apiBaseUrl });
-			const res = await apiFetch((apiBaseUrl || '') + '/login', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					phone: normalizedNumber,
-					password: password ?? '',
-				}),
-			});
+			const res = await AuthService.login(normalizedNumber, password ?? '');
 			if (!res.ok) {
 				const text = await parseApiError(res);
 				setAppMessage({
@@ -492,7 +477,6 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				return;
 			}
 			const data = await res.json();
-			console.info('Login response data:', data);
 
 			// If the server returned pre-computed dashboard data (no TOTP required),
 			// forward that payload into `user` so TransactionContext can pick it up.
@@ -608,16 +592,11 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		email?: string;
 	}) => {
 		try {
-			const res = await apiFetch((apiBaseUrl || '') + '/register', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					phone: normalizePhoneForApi(phone),
-					password: password || '',
-					password_confirmation: password || '',
-					name: name || undefined,
-					email: email || undefined,
-				}),
+			const res = await AuthService.register({
+				phone: normalizePhoneForApi(phone),
+				password: password || '',
+				name: name || undefined,
+				email: email || undefined,
 			});
 			if (!res.ok) {
 				const text = await parseApiError(res);
@@ -658,13 +637,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			const token = await SecureStore.getItemAsync('auth_token');
 			if (token) {
 				try {
-					const res = await apiFetch((apiBaseUrl || '') + '/api/logout', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							Authorization: `Bearer ${token}`,
-						},
-					});
+					const res = await AuthService.logout(String(token));
 					if (res && res.ok) {
 						backendSuccess = true;
 						try {
@@ -743,11 +716,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		payload.phone = normalizePhoneForApi(payload.phone);
 
 		try {
-			const res = await apiFetch((apiBaseUrl || '') + '/verify-otp', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(payload),
-			});
+			const res = await AuthService.verifyOtp(payload);
 			if (!res.ok) {
 				const text = await parseApiError(res);
 				setAppMessage({
@@ -816,16 +785,10 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			return false;
 		}
 		try {
-			const res = await apiFetch((apiBaseUrl || '') + '/2fa-verify', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					phone: normalizePhoneForApi(
-						String(pending2FASetup?.phone ?? pendingPhone)
-					),
-					otp: String(otp).trim(),
-				}),
-			});
+			const res = await AuthService.verify2fa(
+				normalizePhoneForApi(String(pending2FASetup?.phone ?? pendingPhone)),
+				String(otp).trim()
+			);
 			if (!res.ok) {
 				const text = await parseApiError(res);
 				setAppMessage({
@@ -954,10 +917,10 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			return null;
 		}
 		try {
-			const res = await apiFetch((apiBaseUrl || '') + '/api/2fa-setup', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ setup_token, secret, otp: String(otp).trim() }),
+			const res = await AuthService.setupTotp({
+				setup_token,
+				secret,
+				otp: String(otp).trim(),
 			});
 			if (!res.ok) {
 				const text = await parseApiError(res);
