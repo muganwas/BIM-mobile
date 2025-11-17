@@ -16,14 +16,10 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*'],
     rules: {
-      // The @env virtual module is provided at build-time by babel plugin (react-native-dotenv).
-      // eslint-plugin-import cannot resolve it in the editor environment, so ignore it here.
-      'import/no-unresolved': [
-        'error',
-        {
-          ignore: ['^@env$', '^@env/']
-        }
-      ],
+      // Ensure import/no-unresolved raises only for real missing modules.
+      // Previously we ignored the virtual `@env` module provided by a Babel
+      // plugin; since we removed that plugin, don't special-case it here.
+      'import/no-unresolved': ['error'],
       // Disallow accidental use of browser `window` in React Native app source.
       // Prefer `globalThis` or the cross-platform `runtime` global defined in context.
       // This rule is applied via an override below to only affect app source files.

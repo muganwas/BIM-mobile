@@ -13,7 +13,6 @@ import {
 	notifications,
 	User as UserProps,
 } from '@/types';
-import { DEV_OTP } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNetInfo } from '@react-native-community/netinfo';
 import * as DeviceInfo from 'expo-device';
@@ -28,6 +27,9 @@ import React, {
 	useState,
 } from 'react';
 import { Animated, Keyboard, Platform } from 'react-native';
+
+import { env } from '@/helpers/env';
+const DEV_OTP = env('DEV_OTP');
 
 type RouterType = ReturnType<typeof useRouter>;
 

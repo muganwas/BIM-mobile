@@ -1,4 +1,8 @@
-declare module '@env' {
-	/** Development OTP for local testing (set in your local .env file) */
-	export const DEV_OTP: string | undefined;
+declare module '@/helpers/env' {
+	/** Read an environment variable by key. Returns `undefined` when not set. */
+	export function env(
+		key: string,
+		fallback?: string | undefined
+	): string | undefined;
+	export default env;
 }

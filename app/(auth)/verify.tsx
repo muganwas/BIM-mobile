@@ -12,7 +12,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 // no direct router usage here; GeneralContext performs navigation after successful verify
-import { DEV_OTP } from '@env';
+import { env } from '@/helpers/env';
 import { useEffect, useRef, useState } from 'react';
 import {
 	Animated,
@@ -25,6 +25,7 @@ import {
 	useAnimatedValue,
 	useColorScheme,
 } from 'react-native';
+const DEV_OTP = env('DEV_OTP');
 
 const devWidth = Dimensions.get('window').width;
 

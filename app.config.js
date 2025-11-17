@@ -114,6 +114,7 @@ export default ({ config }) => {
         },
         extra: {
             apiBaseUrl: process.env.API_BASE_URL,
+            DEV_OTP: process.env.DEV_OTP,
             env: ENV,
             countryCode: process.env.COUNTRY_CODE,
             countryName: process.env.COUNTRY_NAME,
