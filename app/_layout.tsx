@@ -6,7 +6,7 @@ import {
 } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+// Native splash only: do not use expo-splash-screen JS API here.
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -22,21 +22,10 @@ import {
 	InteractionManager,
 	Text,
 	useAnimatedValue,
+	View,
 } from 'react-native';
 
-try {
-	SplashScreen.preventAutoHideAsync();
-	try {
-		console.debug(
-			'[RootLayout][module] preventAutoHideAsync called @',
-			Date.now()
-		);
-	} catch {}
-} catch (e) {
-	try {
-		console.warn('[RootLayout][module] preventAutoHideAsync failed', e);
-	} catch {}
-}
+// No-op: rely on native splash behavior handled by OS and native configuration.
 
 function RootLayoutContent() {
 	const colorScheme = useColorScheme();
@@ -114,15 +103,11 @@ function RootLayoutContent() {
 							scheduledTimeoutRef.current = global.setTimeout(() => {
 								try {
 									console.debug(
-										'[RootLayout] attempting hideAsync (app already ready) @',
+										'[RootLayout] native splash: not using JS API; assuming auto-hide (app already ready) @',
 										Date.now()
 									);
 								} catch {}
-								SplashScreen.hideAsync()
-									.then(() => {
-										hiddenRef.current = true;
-									})
-									.catch(() => {});
+								hiddenRef.current = true;
 							}, 120) as unknown as number;
 							return;
 						}
@@ -134,31 +119,23 @@ function RootLayoutContent() {
 							}
 							try {
 								console.debug(
-									'[RootLayout] appReady received; attempting hideAsync @',
+									'[RootLayout] appReady received; native splash assumed auto-hide @',
 									Date.now()
 								);
 							} catch {}
-							SplashScreen.hideAsync()
-								.then(() => {
-									hiddenRef.current = true;
-								})
-								.catch(() => {});
+							hiddenRef.current = true;
 						});
 
 						// Fallback: if the app doesn't signal ready within 800ms, hide anyway.
 						scheduledTimeoutRef.current = global.setTimeout(() => {
 							try {
 								console.debug(
-									'[RootLayout] appReady timeout; attempting hideAsync @',
+									'[RootLayout] appReady timeout; native splash assumed auto-hide @',
 									Date.now()
 								);
 							} catch {}
 							readyCancel();
-							SplashScreen.hideAsync()
-								.then(() => {
-									hiddenRef.current = true;
-								})
-								.catch(() => {});
+							hiddenRef.current = true;
 						}, 800) as unknown as number;
 					});
 				});
@@ -174,7 +151,13 @@ function RootLayoutContent() {
 							Date.now()
 						);
 					} catch {}
-					SplashScreen.hideAsync().catch(() => {});
+					try {
+						console.debug(
+							'[RootLayout] safety fallback: native splash assumed auto-hide @',
+							Date.now()
+						);
+					} catch {}
+					hiddenRef.current = true;
 				}
 			}, 10000) as unknown as number;
 
@@ -197,16 +180,24 @@ function RootLayoutContent() {
 		const schemeKey = (colorScheme as any) || 'light';
 		const bg = (Colors as any)[schemeKey]?.background ?? '#ffffff';
 		return (
-			<ImageBackground
-				source={require('../assets/images/splash-icon.png')}
-				resizeMode='contain'
+			<View
 				style={{
 					flex: 1,
-					backgroundColor: bg,
-					alignItems: 'center',
 					justifyContent: 'center',
+					alignItems: 'center',
+					backgroundColor: bg,
 				}}
-			/>
+			>
+				<ImageBackground
+					source={require('../assets/images/splash-icon.png')}
+					resizeMode='contain'
+					style={{
+						flex: 1,
+						alignItems: 'center',
+						justifyContent: 'center',
+					}}
+				/>
+			</View>
 		);
 	}
 

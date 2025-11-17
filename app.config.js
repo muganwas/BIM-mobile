@@ -8,11 +8,6 @@ export default ({ config }) => {
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
         "backgroundColor": "#ffffff",
-        "splash": {
-            "image": "./assets/images/splash-icon.png",
-            "resizeMode": "contain",
-            "backgroundColor": "#ffffff"
-        },
         "scheme": "bimmobile",
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
@@ -88,15 +83,7 @@ export default ({ config }) => {
             ],
             './plugins/withNetworkSecurityConfig.js',
             'expo-router',
-            [
-                'expo-splash-screen',
-                {
-                    image: './assets/images/splash-icon.png',
-                    imageWidth: 200,
-                    resizeMode: 'contain',
-                    backgroundColor: '#ffffff',
-                },
-            ],
+            // using native splash via top-level `splash` config; avoid JS api plugin
             [
                 'expo-font',
                 // {
