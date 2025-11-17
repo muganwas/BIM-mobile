@@ -11,6 +11,7 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
+import { signalAppReady } from '@/helpers/appReady';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
@@ -33,6 +34,15 @@ const devWidth = Dimensions.get('window').width;
 
 export default function LoginsScreen() {
 	useTrackHistory('/(auth)/login');
+
+	// Signal readiness after two paint frames so layout can hide splash.
+	useEffect(() => {
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				signalAppReady();
+			});
+		});
+	}, []);
 	const router = useRouter();
 	const navigation = useNavigation();
 	const loaderFadeAnim = useAnimatedValue(0);

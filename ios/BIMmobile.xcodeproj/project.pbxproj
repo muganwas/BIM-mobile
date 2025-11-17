@@ -7,31 +7,31 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0AEA688B7C12A094E738327D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E62D2542B7A94190680D36D4 /* PrivacyInfo.xcprivacy */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		173B6B82D960560D45B483C4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 529C78E37043FD41442B6217 /* PrivacyInfo.xcprivacy */; };
+		2A49C11EE468E2380A60B8A3 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081BCB1BA31CB7726A94B45E /* ExpoModulesProvider.swift */; };
+		3C6D401B295680F053993008 /* Pods_BIMmobile.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCCAB23CF86C6912AF5E34A7 /* Pods_BIMmobile.framework */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		7BF0CB0F4BA88F55D2E06BFD /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C740778E4A1AA10C43E6531 /* ExpoModulesProvider.swift */; };
-		800FCAD5007716202B772A3C /* Pods_BIMmobile.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD7DC16F119A3AD3E0D86072 /* Pods_BIMmobile.framework */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		E35F3EBC112C45459E011DEB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F97D6138830B421FB2976D7B /* GoogleService-Info.plist */; };
+		EB9D23CCBE354876AFBF5EF1 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D315FA4A94F749ADAABE0F56 /* GoogleService-Info.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		081BCB1BA31CB7726A94B45E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-BIMmobile/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* BIMmobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BIMmobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = BIMmobile/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BIMmobile/Info.plist; sourceTree = "<group>"; };
-		49A53CC2959D17E49F5B9A73 /* Pods-BIMmobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BIMmobile.release.xcconfig"; path = "Target Support Files/Pods-BIMmobile/Pods-BIMmobile.release.xcconfig"; sourceTree = "<group>"; };
-		529C78E37043FD41442B6217 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = BIMmobile/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		9C740778E4A1AA10C43E6531 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-BIMmobile/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		3518FB0E2F14A5AF756A730F /* Pods-BIMmobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BIMmobile.release.xcconfig"; path = "Target Support Files/Pods-BIMmobile/Pods-BIMmobile.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = BIMmobile/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B1A20022571F961C3C59979F /* Pods-BIMmobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BIMmobile.debug.xcconfig"; path = "Target Support Files/Pods-BIMmobile/Pods-BIMmobile.debug.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CD7DC16F119A3AD3E0D86072 /* Pods_BIMmobile.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BIMmobile.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1E66F91A6E1D82FB646AC39 /* Pods-BIMmobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BIMmobile.debug.xcconfig"; path = "Target Support Files/Pods-BIMmobile/Pods-BIMmobile.debug.xcconfig"; sourceTree = "<group>"; };
+		D315FA4A94F749ADAABE0F56 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "BIMmobile/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		DCCAB23CF86C6912AF5E34A7 /* Pods_BIMmobile.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BIMmobile.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E62D2542B7A94190680D36D4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = BIMmobile/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = BIMmobile/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* BIMmobile-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "BIMmobile-Bridging-Header.h"; path = "BIMmobile/BIMmobile-Bridging-Header.h"; sourceTree = "<group>"; };
-		F97D6138830B421FB2976D7B /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "BIMmobile/GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,7 +39,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				800FCAD5007716202B772A3C /* Pods_BIMmobile.framework in Frameworks */,
+				3C6D401B295680F053993008 /* Pods_BIMmobile.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,8 +55,8 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				F97D6138830B421FB2976D7B /* GoogleService-Info.plist */,
-				529C78E37043FD41442B6217 /* PrivacyInfo.xcprivacy */,
+				D315FA4A94F749ADAABE0F56 /* GoogleService-Info.plist */,
+				E62D2542B7A94190680D36D4 /* PrivacyInfo.xcprivacy */,
 			);
 			name = BIMmobile;
 			sourceTree = "<group>";
@@ -65,17 +65,9 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				CD7DC16F119A3AD3E0D86072 /* Pods_BIMmobile.framework */,
+				DCCAB23CF86C6912AF5E34A7 /* Pods_BIMmobile.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		5AE729B7173050802EAB0BF1 /* BIMmobile */ = {
-			isa = PBXGroup;
-			children = (
-				9C740778E4A1AA10C43E6531 /* ExpoModulesProvider.swift */,
-			);
-			name = BIMmobile;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -92,8 +84,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				EF233E95564B9422ADC129D6 /* Pods */,
-				A7209FE6DACAF3C2F85C3AE7 /* ExpoModulesProviders */,
+				A82AB397E2A4C7E37D012975 /* Pods */,
+				C78CFEA82FD95D406DBAD07D /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -108,12 +100,22 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A7209FE6DACAF3C2F85C3AE7 /* ExpoModulesProviders */ = {
+		A1505FDFFB4910EF3D1D7D49 /* BIMmobile */ = {
 			isa = PBXGroup;
 			children = (
-				5AE729B7173050802EAB0BF1 /* BIMmobile */,
+				081BCB1BA31CB7726A94B45E /* ExpoModulesProvider.swift */,
 			);
-			name = ExpoModulesProviders;
+			name = BIMmobile;
+			sourceTree = "<group>";
+		};
+		A82AB397E2A4C7E37D012975 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D1E66F91A6E1D82FB646AC39 /* Pods-BIMmobile.debug.xcconfig */,
+				3518FB0E2F14A5AF756A730F /* Pods-BIMmobile.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -125,14 +127,12 @@
 			path = BIMmobile/Supporting;
 			sourceTree = "<group>";
 		};
-		EF233E95564B9422ADC129D6 /* Pods */ = {
+		C78CFEA82FD95D406DBAD07D /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				B1A20022571F961C3C59979F /* Pods-BIMmobile.debug.xcconfig */,
-				49A53CC2959D17E49F5B9A73 /* Pods-BIMmobile.release.xcconfig */,
+				A1505FDFFB4910EF3D1D7D49 /* BIMmobile */,
 			);
-			name = Pods;
-			path = Pods;
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -143,13 +143,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BIMmobile" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				93235C936A846C97F2635CDC /* [Expo] Configure project */,
+				F8AB50A907BDEB27167614F0 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				7E498D30205CF82FD17AFB19 /* [CP] Embed Pods Frameworks */,
+				B9A55C6D1791D8D541448543 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -199,8 +199,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				E35F3EBC112C45459E011DEB /* GoogleService-Info.plist in Resources */,
-				173B6B82D960560D45B483C4 /* PrivacyInfo.xcprivacy in Resources */,
+				EB9D23CCBE354876AFBF5EF1 /* GoogleService-Info.plist in Resources */,
+				0AEA688B7C12A094E738327D /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,24 +242,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		7E498D30205CF82FD17AFB19 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BIMmobile/Pods-BIMmobile-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BIMmobile/Pods-BIMmobile-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
@@ -304,7 +286,25 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BIMmobile/Pods-BIMmobile-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		93235C936A846C97F2635CDC /* [Expo] Configure project */ = {
+		B9A55C6D1791D8D541448543 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BIMmobile/Pods-BIMmobile-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BIMmobile/Pods-BIMmobile-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F8AB50A907BDEB27167614F0 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -331,7 +331,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				7BF0CB0F4BA88F55D2E06BFD /* ExpoModulesProvider.swift in Sources */,
+				2A49C11EE468E2380A60B8A3 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -340,7 +340,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B1A20022571F961C3C59979F /* Pods-BIMmobile.debug.xcconfig */;
+			baseConfigurationReference = D1E66F91A6E1D82FB646AC39 /* Pods-BIMmobile.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -376,7 +376,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 49A53CC2959D17E49F5B9A73 /* Pods-BIMmobile.release.xcconfig */;
+			baseConfigurationReference = 3518FB0E2F14A5AF756A730F /* Pods-BIMmobile.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

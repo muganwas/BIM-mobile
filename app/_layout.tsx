@@ -8,15 +8,35 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { Colors } from '@/constants/Colors';
 import { GeneralProvider, useGeneral } from '@/context/GeneralContext';
+import { isAppReady, onAppReady } from '@/helpers/appReady';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { Animated, Text, useAnimatedValue } from 'react-native';
+import {
+	Animated,
+	ImageBackground,
+	InteractionManager,
+	Text,
+	useAnimatedValue,
+} from 'react-native';
 
-SplashScreen.preventAutoHideAsync();
+try {
+	SplashScreen.preventAutoHideAsync();
+	try {
+		console.debug(
+			'[RootLayout][module] preventAutoHideAsync called @',
+			Date.now()
+		);
+	} catch {}
+} catch (e) {
+	try {
+		console.warn('[RootLayout][module] preventAutoHideAsync failed', e);
+	} catch {}
+}
 
 function RootLayoutContent() {
 	const colorScheme = useColorScheme();
@@ -28,6 +48,12 @@ function RootLayoutContent() {
 
 	// record navigation history across the app
 	useTrackHistory();
+
+	useEffect(() => {
+		try {
+			console.debug('[RootLayout] mounted @', Date.now());
+		} catch {}
+	}, []);
 
 	useEffect(() => {
 		if (online)
@@ -44,17 +70,144 @@ function RootLayoutContent() {
 			}).start();
 	}, [online, Anim]); // Example effect using animated value
 
+	const hiddenRef = useRef(false);
+	const scheduledTimeoutRef = useRef<number | null>(null);
 	useEffect(() => {
-		// Hide the splash screen only once fonts are loaded and auth verification
-		// has completed. This avoids briefly showing the index page before the
-		// loader or navigation completes.
-		if (loaded && verifyingAuth === false) {
-			SplashScreen.hideAsync();
+		try {
+			console.debug(
+				'[RootLayout] loaded=',
+				loaded,
+				'verifyingAuth=',
+				verifyingAuth,
+				'@',
+				Date.now()
+			);
+		} catch {}
+
+		// Hide the splash only after fonts have loaded and auth verification
+		// has finished. Wait until after React Native interactions complete and
+		// two paint frames occur so the first JS view is visible before we hide
+		// the native splash. This reduces single-frame black flashes on Android.
+		if (loaded && verifyingAuth === false && !hiddenRef.current) {
+			try {
+				console.debug(
+					'[RootLayout] waiting for interactions before hideAsync @',
+					Date.now()
+				);
+			} catch {}
+
+			const interactionHandle = InteractionManager.runAfterInteractions(() => {
+				try {
+					console.debug(
+						'[RootLayout] interactions finished; scheduling paint ticks + hide in 200ms @',
+						Date.now()
+					);
+				} catch {}
+
+				// Two RAFs ensure the UI has a chance to paint.
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						// Wait for an explicit app-ready signal (handshake) or a short
+						// timeout. This guarantees the top screen has a chance to
+						// render itself before we hide the native splash.
+						if (isAppReady()) {
+							scheduledTimeoutRef.current = global.setTimeout(() => {
+								try {
+									console.debug(
+										'[RootLayout] attempting hideAsync (app already ready) @',
+										Date.now()
+									);
+								} catch {}
+								SplashScreen.hideAsync()
+									.then(() => {
+										hiddenRef.current = true;
+									})
+									.catch(() => {});
+							}, 120) as unknown as number;
+							return;
+						}
+
+						const readyCancel = onAppReady(() => {
+							if (scheduledTimeoutRef.current) {
+								clearTimeout(scheduledTimeoutRef.current as unknown as number);
+								scheduledTimeoutRef.current = null;
+							}
+							try {
+								console.debug(
+									'[RootLayout] appReady received; attempting hideAsync @',
+									Date.now()
+								);
+							} catch {}
+							SplashScreen.hideAsync()
+								.then(() => {
+									hiddenRef.current = true;
+								})
+								.catch(() => {});
+						});
+
+						// Fallback: if the app doesn't signal ready within 800ms, hide anyway.
+						scheduledTimeoutRef.current = global.setTimeout(() => {
+							try {
+								console.debug(
+									'[RootLayout] appReady timeout; attempting hideAsync @',
+									Date.now()
+								);
+							} catch {}
+							readyCancel();
+							SplashScreen.hideAsync()
+								.then(() => {
+									hiddenRef.current = true;
+								})
+								.catch(() => {});
+						}, 800) as unknown as number;
+					});
+				});
+			});
+
+			// Safety fallback: ensure the splash is hidden eventually if interactions
+			// never complete (e.g. in edge dev-client cases). 10s fallback.
+			const safety = global.setTimeout(() => {
+				if (!hiddenRef.current) {
+					try {
+						console.debug(
+							'[RootLayout] safety fallback attempting hideAsync @',
+							Date.now()
+						);
+					} catch {}
+					SplashScreen.hideAsync().catch(() => {});
+				}
+			}, 10000) as unknown as number;
+
+			return () => {
+				try {
+					interactionHandle.cancel?.();
+				} catch {}
+				if (scheduledTimeoutRef.current) {
+					clearTimeout(scheduledTimeoutRef.current as unknown as number);
+					scheduledTimeoutRef.current = null;
+				}
+				clearTimeout(safety as unknown as number);
+			};
 		}
 	}, [loaded, verifyingAuth]);
-
 	if (!loaded) {
-		return null;
+		// While fonts or other assets load, render a full-screen placeholder
+		// matching the native splash background to avoid a black flash and to
+		// prevent a second splash from briefly appearing.
+		const schemeKey = (colorScheme as any) || 'light';
+		const bg = (Colors as any)[schemeKey]?.background ?? '#ffffff';
+		return (
+			<ImageBackground
+				source={require('../assets/images/splash-icon.png')}
+				resizeMode='contain'
+				style={{
+					flex: 1,
+					backgroundColor: bg,
+					alignItems: 'center',
+					justifyContent: 'center',
+				}}
+			/>
+		);
 	}
 
 	return (

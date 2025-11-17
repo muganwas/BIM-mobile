@@ -7,6 +7,12 @@ export default ({ config }) => {
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
+        "backgroundColor": "#ffffff",
+        "splash": {
+            "image": "./assets/images/splash-icon.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#ffffff"
+        },
         "scheme": "bimmobile",
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,

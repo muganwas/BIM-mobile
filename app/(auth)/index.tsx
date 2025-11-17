@@ -12,6 +12,7 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { formatPhoneNumber } from '@/helpers';
+import { signalAppReady } from '@/helpers/appReady';
 import { verifyToken } from '@/helpers/auth';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -37,6 +38,15 @@ const devWidth = Dimensions.get('window').width;
 export default function RegisterScreen() {
 	// track register screen
 	useTrackHistory('/(auth)/index');
+
+	// Signal readiness after two paint frames so layout can hide splash.
+	useEffect(() => {
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				signalAppReady();
+			});
+		});
+	}, []);
 	const router = useRouter();
 	const navigation = useNavigation();
 	// timeout ref

@@ -31,6 +31,12 @@
           <string>com.muganwas.BIMmobile</string>
         </array>
       </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.1034621445262-ami1t5gsd0706kkoqaaqorhln9vsds4b</string>
+        </array>
+      </dict>
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
@@ -81,6 +87,8 @@
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>
+    <key>RCTRootViewBackgroundColor</key>
+    <integer>4294967295</integer>
     <key>UIBackgroundModes</key>
     <array>
       <string>fetch</string>

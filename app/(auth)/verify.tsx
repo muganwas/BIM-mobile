@@ -12,6 +12,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 // no direct router usage here; GeneralContext performs navigation after successful verify
+import { signalAppReady } from '@/helpers/appReady';
 import { env } from '@/helpers/env';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -32,6 +33,15 @@ const devWidth = Dimensions.get('window').width;
 export default function VerifyTokenScreen() {
 	useTrackHistory('/(auth)/verify');
 	useColorScheme();
+
+	// Signal readiness after two paint frames so layout can hide splash.
+	useEffect(() => {
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				signalAppReady();
+			});
+		});
+	}, []);
 	const bg = useThemeColor({}, 'background');
 	const headers = useThemeColor({}, 'headers');
 	const textColor = useThemeColor({}, 'text');

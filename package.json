@@ -59,6 +59,7 @@
 	},
 	"devDependencies": {
 		"@babel/core": "^7.25.2",
+		"@react-native-community/cli": "^20.0.2",
 		"@storybook/addon-essentials": "^8.4.0",
 		"@storybook/react-vite": "^8.4.0",
 		"@testing-library/jest-native": "^5.4.3",

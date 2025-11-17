@@ -18,6 +18,7 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { formatMMDD, timeAgo, translateWithVariables } from '@/helpers';
+import { signalAppReady } from '@/helpers/appReady';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { MicroTransaction } from '@/types';
@@ -129,6 +130,17 @@ export default function HomeScreen() {
 		lastFiveTransactions && lastFiveTransactions.length > 0
 			? lastFiveTransactions
 			: [];
+
+	// Signal that the home screen is ready to be considered the first painted
+	// app view. We call this after two animation frames to give the view time
+	// to mount and paint.
+	useEffect(() => {
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				signalAppReady();
+			});
+		});
+	}, []);
 
 	return (
 		<ParallaxScrollView
