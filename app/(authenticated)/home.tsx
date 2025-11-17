@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useIsFocused } from '@react-navigation/native';
+import { useCallback, useEffect, useState } from 'react';
 import {
 	Dimensions,
 	GestureResponderEvent,
@@ -16,7 +17,7 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
-import { formatMMDD, translateWithVariables } from '@/helpers';
+import { formatMMDD, timeAgo, translateWithVariables } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { MicroTransaction } from '@/types';
@@ -25,7 +26,32 @@ import { BarChart } from 'react-native-chart-kit';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function HomeScreen() {
-	const { setSelectedOption, language, user, refreshDashboard } = useGeneral();
+	const {
+		setSelectedOption,
+		language,
+		user,
+		refreshDashboard,
+		lastDashboardUpdated,
+	} = useGeneral();
+
+	// Keep a label that updates every 60s while a last-updated timestamp exists.
+	const [lastUpdatedLabel, setLastUpdatedLabel] = useState('');
+	const isFocused = useIsFocused();
+
+	useEffect(() => {
+		if (!lastDashboardUpdated || !isFocused) {
+			setLastUpdatedLabel('');
+			return;
+		}
+		// Set immediately, then update every minute while screen is focused
+		setLastUpdatedLabel(timeAgo(lastDashboardUpdated));
+		const id = setInterval(() => {
+			try {
+				setLastUpdatedLabel(timeAgo(lastDashboardUpdated));
+			} catch {}
+		}, 60 * 1000);
+		return () => clearInterval(id);
+	}, [lastDashboardUpdated, isFocused]);
 
 	const [refreshing, setRefreshing] = useState(false);
 	const onRefresh = useCallback(async () => {
@@ -55,6 +81,7 @@ export default function HomeScreen() {
 	const screenTitleTextDark = useThemeColor({}, 'screenTitleText', 'dark');
 	const textLight = useThemeColor({}, 'text', 'light');
 	const textDark = useThemeColor({}, 'text', 'dark');
+	const muted = useThemeColor({}, 'mutedText');
 	const iconTint = useThemeColor({}, 'iconTint');
 	const dayText = useThemeColor({}, 'dayText');
 	const dayIconBackground = useThemeColor({}, 'dayIconBackground');
@@ -125,6 +152,20 @@ export default function HomeScreen() {
 				>
 					{translations[language].categories.dashboard.title}
 				</ThemedText>
+				{typeof lastDashboardUpdated !== 'undefined' &&
+					lastDashboardUpdated !== null && (
+						<ThemedText
+							lightColor={muted}
+							darkColor={muted}
+							style={{ fontSize: 12, marginLeft: 8 }}
+						>
+							{translateWithVariables(
+								translations[language].categories.dashboard?.lastUpdated ||
+									'Last updated: {time}',
+								{ time: lastUpdatedLabel }
+							)}
+						</ThemedText>
+					)}
 			</ThemedView>
 			<DashboardTile
 				id='todays-transactions'

@@ -238,6 +238,34 @@ export function formatAmount(value: number | string, decimals = 2): string {
 }
 
 /**
+ * Convert a millisecond timestamp to a human-friendly relative time string.
+ * Examples: "just now", "5 minutes ago", "2 hours ago", "3 days ago"
+ */
+export function timeAgo(ms?: number | null): string {
+	if (!ms || !Number.isFinite(ms)) return 'just now';
+	const diff = Date.now() - Number(ms);
+	if (diff < 5000) return 'just now';
+
+	const seconds = Math.floor(diff / 1000);
+	if (seconds < 60) return `${seconds} seconds ago`;
+
+	const minutes = Math.floor(seconds / 60);
+	if (minutes < 60) return `${minutes} minutes ago`;
+
+	const hours = Math.floor(minutes / 60);
+	if (hours < 24) return `${hours} hours ago`;
+
+	const days = Math.floor(hours / 24);
+	if (days < 7) return `${days} days ago`;
+
+	try {
+		return new Date(ms).toLocaleString();
+	} catch {
+		return new Date(ms).toISOString();
+	}
+}
+
+/**
  * Validate an IPv4 address in dotted decimal notation.
  * - Must have exactly 4 octets
  * - Each octet is numeric and between 0 and 255
