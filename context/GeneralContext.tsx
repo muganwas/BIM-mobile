@@ -1044,11 +1044,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			try {
 				const resp = await fetchDashboard(String(authToken));
-				console.debug('[GeneralContext] refreshDashboard raw response:', resp);
 				try {
 					const json = await (resp as any).json?.();
 					if (json !== undefined) {
-						console.debug('[GeneralContext] refreshDashboard JSON:', json);
 						const hasDashboard = !!(
 							json &&
 							typeof json === 'object' &&

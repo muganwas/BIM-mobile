@@ -34,4 +34,4 @@ export interface DashboardSummary {
 	weekUsers?: number;
 }
 
-export {};
+export { };
