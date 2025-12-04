@@ -5,22 +5,36 @@ import TileContainer from '@/components/TileContainer';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
-import { useTransaction } from '@/context/TransactionContext';
 import { generateRandomInt, msToHms } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { NetRouter } from '@/types';
+import { getRouterById, getRouterHotspots, getRouterStatus } from '@/services/RouterService';
+import { ApiRouter, Hotspot } from '@/types';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+
+export interface RouterStatus {
+	uptime?: string;
+	version?: string;
+	'cpu-load'?: string;
+	'cpu-frequency'?: string;
+	'free-memory'?: string;
+	'total-memory'?: string;
+	'free-hdd-space'?: string;
+	'total-hdd-space'?: string;
+	'architecture-name'?: string;
+	'board-name'?: string;
+	platform?: string;
+}
 
 export default function RouterDetailsScreen() {
 	const navigation = useNavigation<any>();
 	const router = useRouter();
 	const { routerId } = useLocalSearchParams() as { routerId?: string };
-	const { handleUpdateHistory, language } = useGeneral();
-	const { routers } = useTransaction();
+	const { handleUpdateHistory, language, authToken } = useGeneral();
+	
 	// Theme helpers
 	const background = useThemeColor({}, 'background');
 	const backgroundLight = useThemeColor({}, 'background', 'light');
@@ -36,7 +50,12 @@ export default function RouterDetailsScreen() {
 	const bim = useThemeColor({}, 'bim');
 	const whiteLight = useThemeColor({}, 'white', 'light');
 	const whiteDark = useThemeColor({}, 'white', 'dark');
-	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
+	
+	// State
+	const [apiRouter, setApiRouter] = useState<ApiRouter | undefined>();
+	const [routerStatus, setRouterStatus] = useState<RouterStatus | undefined>();
+	const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+	const [loading, setLoading] = useState(false);
 
 	// Seed parent immediately on mount to guarantee ordering before current route push
 	useEffect(() => {
@@ -58,17 +77,59 @@ export default function RouterDetailsScreen() {
 		});
 	}, [navigation]);
 
+	// Fetch router data, status, and hotspots
 	useEffect(() => {
-		if (routerId && routers) {
-			const router = routers.find((r) => r.id === routerId);
-			setNetRouter(router);
+		if (routerId && authToken) {
+			(async () => {
+				setLoading(true);
+				try {
+					// Fetch router basic info
+					const routerResponse = await getRouterById(routerId, authToken);
+					if (routerResponse && routerResponse.ok) {
+						const routerData = await routerResponse.json();
+						if (routerData.router) {
+							setApiRouter(routerData.router);
+						}
+					}
+
+					// Fetch router status
+					const statusResponse = await getRouterStatus(routerId, authToken);
+					if (statusResponse && statusResponse.ok) {
+						const statusData = await statusResponse.json();
+						if (statusData.status && statusData.status.length > 0) {
+							setRouterStatus(statusData.status[0]);
+						}
+					}
+
+					// Fetch router hotspots
+					const hotspotsResponse = await getRouterHotspots(routerId, authToken);
+					if (hotspotsResponse && hotspotsResponse.ok) {
+						const hotspotsData = await hotspotsResponse.json();
+						if (hotspotsData.hotspots) {
+							setHotspots(hotspotsData.hotspots);
+						}
+					}
+				} catch (error) {
+					console.error('[RouterDetailsScreen] Failed to fetch router data:', error);
+				} finally {
+					setLoading(false);
+				}
+			})();
 		}
-	}, [routerId, routers]);
+	}, [routerId, authToken]);
 
 	const handleViewHotspotUsers = (hotspotId: string) => {
 		if (!hotspotId) return;
 		router.push(`/routers/vouchers/${routerId}/${hotspotId}`);
 	};
+
+	if (loading) {
+		return (
+			<ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} lightColor={background} darkColor={background}>
+				<ActivityIndicator size="large" color={bim} />
+			</ThemedView>
+		);
+	}
 	return (
 		<ParallaxScrollView
 			headerBackgroundColor={{
@@ -107,7 +168,7 @@ export default function RouterDetailsScreen() {
 					>
 						{translations[language].categories.routers.routerHash}
 					</ThemedText>
-					<ThemedText>{netRouter?.networkInfo.routerHash}</ThemedText>
+					<ThemedText>{routerId}</ThemedText>
 				</ThemedView>
 			</TileContainer>
 			<TileContainer
@@ -150,8 +211,8 @@ export default function RouterDetailsScreen() {
 							{`${translations[language].categories.routers.uptime}:`}
 						</ThemedText>
 						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.networkInfo.uptime &&
-								msToHms(parseInt(netRouter.networkInfo.uptime))}
+							{routerStatus?.uptime &&
+								msToHms(parseInt(routerStatus.uptime))}
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
@@ -167,7 +228,7 @@ export default function RouterDetailsScreen() {
 							{`${translations[language].categories.routers.routerOS}:`}
 						</ThemedText>
 						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.routerOsVersion}
+							{routerStatus?.version}
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
@@ -183,7 +244,7 @@ export default function RouterDetailsScreen() {
 							{`${translations[language].categories.routers.freeMemory}:`}
 						</ThemedText>
 						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.freeMemory}
+							{routerStatus?.['free-memory']}
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
@@ -199,7 +260,7 @@ export default function RouterDetailsScreen() {
 							{`${translations[language].categories.routers.totalMemory}:`}
 						</ThemedText>
 						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.totalMemory}
+							{routerStatus?.['total-memory']}
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
@@ -215,7 +276,7 @@ export default function RouterDetailsScreen() {
 							{`${translations[language].categories.routers.cpuFrequency}:`}
 						</ThemedText>
 						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.cpuFrequency}
+							{routerStatus?.['cpu-frequency'] ? routerStatus?.['cpu-frequency'] + ' MHz' : 'N/A'}
 						</ThemedText>
 					</ThemedView>
 					<ThemedView
@@ -231,7 +292,7 @@ export default function RouterDetailsScreen() {
 							{`${translations[language].categories.routers.cpuLoad}:`}
 						</ThemedText>
 						<ThemedText style={{ marginLeft: 10 }}>
-							{netRouter?.hardwareInfo.cpuLoad}
+							{routerStatus?.['cpu-load'] ? routerStatus?.['cpu-load'] + '%' : 'N/A'}
 						</ThemedText>
 					</ThemedView>
 				</ThemedView>
@@ -279,7 +340,7 @@ export default function RouterDetailsScreen() {
 								fontSize: fontSize['heading.two'],
 							}}
 						>
-							{netRouter?.name}
+							{apiRouter?.name}
 						</ThemedText>
 					</ThemedText>
 				</ThemedView>
@@ -367,7 +428,7 @@ export default function RouterDetailsScreen() {
 								backgroundColor: background,
 							}}
 						>
-							{netRouter?.networkInfo.hotspots.map((hotspot, index) => (
+							{hotspots.map((hotspot: any, index: number) => (
 								<ThemedView
 									key={index}
 									style={{
@@ -379,7 +440,7 @@ export default function RouterDetailsScreen() {
 										justifyContent: 'space-between',
 										backgroundColor:
 											index % 2 === 0 ? listItemBackground : background,
-										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
+										borderBottomWidth: index < hotspots.length - 1 ? 1 : 0,
 										borderBottomColor: borderDark,
 									}}
 									lightColor={backgroundLight}
@@ -403,7 +464,7 @@ export default function RouterDetailsScreen() {
 										lightColor={bim}
 										darkColor={bim}
 									>
-										{hotspot.ssid}
+										{hotspot.name}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
@@ -427,7 +488,7 @@ export default function RouterDetailsScreen() {
 										lightColor={textLight}
 										darkColor={textDark}
 									>
-										{hotspot.status}
+										{hotspot.disabled === "true" || hotspot.disabled === true ? translations[language].categories.hotspots.disabled : translations[language].categories.hotspots.enabled}
 									</ThemedText>
 									<ThemedView
 										style={{

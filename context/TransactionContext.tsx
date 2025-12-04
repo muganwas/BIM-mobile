@@ -162,11 +162,6 @@ export const TransactionProvider = ({
 				const res = await serviceFetchRouters(authToken ?? undefined);
 				if (res && res.ok) {
 					const json = await res.json();
-					console.info(
-						'[TransactionContext]: fetched routers from API',
-						JSON.stringify(json)
-					);
-
 					if (json?.routers?.data && Array.isArray(json.routers.data)) {
 						setRouters(json as GetRoutersResponse);
 						return json as GetRoutersResponse;

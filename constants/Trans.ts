@@ -205,6 +205,8 @@ const translations: Translations = {
 			},
 			hotspots: {
 				title: 'Hotspot Servers for Router:',
+				enabled: 'Enabled',
+				disabled: 'Disabled',
 			},
 			vouchers: {
 				title: 'Vouchers',
