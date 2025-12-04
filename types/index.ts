@@ -82,6 +82,43 @@ export interface NetRouter {
 	updatedAt?: Date;
 }
 
+export interface ApiRouter {
+	id: string;
+	name: string;
+	location: string;
+	type: string;
+	ip_address: string;
+	router_user: string;
+	router_password: string;
+	balance: string;
+	user_id: number;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface GetRoutersResponse {
+	routers: {
+		current_page: number;
+		data: ApiRouter[];
+		first_page_url: string;
+		from: number;
+		last_page: number;
+		last_page_url: string;
+		links: {
+			url: string | null;
+			label: string;
+			active: boolean;
+		}[];
+		next_page_url: string | null;
+		path: string;
+		per_page: number;
+		prev_page_url: string | null;
+		to: number;
+		total: number;
+	};
+	message: string;
+}
+
 export type InternetPackageName = 'short' | 'daily' | 'weekly' | 'monthly';
 
 export interface InternetPackage {

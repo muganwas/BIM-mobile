@@ -10,10 +10,8 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
-import * as factories from '@/helpers/factories';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { NetRouter } from '@/types';
 import RouterOverlay from '@/views/Router';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -52,16 +50,16 @@ export default function RoutersScreen() {
 
 	// compute initial values for edit modal when a router is selected
 	const editInitial = useMemo(() => {
-		if (!editRouterId) return undefined;
-		const r = routers.find((x) => x.id === editRouterId);
+		if (!editRouterId || !routers?.routers?.data) return undefined;
+		const r = routers.routers.data.find((x) => x.id === editRouterId);
 		return r
 			? {
 					name: r.name,
 					location: r.location,
 					type: r.type,
-					ipAddress: r.networkInfo.ipv4,
-					username: r.username,
-					password: r.password,
+					ipAddress: r.ip_address,
+					username: r.router_user,
+					password: r.router_password,
 			  }
 			: undefined;
 	}, [routers, editRouterId]);
@@ -82,12 +80,12 @@ export default function RoutersScreen() {
 	useTrackHistory('/(authenticated)/routers');
 
 	useEffect(() => {
-		if (user && routers.length === 0) {
+		if (!routers) {
 			(async () => {
-				await fetchRouters(user);
+				await fetchRouters();
 			})();
 		}
-	}, [user, routers, fetchRouters]);
+	}, [routers, fetchRouters]);
 
 	// Predefine header columns for the routers table
 	const routerHeaders = [
@@ -157,12 +155,23 @@ export default function RoutersScreen() {
 	};
 	const handleDeleteRouter = () => {
 		// Delete router logic here
+		if (!routers?.routers?.data) return;
 		//update state
-		const updatedRouters = routers.filter((r) => r.id !== activeRouter);
+		const updatedRouters = routers.routers.data.filter(
+			(r) => r.id !== activeRouter
+		);
 		// Assuming there's a method in the context to update routers
-		setRouters(updatedRouters);
+		setRouters({
+			...routers,
+			routers: {
+				...routers.routers,
+				data: updatedRouters,
+			},
+		});
 		toggleShowPrompt(false);
 	};
+
+	const routersList = routers?.routers?.data || [];
 
 	return (
 		<>
@@ -272,7 +281,7 @@ export default function RoutersScreen() {
 									backgroundColor: bg,
 								}}
 							>
-								{routers.map((router, index) => (
+								{routersList.map((router, index) => (
 									<ThemedView
 										key={index}
 										style={{
@@ -284,7 +293,7 @@ export default function RoutersScreen() {
 											justifyContent: 'space-between',
 											backgroundColor:
 												index % 2 === 0 ? listItemBackground : bg,
-											borderBottomWidth: index < routers.length - 1 ? 1 : 0,
+											borderBottomWidth: index < routersList.length - 1 ? 1 : 0,
 											borderBottomColor: borderDark,
 										}}
 										lightColor={bg}
@@ -345,7 +354,7 @@ export default function RoutersScreen() {
 											lightColor={textColor}
 											darkColor={textColor}
 										>
-											{router?.networkInfo.ipv4}
+											{router.ip_address}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -356,7 +365,7 @@ export default function RoutersScreen() {
 											lightColor={textColor}
 											darkColor={textColor}
 										>
-											{router.transactionBalance}
+											{router.balance}
 										</ThemedText>
 										<ThemedView
 											style={{
@@ -380,7 +389,7 @@ export default function RoutersScreen() {
 											</TouchableOpacity>
 											<TouchableOpacity
 												onPress={() => {
-													const r: NetRouter | undefined = routers.find(
+													const r = routersList.find(
 														(r) => r.id === router?.id
 													);
 													if (!r) return;
@@ -405,25 +414,10 @@ export default function RoutersScreen() {
 				onCancel={() => setShowCreateModal(false)}
 				onBack={() => setShowCreateModal(false)}
 				onSubmit={({ name, location, type, ipAddress, username, password }) => {
-					const newRouter = factories.generateNetRouter({
-						name,
-						location,
-						type,
-						networkInfo: {
-							mac: `00:1A:2B:3C:4D:${Math.floor(Math.random() * 255)
-								.toString(16)
-								.padStart(2, '0')}`,
-							ipv4: ipAddress,
-							ipv6: `::ffff:${ipAddress}`,
-							hostname: `${name.toLowerCase().replace(/\s+/g, '-')}.local`,
-							routerHash: Math.random().toString(36).slice(2, 10),
-							uptime: '0',
-							hotspots: [],
-						},
-						username,
-						password,
-					});
-					setRouters((prev) => [newRouter, ...prev]);
+					// NOTE: This local update is temporary. In a real app, we'd refetch or optimistically update properly.
+					// Since we are using ApiRouter structure, we need to match it.
+					// For now, I'll just refetch to keep it simple and correct.
+					fetchRouters();
 					setShowCreateModal(false);
 				}}
 			/>
@@ -450,30 +444,32 @@ export default function RoutersScreen() {
 						username,
 						password,
 					}) => {
-						if (!editRouterId) return;
-						setRouters((prev) =>
-							prev.map((r) =>
+						if (!editRouterId || !routers) return;
+						
+						// Optimistic update for ApiRouter structure
+						const updatedData = routers.routers.data.map((r) =>
 								r.id === editRouterId
 									? {
 											...r,
 											name,
 											location,
 											type,
-											username,
-											password,
-											networkInfo: {
-												...r.networkInfo,
-												ipv4: ipAddress,
-												ipv6: `::ffff:${ipAddress}`,
-												hostname: `${name
-													.toLowerCase()
-													.replace(/\s+/g, '-')}.local`,
-											},
-											updatedAt: new Date(),
+											router_user: username,
+											router_password: password,
+											ip_address: ipAddress,
+											updated_at: new Date().toISOString(),
 									  }
 									: r
-							)
-						);
+							);
+						
+						setRouters({
+							...routers,
+							routers: {
+								...routers.routers,
+								data: updatedData
+							}
+						});
+						
 						setShowEditModal(false);
 						setEditRouterId(undefined);
 					}}

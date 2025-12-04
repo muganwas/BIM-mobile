@@ -7,12 +7,11 @@ import * as UserService from '@/services/UserService';
 import {
 	Bank,
 	DocumentProps,
+	GetRoutersResponse,
 	InternetPackage,
 	MicroTransaction,
-	NetRouter,
 	Transaction,
-	User,
-	VoucherUser,
+	VoucherUser
 } from '@/types';
 import {
 	createContext,
@@ -34,20 +33,17 @@ export interface TransactionContextType {
 	setVoucherUsers: React.Dispatch<React.SetStateAction<VoucherUser[]>>;
 	packages: InternetPackage[];
 	setPackages: React.Dispatch<React.SetStateAction<InternetPackage[]>>;
-	routers: NetRouter[];
-	setRouters: React.Dispatch<React.SetStateAction<NetRouter[]>>;
+	routers: GetRoutersResponse | null;
+	setRouters: React.Dispatch<React.SetStateAction<GetRoutersResponse | null>>;
 	banks: Bank[];
 	setBanks: React.Dispatch<React.SetStateAction<Bank[]>>;
 	documents: DocumentProps[];
 	setDocuments: React.Dispatch<React.SetStateAction<DocumentProps[]>>;
-	fetchDocuments: (user: User | null) => Promise<void>;
-	fetchBanks: (user: User | null) => Promise<void>;
-	fetchRouters: (user: User | null) => Promise<NetRouter[]>;
-	fetchPackages: (user: User | null) => Promise<void>;
-	fetchPurchases: (
-		user: User | null,
-		routersOverride?: NetRouter[]
-	) => Promise<void>;
+	fetchDocuments: () => Promise<void>;
+	fetchBanks: () => Promise<void>;
+	fetchRouters: () => Promise<GetRoutersResponse | null>;
+	fetchPackages: () => Promise<void>;
+	fetchPurchases: () => Promise<void>;
 
 	// Optional dashboard data provided by the server on successful login
 	serverDashboard?: any | null;
@@ -82,7 +78,7 @@ export const TransactionProvider = ({
 	const [loading, setLoading] = useState<boolean>(false);
 	const [voucherUsers, setVoucherUsers] = useState<VoucherUser[]>([]);
 	const [packages, setPackages] = useState<InternetPackage[]>([]);
-	const [routers, setRouters] = useState<NetRouter[]>([]);
+	const [routers, setRouters] = useState<GetRoutersResponse | null>(null);
 	const [banks, setBanks] = useState<Bank[]>([]);
 	const [documents, setDocuments] = useState<DocumentProps[]>([]);
 
@@ -123,15 +119,7 @@ export const TransactionProvider = ({
 	>([]);
 
 	const fetchDocuments = useCallback(
-		async (user: User | null) => {
-			if (!user) return;
-			// Prefer typed dashboard data attached to user.dashboard; fall back to root-level payload for compatibility
-			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
-			if (sd && Array.isArray(sd.documents)) {
-				setDocuments(sd.documents as DocumentProps[]);
-				return;
-			}
-			// Try to fetch from backend if available
+		async () => {
 			try {
 				const res = await UserService.fetchDocuments(authToken ?? undefined);
 				if (res && res.ok) {
@@ -150,13 +138,7 @@ export const TransactionProvider = ({
 	);
 
 	const fetchBanks = useCallback(
-		async (user: User | null) => {
-			if (!user) return;
-			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
-			if (sd && Array.isArray(sd.banks)) {
-				setBanks(sd.banks as Bank[]);
-				return;
-			}
+		async () => {
 			try {
 				const res = await serviceFetchBanks(authToken ?? undefined);
 				if (res && res.ok) {
@@ -175,39 +157,32 @@ export const TransactionProvider = ({
 	);
 
 	const fetchRouters = useCallback(
-		async (user: User | null): Promise<NetRouter[]> => {
-			if (!user) return [];
-			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
-			if (sd && Array.isArray(sd.routerBalances)) {
-				setRouters(sd.routerBalances as NetRouter[]);
-				return sd.routerBalances as NetRouter[];
-			}
+		async (): Promise<GetRoutersResponse | null> => {
 			try {
 				const res = await serviceFetchRouters(authToken ?? undefined);
 				if (res && res.ok) {
 					const json = await res.json();
-					if (Array.isArray(json)) {
-						setRouters(json as NetRouter[]);
-						return json as NetRouter[];
+					console.info(
+						'[TransactionContext]: fetched routers from API',
+						JSON.stringify(json)
+					);
+
+					if (json?.routers?.data && Array.isArray(json.routers.data)) {
+						setRouters(json as GetRoutersResponse);
+						return json as GetRoutersResponse;
 					}
 				}
 			} catch (e) {
 				console.error('fetchRouters: failed to fetch from API', e);
 			}
-			setRouters([]);
-			return [];
+			setRouters(null);
+			return null;
 		},
 		[authToken]
 	);
 
 	const fetchPackages = useCallback(
-		async (user: User | null) => {
-			if (!user) return;
-			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
-			if (sd && Array.isArray(sd.packages)) {
-				setPackages(sd.packages as InternetPackage[]);
-				return;
-			}
+		async () => {
 			try {
 				const res = await serviceFetchPackages(authToken ?? undefined);
 				if (res && res.ok) {
@@ -227,16 +202,7 @@ export const TransactionProvider = ({
 	);
 
 	const fetchPurchases = useCallback(
-		async (user: User | null, routersOverride?: NetRouter[]) => {
-			if (!user) return;
-			const sd = ((user as any)?.dashboard ?? (user as any)) || null;
-			if (sd) {
-				if (Array.isArray(sd.purchases))
-					setPurchases(sd.purchases as MicroTransaction[]);
-				if (Array.isArray(sd.voucherUsers))
-					setVoucherUsers(sd.voucherUsers as VoucherUser[]);
-				return;
-			}
+		async () => {
 			try {
 				const res = await UserService.fetchPurchases(authToken ?? undefined);
 				if (res && res.ok) {
@@ -270,13 +236,6 @@ export const TransactionProvider = ({
 						sd.chartData)
 				) {
 					setServerDashboard(sd);
-					if (Array.isArray(sd.recentTransactions))
-						setTransactions(sd.recentTransactions as Transaction[]);
-					if (Array.isArray(sd.routerBalances))
-						setRouters(sd.routerBalances as NetRouter[]);
-					// The server may have provided aggregate numbers and chartData that
-					// the rest of the app can consume later via `serverDashboard`.
-					// Populate UI-friendly dashboard metrics when provided by server
 					try {
 						setDailyPurchasesTotal(Number(sd.todayTransactions) || 0);
 						setWeeklyPurchasesTotal(Number(sd.weekTransactions) || 0);
@@ -337,16 +296,16 @@ export const TransactionProvider = ({
 				setLoading(true);
 				try {
 					// Ensure routers are fetched first so purchases can reference them.
-					const routersData = await fetchRouters(user);
+					const routersData = await fetchRouters();
 
 					const fetchOperations = [
-						{ name: 'Packages', fn: fetchPackages(user) },
+						{ name: 'Packages', fn: fetchPackages() },
 						{
 							name: 'Micro Transactions',
-							fn: fetchPurchases(user, routersData),
+							fn: fetchPurchases(),
 						},
-						{ name: 'Banks', fn: fetchBanks(user) },
-						{ name: 'Documents', fn: fetchDocuments(user) },
+						{ name: 'Banks', fn: fetchBanks() },
+						{ name: 'Documents', fn: fetchDocuments() },
 					];
 
 					const results = await Promise.allSettled(
