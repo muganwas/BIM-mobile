@@ -1,4 +1,5 @@
 import { apiBaseUrl } from '@/constants/API';
+import { ShowAlert } from '@/helpers';
 
 /**
  * Lightweight fetch wrapper that injects the X-Client-Type header for backend API calls.
@@ -33,7 +34,22 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 		headers,
 	};
 
-	return fetch(input, mergedInit);
+	try {
+		const response = await fetch(input, mergedInit);
+		return response;
+	} catch (error) {
+		console.error('API Request Failed:', error);
+		ShowAlert('Network request failed. Please check your connection.', 'Error');
+		// Return a mock error response so the app doesn't crash on .json()
+		return new Response(
+			JSON.stringify({ error: 'Network request failed', message: 'Network request failed' }),
+			{
+				status: 503,
+				statusText: 'Service Unavailable',
+				headers: { 'Content-Type': 'application/json' },
+			}
+		);
+	}
 }
 
 export default apiFetch;
