@@ -122,7 +122,7 @@ export default function RouterDetailsScreen() {
 				}
 			})();
 		}
-	}, [routerId, authToken]);
+	}, [routerId, name, authToken]);
 
 	const handleViewHotspotUsers = (hotspot: Hotspot) => {
 		const hotspotId = hotspot['.id'];
