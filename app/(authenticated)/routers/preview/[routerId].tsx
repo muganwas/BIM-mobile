@@ -118,9 +118,14 @@ export default function RouterDetailsScreen() {
 		}
 	}, [routerId, authToken]);
 
-	const handleViewHotspotUsers = (hotspotId: string) => {
+	const handleViewHotspotUsers = (hotspot: Hotspot) => {
+		const hotspotId = hotspot['.id'];
 		if (!hotspotId) return;
-		router.push(`/routers/vouchers/${routerId}/${hotspotId}`);
+		
+		router.push({
+			pathname: `/routers/vouchers/${routerId}/${hotspotId}`,
+			params: { ...hotspot, disabled: String(hotspot.disabled) }
+		} as any);
 	};
 
 	if (loading) {
@@ -428,7 +433,7 @@ export default function RouterDetailsScreen() {
 								backgroundColor: background,
 							}}
 						>
-							{hotspots.map((hotspot: any, index: number) => (
+							{hotspots.map((hotspot, index: number) => (
 								<ThemedView
 									key={index}
 									style={{
@@ -507,7 +512,7 @@ export default function RouterDetailsScreen() {
 												paddingHorizontal: 12,
 												borderRadius: 8,
 											}}
-											onPress={() => handleViewHotspotUsers(hotspot.id)}
+											onPress={() => handleViewHotspotUsers(hotspot)}
 										>
 											<ThemedText lightColor={whiteLight} darkColor={whiteDark}>
 												{translations[language].categories.buttons.viewUsers}

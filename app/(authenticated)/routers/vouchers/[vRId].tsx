@@ -1,4 +1,3 @@
-import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
@@ -8,7 +7,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { NetRouter } from '@/types';
+import { ApiRouter } from '@/types';
 import {
 	useFocusEffect,
 	useLocalSearchParams,
@@ -43,7 +42,7 @@ export default function VouchersHotspotScreen() {
 	useTrackHistory(trackPath);
 	const { packages, fetchPackages, routers } = useTransaction();
 	const { user, language, handleUpdateHistory } = useGeneral();
-	const [currentRouter, setCurrentRouter] = React.useState<NetRouter>();
+	const [currentRouter, setCurrentRouter] = React.useState<ApiRouter>();
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
 	const packageRouterHotspotsListDetailsId = useRef(
@@ -91,14 +90,14 @@ export default function VouchersHotspotScreen() {
 	useEffect(() => {
 		if (user && packages.length === 0) {
 			(async () => {
-				await fetchPackages(user);
+				await fetchPackages();
 			})();
 		}
 	}, [user, packages, fetchPackages]);
 
 	useEffect(() => {
 		if (vRId && routers) {
-			const found = routers.find((r) => r.id === vRId);
+			const found = routers.routers.data.find((r) => r.id === vRId);
 			setCurrentRouter(found);
 		}
 	}, [vRId, routers]);
@@ -253,7 +252,8 @@ export default function VouchersHotspotScreen() {
 								lightColor={backgroundLight}
 								darkColor={backgroundDark}
 							>
-								{currentRouter?.networkInfo.hotspots.map((hotspot, index) => (
+								<ThemedText>test</ThemedText>
+								{/* {currentRouter?.networkInfo.hotspots.map((hotspot, index) => (
 									<ThemedView
 										key={index}
 										style={{
@@ -342,7 +342,7 @@ export default function VouchersHotspotScreen() {
 											/>
 										</ThemedView>
 									</ThemedView>
-								))}
+								))} */}
 							</ThemedView>
 						</ScrollView>
 					</ThemedView>

@@ -37,11 +37,11 @@ export interface PromptButton {
 }
 
 export interface Hotspot {
-	id: string;
-	ssid: string; // SSID of the hotspot
+	".id": string;
+	name: string; // SSID of the hotspot
 	interface: string; // Network interface associated with the hotspot
 	profile: string; // Profile name for the hotspot
-	status: 'enabled' | 'disabled'; // Status of the hotspot
+	disabled: "true" | "false" | boolean; // Status of the hotspot
 	users?: VoucherUser[]; // Optional list of voucher users connected to the hotspot
 }
 
@@ -268,5 +268,54 @@ export type langCode =
 	| 'zh'
 	| 'ja'
 	| 'ar';
+
+export interface HotspotUser {
+	name: string;
+	profile?: string;
+	uptime: string;
+	comment?: string;
+	server?: string;
+	"bytes-in": string;
+	"bytes-out": string;
+	"mac-address": string;
+	"time-left"?: string;
+	profile_display?: string;
+	"limit-uptime"?: string;
+}
+
+export interface PaginatedHotspotUsers {
+	current_page: number;
+	data: HotspotUser[];
+	first_page_url: string;
+	from: number;
+	last_page: number;
+	last_page_url: string;
+	links: {
+		url: string | null;
+		label: string;
+		active: boolean;
+	}[];
+	next_page_url: string | null;
+	path: string;
+	per_page: number;
+	prev_page_url: string | null;
+	to: number;
+	total: number;
+}
+
+export interface GetRouterHotspotUsersResponse {
+	router: ApiRouter;
+	hotspotId: string;
+	users: PaginatedHotspotUsers;
+	profiles: any[];
+	hotspotServers: any[];
+	users_meta: {
+		total: number;
+		per_page: number;
+		current_page: number;
+		first_item: number;
+		last_item: number;
+	};
+}
 
 export * from './dashboard';

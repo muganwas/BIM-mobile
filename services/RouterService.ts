@@ -37,9 +37,23 @@ export async function getRouterHotspots(routerId: string, token?: string) {
 	});
 }
 
+export async function getRouterHotspotUsers(
+	routerId: string,
+	hotspotId: string,
+	token?: string
+) {
+	const url = `${apiBaseUrl || ''}/vouchers/${routerId}/hotspots/${hotspotId}`;
+
+	return apiFetch(url, {
+		method: 'GET',
+		headers: buildHeaders(token),
+	});
+}
+
 export default {
 	fetchRouters,
 	getRouterById,
 	getRouterStatus,
 	getRouterHotspots,
+	getRouterHotspotUsers,
 };

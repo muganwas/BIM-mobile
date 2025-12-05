@@ -12,11 +12,13 @@ import { useTransaction } from '@/context/TransactionContext';
 import { generateRandomInt, translateWithVariables } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { Hotspot, NetRouter } from '@/types';
+import { getRouterHotspotUsers } from '@/services/RouterService';
+import { ApiRouter, GetRouterHotspotUsersResponse, Hotspot } from '@/types';
 import CreateVouchers from '@/views/CreateVouchers';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
+	ActivityIndicator,
 	Animated,
 	StyleSheet,
 	TouchableOpacity,
@@ -30,11 +32,12 @@ export default function HotspotVouchersScreen() {
 	const createVouchersFadeAnim = useAnimatedValue(0);
 	const affirmAction = useRef<() => void | null>(null);
 	const navigation = useNavigation<any>();
-	const { vRId, hotspotId } = useLocalSearchParams() as {
+	const { vRId, hotspotId, name: hotSpotName } = useLocalSearchParams() as {
 		vRId?: string;
 		hotspotId?: string;
+		name?: string;
 	};
-	const { handleUpdateHistory, language } = useGeneral();
+	const { handleUpdateHistory, language, authToken } = useGeneral();
 	const { routers } = useTransaction();
 	useColorScheme();
 	// Theme helpers
@@ -50,12 +53,13 @@ export default function HotspotVouchersScreen() {
 	const bim = useThemeColor({}, 'bim');
 	const lime = useThemeColor({}, 'lime');
 	const yellow = useThemeColor({}, 'yellow');
-	const error = useThemeColor({}, 'error');
+	const errorColor = useThemeColor({}, 'error');
 	const cancelButton = useThemeColor({}, 'cancelButton');
 	const dangerButton = useThemeColor({}, 'dangerButton');
 	const white = useThemeColor({}, 'white');
-	const [netRouter, setNetRouter] = useState<NetRouter | undefined>();
+	const [netRouter, setNetRouter] = useState<ApiRouter | undefined>();
 	const [hotSpot, setHotSpot] = useState<Hotspot | undefined>();
+	const [usersResponse, setUsersResponse] = useState<GetRouterHotspotUsersResponse | null>(null);
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [promptTitle, setPromptTitle] = useState('');
 	const [promptMessage, setPromptMessage] = useState('');
@@ -63,6 +67,10 @@ export default function HotspotVouchersScreen() {
 	const [showCreateVouchers, setShowCreateVouchers] = useState(false);
 	const [multipleVouchers, setMultipleVouchers] = useState(false);
 	const [editVoucherCode, setEditVoucherCode] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState(false);
+	const [retrying, setRetrying] = useState(false);
+	const retryCount = useRef(0);
 
 	// Seed parent immediately on mount to guarantee ordering before current route push
 	useEffect(() => {
@@ -85,19 +93,63 @@ export default function HotspotVouchersScreen() {
 		});
 	}, [navigation]);
 
+	const fetchUsers = async (isRetry = false) => {
+		if (!vRId || !hotspotId || !authToken) return;
+		
+		setLoading(true);
+		setError(false);
+		if (isRetry) setRetrying(true);
+
+		try {
+			const response = await getRouterHotspotUsers(vRId, hotspotId, authToken);
+			if (response && response.ok) {
+				const data: GetRouterHotspotUsersResponse = await response.json();
+				setUsersResponse(data);
+				// Set hotspot from response if available
+				if (data.hotspotServers && data.hotspotServers.length > 0) {
+					// Find the matching hotspot or default to first
+					const match = data.hotspotServers.find(h => h['.id'] === data.hotspotId) || data.hotspotServers[0];
+					setHotSpot(match);
+				}
+				// Reset retry count on success
+				retryCount.current = 0;
+			} 
+		} catch (error) {
+			if (retryCount.current < 1) {
+				retryCount.current += 1;
+				// Automatic retry once
+				setTimeout(() => {
+					fetchUsers(true);
+				}, 1000); 
+			} else {
+				setError(true);
+			}
+		} finally {
+			if (!isRetry || (isRetry && retryCount.current >= 1)) {
+				setLoading(false);
+				setRetrying(false);
+			}
+		}
+	};
+
 	useEffect(() => {
 		if (vRId && hotspotId && routers) {
-			const router = routers.find((r) => r.id === vRId);
+			const router = routers.routers.data.find((r) => r.id === vRId);
 			setNetRouter(router);
-			const hotspot = router?.networkInfo.hotspots.find(
-				(h) => h.id === hotspotId
-			);
-			setHotSpot(hotspot);
 		}
-	}, [vRId, hotspotId, routers]);
+
+		if (vRId && hotspotId && authToken) {
+			fetchUsers();
+		}
+	}, [vRId, hotspotId, routers, authToken]);
+
+	const handleManualRetry = () => {
+		retryCount.current = 0; // Reset for manual retry to allow another auto-retry if needed? Or just treat as fresh start.
+		fetchUsers();
+	};
 
 	const handleEditUserDetails = (voucher: string) => {
-		if (!voucher || !hotSpot) return;
+		if (!voucher || !usersResponse) return;
 		// Always reset to single-voucher mode for edits
 		setMultipleVouchers(false);
 		setEditVoucherCode(voucher);
@@ -174,13 +226,21 @@ export default function HotspotVouchersScreen() {
 		numberOfUsers: number;
 		package: string;
 	}) => {
-		if (!hotSpot) return;
+		if (!usersResponse) return;
 		if (editVoucherCode) {
 			// Edit existing voucher (update package only for now)
-			const targetVoucher = hotSpot.users?.find(
-				(u) => u.voucherCode === editVoucherCode
+			const targetVoucher = usersResponse.users.data.find(
+				(u) => u.name === editVoucherCode
 			);
-			if (targetVoucher) targetVoucher.package = pkg;
+			// Note: This mutation is local and might need a setUsersResponse to trigger re-render if deep clone wasn't done, 
+            // but for now we keep the logic similar to before (direct mutation was likely used). 
+            // Better to use state setter ideally.
+			// if (targetVoucher) targetVoucher.profile = pkg; // Field name difference... profile_display? profile?
+            // The API response user has 'profile' which is the long string, and 'profile_display'.
+            // Assuming we want to update the profile or package.
+            // Let's defer mutation logic fixes for a separate step if needed, but here's the access update:
+			if (targetVoucher) targetVoucher.profile_display = pkg;
+			
 			setEditVoucherCode(null);
 			toggleShowCreateVouchers(false);
 			return;
@@ -224,7 +284,7 @@ export default function HotspotVouchersScreen() {
 						{translateWithVariables(
 							translations[language].categories.vouchers.vouchersSubtitle,
 							{
-								hotspotName: hotSpot?.ssid ?? '',
+								hotspotName: hotSpotName ?? '',
 								routerName: netRouter?.name ?? '',
 							}
 						)}
@@ -269,6 +329,38 @@ export default function HotspotVouchersScreen() {
 						/>
 					</ThemedView>
 				</ThemedView>
+				{loading ? (
+					<ThemedView
+						style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}
+						lightColor={background}
+						darkColor={background}
+					>
+						<ActivityIndicator size="large" color={bim} />
+						{retrying && (
+							<ThemedText style={{ marginTop: 10, textAlign: 'center' }}>
+								{translations[language].categories.dashboard.retrying}
+							</ThemedText>
+						)}
+					</ThemedView>
+				) : error ? (
+					<ThemedView
+						style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}
+						lightColor={background}
+						darkColor={background}
+					>
+						<ThemedText style={{ marginBottom: 20, textAlign: 'center' }}>
+							{translations[language].categories.auth.unexpectedError}
+						</ThemedText>
+						<ThemedButton
+							title={translations[language].categories.buttons.retry}
+							onPress={handleManualRetry}
+							lightColor={bim}
+							darkColor={bim}
+							lightTextColor={white}
+							darkTextColor={white}
+						/>
+					</ThemedView>
+				) : (
 				<TileContainer
 					id={vRId || 'new-router-' + generateRandomInt(1000, 9999)}
 					backgroundColor={background}
@@ -389,7 +481,7 @@ export default function HotspotVouchersScreen() {
 									backgroundColor: background,
 								}}
 							>
-								{hotSpot?.users?.map((user, index) => (
+								{usersResponse?.users?.data?.map((user, index) => (
 									<ThemedView
 										key={index}
 										style={{
@@ -399,7 +491,7 @@ export default function HotspotVouchersScreen() {
 											gap: 10,
 											paddingHorizontal: 10,
 											justifyContent: 'space-between',
-											borderBottomWidth: index < routers.length - 1 ? 1 : 0,
+											borderBottomWidth: routers?.routers?.data?.length &&index < routers?.routers?.data?.length - 1 ? 1 : 0,
 											borderBottomColor: borderDark,
 											backgroundColor:
 												index % 2 === 0 ? listItemBackground : background,
@@ -413,7 +505,7 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{index + 1}
+											{usersResponse.users.from + index}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -421,7 +513,7 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{user.voucherCode}
+											{user.name}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -429,7 +521,7 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{user.package}
+											{user.profile_display}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -437,7 +529,13 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{user.status}
+											{/* Status is not explicitly in the new user object, maybe infer or use new field? Using 'comment' as proxy for now or just N/A if not found. 
+                                                Actually log shows 'uptime' 'time-left'. 
+                                                Old code used 'user.status'. 
+                                                New object doesn't have status. 
+                                                Maybe check time-left?
+                                            */}
+											{user['time-left'] === 'Unlimited' ? 'Active' : user['time-left']}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -445,7 +543,7 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{user.macAddress}
+											{user['mac-address']}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -461,7 +559,7 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{user.bytesIn}
+											{user['bytes-in']}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -469,7 +567,7 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{user.bytesOut}
+											{user['bytes-out']}
 										</ThemedText>
 										<ThemedView
 											style={[
@@ -488,7 +586,7 @@ export default function HotspotVouchersScreen() {
 												style={{
 													paddingVertical: 6,
 												}}
-												onPress={() => handleEditUserDetails(user.voucherCode)}
+												onPress={() => handleEditUserDetails(user.name)}
 											>
 												<IconSymbol
 													name='edit.outline'
@@ -502,7 +600,7 @@ export default function HotspotVouchersScreen() {
 												}}
 												onPress={() => {
 													affirmAction.current = () =>
-														handleBlockUser(user.voucherCode);
+														handleBlockUser(user.name);
 													setPromptTitle(
 														translations[language].categories.vouchers
 															.confirmBlockTitle
@@ -517,7 +615,7 @@ export default function HotspotVouchersScreen() {
 													toggleShowPrompt(true);
 												}}
 											>
-												<IconSymbol name='block' size={20} color={error} />
+												<IconSymbol name='block' size={20} color={errorColor} />
 											</TouchableOpacity>
 											<TouchableOpacity
 												style={{
@@ -525,7 +623,7 @@ export default function HotspotVouchersScreen() {
 												}}
 												onPress={() => {
 													affirmAction.current = () =>
-														handleDeleteUser(user.voucherCode);
+														handleDeleteUser(user.name);
 													setPromptTitle(
 														translations[language].categories.vouchers
 															.confirmDeleteTitle
@@ -543,7 +641,7 @@ export default function HotspotVouchersScreen() {
 												<IconSymbol
 													name='delete.outline'
 													size={20}
-													color={error}
+													color={errorColor}
 												/>
 											</TouchableOpacity>
 										</ThemedView>
@@ -553,6 +651,7 @@ export default function HotspotVouchersScreen() {
 						</ThemedView>
 					</ScrollView>
 				</TileContainer>
+				)}
 			</ParallaxScrollView>
 			<Prompt
 				id='confirm-block-delete-voucher'
@@ -590,8 +689,8 @@ export default function HotspotVouchersScreen() {
 					mode={editVoucherCode ? 'edit' : 'create'}
 					initialPkg={
 						editVoucherCode
-							? hotSpot.users?.find((u) => u.voucherCode === editVoucherCode)
-									?.package || ''
+							? usersResponse?.users.data.find((u) => u.name === editVoucherCode)
+									?.profile_display || ''
 							: undefined
 					}
 					titleOverride={

@@ -921,6 +921,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					Array.isArray(data.chartData))
 			);
 			if (hasDashboard) {
+				try {
 				// Map server-provided dashboard fields into typed structures and coerce numeric strings to numbers
 				const dashboard: DashboardSummary = {
 					chartData: Array.isArray(data.chartData)
@@ -964,15 +965,17 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					dashboard,
 				};
 				setUser(mergedUser as any);
-				try {
-					setLastDashboardUpdated(Date.now());
-				} catch {}
+				setLastDashboardUpdated(Date.now());
+
 				// If server returned a token as part of the login payload, persist it
 				if (data && data.token) {
 					await SecureStore.setItemAsync('auth_token', String(data.token));
 					setAuthToken(String(data.token));
 				}
 				return navigateToPath('/(authenticated)/home');
+				} catch(e) {
+					console.error('[GeneralContext] Error setting last dashboard updated:', e);
+				}
 			}
 
 			// Determine which 2FA method the backend expects when redirecting to verify
@@ -994,7 +997,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				} else {
 					setPending2FAMethod('totp');
 				}
-			} catch {
+			} catch(e) {
+				console.error('[GeneralContext] Error determining 2FA method:', e);
 				setPending2FAMethod(null);
 			}
 			// Store the pending phone so the verify screen can reference it if need

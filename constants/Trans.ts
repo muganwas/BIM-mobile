@@ -269,6 +269,7 @@ const translations: Translations = {
 				bytesIn: 'Bytes In',
 				bytesOut: 'Bytes Out',
 				loading: 'Loading...',
+				retrying: 'Retrying...',
 			},
 			transactions: {
 				title: 'Transactions',
