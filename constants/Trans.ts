@@ -316,6 +316,9 @@ const translations: Translations = {
 				editDocument: 'Edit document',
 				addYourDocumentDetails: 'Add your document details',
 			},
+			errors: {
+				somethingWentWrong: 'Something went wrong',
+			},
 		},
 	},
 	fr: {
@@ -363,6 +366,9 @@ const translations: Translations = {
 				registrationFailed: 'Registration failed',
 				otpVerificationFailed: 'OTP verification failed',
 				unexpectedError: 'An unexpected error occurred',
+			},
+			errors: {
+				somethingWentWrong: 'Something went wrong',
 			},
 		},
 	},

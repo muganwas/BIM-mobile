@@ -32,7 +32,7 @@ export interface RouterStatus {
 export default function RouterDetailsScreen() {
 	const navigation = useNavigation<any>();
 	const router = useRouter();
-	const { routerId } = useLocalSearchParams() as { routerId?: string };
+	const { routerId, name } = useLocalSearchParams() as { routerId?: string, name?: string };
 	const { handleUpdateHistory, language, authToken } = useGeneral();
 	
 	// Theme helpers
@@ -52,7 +52,7 @@ export default function RouterDetailsScreen() {
 	const whiteDark = useThemeColor({}, 'white', 'dark');
 	
 	// State
-	const [apiRouter, setApiRouter] = useState<ApiRouter | undefined>();
+	const [apiRouter, setApiRouter] = useState<Partial<ApiRouter>>();
 	const [routerStatus, setRouterStatus] = useState<RouterStatus | undefined>();
 	const [hotspots, setHotspots] = useState<Hotspot[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -80,15 +80,21 @@ export default function RouterDetailsScreen() {
 	// Fetch router data, status, and hotspots
 	useEffect(() => {
 		if (routerId && authToken) {
+			console.log('[RouterDetailsScreen] Fetching data for router ID:', routerId);
 			(async () => {
 				setLoading(true);
 				try {
+					if (name && routerId) {
+						setApiRouter({ name, id: routerId });
+					}
+					else {
 					// Fetch router basic info
-					const routerResponse = await getRouterById(routerId, authToken);
-					if (routerResponse && routerResponse.ok) {
-						const routerData = await routerResponse.json();
-						if (routerData.router) {
-							setApiRouter(routerData.router);
+						const routerResponse = await getRouterById(routerId, authToken);
+						if (routerResponse && routerResponse.ok) {
+							const routerData = await routerResponse.json();
+							if (routerData.router) {
+								setApiRouter({...routerData });
+							}
 						}
 					}
 

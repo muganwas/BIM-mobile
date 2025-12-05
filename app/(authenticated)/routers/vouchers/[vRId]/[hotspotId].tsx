@@ -16,7 +16,7 @@ import { getRouterHotspotUsers } from '@/services/RouterService';
 import { ApiRouter, GetRouterHotspotUsersResponse, Hotspot } from '@/types';
 import CreateVouchers from '@/views/CreateVouchers';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
 	ActivityIndicator,
 	Animated,
@@ -93,7 +93,7 @@ export default function HotspotVouchersScreen() {
 		});
 	}, [navigation]);
 
-	const fetchUsers = async (isRetry = false) => {
+	const fetchUsers = useCallback(async (isRetry = false) => {
 		if (!vRId || !hotspotId || !authToken) return;
 		
 		setLoading(true);
@@ -115,33 +115,33 @@ export default function HotspotVouchersScreen() {
 				retryCount.current = 0;
 			} 
 		} catch (error) {
-			if (retryCount.current < 1) {
-				retryCount.current += 1;
-				// Automatic retry once
-				setTimeout(() => {
-					fetchUsers(true);
-				}, 1000); 
-			} else {
-				setError(true);
-			}
+			console.error('Error fetching hotspot users:', error);
+			// Avoid automatic retry to reduce resource usage; rely on manual retry
+			setError(true);
 		} finally {
 			if (!isRetry || (isRetry && retryCount.current >= 1)) {
 				setLoading(false);
 				setRetrying(false);
 			}
 		}
-	};
+	}, [vRId, hotspotId, authToken]);
 
+	// Update local router reference whenever routers collection changes
 	useEffect(() => {
-		if (vRId && hotspotId && routers) {
+		if (vRId && routers) {
 			const router = routers.routers.data.find((r) => r.id === vRId);
 			setNetRouter(router);
 		}
+	}, [vRId, routers]);
 
-		if (vRId && hotspotId && authToken) {
+	// Fetch users only once when route ids and token are present (prevent refetch on token/routers changes)
+	const hasFetchedRef = useRef(false);
+	useEffect(() => {
+		if (!hasFetchedRef.current && vRId && hotspotId && authToken) {
+			hasFetchedRef.current = true;
 			fetchUsers();
 		}
-	}, [vRId, hotspotId, routers, authToken]);
+	}, [vRId, hotspotId, fetchUsers, authToken]);
 
 	const handleManualRetry = () => {
 		retryCount.current = 0; // Reset for manual retry to allow another auto-retry if needed? Or just treat as fresh start.

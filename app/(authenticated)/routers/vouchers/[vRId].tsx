@@ -1,3 +1,4 @@
+import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
@@ -5,9 +6,11 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
+import { ShowAlert } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { ApiRouter } from '@/types';
+import { getRouterHotspots } from '@/services/RouterService';
+import { ApiRouter, Hotspot } from '@/types';
 import {
 	useFocusEffect,
 	useLocalSearchParams,
@@ -15,7 +18,7 @@ import {
 	useRouter,
 } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { ActivityIndicator, StyleSheet, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function VouchersHotspotScreen() {
@@ -41,8 +44,10 @@ export default function VouchersHotspotScreen() {
 	}, [vRId]);
 	useTrackHistory(trackPath);
 	const { packages, fetchPackages, routers } = useTransaction();
-	const { user, language, handleUpdateHistory } = useGeneral();
+	const { user, language, handleUpdateHistory, authToken } = useGeneral();
 	const [currentRouter, setCurrentRouter] = React.useState<ApiRouter>();
+	const [hotspots, setHotspots] = React.useState<Hotspot[]>([]);
+	const [isLoading, setIsLoading] = React.useState(false);
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
 	const packageRouterHotspotsListDetailsId = useRef(
@@ -88,6 +93,27 @@ export default function VouchersHotspotScreen() {
 	);
 
 	useEffect(() => {
+		(async () => {
+		if (vRId && authToken) {
+			// Fetch router hotspots
+			setIsLoading(true);
+			const hotspotsResponse = await getRouterHotspots(vRId, authToken);
+			if (hotspotsResponse && hotspotsResponse.ok) {
+				const hotspotsData = await hotspotsResponse.json();
+				if (hotspotsData.hotspots) {
+					setHotspots(hotspotsData.hotspots);
+					setIsLoading(false);
+				}
+			}
+			else {
+				ShowAlert(translations[language].categories.errors.somethingWentWrong, 'Error');
+				setIsLoading(false);
+			}
+		}
+	})();
+	}, [vRId, authToken]);
+
+	useEffect(() => {
 		if (user && packages.length === 0) {
 			(async () => {
 				await fetchPackages();
@@ -101,7 +127,13 @@ export default function VouchersHotspotScreen() {
 			setCurrentRouter(found);
 		}
 	}, [vRId, routers]);
-
+	if (isLoading) {
+			return (
+				<ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} lightColor={background} darkColor={background}>
+					<ActivityIndicator size="large" color={bim} />
+				</ThemedView>
+			);
+		}
 	return (
 		<ThemedView
 			lightColor={backgroundLight}
@@ -252,8 +284,7 @@ export default function VouchersHotspotScreen() {
 								lightColor={backgroundLight}
 								darkColor={backgroundDark}
 							>
-								<ThemedText>test</ThemedText>
-								{/* {currentRouter?.networkInfo.hotspots.map((hotspot, index) => (
+								{hotspots.map((hotspot, index) => (
 									<ThemedView
 										key={index}
 										style={{
@@ -279,7 +310,7 @@ export default function VouchersHotspotScreen() {
 											lightColor={bim}
 											darkColor={bim}
 										>
-											{hotspot.ssid.toUpperCase()}
+											{hotspot.name.toUpperCase()}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -312,7 +343,7 @@ export default function VouchersHotspotScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{hotspot.status}
+											{hotspot.disabled === true || hotspot.disabled === 'true' ? 'Disabled' : 'Enabled'}
 										</ThemedText>
 										<ThemedView
 											style={{
@@ -331,7 +362,7 @@ export default function VouchersHotspotScreen() {
 												numberOfLines={1}
 												onPress={() =>
 													router.push(
-														`/(authenticated)/routers/vouchers/${vRId}/${hotspot.id}`
+														`/(authenticated)/routers/vouchers/${vRId}/${hotspot['.id']}`
 													)
 												}
 												lightColor={bim}
@@ -342,7 +373,7 @@ export default function VouchersHotspotScreen() {
 											/>
 										</ThemedView>
 									</ThemedView>
-								))} */}
+								))}
 							</ThemedView>
 						</ScrollView>
 					</ThemedView>

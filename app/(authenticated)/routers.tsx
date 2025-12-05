@@ -12,6 +12,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
+import { ApiRouter } from '@/types';
 import RouterOverlay from '@/views/Router';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -144,9 +145,9 @@ export default function RoutersScreen() {
 		setShowCreateModal(true);
 	};
 
-	const handleViewRouter = (routerId: string) => {
-		if (!routerId) return;
-		router.push(`/routers/preview/${routerId}`);
+	const handleViewRouter = (netRouter: ApiRouter) => {
+		if (!netRouter.id) return;
+		router.push({ pathname: '/routers/preview/[routerId]', params: { ...netRouter, routerId: netRouter.id } });
 	};
 	const handleEditRouter = (routerId: string) => {
 		if (!routerId) return;
@@ -378,7 +379,7 @@ export default function RoutersScreen() {
 											darkColor='transparent'
 										>
 											<TouchableOpacity
-												onPress={() => handleViewRouter(router?.id as string)}
+												onPress={() => handleViewRouter(router)}
 											>
 												<IconSymbol color={lime} name='eye.outline' />
 											</TouchableOpacity>

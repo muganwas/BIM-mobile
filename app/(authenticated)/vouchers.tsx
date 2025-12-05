@@ -47,7 +47,7 @@ export default function VouchersScreen() {
 	useEffect(() => {
 		if (user && packages.length === 0) {
 			(async () => {
-				await fetchPackages(user);
+				await fetchPackages();
 			})();
 		}
 	}, [user, packages, fetchPackages]);
@@ -182,7 +182,7 @@ export default function VouchersScreen() {
 								backgroundColor: background,
 							}}
 						>
-							{routers.map((r, index) => (
+							{routers?.routers?.data?.map((r, index) => (
 								<ThemedView
 									key={index}
 									style={{
@@ -193,7 +193,7 @@ export default function VouchersScreen() {
 										paddingHorizontal: 10,
 										backgroundColor:
 											index % 2 === 0 ? listItemBackground : background,
-										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
+										borderBottomWidth: !!routers?.routers?.data?.length && index < routers?.routers?.data?.length - 1 ? 1 : 0,
 										borderBottomColor: borderDark,
 										justifyContent: 'space-between',
 									}}
@@ -232,7 +232,7 @@ export default function VouchersScreen() {
 										lightColor={textLight}
 										darkColor={textDark}
 									>
-										{r?.networkInfo.ipv4}
+										{r?.ip_address}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
@@ -243,7 +243,7 @@ export default function VouchersScreen() {
 										lightColor={textLight}
 										darkColor={textDark}
 									>
-										{r.username}
+										{r.router_user}
 									</ThemedText>
 									<ThemedView
 										style={{
