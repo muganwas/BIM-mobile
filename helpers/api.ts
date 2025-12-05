@@ -5,6 +5,27 @@ import { ShowAlert } from '@/helpers';
  * Lightweight fetch wrapper that injects the X-Client-Type header for backend API calls.
  * It will add the header only when the request target appears to be the configured apiBaseUrl.
  */
+/**
+ * Callbacks for handling auth lifecycle events from the API layer.
+ * These are injected from the app context (GeneralContext) to avoid circular dependencies.
+ */
+export interface AuthCallbacks {
+	onRefreshToken: () => Promise<string | null>;
+	onLogout: () => void;
+}
+
+let authCallbacks: AuthCallbacks | null = null;
+
+export function registerAuthCallbacks(callbacks: AuthCallbacks) {
+	authCallbacks = callbacks;
+}
+
+/**
+ * Lightweight fetch wrapper that injects the X-Client-Type header for backend API calls.
+ * It will add the header only when the request target appears to be the configured apiBaseUrl.
+ * 
+ * Handles 401 Unauthorized responses by attempting to refresh the token and retrying the request.
+ */
 export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 	const url = typeof input === 'string' ? input : (input as Request).url;
 
@@ -29,13 +50,45 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 		// ignore
 	}
 
+	// Check if we should skip the interceptor (e.g. for the refresh call itself)
+	const skipInterceptor = headers['X-Skip-Interceptor'] === 'true';
+	if (skipInterceptor) {
+		delete headers['X-Skip-Interceptor'];
+	}
+
 	const mergedInit: RequestInit = {
 		...(init || {}),
 		headers,
 	};
 
 	try {
-		const response = await fetch(input, mergedInit);
+		let response = await fetch(input, mergedInit);
+
+		// Intercept 401s if we have callbacks and aren't skipping
+		if (response.status === 401 && !skipInterceptor && authCallbacks) {
+			try {
+				console.log('API: 401 received, attempting token refresh...');
+				const newToken = await authCallbacks.onRefreshToken();
+				
+				if (newToken) {
+					console.log('API: Token refresh successful, retrying request...');
+					// Update Authorization header with new token
+					headers['Authorization'] = `Bearer ${newToken}`;
+					const retryInit = {
+						...mergedInit,
+						headers,
+					};
+					response = await fetch(input, retryInit);
+				} else {
+					console.log('API: Token refresh failed, logging out...');
+					authCallbacks.onLogout();
+				}
+			} catch (e) {
+				console.error('API: Error during token refresh interceptor', e);
+				authCallbacks.onLogout();
+			}
+		}
+
 		return response;
 	} catch (error) {
 		console.error('API Request Failed:', error);

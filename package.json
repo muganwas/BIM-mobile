@@ -10,7 +10,7 @@
 		"android": "expo run:android --device",
 		"ios": "expo run:ios --device",
 		"web": "expo start --web",
-		"test": "jest --verbose --watchAll",
+		"test": "jest --verbose",
 		"lint": "expo lint",
 		"storybook": "storybook dev -p 6006 --no-open",
 		"build-storybook": "storybook build"
@@ -63,10 +63,12 @@
 		"@storybook/addon-essentials": "^8.4.0",
 		"@storybook/react-vite": "^8.4.0",
 		"@testing-library/jest-native": "^5.4.3",
+		"@testing-library/react": "^16.3.0",
 		"@testing-library/react-native": "^13.3.3",
 		"@types/jest": "^30.0.0",
 		"@types/minimatch": "^6.0.0",
 		"@types/react": "~19.0.10",
+		"@types/react-test-renderer": "^19.1.0",
 		"babel-jest": "^30.2.0",
 		"eslint": "^9.25.0",
 		"eslint-config-expo": "~9.2.0",
@@ -81,9 +83,19 @@
 	},
 	"private": true,
 	"jest": {
+		"preset": "react-native",
+		"testMatch": [
+			"**/__tests__/**/*.test.ts",
+			"**/__tests__/**/*.test.tsx"
+		],
 		"moduleNameMapper": {
 			"^@/(.*)$": "<rootDir>/$1"
 		},
-		"testEnvironment": "jsdom"
+		"transformIgnorePatterns": [
+			"node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
+		],
+		"setupFiles": [
+			"<rootDir>/jest-setup.js"
+		]
 	}
 }

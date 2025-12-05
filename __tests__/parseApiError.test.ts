@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /// <reference types="jest" />
 
+// Mock expo-constants to prevent native module errors
+jest.mock('expo-constants', () => ({
+	manifest: { extra: {} },
+	expoConfig: { extra: {} },
+}));
+
 // Prevent importing real expo/native modules by mocking our API constants module
 jest.mock('@/constants/API', () => ({ apiBaseUrl: undefined }));
 

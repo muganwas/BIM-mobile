@@ -113,6 +113,7 @@ export async function refreshToken(token: string) {
 		headers: {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${token}`,
+			'X-Skip-Interceptor': 'true',
 		},
 	});
 }

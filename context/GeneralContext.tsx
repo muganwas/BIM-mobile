@@ -3,7 +3,7 @@ import Toast from '@/components/Toast';
 // apiBaseUrl removed — use service layer for endpoints
 import translations from '@/constants/Trans';
 import { delay, normalizePhoneForApi, parseAmount } from '@/helpers';
-import { parseApiError } from '@/helpers/api';
+import { parseApiError, registerAuthCallbacks } from '@/helpers/api';
 import * as AuthService from '@/services/AuthService';
 import { fetchDashboard } from '@/services/UserService';
 import {
@@ -307,77 +307,63 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	// Logout handler: revoke token (if present), clear storage and app state,
 	// then redirect to the login screen.
+	// Logout handler: revoke token (if present), clear storage and app state,
+	// then redirect to the login screen.
 	const handleLogout = React.useCallback(async () => {
-		let backendSuccess = false;
-		let backendMessage: string | null = null;
+		// 1. Attempt backend logout (best effort)
 		try {
 			const token = await SecureStore.getItemAsync('auth_token');
 			if (token) {
-				try {
-					const res = await AuthService.logout(String(token));
-					if (res && res.ok) {
-						backendSuccess = true;
-						try {
-							const json = await res.json();
-							backendMessage = json?.message ?? null;
-						} catch {}
-					} else if (res) {
-						const text = await parseApiError(res);
-						backendMessage = String(text) || null;
-					}
-				} catch (e) {
-					console.warn('logout: backend call failed', e);
-					backendMessage = (e && (e as any).message) || 'Logout failed';
-				}
+				// We don't await the result or check success/failure for UI purposes
+				// The user wants to be logged out regardless of server status.
+				await AuthService.logout(String(token)).catch(() => {});
 			}
-		} catch (e) {
-			console.warn('logout: token lookup failed', e);
-			backendMessage = 'Logout failed';
-		} finally {
-			// Always clear local state/credentials for security, but show different toasts
-			try {
-				await SecureStore.deleteItemAsync('auth_token');
-				await SecureStore.deleteItemAsync('totp_secret');
-			} catch (e) {
-				console.warn('logout: secure store clear failed', e);
-			}
-			try {
-				await AsyncStorage.removeItem('user_id');
-				await AsyncStorage.removeItem('user_email');
-				await AsyncStorage.removeItem('user_phone');
-			} catch (e) {
-				console.warn('logout: async storage clear failed', e);
-			}
+		} catch {
+			// Ignore token lookup errors
+		}
+
+		// 2. Perform local cleanup (Critical)
+		let localCleanupSuccess = true;
+		try {
+			// Clear credentials
+			await SecureStore.deleteItemAsync('auth_token');
+			await SecureStore.deleteItemAsync('totp_secret');
+			
+			// Clear user data
+			await AsyncStorage.removeItem('user_id');
+			await AsyncStorage.removeItem('user_email');
+			await AsyncStorage.removeItem('user_phone');
+			
+			// Reset state
 			setUser(null);
 			setNotifications([]);
 			setPendingRegistration?.(null);
 			setPending2FASetup?.(null);
 			setPendingPhone?.(null);
 			setPending2FAMethod?.(null);
-			if (backendSuccess) {
-				setAppMessage?.({
-					type: 'message',
-					message:
-						backendMessage ||
-						tr.categories.auth['logoutSuccess'] ||
-						'Logged out',
-				});
-			} else {
-				setAppMessage?.({
-					type: 'error',
-					message:
-						backendMessage ||
-						tr.categories.auth['logoutFailed'] ||
-						'Logout failed',
-				});
-			}
+		} catch (e) {
+			console.error('logout: local cleanup failed', e);
+			localCleanupSuccess = false;
+		}
+
+		// 3. UI Feedback & Navigation
+		if (localCleanupSuccess) {
+			setAppMessage?.({
+				type: 'message',
+				message: tr.categories.auth['logoutSuccess'] || 'Logged out',
+			});
 			router.replace('/(auth)/login');
+		} else {
+			setAppMessage?.({
+				type: 'error',
+				message: 'Failed to clear local session. Please try again.',
+			});
 		}
 	}, [tr, router]);
 
-	// Attempt a single token refresh on demand. Returns true on success.
-	const attemptRefresh = React.useCallback(async (): Promise<boolean> => {
-		if (!authToken) return false;
+	// Attempt a single token refresh on demand. Returns the new token on success, or null.
+	const attemptRefresh = React.useCallback(async (): Promise<string | null> => {
+		if (!authToken) return null;
 		try {
 			const tokenVal = String(authToken);
 			if (authDebug)
@@ -393,26 +379,37 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					'ok=',
 					refreshRes && refreshRes.ok
 				);
-			if (!refreshRes || !refreshRes.ok) return false;
+			if (!refreshRes || !refreshRes.ok) return null;
 			const refJson = await refreshRes.json().catch(() => null);
 			if (refJson && (refJson as any).token) {
+				const newToken = String((refJson as any).token);
 				try {
 					await SecureStore.setItemAsync(
 						'auth_token',
-						String((refJson as any).token)
+						newToken
 					);
 				} catch {}
-				setAuthToken(String((refJson as any).token));
+				setAuthToken(newToken);
+				
+				if (refJson && (refJson as any).user) {
+					setUser((refJson as any).user as any);
+				}
+				return newToken;
 			}
-			if (refJson && (refJson as any).user) {
-				setUser((refJson as any).user as any);
-			}
-			return true;
+			return null;
 		} catch (e) {
 			if (authDebug) console.error('attemptRefresh: error', e);
-			return false;
+			return null;
 		}
 	}, [authToken, authDebug]);
+
+	// Register API interceptor callbacks
+	useEffect(() => {
+		registerAuthCallbacks({
+			onRefreshToken: attemptRefresh,
+			onLogout: handleLogout,
+		});
+	}, [attemptRefresh, handleLogout]);
 
 	// When an auth token is present in memory, verify it with the backend. If
 	// the token is invalid, perform a logout to clear local state. If the
@@ -1443,6 +1440,11 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		setNotifications(fetched);
 	};
 
+	const retryRefreshWrapper = useCallback(async () => {
+		const res = await attemptRefresh();
+		return !!res;
+	}, [attemptRefresh]);
+
 	return (
 		<GeneralContext.Provider
 			value={{
@@ -1480,7 +1482,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setPending2FASetup,
 				authToken,
 				setAuthToken,
-				retryRefresh: attemptRefresh,
+				retryRefresh: retryRefreshWrapper,
 				verifyingAuth,
 				lastDashboardUpdated,
 			}}
