@@ -5,12 +5,12 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useThemeColor } from '@/hooks/useThemeColor';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import * as factories from '@/helpers/factories';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { InternetPackage } from '@/types';
 import InternetPackageOverlay, {
@@ -28,9 +28,9 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 export default function HotspotPackagesScreen() {
 	const navigation = useNavigation<any>();
-	const { hotspotId } = useLocalSearchParams() as { hotspotId?: string };
+	const { hotspotId, hotspotName } = useLocalSearchParams() as { hotspotId?: string, hotspotName?: string };
 	const { handleUpdateHistory, user, language } = useGeneral();
-	const { packages, setPackages, fetchPackages, routers } = useTransaction();
+	const { packages, setPackages, fetchPackages } = useTransaction();
 	useColorScheme();
 	// Theme helpers
 	const background = useThemeColor({}, 'background');
@@ -52,8 +52,6 @@ export default function HotspotPackagesScreen() {
 	const actionButtonDark = useThemeColor({}, 'actionButton', 'dark');
 	const authButtonTextLight = useThemeColor({}, 'authButtonText', 'light');
 	const authButtonTextDark = useThemeColor({}, 'authButtonText', 'dark');
-
-	const [hotspotName, setHotspotName] = useState<string>('');
 	const [showOverlay, setShowOverlay] = useState(false);
 	const [overlayMode, setOverlayMode] =
 		useState<InternetPackageOverlayMode>('create');
@@ -114,22 +112,11 @@ export default function HotspotPackagesScreen() {
 		// Ensure packages are loaded
 		if (user && packages.length === 0) {
 			(async () => {
-				await fetchPackages(user);
+				await fetchPackages();
 			})();
 		}
 	}, [user, packages, fetchPackages]);
 
-	useEffect(() => {
-		if (!hotspotId || !routers) return;
-		// Find hotspot across all routers to display its name
-		for (const r of routers) {
-			const hs = r.networkInfo.hotspots.find((h) => h.id === hotspotId);
-			if (hs) {
-				setHotspotName(hs.ssid);
-				break;
-			}
-		}
-	}, [hotspotId, routers]);
 
 	const t = translations[language]?.categories as any;
 

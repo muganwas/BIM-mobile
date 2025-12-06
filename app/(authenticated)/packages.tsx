@@ -42,7 +42,7 @@ export default function PackagesScreen() {
 	useEffect(() => {
 		if (user && packages.length === 0) {
 			(async () => {
-				await fetchPackages(user);
+				await fetchPackages();
 			})();
 		}
 	}, [user, packages, fetchPackages]);
@@ -170,7 +170,7 @@ export default function PackagesScreen() {
 								backgroundColor: bg,
 							}}
 						>
-							{routers.map((r, index) => (
+							{routers?.routers.data.map((r, index) => (
 								<ThemedView
 									key={index}
 									style={{
@@ -181,7 +181,7 @@ export default function PackagesScreen() {
 										paddingHorizontal: 10,
 										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
 										justifyContent: 'space-between',
-										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
+										borderBottomWidth: index < routers.routers.data.length - 1 ? 1 : 0,
 										borderBottomColor: borderDark,
 									}}
 									lightColor={bg}
@@ -219,7 +219,7 @@ export default function PackagesScreen() {
 										lightColor={textColor}
 										darkColor={textColor}
 									>
-										{r?.networkInfo.ipv4}
+										{r?.ip_address}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
@@ -230,7 +230,7 @@ export default function PackagesScreen() {
 										lightColor={textColor}
 										darkColor={textColor}
 									>
-										{r.username}
+										{r.router_user}
 									</ThemedText>
 									<ThemedView
 										style={{
