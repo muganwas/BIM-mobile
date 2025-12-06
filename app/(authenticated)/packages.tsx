@@ -245,7 +245,7 @@ export default function PackagesScreen() {
 											title={translations[
 												language
 											].categories.buttons.hotspots.toUpperCase()}
-											onPress={() => router.push(`/routers/hotspots/${r.id}`)}
+											onPress={() => router.push(`/routers/hotspots/packages/${r.id}`)}
 											lightColor={lime}
 											darkColor={lime}
 											darkTextColor={white}

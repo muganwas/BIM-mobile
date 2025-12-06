@@ -367,10 +367,12 @@ export default function PackageRouterHotspotsScreen() {
 										</ThemedText>
 										<ThemedView
 											style={{
+												position: 'relative',
 												flexDirection: 'row',
 												justifyContent: 'space-between',
 												gap: 5,
 												width: 120,
+												zIndex:100
 											}}
 											lightColor={backgroundLight}
 											darkColor={backgroundDark}
@@ -389,7 +391,7 @@ export default function PackageRouterHotspotsScreen() {
 												darkColor={lime}
 												darkTextColor={white}
 												lightTextColor={white}
-												style={{ flex: 1 }}
+												style={{ flex: 1, zIndex: 150 }}
 											/>
 										</ThemedView>
 									</ThemedView>
@@ -400,7 +402,7 @@ export default function PackageRouterHotspotsScreen() {
 				</ScrollView>
 			</TileContainer>
 		</ThemedView>
-		<Loader showOverlay={loading} fadeAnim={fadeAnim} toggleShowOverlay={toggleOverlay} />
+			{loading && <Loader showOverlay={loading} fadeAnim={fadeAnim} toggleShowOverlay={toggleOverlay} />}
 		</>
 	);
 }

@@ -134,6 +134,9 @@ export default function RouterDetailsScreen() {
 		} as any);
 	};
 
+	const handleViewHotspotDetails = (hotspot: Hotspot) => {
+	}
+
 	if (loading) {
 		return (
 			<ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} lightColor={background} darkColor={background}>
