@@ -1,3 +1,4 @@
+import Loader from '@/components/Loader';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -8,7 +9,8 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { NetRouter } from '@/types';
+import { getRouterHotspots } from '@/services/RouterService';
+import { ApiRouter, Hotspot } from '@/types';
 import {
 	useFocusEffect,
 	useLocalSearchParams,
@@ -16,7 +18,7 @@ import {
 	useRouter,
 } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { Animated, StyleSheet, useAnimatedValue, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackageRouterHotspotsScreen() {
@@ -37,14 +39,17 @@ export default function PackageRouterHotspotsScreen() {
 	const navigation = useNavigation();
 	const expoRouter = useRouter();
 	const { rId } = useLocalSearchParams() as { rId?: string };
+	const fadeAnim = useAnimatedValue(0);
 	// memoize the path so useTrackHistory doesn't receive a new string each render
 	const trackPath = useMemo(() => {
 		return rId ? '/(authenticated)/routers/hotspots/' + rId : undefined;
 	}, [rId]);
 	useTrackHistory(trackPath);
 	const { packages, fetchPackages, routers } = useTransaction();
-	const { user, language, handleUpdateHistory } = useGeneral();
-	const [currentRouter, setCurrentRouter] = React.useState<NetRouter>();
+	const { user, language, handleUpdateHistory, authToken } = useGeneral();
+	const [currentRouter, setCurrentRouter] = React.useState<ApiRouter>();
+	const [hotspots, setHotspots] = React.useState<Hotspot[]>([]);
+	const [loading, setLoading] = React.useState(false);
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
 	const packageRouterHotspotsListDetailsId = useRef(
@@ -92,19 +97,64 @@ export default function PackageRouterHotspotsScreen() {
 	useEffect(() => {
 		if (user && packages.length === 0) {
 			(async () => {
-				await fetchPackages(user);
+				await fetchPackages();
 			})();
 		}
 	}, [user, packages, fetchPackages]);
 
 	useEffect(() => {
 		if (rId && routers) {
-			const found = routers.find((r) => r.id === rId);
+			const found = routers.routers.data.find((r) => r.id === rId);
 			setCurrentRouter(found);
 		}
 	}, [rId, routers]);
 
+
+	const toggleOverlay = (show?: boolean) => {
+		const val = show !== undefined ? show : !loading;
+		if (val) {
+			Animated.timing(fadeAnim, {
+				toValue: 1,
+				duration: 300,
+				useNativeDriver: true,
+			}).start();
+			setLoading(true);		
+		} else {
+			Animated.timing(fadeAnim, {
+				toValue: 0,
+				duration: 300,
+				useNativeDriver: true,
+			}).start(() => {
+				setLoading(false);
+			});
+		}
+	}
+
+	useEffect(() => {
+		if (!rId || !authToken) return;
+			// Fetch router hotspots
+			(async () => {
+				toggleOverlay(true);
+				try {
+				const hotspotsResponse = await getRouterHotspots(rId, authToken);
+				if (hotspotsResponse && hotspotsResponse.ok) {
+					const hotspotsData = await hotspotsResponse.json();
+					if (hotspotsData.hotspots) {
+						setHotspots(hotspotsData.hotspots);
+					}
+				}
+			} catch (error) {
+				console.error('Error fetching hotspots:', error);
+			} finally {
+				toggleOverlay(false);
+			}
+			})();
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [rId, authToken]);
+
+
 	return (
+		<>
 		<ThemedView
 			lightColor={backgroundLight}
 			darkColor={backgroundDark}
@@ -254,7 +304,7 @@ export default function PackageRouterHotspotsScreen() {
 								lightColor={backgroundLight}
 								darkColor={backgroundDark}
 							>
-								{currentRouter?.networkInfo.hotspots.map((hotspot, index) => (
+								{hotspots.map((hotspot, index) => (
 									<ThemedView
 										key={index}
 										style={{
@@ -280,7 +330,7 @@ export default function PackageRouterHotspotsScreen() {
 											lightColor={lime}
 											darkColor={lime}
 										>
-											{hotspot.ssid.toUpperCase()}
+											{hotspot.name.toUpperCase()}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -313,7 +363,7 @@ export default function PackageRouterHotspotsScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{hotspot.status}
+											{hotspot.disabled === true || hotspot.disabled === 'true' ? 'Disabled' : 'Enabled'}
 										</ThemedText>
 										<ThemedView
 											style={{
@@ -332,7 +382,7 @@ export default function PackageRouterHotspotsScreen() {
 												numberOfLines={1}
 												onPress={() =>
 													router.push(
-														`/(authenticated)/routers/packages/${hotspot.id}`
+														`/(authenticated)/routers/packages/${hotspot['.id']}`
 													)
 												}
 												lightColor={lime}
@@ -350,6 +400,8 @@ export default function PackageRouterHotspotsScreen() {
 				</ScrollView>
 			</TileContainer>
 		</ThemedView>
+		<Loader showOverlay={loading} fadeAnim={fadeAnim} toggleShowOverlay={toggleOverlay} />
+		</>
 	);
 }
 
