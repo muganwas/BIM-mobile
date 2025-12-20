@@ -15,9 +15,27 @@ export interface AuthCallbacks {
 }
 
 let authCallbacks: AuthCallbacks | null = null;
+let isRefreshing = false;
+let refreshSubscribers: ((token: string | null) => void)[] = [];
 
 export function registerAuthCallbacks(callbacks: AuthCallbacks) {
 	authCallbacks = callbacks;
+}
+
+/**
+ * Subscribe to token refresh completion.
+ * Used to queue requests waiting for a refresh to complete.
+ */
+function subscribeTokenRefresh(callback: (token: string | null) => void) {
+	refreshSubscribers.push(callback);
+}
+
+/**
+ * Notify all subscribers that token refresh is complete.
+ */
+function onRefreshComplete(token: string | null) {
+	refreshSubscribers.forEach(callback => callback(token));
+	refreshSubscribers = [];
 }
 
 /**
@@ -68,22 +86,54 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 		if (response.status === 401 && !skipInterceptor && authCallbacks) {
 			try {
 				console.log('API: 401 received, attempting token refresh...');
-				const newToken = await authCallbacks.onRefreshToken();
 				
-				if (newToken) {
-					console.log('API: Token refresh successful, retrying request...');
-					// Update Authorization header with new token
-					headers['Authorization'] = `Bearer ${newToken}`;
-					const retryInit = {
-						...mergedInit,
-						headers,
-					};
-					response = await fetch(input, retryInit);
+				// If a refresh is already in progress, wait for it
+				if (isRefreshing) {
+					console.log('API: Token refresh already in progress, waiting...');
+					const newToken = await new Promise<string | null>((resolve) => {
+						subscribeTokenRefresh((token) => {
+							resolve(token);
+						});
+					});
+					
+					if (newToken) {
+						console.log('API: Using refreshed token, retrying request...');
+						headers['Authorization'] = `Bearer ${newToken}`;
+						const retryInit = {
+							...mergedInit,
+							headers,
+						};
+						response = await fetch(input, retryInit);
+					} else {
+						console.log('API: Token refresh failed (from queue), logging out...');
+						authCallbacks.onLogout();
+					}
 				} else {
-					console.log('API: Token refresh failed, logging out...');
-					authCallbacks.onLogout();
+					// We're the first to attempt refresh
+					isRefreshing = true;
+					const newToken = await authCallbacks.onRefreshToken();
+					isRefreshing = false;
+					
+					// Notify all waiting requests
+					onRefreshComplete(newToken);
+					
+					if (newToken) {
+						console.log('API: Token refresh successful, retrying request...');
+						// Update Authorization header with new token
+						headers['Authorization'] = `Bearer ${newToken}`;
+						const retryInit = {
+							...mergedInit,
+							headers,
+						};
+						response = await fetch(input, retryInit);
+					} else {
+						console.log('API: Token refresh failed, logging out...');
+						authCallbacks.onLogout();
+					}
 				}
 			} catch (e) {
+				isRefreshing = false;
+				onRefreshComplete(null);
 				console.error('API: Error during token refresh interceptor', e);
 				authCallbacks.onLogout();
 			}

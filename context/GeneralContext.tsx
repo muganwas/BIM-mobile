@@ -165,6 +165,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	// Used to suppress history updates while we are programmatically navigating back
 	const navigatingBackRef = React.useRef(false);
+	const isLoggingOutRef = React.useRef(false);
 
 	const [user, setUser] = useState<UserProps | null>(null);
 	// Keep an in-memory copy of the auth token for fast checks and guards
@@ -310,54 +311,66 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	// Logout handler: revoke token (if present), clear storage and app state,
 	// then redirect to the login screen.
 	const handleLogout = React.useCallback(async () => {
-		// 1. Attempt backend logout (best effort)
+		// Prevent multiple simultaneous logout calls
+		if (isLoggingOutRef.current) {
+			console.log('Logout already in progress, ignoring duplicate call');
+			return;
+		}
+		
+		isLoggingOutRef.current = true;
+		
 		try {
-			const token = await SecureStore.getItemAsync('auth_token');
-			if (token) {
-				// We don't await the result or check success/failure for UI purposes
-				// The user wants to be logged out regardless of server status.
-				await AuthService.logout(String(token)).catch(() => {});
+			// 1. Attempt backend logout (best effort)
+			try {
+				const token = await SecureStore.getItemAsync('auth_token');
+				if (token) {
+					// We don't await the result or check success/failure for UI purposes
+					// The user wants to be logged out regardless of server status.
+					await AuthService.logout(String(token)).catch(() => {});
+				}
+			} catch {
+				// Ignore token lookup errors
 			}
-		} catch {
-			// Ignore token lookup errors
-		}
 
-		// 2. Perform local cleanup (Critical)
-		let localCleanupSuccess = true;
-		try {
-			// Clear credentials
-			await SecureStore.deleteItemAsync('auth_token');
-			await SecureStore.deleteItemAsync('totp_secret');
-			
-			// Clear user data
-			await AsyncStorage.removeItem('user_id');
-			await AsyncStorage.removeItem('user_email');
-			await AsyncStorage.removeItem('user_phone');
-			
-			// Reset state
-			setUser(null);
-			setNotifications([]);
-			setPendingRegistration?.(null);
-			setPending2FASetup?.(null);
-			setPendingPhone?.(null);
-			setPending2FAMethod?.(null);
-		} catch (e) {
-			console.error('logout: local cleanup failed', e);
-			localCleanupSuccess = false;
-		}
+			// 2. Perform local cleanup (Critical)
+			let localCleanupSuccess = true;
+			try {
+				// Clear credentials
+				await SecureStore.deleteItemAsync('auth_token');
+				await SecureStore.deleteItemAsync('totp_secret');
+				
+				// Clear user data
+				await AsyncStorage.removeItem('user_id');
+				await AsyncStorage.removeItem('user_email');
+				await AsyncStorage.removeItem('user_phone');
+				
+				// Reset state
+				setUser(null);
+				setNotifications([]);
+				setPendingRegistration?.(null);
+				setPending2FASetup?.(null);
+				setPendingPhone?.(null);
+				setPending2FAMethod?.(null);
+			} catch (e) {
+				console.error('logout: local cleanup failed', e);
+				localCleanupSuccess = false;
+			}
 
-		// 3. UI Feedback & Navigation
-		if (localCleanupSuccess) {
-			setAppMessage?.({
-				type: 'message',
-				message: tr.categories.auth['logoutSuccess'] || 'Logged out',
-			});
-			router.replace('/(auth)/login');
-		} else {
-			setAppMessage?.({
-				type: 'error',
-				message: 'Failed to clear local session. Please try again.',
-			});
+			// 3. UI Feedback & Navigation
+			if (localCleanupSuccess) {
+				setAppMessage?.({
+					type: 'message',
+					message: tr.categories.auth['logoutSuccess'] || 'Logged out',
+				});
+				router.replace('/(auth)/login');
+			} else {
+				setAppMessage?.({
+					type: 'error',
+					message: 'Failed to clear local session. Please try again.',
+				});
+			}
+		} finally {
+			isLoggingOutRef.current = false;
 		}
 	}, [tr, router]);
 
