@@ -270,6 +270,7 @@ export type langCode =
 	| 'ar';
 
 export interface HotspotUser {
+	[".id"]: string;
 	name: string;
 	profile?: string;
 	uptime: string;

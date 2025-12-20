@@ -524,7 +524,7 @@ export default function RouterDetailsScreen() {
 											onPress={() => handleViewHotspotUsers(hotspot)}
 										>
 											<ThemedText lightColor={whiteLight} darkColor={whiteDark}>
-												{translations[language].categories.buttons.viewUsers}
+												{translations[language].categories.buttons.viewDetails}
 											</ThemedText>
 										</TouchableOpacity>
 									</ThemedView>
@@ -537,6 +537,10 @@ export default function RouterDetailsScreen() {
 		</ParallaxScrollView>
 	);
 }
+
+/**
+ * TODO: inside (authenticated)/routers/hotspots/details i need a dynamic route that takes hotspotId and displays hotspot details
+ */
 
 const styles = StyleSheet.create({
 	statusLabel: {

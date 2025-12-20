@@ -115,6 +115,7 @@ const translations: Translations = {
 				updateRouter: 'Update Router',
 				viewPackages: 'View Packages',
 				viewVouchers: 'View Vouchers',
+				viewDetails: 'View Details',
 				saveChanges: 'Save Changes',
 				hotspots: 'Hotspots',
 				cancel: 'Cancel',
