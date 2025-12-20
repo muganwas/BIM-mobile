@@ -10,8 +10,8 @@ import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef } from 'react';
-import { StyleSheet } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { RefreshControl, StyleSheet } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackagesScreen() {
@@ -25,6 +25,19 @@ export default function PackagesScreen() {
 	const white = useThemeColor({}, 'white');
 	const router = useRouter();
 	const { packages, fetchPackages, routers } = useTransaction();
+
+	const [refreshing, setRefreshing] = useState(false);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			await fetchPackages();
+		} catch (e) {
+			console.error('[PackagesScreen] refresh failed', e);
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchPackages]);
 	const { user, language } = useGeneral();
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
@@ -169,6 +182,7 @@ export default function PackagesScreen() {
 								flexDirection: 'column',
 								backgroundColor: bg,
 							}}
+							refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
 						>
 							{routers?.routers.data.map((r, index) => (
 								<ThemedView

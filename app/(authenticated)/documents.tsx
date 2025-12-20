@@ -13,7 +13,7 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import { DocumentProps } from '@/types';
 import DocumentOverlay from '@/views/Document';
 import { openBrowserAsync } from 'expo-web-browser';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TouchableOpacity } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -31,6 +31,19 @@ export default function DocumentsScreen() {
 	const errorColor = useThemeColor({}, 'error');
 	const { documents, fetchDocuments, setDocuments } = useTransaction();
 	const { user } = useGeneral();
+
+	const [refreshing, setRefreshing] = useState(false);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			await fetchDocuments();
+		} catch (e) {
+			console.error('[DocumentsScreen] refresh failed', e);
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchDocuments]);
 
 	// Overlay state
 	const [showDocModal, setShowDocModal] = useState(false);
@@ -60,7 +73,7 @@ export default function DocumentsScreen() {
 	useEffect(() => {
 		if (user && documents.length === 0) {
 			(async () => {
-				await fetchDocuments(user);
+				await fetchDocuments();
 			})();
 		}
 	}, [user, documents, fetchDocuments]);
@@ -161,6 +174,8 @@ export default function DocumentsScreen() {
 			}}
 			containerStyle={{ flex: 1 }}
 			contentStyle={{ padding: 16 }}
+			onRefresh={handleRefresh}
+			refreshing={refreshing}
 		>
 			{/* Title row */}
 			<ThemedView

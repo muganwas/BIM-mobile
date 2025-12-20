@@ -12,7 +12,7 @@ import { useTransaction } from '@/context/TransactionContext';
 import { formatAmount } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -40,6 +40,20 @@ export default function TransactionsScreen() {
 	const mutedTextDark = useThemeColor({}, 'mutedText', 'dark');
 	const { purchases, fetchPurchases } = useTransaction();
 	const { user, language } = useGeneral();
+
+	const [refreshing, setRefreshing] = useState(false);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			if (user) await fetchPurchases();
+			else await fetchPurchases();
+		} catch (e) {
+			console.error('[TransactionsScreen] refresh failed', e);
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchPurchases, user]);
 	const t = translations[language].categories.transactions;
 
 	// Filters state
@@ -71,7 +85,7 @@ export default function TransactionsScreen() {
 	useEffect(() => {
 		if (user && purchases.length === 0) {
 			(async () => {
-				await fetchPurchases(user);
+				await fetchPurchases();
 			})();
 		}
 	}, [user, purchases, fetchPurchases]);
@@ -142,12 +156,14 @@ export default function TransactionsScreen() {
 		setPage((p) => Math.min(totalPages, p + 1));
 	};
 
-	return (
-		<ParallaxScrollView
+    return (
+        <ParallaxScrollView
 			headerBackgroundColor={{
 				light: backgroundLight,
 				dark: backgroundDark,
 			}}
+			refreshing={refreshing}
+			onRefresh={handleRefresh}
 			contentStyle={{ padding: 16 }}
 			containerStyle={{ flex: 1 }}
 		>

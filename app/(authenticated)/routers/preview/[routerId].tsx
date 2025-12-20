@@ -11,7 +11,7 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import { getRouterById, getRouterHotspots, getRouterStatus } from '@/services/RouterService';
 import { ApiRouter, Hotspot } from '@/types';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -56,6 +56,7 @@ export default function RouterDetailsScreen() {
 	const [routerStatus, setRouterStatus] = useState<RouterStatus | undefined>();
 	const [hotspots, setHotspots] = useState<Hotspot[]>([]);
 	const [loading, setLoading] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 
 	// Seed parent immediately on mount to guarantee ordering before current route push
 	useEffect(() => {
@@ -78,51 +79,55 @@ export default function RouterDetailsScreen() {
 	}, [navigation]);
 
 	// Fetch router data, status, and hotspots
-	useEffect(() => {
-		if (routerId && authToken) {
-			console.log('[RouterDetailsScreen] Fetching data for router ID:', routerId);
-			(async () => {
-				setLoading(true);
-				try {
-					if (name && routerId) {
-						setApiRouter({ name, id: routerId });
-					}
-					else {
-					// Fetch router basic info
-						const routerResponse = await getRouterById(routerId, authToken);
-						if (routerResponse && routerResponse.ok) {
-							const routerData = await routerResponse.json();
-							if (routerData.router) {
-								setApiRouter({...routerData });
-							}
-						}
-					}
-
-					// Fetch router status
-					const statusResponse = await getRouterStatus(routerId, authToken);
-					if (statusResponse && statusResponse.ok) {
-						const statusData = await statusResponse.json();
-						if (statusData.status && statusData.status.length > 0) {
-							setRouterStatus(statusData.status[0]);
-						}
-					}
-
-					// Fetch router hotspots
-					const hotspotsResponse = await getRouterHotspots(routerId, authToken);
-					if (hotspotsResponse && hotspotsResponse.ok) {
-						const hotspotsData = await hotspotsResponse.json();
-						if (hotspotsData.hotspots) {
-							setHotspots(hotspotsData.hotspots);
-						}
-					}
-				} catch (error) {
-					console.error('[RouterDetailsScreen] Failed to fetch router data:', error);
-				} finally {
-					setLoading(false);
+	const fetchRouterData = useCallback(async () => {
+		if (!routerId || !authToken) return;
+		console.log('[RouterDetailsScreen] Fetching data for router ID:', routerId);
+		setLoading(true);
+		try {
+			if (name && routerId) {
+				setApiRouter({ name, id: routerId });
+			} else {
+				const routerResponse = await getRouterById(routerId, authToken);
+				if (routerResponse && routerResponse.ok) {
+					const routerData = await routerResponse.json();
+					if (routerData.router) setApiRouter({ ...routerData });
 				}
-			})();
+			}
+
+			const statusResponse = await getRouterStatus(routerId, authToken);
+			if (statusResponse && statusResponse.ok) {
+				const statusData = await statusResponse.json();
+				if (statusData.status && statusData.status.length > 0) {
+					setRouterStatus(statusData.status[0]);
+				}
+			}
+
+			const hotspotsResponse = await getRouterHotspots(routerId, authToken);
+			if (hotspotsResponse && hotspotsResponse.ok) {
+				const hotspotsData = await hotspotsResponse.json();
+				if (hotspotsData.hotspots) setHotspots(hotspotsData.hotspots);
+			}
+		} catch (error) {
+			console.error('[RouterDetailsScreen] Failed to fetch router data:', error);
+		} finally {
+			setLoading(false);
 		}
 	}, [routerId, name, authToken]);
+
+	useEffect(() => {
+		void fetchRouterData();
+	}, [fetchRouterData]);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			await fetchRouterData();
+		} catch (e) {
+			console.error('[RouterDetailsScreen] refresh failed', e);
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchRouterData]);
 
 	const handleViewHotspotUsers = (hotspot: Hotspot) => {
 		const hotspotId = hotspot['.id'];
@@ -134,8 +139,7 @@ export default function RouterDetailsScreen() {
 		} as any);
 	};
 
-	const handleViewHotspotDetails = (hotspot: Hotspot) => {
-	}
+
 
 	if (loading) {
 		return (
@@ -154,6 +158,8 @@ export default function RouterDetailsScreen() {
 				paddingHorizontal: 10,
 			}}
 			containerStyle={{ flex: 1 }}
+			onRefresh={handleRefresh}
+			refreshing={refreshing}
 		>
 			<TileContainer
 				id={routerId || 'new-router'}

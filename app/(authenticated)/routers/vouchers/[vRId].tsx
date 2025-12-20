@@ -12,13 +12,13 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import { getRouterHotspots } from '@/services/RouterService';
 import { ApiRouter, Hotspot } from '@/types';
 import {
-	useFocusEffect,
-	useLocalSearchParams,
-	useNavigation,
-	useRouter,
+    useFocusEffect,
+    useLocalSearchParams,
+    useNavigation,
+    useRouter,
 } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { ActivityIndicator, StyleSheet, useColorScheme } from 'react-native';
+import { ActivityIndicator, RefreshControl, StyleSheet, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function VouchersHotspotScreen() {
@@ -48,6 +48,7 @@ export default function VouchersHotspotScreen() {
 	const [currentRouter, setCurrentRouter] = React.useState<ApiRouter>();
 	const [hotspots, setHotspots] = React.useState<Hotspot[]>([]);
 	const [isLoading, setIsLoading] = React.useState(false);
+	const [refreshing, setRefreshing] = React.useState(false);
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
 	const packageRouterHotspotsListDetailsId = useRef(
@@ -92,26 +93,41 @@ export default function VouchersHotspotScreen() {
 		}, [handleUpdateHistory, trackPath, vRId])
 	);
 
-	useEffect(() => {
-		(async () => {
-		if (vRId && authToken) {
-			// Fetch router hotspots
-			setIsLoading(true);
+	const fetchHotspots = useCallback(async () => {
+		if (!vRId || !authToken) return;
+		setIsLoading(true);
+		try {
 			const hotspotsResponse = await getRouterHotspots(vRId, authToken);
 			if (hotspotsResponse && hotspotsResponse.ok) {
 				const hotspotsData = await hotspotsResponse.json();
 				if (hotspotsData.hotspots) {
 					setHotspots(hotspotsData.hotspots);
-					setIsLoading(false);
 				}
-			}
-			else {
+			} else {
 				ShowAlert(translations[language].categories.errors.somethingWentWrong, 'Error');
-				setIsLoading(false);
 			}
+		} catch (e) {
+			console.error('[VouchersHotspotScreen] fetchHotspots failed', e);
+			ShowAlert(translations[language].categories.errors.somethingWentWrong, 'Error');
+		} finally {
+			setIsLoading(false);
 		}
-	})();
-	}, [vRId, authToken]);
+	}, [vRId, authToken, language]);
+
+	useEffect(() => {
+		void fetchHotspots();
+	}, [fetchHotspots]);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			await fetchHotspots();
+		} catch (e) {
+			console.error('[VouchersHotspotScreen] refresh failed', e);
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchHotspots]);
 
 	useEffect(() => {
 		if (user && packages.length === 0) {
@@ -278,6 +294,9 @@ export default function VouchersHotspotScreen() {
 								flexDirection: 'column',
 								backgroundColor: background,
 							}}
+							refreshControl={
+								<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+							}
 						>
 							<ThemedView
 								style={{ flexDirection: 'column', gap: 5 }}

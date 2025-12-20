@@ -12,13 +12,13 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import { getRouterHotspots } from '@/services/RouterService';
 import { ApiRouter, Hotspot } from '@/types';
 import {
-	useFocusEffect,
-	useLocalSearchParams,
-	useNavigation,
-	useRouter,
+    useFocusEffect,
+    useLocalSearchParams,
+    useNavigation,
+    useRouter,
 } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Animated, StyleSheet, useAnimatedValue, useColorScheme } from 'react-native';
+import { Animated, RefreshControl, StyleSheet, useAnimatedValue, useColorScheme } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackageRouterHotspotsScreen() {
@@ -50,6 +50,7 @@ export default function PackageRouterHotspotsScreen() {
 	const [currentRouter, setCurrentRouter] = React.useState<ApiRouter>();
 	const [hotspots, setHotspots] = React.useState<Hotspot[]>([]);
 	const [loading, setLoading] = React.useState(false);
+	const [refreshing, setRefreshing] = React.useState(false);
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
 	const packageRouterHotspotsListDetailsId = useRef(
@@ -130,27 +131,38 @@ export default function PackageRouterHotspotsScreen() {
 		}
 	}
 
-	useEffect(() => {
+	const fetchHotspots = useCallback(async (showOverlay = false) => {
 		if (!rId || !authToken) return;
-			// Fetch router hotspots
-			(async () => {
-				toggleOverlay(true);
-				try {
-				const hotspotsResponse = await getRouterHotspots(rId, authToken);
-				if (hotspotsResponse && hotspotsResponse.ok) {
-					const hotspotsData = await hotspotsResponse.json();
-					if (hotspotsData.hotspots) {
-						setHotspots(hotspotsData.hotspots);
-					}
+		if (showOverlay) toggleOverlay(true);
+		try {
+			const hotspotsResponse = await getRouterHotspots(rId, authToken);
+			if (hotspotsResponse && hotspotsResponse.ok) {
+				const hotspotsData = await hotspotsResponse.json();
+				if (hotspotsData.hotspots) {
+					setHotspots(hotspotsData.hotspots);
 				}
-			} catch (error) {
-				console.error('Error fetching hotspots:', error);
-			} finally {
-				toggleOverlay(false);
 			}
-			})();
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		} catch (error) {
+			console.error('Error fetching hotspots:', error);
+		} finally {
+			if (showOverlay) toggleOverlay(false);
+		}
 	}, [rId, authToken]);
+
+	useEffect(() => {
+		void fetchHotspots(true);
+	}, [fetchHotspots]);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			await fetchHotspots(false);
+		} catch (e) {
+			console.error('[PackageRouterHotspotsScreen] refresh failed', e);
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchHotspots]);
 
 
 	return (
@@ -298,6 +310,7 @@ export default function PackageRouterHotspotsScreen() {
 								flexDirection: 'column',
 								backgroundColor: background,
 							}}
+							refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
 						>
 							<ThemedView
 								style={{ flexDirection: 'column', gap: 5 }}

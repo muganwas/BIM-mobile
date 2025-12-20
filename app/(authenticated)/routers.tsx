@@ -15,12 +15,12 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import { ApiRouter } from '@/types';
 import RouterOverlay from '@/views/Router';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-	Animated,
-	TouchableOpacity,
-	useAnimatedValue,
-	useColorScheme,
+    Animated,
+    TouchableOpacity,
+    useAnimatedValue,
+    useColorScheme,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -174,6 +174,19 @@ export default function RoutersScreen() {
 
 	const routersList = routers?.routers?.data || [];
 
+	const [refreshing, setRefreshing] = useState(false);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			await fetchRouters();
+		} catch (e) {
+			console.error('[RoutersScreen] refresh failed', e);
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchRouters]);
+
 	return (
 		<>
 			<ParallaxScrollView
@@ -183,6 +196,8 @@ export default function RoutersScreen() {
 				}}
 				containerStyle={{ flex: 1 }}
 				contentStyle={{ padding: 16 }}
+				onRefresh={handleRefresh}
+				refreshing={refreshing}
 			>
 				<ThemedView lightColor={bg} darkColor={bg}>
 					<ThemedText

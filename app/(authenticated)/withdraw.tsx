@@ -1,3 +1,4 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -9,7 +10,7 @@ import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import WithdrawFunds from '@/views/WithdrawFunds';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -25,12 +26,26 @@ export default function WithdrawScreen() {
 	const { routers, fetchRouters } = useTransaction();
 	const { user, language } = useGeneral();
 
+	const [refreshing, setRefreshing] = useState(false);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			if (user) await fetchRouters();
+			else await fetchRouters();
+		} catch (e) {
+			console.error('[WithdrawScreen] refresh failed', e);
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchRouters, user]);
+
 	useTrackHistory('/(authenticated)/withdraw');
 
 	useEffect(() => {
-		if (user && routers.length === 0) {
+		if (user && routers?.routers?.data.length === 0) {
 			(async () => {
-				await fetchRouters(user);
+				await fetchRouters();
 			})();
 		}
 	}, [user, routers, fetchRouters]);
@@ -77,7 +92,7 @@ export default function WithdrawScreen() {
 		[language]
 	);
 	const selectedRouter = useMemo(
-		() => routers.find((r) => r.id === selectedRouterId) || null,
+		() => routers?.routers?.data.find((r) => r.id === selectedRouterId) || null,
 		[routers, selectedRouterId]
 	);
 
@@ -102,6 +117,13 @@ export default function WithdrawScreen() {
 	};
 
 	return (
+		<ParallaxScrollView
+			headerBackgroundColor={{ light: bg, dark: bg }}
+			containerStyle={{ flex: 1 }}
+			contentStyle={{ padding: 16 }}
+			onRefresh={handleRefresh}
+			refreshing={refreshing}
+		>
 		<ThemedView lightColor={bg} darkColor={bg} style={styles.container}>
 			<ThemedView
 				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
@@ -193,7 +215,7 @@ export default function WithdrawScreen() {
 								backgroundColor: bg,
 							}}
 						>
-							{routers.map((r, index) => (
+							{routers?.routers?.data.map((r, index) => (
 								<ThemedView
 									key={r.id}
 									style={{
@@ -204,7 +226,7 @@ export default function WithdrawScreen() {
 										paddingHorizontal: 5,
 										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
 										justifyContent: 'space-between',
-										borderBottomWidth: index < routers.length - 1 ? 1 : 0,
+										borderBottomWidth: index < routers?.routers?.data.length - 1 ? 1 : 0,
 										borderBottomColor: borderDark,
 									}}
 									lightColor={bg}
@@ -240,7 +262,7 @@ export default function WithdrawScreen() {
 										lightColor={textColor}
 										darkColor={textColor}
 									>
-										{r?.networkInfo.ipv4}
+										{r?.ip_address || 'N/A'}
 									</ThemedText>
 									<ThemedText
 										numberOfLines={1}
@@ -248,7 +270,7 @@ export default function WithdrawScreen() {
 										lightColor={textColor}
 										darkColor={textColor}
 									>
-										{r.transactionBalance}
+										{r.balance}
 									</ThemedText>
 									<ThemedView
 										style={{ width: 120, alignItems: 'center' }}
@@ -282,7 +304,8 @@ export default function WithdrawScreen() {
 					onInitiate={handleInitiateWithdraw}
 				/>
 			)}
-		</ThemedView>
+			</ThemedView>
+		</ParallaxScrollView>
 	);
 }
 

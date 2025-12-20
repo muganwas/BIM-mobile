@@ -18,12 +18,12 @@ import CreateVouchers from '@/views/CreateVouchers';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-	ActivityIndicator,
-	Animated,
-	StyleSheet,
-	TouchableOpacity,
-	useAnimatedValue,
-	useColorScheme,
+    ActivityIndicator,
+    Animated,
+    StyleSheet,
+    TouchableOpacity,
+    useAnimatedValue,
+    useColorScheme,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -70,6 +70,7 @@ export default function HotspotVouchersScreen() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(false);
 	const [retrying, setRetrying] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 	const retryCount = useRef(0);
 
 	// Seed parent immediately on mount to guarantee ordering before current route push
@@ -142,6 +143,17 @@ export default function HotspotVouchersScreen() {
 			fetchUsers();
 		}
 	}, [vRId, hotspotId, fetchUsers, authToken]);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			await fetchUsers();
+		} catch (e) {
+			console.error('[HotspotVouchersScreen] refresh failed', e);
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchUsers]);
 
 	const handleManualRetry = () => {
 		retryCount.current = 0; // Reset for manual retry to allow another auto-retry if needed? Or just treat as fresh start.
@@ -251,7 +263,7 @@ export default function HotspotVouchersScreen() {
 
 	return (
 		<>
-			<ParallaxScrollView
+				<ParallaxScrollView
 				headerBackgroundColor={{
 					light: backgroundLight,
 					dark: backgroundDark,
@@ -260,6 +272,8 @@ export default function HotspotVouchersScreen() {
 					paddingHorizontal: 10,
 				}}
 				containerStyle={{ flex: 1 }}
+					onRefresh={handleRefresh}
+					refreshing={refreshing}
 			>
 				<ThemedView
 					style={{

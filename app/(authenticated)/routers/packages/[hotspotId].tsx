@@ -14,15 +14,15 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { InternetPackage } from '@/types';
 import InternetPackageOverlay, {
-	InternetPackageOverlayMode,
+    InternetPackageOverlayMode,
 } from '@/views/InternetPackageOverlay';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-	Animated,
-	StyleSheet,
-	TouchableOpacity,
-	useColorScheme,
+    Animated,
+    StyleSheet,
+    TouchableOpacity,
+    useColorScheme,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -116,6 +116,17 @@ export default function HotspotPackagesScreen() {
 			})();
 		}
 	}, [user, packages, fetchPackages]);
+
+	const [refreshing, setRefreshing] = useState(false);
+
+	const handleRefresh = useCallback(async () => {
+		setRefreshing(true);
+		try {
+			await fetchPackages();
+		} finally {
+			setRefreshing(false);
+		}
+	}, [fetchPackages]);
 
 
 	const t = translations[language]?.categories as any;
@@ -212,6 +223,8 @@ export default function HotspotPackagesScreen() {
 					light: backgroundLight,
 					dark: backgroundDark,
 				}}
+				refreshing={refreshing}
+				onRefresh={handleRefresh}
 				contentStyle={{ paddingHorizontal: 10 }}
 				containerStyle={{ flex: 1 }}
 			>
