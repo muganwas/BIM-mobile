@@ -31,10 +31,31 @@ export async function getRouterStatus(routerId: string, token?: string) {
 }
 
 export async function getRouterHotspots(routerId: string, token?: string) {
-	return apiFetch((apiBaseUrl || '') + `/routers/${routerId}/hotspots`, {
+	const url = (apiBaseUrl || '') + `/routers/${routerId}/hotspots`;
+	const resp = await apiFetch(url, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});
+
+	// If the server accepted the request for background processing, poll for result
+	if (resp.status === 202) {
+		try {
+			const body = await resp.json().catch(() => ({}));
+			const cacheKey = body?.cache_key || body?.cacheKey || null;
+			if (cacheKey) {
+				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey);
+				return new Response(JSON.stringify(polled ?? {}), {
+					status: 200,
+					headers: { 'Content-Type': 'application/json' },
+				});
+			}
+		} catch (e) {
+			console.error('[getRouterHotspots] polling failed', e);
+			return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+		}
+	}
+
+	return resp;
 }
 
 export async function getRouterHotspotUsers(
@@ -43,11 +64,29 @@ export async function getRouterHotspotUsers(
 	token?: string
 ) {
 	const url = `${apiBaseUrl || ''}/vouchers/${routerId}/hotspots/${hotspotId}`;
-
-	return apiFetch(url, {
+	const resp = await apiFetch(url, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});
+
+	if (resp.status === 202) {
+		try {
+			const body = await resp.json().catch(() => ({}));
+			const cacheKey = body?.cache_key || body?.cacheKey || null;
+			if (cacheKey) {
+				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey);
+				return new Response(JSON.stringify(polled ?? {}), {
+					status: 200,
+					headers: { 'Content-Type': 'application/json' },
+				});
+			}
+		} catch (e) {
+			console.error('[getRouterHotspotUsers] polling failed', e);
+			return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+		}
+	}
+
+	return resp;
 }
 
 export default {

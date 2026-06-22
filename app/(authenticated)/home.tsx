@@ -17,7 +17,7 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
-import { formatMMDD, timeAgo, translateWithVariables } from '@/helpers';
+import { formatAmount, formatMMDD, timeAgo, translateWithVariables } from '@/helpers';
 import { signalAppReady } from '@/helpers/appReady';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
@@ -637,7 +637,7 @@ export default function HomeScreen() {
 								lightColor={whiteLight}
 								darkColor={whiteDark}
 							>
-								{router.amount}
+								{formatAmount(router.amount)}
 							</ThemedText>
 						</ThemedView>
 					))}

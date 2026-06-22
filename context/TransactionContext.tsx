@@ -251,15 +251,14 @@ export const TransactionProvider = ({
 								sd.recentTransactions.slice(0, 5).map((rt: any) => ({
 									id: rt.id ?? String(rt.created_at || Math.random()),
 									amount: Number(rt.amount) || 0,
-									status: (rt.status as any) || ('completed' as any),
-									routerName:
-										(rt.router && (rt.router as any).name) ||
+									status: rt.status || 'completed',
+									routerName: rt.router_name ||
 										rt.router_id ||
 										'',
 									date: rt.created_at ? new Date(rt.created_at) : new Date(),
 									reason: rt.reason || 'other',
 									description: undefined,
-									method: { type: (rt.type as any) || 'mobile-money' },
+									method: { type: rt.type || 'mobile-money' },
 								}))
 							);
 						}

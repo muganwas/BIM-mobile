@@ -213,3 +213,56 @@ export async function parseApiError(res: Response): Promise<string> {
 	}
 	return `HTTP error ${res.status}`;
 }
+
+/**
+ * Poll a queued operation by cache key until it completes or times out.
+ * Returns the parsed JSON of the successful operation (typically an object with the resource data),
+ * or throws on failure/timeout.
+ */
+export async function pollQueuedOperation(
+	cacheKey: string,
+{
+ 	maxAttempts = 30,
+ 	intervalMs = 2000,
+} = {}
+) {
+ 	if (!cacheKey) throw new Error('cacheKey required for polling');
+ 	const pollUrl = `${apiBaseUrl}/api/router-operations/poll`;
+
+ 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
+ 		try {
+ 			const resp = await apiFetch(pollUrl, {
+ 				method: 'POST',
+ 				headers: { 'Content-Type': 'application/json' },
+ 				body: JSON.stringify({ cache_key: cacheKey }),
+ 			});
+
+ 			// If non-json or error status, treat as retryable unless final
+ 			let json: any = null;
+ 			try {
+ 				json = await resp.json();
+ 			} catch (e) {
+ 				json = null;
+ 			}
+
+ 			if (json && typeof json === 'object') {
+ 				const status = (json.status || '').toString().toLowerCase();
+ 				if (status === 'success') {
+ 					// Prefer returning the data payload if present
+ 					return json.data ?? json;
+ 				}
+ 				if (status === 'error' || status === 'failed') {
+ 					throw new Error(json.error || json.message || 'Queued operation failed');
+ 				}
+ 			}
+ 		} catch (e) {
+ 			// Log and continue to retry until attempts exhausted
+ 			console.warn('[pollQueuedOperation] attempt', attempt, 'failed:', e);
+ 		}
+
+ 		// wait before next attempt
+ 		await new Promise((r) => setTimeout(r, intervalMs));
+ 	}
+
+ 	throw new Error('Queued operation timed out');
+}
