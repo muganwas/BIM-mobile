@@ -182,7 +182,7 @@ export default function VouchersScreen() {
 								backgroundColor: background,
 							}}
 						>
-							{routers?.routers?.data?.map((r, index) => (
+							{routers?.data?.map((r, index) => (
 								<ThemedView
 									key={index}
 									style={{
@@ -193,7 +193,7 @@ export default function VouchersScreen() {
 										paddingHorizontal: 10,
 										backgroundColor:
 											index % 2 === 0 ? listItemBackground : background,
-										borderBottomWidth: !!routers?.routers?.data?.length && index < routers?.routers?.data?.length - 1 ? 1 : 0,
+										borderBottomWidth: !!routers?.data?.length && index < routers?.data?.length - 1 ? 1 : 0,
 										borderBottomColor: borderDark,
 										justifyContent: 'space-between',
 									}}

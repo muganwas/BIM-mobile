@@ -33,8 +33,8 @@ export interface TransactionContextType {
 	setVoucherUsers: React.Dispatch<React.SetStateAction<VoucherUser[]>>;
 	packages: InternetPackage[];
 	setPackages: React.Dispatch<React.SetStateAction<InternetPackage[]>>;
-	routers: GetRoutersResponse | null;
-	setRouters: React.Dispatch<React.SetStateAction<GetRoutersResponse | null>>;
+	routers: GetRoutersResponse['routers'] | null;
+	setRoutersResponse: React.Dispatch<React.SetStateAction<GetRoutersResponse | null>>;
 	banks: Bank[];
 	setBanks: React.Dispatch<React.SetStateAction<Bank[]>>;
 	documents: DocumentProps[];
@@ -78,7 +78,7 @@ export const TransactionProvider = ({
 	const [loading, setLoading] = useState<boolean>(false);
 	const [voucherUsers, setVoucherUsers] = useState<VoucherUser[]>([]);
 	const [packages, setPackages] = useState<InternetPackage[]>([]);
-	const [routers, setRouters] = useState<GetRoutersResponse | null>(null);
+	const [routersResponse, setRoutersResponse] = useState<GetRoutersResponse | null>(null);
 	const [banks, setBanks] = useState<Bank[]>([]);
 	const [documents, setDocuments] = useState<DocumentProps[]>([]);
 
@@ -163,14 +163,14 @@ export const TransactionProvider = ({
 				if (res && res.ok) {
 					const json = await res.json();
 					if (json?.routers?.data && Array.isArray(json.routers.data)) {
-						setRouters(json as GetRoutersResponse);
+						setRoutersResponse(json as GetRoutersResponse);
 						return json as GetRoutersResponse;
 					}
 				}
 			} catch (e) {
 				console.error('fetchRouters: failed to fetch from API', e);
 			}
-			setRouters(null);
+			setRoutersResponse(null);
 			return null;
 		},
 		[authToken]
@@ -353,8 +353,8 @@ export const TransactionProvider = ({
 				loading,
 				setLoading,
 				setPackages,
-				routers,
-				setRouters,
+				routers: routersResponse?.routers || null,
+				setRoutersResponse,
 				banks,
 				setBanks,
 				documents,

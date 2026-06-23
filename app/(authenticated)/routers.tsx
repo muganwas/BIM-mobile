@@ -17,12 +17,13 @@ import RouterOverlay from '@/views/Router';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    Animated,
-    TouchableOpacity,
-    useAnimatedValue,
-    useColorScheme,
+	Animated,
+	TouchableOpacity,
+	useAnimatedValue,
+	useColorScheme,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+import { formatAmount } from '../../helpers/index';
 
 export default function RoutersScreen() {
 	const colorScheme = useColorScheme() ?? 'light';
@@ -40,7 +41,7 @@ export default function RoutersScreen() {
 	const listItemBackground = useThemeColor({}, 'listItemBackground');
 	// borderColor unused; Colors[colorScheme] is used directly where needed
 	const router = useRouter();
-	const { routers, setRouters, fetchRouters } = useTransaction();
+	const { routers, setRoutersResponse, fetchRouters } = useTransaction();
 	const promptFadeAnim = useAnimatedValue(0);
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [showCreateModal, setShowCreateModal] = useState(false);
@@ -51,8 +52,8 @@ export default function RoutersScreen() {
 
 	// compute initial values for edit modal when a router is selected
 	const editInitial = useMemo(() => {
-		if (!editRouterId || !routers?.routers?.data) return undefined;
-		const r = routers.routers.data.find((x) => x.id === editRouterId);
+		if (!editRouterId || routers?.data) return undefined;
+		const r = routers?.data.find((x) => x.id === editRouterId);
 		return r
 			? {
 					name: r.name,
@@ -156,23 +157,23 @@ export default function RoutersScreen() {
 	};
 	const handleDeleteRouter = () => {
 		// Delete router logic here
-		if (!routers?.routers?.data) return;
+		if (!routers?.data) return;
 		//update state
-		const updatedRouters = routers.routers.data.filter(
+		const updatedRouters = routers.data.filter(
 			(r) => r.id !== activeRouter
 		);
 		// Assuming there's a method in the context to update routers
-		setRouters({
-			...routers,
+		setRoutersResponse({
 			routers: {
-				...routers.routers,
-				data: updatedRouters,
+				...routers,
+				data: updatedRouters
 			},
+			message: 'Router deleted successfully',
 		});
 		toggleShowPrompt(false);
 	};
 
-	const routersList = routers?.routers?.data || [];
+	const routersList = routers?.data || [];
 
 	const [refreshing, setRefreshing] = useState(false);
 
@@ -381,7 +382,7 @@ export default function RoutersScreen() {
 											lightColor={textColor}
 											darkColor={textColor}
 										>
-											{router.balance}
+											{formatAmount(router.balance)}
 										</ThemedText>
 										<ThemedView
 											style={{
@@ -463,7 +464,7 @@ export default function RoutersScreen() {
 						if (!editRouterId || !routers) return;
 						
 						// Optimistic update for ApiRouter structure
-						const updatedData = routers.routers.data.map((r) =>
+						const updatedData = routers?.data.map((r) =>
 								r.id === editRouterId
 									? {
 											...r,
@@ -478,12 +479,12 @@ export default function RoutersScreen() {
 									: r
 							);
 						
-						setRouters({
-							...routers,
+						setRoutersResponse({
 							routers: {
-								...routers.routers,
+								...routers,
 								data: updatedData
-							}
+							},
+							message: 'Router updated successfully',
 						});
 						
 						setShowEditModal(false);

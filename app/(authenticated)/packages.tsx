@@ -184,7 +184,7 @@ export default function PackagesScreen() {
 							}}
 							refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
 						>
-							{routers?.routers.data.map((r, index) => (
+							{routers?.data.map((r, index) => (
 								<ThemedView
 									key={index}
 									style={{
@@ -195,7 +195,7 @@ export default function PackagesScreen() {
 										paddingHorizontal: 10,
 										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
 										justifyContent: 'space-between',
-										borderBottomWidth: index < routers.routers.data.length - 1 ? 1 : 0,
+										borderBottomWidth: index < routers?.data.length - 1 ? 1 : 0,
 										borderBottomColor: borderDark,
 									}}
 									lightColor={bg}

@@ -77,14 +77,15 @@ export default function EditVoucherScreen() {
 
 	useEffect(() => {
 		if (vRId && hotspotId && routers) {
-			const router = routers.find((r) => r.id === vRId);
-			const hotspot = router?.networkInfo.hotspots.find(
-				(h) => h.id === hotspotId
-			);
-			const user = hotspot?.users?.find((u) => u.voucherCode === voucher);
-			setUsername(user?.voucherCode || '');
-			setPassword(user?.password || '');
-			setProfile(user?.package || '');
+			const router = routers['data'].find((r) => r.id === vRId);
+			console.log({ data: routers.data });
+			// const hotspot = router?.networkInfo.hotspots.find(
+			// 	(h) => h.id === hotspotId
+			// );
+			// const user = hotspot?.users?.find((u) => u.voucherCode === voucher);
+			// setUsername(user?.voucherCode || '');
+			// setPassword(user?.password || '');
+			// setProfile(user?.package || '');
 		}
 	}, [vRId, hotspotId, routers, voucher]);
 

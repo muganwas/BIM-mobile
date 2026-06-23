@@ -12,10 +12,10 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import { getRouterHotspots } from '@/services/RouterService';
 import { ApiRouter, Hotspot } from '@/types';
 import {
-    useFocusEffect,
-    useLocalSearchParams,
-    useNavigation,
-    useRouter,
+	useFocusEffect,
+	useLocalSearchParams,
+	useNavigation,
+	useRouter,
 } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Animated, RefreshControl, StyleSheet, useAnimatedValue, useColorScheme } from 'react-native';
@@ -105,7 +105,7 @@ export default function PackageRouterHotspotsScreen() {
 
 	useEffect(() => {
 		if (rId && routers) {
-			const found = routers.routers.data.find((r) => r.id === rId);
+			const found = routers?.data.find((r) => r.id === rId);
 			setCurrentRouter(found);
 		}
 	}, [rId, routers]);

@@ -78,25 +78,27 @@ export default function RouterDetailsScreen() {
 		});
 	}, [navigation]);
 
+	console.log({apiRouter})
+
 	// Fetch router data, status, and hotspots
 	const fetchRouterData = useCallback(async () => {
 		if (!routerId || !authToken) return;
 		console.log('[RouterDetailsScreen] Fetching data for router ID:', routerId);
 		setLoading(true);
 		try {
-			if (name && routerId) {
-				setApiRouter({ name, id: routerId });
-			} else {
-				const routerResponse = await getRouterById(routerId, authToken);
-				if (routerResponse && routerResponse.ok) {
-					const routerData = await routerResponse.json();
-					if (routerData.router) setApiRouter({ ...routerData });
-				}
+			if (name && routerId) 
+			 	setApiRouter({ name, id: routerId });
+			const routerResponse = await getRouterById(routerId, authToken);
+			if (routerResponse && routerResponse.ok) {
+				const routerData = await routerResponse.json();
+				if (routerData.router) setApiRouter({ ...routerData });
 			}
 
 			const statusResponse = await getRouterStatus(routerId, authToken);
+			console.log({statusResponse})
 			if (statusResponse && statusResponse.ok) {
 				const statusData = await statusResponse.json();
+				console.log({ statusData})
 				if (statusData.status && statusData.status.length > 0) {
 					setRouterStatus(statusData.status[0]);
 				}

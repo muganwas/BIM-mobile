@@ -12,10 +12,10 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import { getRouterHotspots } from '@/services/RouterService';
 import { ApiRouter, Hotspot } from '@/types';
 import {
-    useFocusEffect,
-    useLocalSearchParams,
-    useNavigation,
-    useRouter,
+	useFocusEffect,
+	useLocalSearchParams,
+	useNavigation,
+	useRouter,
 } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, useColorScheme } from 'react-native';
@@ -139,7 +139,7 @@ export default function VouchersHotspotScreen() {
 
 	useEffect(() => {
 		if (vRId && routers) {
-			const found = routers.routers.data.find((r) => r.id === vRId);
+			const found = routers.data.find((r) => r.id === vRId);
 			setCurrentRouter(found);
 		}
 	}, [vRId, routers]);
@@ -380,9 +380,15 @@ export default function VouchersHotspotScreen() {
 												].categories.buttons.viewVouchers.toUpperCase()}
 												numberOfLines={1}
 												onPress={() =>
-													router.push(
-														`/(authenticated)/routers/vouchers/${vRId}/${hotspot['.id']}`
-													)
+													router.push({
+														pathname:
+															'/(authenticated)/routers/vouchers/[vRId]/[hotspotId]',
+														params: {
+															vRId: vRId ?? '',
+															hotspotId: hotspot['.id'],
+															name: hotspot.name,
+														},
+													})
 												}
 												lightColor={bim}
 												darkColor={bim}

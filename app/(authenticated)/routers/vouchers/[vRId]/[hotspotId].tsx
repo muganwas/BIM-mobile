@@ -18,12 +18,12 @@ import CreateVouchers from '@/views/CreateVouchers';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Animated,
-    StyleSheet,
-    TouchableOpacity,
-    useAnimatedValue,
-    useColorScheme,
+	ActivityIndicator,
+	Animated,
+	StyleSheet,
+	TouchableOpacity,
+	useAnimatedValue,
+	useColorScheme,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -130,7 +130,7 @@ export default function HotspotVouchersScreen() {
 	// Update local router reference whenever routers collection changes
 	useEffect(() => {
 		if (vRId && routers) {
-			const router = routers.routers.data.find((r) => r.id === vRId);
+			const router = routers.data.find((r) => r.id === vRId);
 			setNetRouter(router);
 		}
 	}, [vRId, routers]);
@@ -505,7 +505,7 @@ export default function HotspotVouchersScreen() {
 											gap: 10,
 											paddingHorizontal: 10,
 											justifyContent: 'space-between',
-											borderBottomWidth: routers?.routers?.data?.length &&index < routers?.routers?.data?.length - 1 ? 1 : 0,
+											borderBottomWidth: routers?.data?.length &&index < routers?.data?.length - 1 ? 1 : 0,
 											borderBottomColor: borderDark,
 											backgroundColor:
 												index % 2 === 0 ? listItemBackground : background,

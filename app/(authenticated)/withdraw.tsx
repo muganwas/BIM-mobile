@@ -43,7 +43,7 @@ export default function WithdrawScreen() {
 	useTrackHistory('/(authenticated)/withdraw');
 
 	useEffect(() => {
-		if (user && routers?.routers?.data.length === 0) {
+		if (user && routers?.data.length === 0) {
 			(async () => {
 				await fetchRouters();
 			})();
@@ -92,7 +92,7 @@ export default function WithdrawScreen() {
 		[language]
 	);
 	const selectedRouter = useMemo(
-		() => routers?.routers?.data.find((r) => r.id === selectedRouterId) || null,
+		() => routers?.data.find((r) => r.id === selectedRouterId) || null,
 		[routers, selectedRouterId]
 	);
 
@@ -215,7 +215,7 @@ export default function WithdrawScreen() {
 								backgroundColor: bg,
 							}}
 						>
-							{routers?.routers?.data.map((r, index) => (
+							{routers?.data.map((r, index) => (
 								<ThemedView
 									key={r.id}
 									style={{
@@ -226,7 +226,7 @@ export default function WithdrawScreen() {
 										paddingHorizontal: 5,
 										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
 										justifyContent: 'space-between',
-										borderBottomWidth: index < routers?.routers?.data.length - 1 ? 1 : 0,
+										borderBottomWidth: index < routers?.data.length - 1 ? 1 : 0,
 										borderBottomColor: borderDark,
 									}}
 									lightColor={bg}

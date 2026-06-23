@@ -96,6 +96,7 @@ export interface ApiRouter {
 	updated_at: string;
 }
 
+
 export interface GetRoutersResponse {
 	routers: {
 		current_page: number;
