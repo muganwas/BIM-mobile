@@ -43,7 +43,9 @@ export async function getRouterHotspots(routerId: string, token?: string) {
 			const body = await resp.json().catch(() => ({}));
 			const cacheKey = body?.cache_key || body?.cacheKey || null;
 			if (cacheKey) {
-				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey);
+				const { fetchCsrfToken, pollQueuedOperation } = await import('@/helpers/api');
+				const csrfToken = await fetchCsrfToken();
+				const polled = await pollQueuedOperation(cacheKey, { csrfToken });
 				return new Response(JSON.stringify(polled ?? {}), {
 					status: 200,
 					headers: { 'Content-Type': 'application/json' },
@@ -74,7 +76,9 @@ export async function getRouterHotspotUsers(
 			const body = await resp.json().catch(() => ({}));
 			const cacheKey = body?.cache_key || body?.cacheKey || null;
 			if (cacheKey) {
-				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey);
+				const { fetchCsrfToken, pollQueuedOperation } = await import('@/helpers/api');
+				const csrfToken = await fetchCsrfToken();
+				const polled = await pollQueuedOperation(cacheKey, { csrfToken });
 				return new Response(JSON.stringify(polled ?? {}), {
 					status: 200,
 					headers: { 'Content-Type': 'application/json' },

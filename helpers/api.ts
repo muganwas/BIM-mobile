@@ -219,21 +219,55 @@ export async function parseApiError(res: Response): Promise<string> {
  * Returns the parsed JSON of the successful operation (typically an object with the resource data),
  * or throws on failure/timeout.
  */
+/**
+ * Fetch a Laravel Sanctum CSRF token from the server.
+ * Returns the decoded XSRF-TOKEN value, or null if fetching fails.
+ */
+export async function fetchCsrfToken(): Promise<string | null> {
+	try {
+		const csrfUrl = `${apiBaseUrl}/sanctum/csrf-cookie`;
+		// Use raw fetch (not apiFetch) to avoid auth interceptor interference
+		const resp = await fetch(csrfUrl, {
+			method: 'GET',
+			headers: { Accept: 'application/json' },
+		});
+		// Extract XSRF-TOKEN from Set-Cookie header
+		const setCookie = resp.headers.get('set-cookie');
+		if (setCookie) {
+			const match = setCookie.match(/XSRF-TOKEN=([^;]+)/);
+			if (match) {
+				return decodeURIComponent(match[1]);
+			}
+		}
+		return null;
+	} catch {
+		return null;
+	}
+}
+
 export async function pollQueuedOperation(
 	cacheKey: string,
 {
  	maxAttempts = 30,
  	intervalMs = 2000,
-} = {}
+	csrfToken,
+} = {} as { maxAttempts?: number; intervalMs?: number; csrfToken?: string | null }
 ) {
  	if (!cacheKey) throw new Error('cacheKey required for polling');
  	const pollUrl = `${apiBaseUrl}/api/router-operations/poll`;
 
  	for (let attempt = 0; attempt < maxAttempts; attempt++) {
  		try {
- 			const resp = await apiFetch(pollUrl, {
- 				method: 'POST',
- 				headers: { 'Content-Type': 'application/json' },
+const pollHeaders: Record<string, string> = {
+				'Content-Type': 'application/json',
+			};
+			if (csrfToken) {
+				pollHeaders['X-XSRF-TOKEN'] = csrfToken;
+			}
+
+			const resp = await apiFetch(pollUrl, {
+				method: 'POST',
+				headers: pollHeaders,
  				body: JSON.stringify({ cache_key: cacheKey }),
  			});
 
@@ -246,23 +280,37 @@ export async function pollQueuedOperation(
  			}
 
  			if (json && typeof json === 'object') {
- 				const status = (json.status || '').toString().toLowerCase();
- 				if (status === 'success') {
- 					// Prefer returning the data payload if present
- 					return json.data ?? json;
- 				}
- 				if (status === 'error' || status === 'failed') {
- 					throw new Error(json.error || json.message || 'Queued operation failed');
- 				}
- 			}
- 		} catch (e) {
- 			// Log and continue to retry until attempts exhausted
- 			console.warn('[pollQueuedOperation] attempt', attempt, 'failed:', e);
- 		}
+				// Detect the apiFetch network-error mock response — stop polling immediately
+				if (json.error === 'Network request failed') {
+					throw new Error('Network request failed — poll endpoint unreachable');
+				}
 
- 		// wait before next attempt
- 		await new Promise((r) => setTimeout(r, intervalMs));
- 	}
+				const status = (json.status || '').toString().toLowerCase();
+				if (status === 'success') {
+					// Prefer returning the data payload if present
+					return json.data ?? json;
+				}
+				if (status === 'error' || status === 'failed') {
+					throw new Error(json.error || json.message || 'Queued operation failed');
+				}
+				// Log the actual poll status for debugging
+				console.log(
+					'[pollQueuedOperation] attempt',
+					attempt + 1,
+					'status:',
+					resp.status,
+					'body:',
+					JSON.stringify(json).slice(0, 200)
+				);
+			}
+		} catch (e) {
+			// Log and continue to retry until attempts exhausted
+			console.warn('[pollQueuedOperation] attempt', attempt + 1, 'failed:', e);
+		}
 
- 	throw new Error('Queued operation timed out');
+		// wait before next attempt
+		await new Promise((r) => setTimeout(r, intervalMs));
+	}
+
+	throw new Error('Queued operation timed out');
 }
