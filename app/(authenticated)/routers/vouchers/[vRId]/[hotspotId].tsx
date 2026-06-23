@@ -103,13 +103,14 @@ export default function HotspotVouchersScreen() {
 
 		try {
 			const response = await getRouterHotspotUsers(vRId, hotspotId, authToken);
+			console.log('[fetchUsers] response status:', response.status);
 			if (response && response.ok) {
 				const data: GetRouterHotspotUsersResponse = await response.json();
 				setUsersResponse(data);
 				// Set hotspot from response if available
 				if (data.hotspotServers && data.hotspotServers.length > 0) {
 					// Find the matching hotspot or default to first
-					const match = data.hotspotServers.find(h => h['.id'] === data.hotspotId) || data.hotspotServers[0];
+					const match = data.hotspotServers.find(h => h['.id'] === hotspotId) || data.hotspotServers[0];
 					setHotSpot(match);
 				}
 				// Reset retry count on success
@@ -241,7 +242,7 @@ export default function HotspotVouchersScreen() {
 		if (!usersResponse) return;
 		if (editVoucherCode) {
 			// Edit existing voucher (update package only for now)
-			const targetVoucher = usersResponse.users.data.find(
+			const targetVoucher = usersResponse.users.find(
 				(u) => u.name === editVoucherCode
 			);
 			// Note: This mutation is local and might need a setUsersResponse to trigger re-render if deep clone wasn't done, 
@@ -268,9 +269,7 @@ export default function HotspotVouchersScreen() {
 					light: backgroundLight,
 					dark: backgroundDark,
 				}}
-				contentStyle={{
-					paddingHorizontal: 10,
-				}}
+				contentStyle={{ padding: 16 }}
 				containerStyle={{ flex: 1 }}
 					onRefresh={handleRefresh}
 					refreshing={refreshing}
@@ -495,7 +494,7 @@ export default function HotspotVouchersScreen() {
 									backgroundColor: background,
 								}}
 							>
-								{usersResponse?.users?.data?.map((user, index) => (
+								{usersResponse?.active?.map((user, index) => (
 									<ThemedView
 										key={index}
 										style={{
@@ -519,7 +518,7 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{usersResponse.users.from + index}
+											{index + 1}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -527,7 +526,7 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{user.name}
+											{user.user}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -535,7 +534,7 @@ export default function HotspotVouchersScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{user.profile_display}
+											{usersResponse?.users?.find(u => u.name === user.user)?.profile || user.server}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -549,7 +548,7 @@ export default function HotspotVouchersScreen() {
                                                 New object doesn't have status. 
                                                 Maybe check time-left?
                                             */}
-											{user['time-left'] === 'Unlimited' ? 'Active' : user['time-left']}
+											{user['session-time-left'] === 'Unlimited' ? 'Active' : (user['session-time-left'] || 'N/A')}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -600,7 +599,7 @@ export default function HotspotVouchersScreen() {
 												style={{
 													paddingVertical: 6,
 												}}
-												onPress={() => handleEditUserDetails(user.name)}
+												onPress={() => handleEditUserDetails(user.user)}
 											>
 												<IconSymbol
 													name='edit.outline'
@@ -614,7 +613,7 @@ export default function HotspotVouchersScreen() {
 												}}
 												onPress={() => {
 													affirmAction.current = () =>
-														handleBlockUser(user.name);
+														handleBlockUser(user.user);
 													setPromptTitle(
 														translations[language].categories.vouchers
 															.confirmBlockTitle
@@ -637,7 +636,7 @@ export default function HotspotVouchersScreen() {
 												}}
 												onPress={() => {
 													affirmAction.current = () =>
-														handleDeleteUser(user.name);
+														handleDeleteUser(user.user);
 													setPromptTitle(
 														translations[language].categories.vouchers
 															.confirmDeleteTitle
@@ -703,8 +702,8 @@ export default function HotspotVouchersScreen() {
 					mode={editVoucherCode ? 'edit' : 'create'}
 					initialPkg={
 						editVoucherCode
-							? usersResponse?.users.data.find((u) => u.name === editVoucherCode)
-									?.profile_display || ''
+							? usersResponse?.users.find((u) => u.name === editVoucherCode)
+									?.profile || ''
 							: undefined
 					}
 					titleOverride={

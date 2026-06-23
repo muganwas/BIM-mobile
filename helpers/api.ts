@@ -241,23 +241,35 @@ export async function pollQueuedOperation(
  			let json: any = null;
  			try {
  				json = await resp.json();
- 			} catch (e) {
- 				json = null;
+ 			} catch (_e) {
+				console.log('[pollQueuedOperation] attempt', attempt + 1, 'HTTP', resp.status, '— not JSON');
+				json = null;
  			}
 
  			if (json && typeof json === 'object') {
+				console.log(
+					'[pollQueuedOperation] attempt',
+					attempt + 1,
+					'HTTP',
+					resp.status,
+					'body:',
+					JSON.stringify(json).slice(0, 300)
+				);
+
  				const status = (json.status || '').toString().toLowerCase();
- 				if (status === 'success') {
+				if (status === 'success' || status === 'done') {
  					// Prefer returning the data payload if present
  					return json.data ?? json;
  				}
  				if (status === 'error' || status === 'failed') {
  					throw new Error(json.error || json.message || 'Queued operation failed');
  				}
+ 			} else {
+				console.log('[pollQueuedOperation] attempt', attempt + 1, 'HTTP', resp.status, '— empty or non-object response');
  			}
  		} catch (e) {
  			// Log and continue to retry until attempts exhausted
- 			console.warn('[pollQueuedOperation] attempt', attempt, 'failed:', e);
+ 			console.warn('[pollQueuedOperation] attempt', attempt + 1, 'failed:', e);
  		}
 
  		// wait before next attempt

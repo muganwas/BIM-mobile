@@ -1,3 +1,4 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -151,10 +152,12 @@ export default function VouchersHotspotScreen() {
 			);
 		}
 	return (
-		<ThemedView
-			lightColor={backgroundLight}
-			darkColor={backgroundDark}
-			style={styles.container}
+		<ParallaxScrollView
+			containerStyle={styles.container}
+			contentStyle={{ padding: 16 }}
+			headerBackgroundColor={{ dark: backgroundDark, light: backgroundLight }}
+			onRefresh={handleRefresh}
+			refreshing={refreshing}
 		>
 			<ThemedView
 				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
@@ -404,18 +407,16 @@ export default function VouchersHotspotScreen() {
 					</ThemedView>
 				</ScrollView>
 			</TileContainer>
-		</ThemedView>
+		</ParallaxScrollView>
 	);
 }
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		padding: 16,
+		margin: 0,
 	},
 	routerItem: {
-		padding: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: '#eee',
+		borderBottomWidth: 1
 	},
 });

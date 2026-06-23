@@ -285,39 +285,31 @@ export interface HotspotUser {
 	"limit-uptime"?: string;
 }
 
-export interface PaginatedHotspotUsers {
-	current_page: number;
-	data: HotspotUser[];
-	first_page_url: string;
-	from: number;
-	last_page: number;
-	last_page_url: string;
-	links: {
-		url: string | null;
-		label: string;
-		active: boolean;
-	}[];
-	next_page_url: string | null;
-	path: string;
-	per_page: number;
-	prev_page_url: string | null;
-	to: number;
-	total: number;
+export interface HotspotActiveUser {
+	'.id': string;
+	address: string;
+	'bytes-in': string;
+	'bytes-out': string;
+	comment?: string;
+	'idle-time'?: string;
+	'keepalive-timeout'?: string;
+	'login-by'?: string;
+	'mac-address': string;
+	'packets-in'?: string;
+	'packets-out'?: string;
+	radius?: string;
+	server: string;
+	'session-time-left'?: string;
+	uptime: string;
+	user: string;
 }
 
 export interface GetRouterHotspotUsersResponse {
-	router: ApiRouter;
-	hotspotId: string;
-	users: PaginatedHotspotUsers;
-	profiles: any[];
+	active: HotspotActiveUser[];
+	active_by_user: Record<string, HotspotActiveUser[][]>;
 	hotspotServers: any[];
-	users_meta: {
-		total: number;
-		per_page: number;
-		current_page: number;
-		first_item: number;
-		last_item: number;
-	};
+	profiles: any[];
+	users: HotspotUser[];
 }
 
 export * from './dashboard';

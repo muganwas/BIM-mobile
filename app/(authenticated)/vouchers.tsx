@@ -93,6 +93,9 @@ export default function VouchersScreen() {
 			}}
 			containerStyle={{ flex: 1 }}
 			contentStyle={{ padding: 16 }}
+			onRefresh={async () => {
+				await fetchPackages();
+			}}
 		>
 			<ThemedView
 				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}

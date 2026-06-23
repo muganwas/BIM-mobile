@@ -196,7 +196,6 @@ export default function RoutersScreen() {
 					dark: bg,
 				}}
 				containerStyle={{ flex: 1 }}
-				contentStyle={{ padding: 16 }}
 				onRefresh={handleRefresh}
 				refreshing={refreshing}
 			>
