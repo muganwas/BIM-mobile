@@ -243,17 +243,18 @@ export async function pollQueuedOperation(
  				json = await resp.json();
  			} catch (_e) {
 				console.log('[pollQueuedOperation] attempt', attempt + 1, 'HTTP', resp.status, '— not JSON');
+				console.log('[pollQueuedOperation] error:', _e);
 				json = null;
  			}
 
  			if (json && typeof json === 'object') {
-				console.log(
-					'[pollQueuedOperation] attempt',
-					attempt + 1,
-					'HTTP',
-					resp.status,
-					'body:',
-					JSON.stringify(json).slice(0, 300)
+					console.log(
+						'[pollQueuedOperation] attempt',
+						attempt + 1,
+						'HTTP',
+						resp.status,
+						'body:',
+						JSON.stringify(json)//.slice(0, 300)
 				);
 
  				const status = (json.status || '').toString().toLowerCase();

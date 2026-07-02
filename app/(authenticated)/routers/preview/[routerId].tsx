@@ -78,8 +78,6 @@ export default function RouterDetailsScreen() {
 		});
 	}, [navigation]);
 
-	console.log({apiRouter})
-
 	// Fetch router data, status, and hotspots
 	const fetchRouterData = useCallback(async () => {
 		if (!routerId || !authToken) return;
@@ -95,12 +93,21 @@ export default function RouterDetailsScreen() {
 			}
 
 			const statusResponse = await getRouterStatus(routerId, authToken);
-			console.log({statusResponse})
 			if (statusResponse && statusResponse.ok) {
 				const statusData = await statusResponse.json();
-				console.log({ statusData})
-				if (statusData.status && statusData.status.length > 0) {
-					setRouterStatus(statusData.status[0]);
+				// statusData.status can be a string (e.g., "queued") or an array of status objects
+				const statusVal = statusData.status;
+				if (statusVal) {
+					if (Array.isArray(statusVal) && statusVal.length > 0) {
+						setRouterStatus(statusVal[0]);
+					} else if (typeof statusVal === 'object' && !Array.isArray(statusVal)) {
+						setRouterStatus(statusVal);
+					} else {
+						// For string statuses like "queued", check for data payload
+						if (statusData.data && Array.isArray(statusData.data) && statusData.data.length > 0) {
+							setRouterStatus(statusData.data[0]);
+						}
+					}
 				}
 			}
 

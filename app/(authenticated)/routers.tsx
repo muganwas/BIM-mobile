@@ -48,7 +48,7 @@ export default function RoutersScreen() {
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [editRouterId, setEditRouterId] = useState<string | undefined>();
 	const [activeRouter, setActiveRouter] = useState<string | undefined>();
-	const { user, language } = useGeneral();
+	const { language } = useGeneral();
 
 	// compute initial values for edit modal when a router is selected
 	const editInitial = useMemo(() => {
