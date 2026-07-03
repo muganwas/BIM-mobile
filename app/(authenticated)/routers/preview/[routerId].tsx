@@ -141,7 +141,6 @@ export default function RouterDetailsScreen() {
 	const handleViewHotspotUsers = (hotspot: Hotspot) => {
 		const hotspotId = hotspot['.id'];
 		if (!hotspotId) return;
-		
 		router.push({
 			pathname: `/routers/vouchers/${routerId}/${hotspotId}`,
 			params: { ...hotspot, disabled: String(hotspot.disabled) }

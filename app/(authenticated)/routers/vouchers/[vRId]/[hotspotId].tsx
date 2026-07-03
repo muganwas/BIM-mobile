@@ -1,4 +1,3 @@
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Prompt from '@/components/Prompt';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
@@ -20,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
 	ActivityIndicator,
 	Animated,
+	RefreshControl,
 	StyleSheet,
 	TouchableOpacity,
 	useAnimatedValue,
@@ -76,15 +76,11 @@ export default function HotspotVouchersScreen() {
 	// Seed parent immediately on mount to guarantee ordering before current route push
 	useEffect(() => {
 		if (!vRId) return;
-		handleUpdateHistory('/(authenticated)/routers/vouchers/' + vRId);
+		handleUpdateHistory(`/(authenticated)/routers/preview/${vRId}`);
 	}, [handleUpdateHistory, vRId]);
 
 	// Track current route after parent seeding is registered
-	useTrackHistory(
-		hotspotId && vRId
-			? `/(authenticated)/routers/vouchers/${vRId}/${hotspotId}`
-			: '/(authenticated)/routers/vouchers'
-	);
+	useTrackHistory(`/(authenticated)/routers/vouchers/${vRId}/${hotspotId}`);
 
 	useEffect(() => {
 		navigation.setOptions({
@@ -136,11 +132,9 @@ export default function HotspotVouchersScreen() {
 		}
 	}, [vRId, routers]);
 
-	// Fetch users only once when route ids and token are present (prevent refetch on token/routers changes)
-	const hasFetchedRef = useRef(false);
+	// Fetch users whenever route ids or token are present
 	useEffect(() => {
-		if (!hasFetchedRef.current && vRId && hotspotId && authToken) {
-			hasFetchedRef.current = true;
+		if (vRId && hotspotId && authToken) {
 			fetchUsers();
 		}
 	}, [vRId, hotspotId, fetchUsers, authToken]);
@@ -264,16 +258,7 @@ export default function HotspotVouchersScreen() {
 
 	return (
 		<>
-				<ParallaxScrollView
-				headerBackgroundColor={{
-					light: backgroundLight,
-					dark: backgroundDark,
-				}}
-				contentStyle={{ padding: 16 }}
-				containerStyle={{ flex: 1 }}
-					onRefresh={handleRefresh}
-					refreshing={refreshing}
-			>
+			<ThemedView  style={{ flex: 1, padding: 16, backgroundColor: background }}>
 				<ThemedView
 					style={{
 						flexDirection: 'column',
@@ -492,7 +477,13 @@ export default function HotspotVouchersScreen() {
 								style={{
 									flexDirection: 'column',
 									backgroundColor: background,
-								}}
+								}}										
+								refreshControl={
+									<RefreshControl
+										refreshing={refreshing}
+										onRefresh={handleRefresh}
+									/>
+								}
 							>
 								{usersResponse?.active?.map((user, index) => (
 									<ThemedView
@@ -665,7 +656,7 @@ export default function HotspotVouchersScreen() {
 					</ScrollView>
 				</TileContainer>
 				)}
-			</ParallaxScrollView>
+			</ThemedView>
 			<Prompt
 				id='confirm-block-delete-voucher'
 				fadeAnim={promptFadeAnim}
