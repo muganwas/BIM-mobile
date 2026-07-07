@@ -72,7 +72,7 @@ export const TransactionProvider = ({
 }: {
 	children: React.ReactNode;
 }) => {
-	const { user, authToken } = useGeneral();
+	const { user, authToken, handleLogout } = useGeneral();
 	const [transactions, setTransactions] = useState<Transaction[]>([]);
 	const [purchases, setPurchases] = useState<MicroTransaction[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -199,11 +199,15 @@ export const TransactionProvider = ({
 	const fetchPurchases = useCallback(
 		async () => {
 			try {
+				if (!authToken) {
+					console.error('fetchPurchases: No authentication token available');
+					return handleLogout(); // Ensure user is logged out if no token
+				}
 				console.log('fetchPurchases: fetching purchases from API');
-				const res = await UserService.fetchPurchases(authToken ?? undefined);
+				const res = await UserService.fetchPurchases(authToken); // Adjust parameters as needed
 				if (res && res.ok) {
 					const json = await res.json();
-					console.log('fetchPurchases: fetched purchases from API', json);
+					console.log('fetchPurchases: fetched purchases from API', json.transactions.links);
 					if (Array.isArray(json.purchases))
 						setPurchases(json.purchases as MicroTransaction[]);
 					if (Array.isArray(json.voucherUsers))
@@ -217,7 +221,7 @@ export const TransactionProvider = ({
 			setPurchases([]);
 			setVoucherUsers([]);
 		},
-		[authToken]
+		[authToken, handleLogout]
 	);
 
 	useEffect(() => {

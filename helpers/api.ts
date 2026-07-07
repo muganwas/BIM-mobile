@@ -221,19 +221,22 @@ export async function parseApiError(res: Response): Promise<string> {
  */
 export async function pollQueuedOperation(
 	cacheKey: string,
+	token?: string,
 {
  	maxAttempts = 30,
  	intervalMs = 2000,
 } = {}
 ) {
  	if (!cacheKey) throw new Error('cacheKey required for polling');
- 	const pollUrl = `${apiBaseUrl}/api/router-operations/poll`;
+ 	const pollUrl = `${apiBaseUrl}/router-operations/poll`;
+	const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+	if (token) headers['Authorization'] = `Bearer ${token}`;
 
  	for (let attempt = 0; attempt < maxAttempts; attempt++) {
  		try {
  			const resp = await apiFetch(pollUrl, {
  				method: 'POST',
- 				headers: { 'Content-Type': 'application/json' },
+				headers,
  				body: JSON.stringify({ cache_key: cacheKey }),
  			});
 

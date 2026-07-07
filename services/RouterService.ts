@@ -35,7 +35,7 @@ export async function getRouterStatus(routerId: string, token?: string) {
 			const body = await resp.json().catch(() => ({}));
 			const cacheKey = body?.cache_key || body?.cacheKey || null;
 			if (cacheKey) {
-				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey);
+				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey, token);
 				return new Response(JSON.stringify(polled ?? {}), {
 					status: 200,
 					headers: { 'Content-Type': 'application/json' },
@@ -63,7 +63,7 @@ export async function getRouterHotspots(routerId: string, token?: string) {
 			const body = await resp.json().catch(() => ({}));
 			const cacheKey = body?.cache_key || body?.cacheKey || null;
 			if (cacheKey) {
-				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey);
+				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey, token);
 				return new Response(JSON.stringify(polled ?? {}), {
 					status: 200,
 					headers: { 'Content-Type': 'application/json' },
@@ -84,6 +84,7 @@ export async function getRouterHotspotUsers(
 	token?: string
 ) {
 	const url = `${apiBaseUrl || ''}/vouchers/${routerId}/hotspots/${hotspotId}`;
+	console.log('[getRouterHotspotUsers] url', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
 		headers: buildHeaders(token),
@@ -94,7 +95,7 @@ export async function getRouterHotspotUsers(
 			const body = await resp.json().catch(() => ({}));
 			const cacheKey = body?.cache_key || body?.cacheKey || null;
 			if (cacheKey) {
-				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey);
+				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey, token);
 				return new Response(JSON.stringify(polled ?? {}), {
 					status: 200,
 					headers: { 'Content-Type': 'application/json' },

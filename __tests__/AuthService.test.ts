@@ -63,7 +63,7 @@ describe('AuthService', () => {
 		});
 	});
 
-	test('setupTotp posts to /api/2fa-setup', async () => {
+	test('setupTotp posts to /2fa-setup', async () => {
 		await AuthService.setupTotp({ setup_token: 't', secret: 's', otp: 'o' });
 		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
 		const init = call[1] as any;
@@ -74,7 +74,7 @@ describe('AuthService', () => {
 		});
 	});
 
-	test('logout posts to /api/logout with Authorization header', async () => {
+	test('logout posts to /logout with Authorization header', async () => {
 		await AuthService.logout('token-x');
 		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
 		const init = call[1] as any;
@@ -90,12 +90,12 @@ describe('AuthService', () => {
 		expect(url).toContain('password?=pw');
 	});
 
-	test('verifyToken calls GET /api/token/verify with Authorization header', async () => {
+	test('verifyToken calls GET /token/verify with Authorization header', async () => {
 		await AuthService.verifyToken('tok-1');
 		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
 		const url = call[0] as string;
 		const init = call[1] as any;
-		expect(url).toBe('https://api.example/api/token/verify');
+		expect(url).toBe('https://api.example/token/verify');
 		expect(init.method).toBe('GET');
 		expect(init.headers.Authorization).toBe('Bearer tok-1');
 	});

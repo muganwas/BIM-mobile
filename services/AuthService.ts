@@ -59,7 +59,7 @@ export async function setupTotp({
 	secret: string;
 	otp: string;
 }) {
-	return apiFetch((apiBaseUrl || '') + '/api/2fa-setup', {
+	return apiFetch((apiBaseUrl || '') + '/2fa-setup', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ setup_token, secret, otp }),
@@ -67,7 +67,7 @@ export async function setupTotp({
 }
 
 export async function logout(token: string) {
-	return apiFetch((apiBaseUrl || '') + '/api/logout', {
+	return apiFetch((apiBaseUrl || '') + '/logout', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export async function getAuthToken({
 }
 
 export async function verifyToken(token: string) {
-	return apiFetch((apiBaseUrl || '') + '/api/token/verify', {
+	return apiFetch((apiBaseUrl || '') + '/token/verify', {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ export async function verifyToken(token: string) {
 }
 
 export async function refreshToken(token: string) {
-	return apiFetch((apiBaseUrl || '') + '/api/token/refresh', {
+	return apiFetch((apiBaseUrl || '') + '/token/refresh', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

@@ -17,7 +17,8 @@ export async function fetchDashboard(token?: string) {
 }
 
 export async function fetchPurchases(token?: string) {
-	return apiFetch((apiBaseUrl || '') + '/purchases', {
+	console.log({ token, apiBaseUrl });
+	return apiFetch((apiBaseUrl || '') + `/transactions`, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});

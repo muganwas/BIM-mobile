@@ -49,7 +49,7 @@ describe('UserService', () => {
 		const call0 = (mockApiFetch.mock.calls[0] as any[]) || [];
 		const purchasesUrl = call0[0] as string;
 		const purchasesInit = call0[1] as any;
-		expect(purchasesUrl).toBe('https://api.example/purchases');
+		expect(purchasesUrl).toBe('https://api.example/transactions');
 		expect(purchasesInit.headers.Authorization).toBe('Bearer t1');
 
 		const call1 = (mockApiFetch.mock.calls[1] as any[]) || [];
