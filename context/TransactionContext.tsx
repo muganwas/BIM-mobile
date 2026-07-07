@@ -199,15 +199,18 @@ export const TransactionProvider = ({
 	const fetchPurchases = useCallback(
 		async () => {
 			try {
+				console.log('fetchPurchases: fetching purchases from API');
 				const res = await UserService.fetchPurchases(authToken ?? undefined);
 				if (res && res.ok) {
 					const json = await res.json();
+					console.log('fetchPurchases: fetched purchases from API', json);
 					if (Array.isArray(json.purchases))
 						setPurchases(json.purchases as MicroTransaction[]);
 					if (Array.isArray(json.voucherUsers))
 						setVoucherUsers(json.voucherUsers as VoucherUser[]);
 					return;
 				}
+				console.log('fetchPurchases: API response not OK', res);
 			} catch (e) {
 				console.error('fetchPurchases: failed to fetch from API', e);
 			}

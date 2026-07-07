@@ -55,6 +55,7 @@ export default function TransactionsScreen() {
 		}
 	}, [fetchPurchases, user]);
 	const t = translations[language].categories.transactions;
+	console.log({ purchases });
 
 	// Filters state
 	const [startDate, setStartDate] = useState<Date | null>(null);
@@ -82,13 +83,34 @@ export default function TransactionsScreen() {
 	const [page, setPage] = useState(1);
 	const pageSize = 10;
 
+	// Auto-fetch purchases on an interval when the list is empty.
+	// Rate-limited to at most 2 calls per minute (every 30s).
+	// Manual refresh (pull-to-refresh) bypasses this limit.
+	const autoFetchIntervalMs = 30_000;
+	const lastAutoFetchRef = useRef(0);
+
 	useEffect(() => {
-		if (user && purchases.length === 0) {
-			(async () => {
-				await fetchPurchases();
-			})();
+		if (!user) return;
+
+		const intervalId = setInterval(() => {
+			const now = Date.now();
+			if (now - lastAutoFetchRef.current < autoFetchIntervalMs) return;
+
+			lastAutoFetchRef.current = now;
+			fetchPurchases().catch(() => {});
+		}, autoFetchIntervalMs);
+
+		// Run once immediately on mount (or when user becomes available)
+		if (purchases.length === 0) {
+			lastAutoFetchRef.current = Date.now();
+			fetchPurchases().catch(() => {});
 		}
-	}, [user, purchases, fetchPurchases]);
+
+		return () => clearInterval(intervalId);
+		// fetchPurchases & purchases are intentionally excluded to avoid
+		// re-triggering the interval on every state change.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [user]);
 
 	// Derived filtered/paginated data
 	const filtered = useMemo(() => {
