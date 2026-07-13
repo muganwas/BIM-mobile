@@ -55,7 +55,7 @@ export default function TransactionsScreen() {
 		}
 	}, [fetchPurchases, user]);
 	const t = translations[language].categories.transactions;
-	console.log({ purchases });
+	console.log({ router: purchases && purchases[0]?.router });
 
 	// Filters state
 	const [startDate, setStartDate] = useState<Date | null>(null);
@@ -115,8 +115,8 @@ export default function TransactionsScreen() {
 	// Derived filtered/paginated data
 	const filtered = useMemo(() => {
 		return purchases.filter((p) => {
-			const inStart = startDate ? p.date >= startDate : true;
-			const inEnd = endDate ? p.date <= endDate : true;
+			const inStart = startDate ? p.created_at >= startDate : true;
+			const inEnd = endDate ? p.created_at <= endDate : true;
 			const matchesStatus =
 				!status || status.toLowerCase() === t.all.toLowerCase()
 					? true
@@ -130,9 +130,13 @@ export default function TransactionsScreen() {
 	}, [purchases, startDate, endDate, status, type, t.all]);
 
 	const totalBalance = useMemo(
-		() => filtered.reduce((sum, p) => sum + (p.amount || 0), 0),
-		[filtered]
+		() => {
+			// every purchase has a router, so we can safely get the last purchase's router balance
+			return purchases[purchases.length - 1]?.router?.balance ?? 0;
+		},
+		[purchases]
 	);
+	console.log('Total balance', totalBalance);
 
 	const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 	const paged = useMemo(() => {
@@ -483,7 +487,7 @@ export default function TransactionsScreen() {
 										lightColor={textLight}
 										darkColor={textDark}
 									>
-										{trans.method.type}
+										{trans.type}
 									</ThemedText>
 									{/* Reason */}
 									<ThemedText
@@ -525,7 +529,7 @@ export default function TransactionsScreen() {
 										lightColor={textLight}
 										darkColor={textDark}
 									>
-										{trans.routerName}
+										{trans.router.name}
 									</ThemedText>
 									{/* Transaction Date */}
 									<ThemedText
@@ -534,7 +538,7 @@ export default function TransactionsScreen() {
 										lightColor={textLight}
 										darkColor={textDark}
 									>
-										{new Date(trans.date).toLocaleDateString()}
+										{new Date(trans.created_at).toLocaleDateString()}
 									</ThemedText>
 								</ThemedView>
 							))}

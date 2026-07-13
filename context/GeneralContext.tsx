@@ -170,6 +170,11 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [user, setUser] = useState<UserProps | null>(null);
 	// Keep an in-memory copy of the auth token for fast checks and guards
 	const [authToken, setAuthToken] = useState<string | null>(null);
+	// Ref always in sync with latest authToken so attemptRefresh never captures a stale value
+	const authTokenRef = React.useRef<string | null>(null);
+	React.useEffect(() => {
+		authTokenRef.current = authToken;
+	}, [authToken]);
 	const [notifications, setNotifications] = useState<notifications[]>([]);
 	const [pendingPhone, setPendingPhone] = useState<string | null>(null);
 	// Which 2FA method is expected for the current pending verification
@@ -375,10 +380,14 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	}, [tr, router]);
 
 	// Attempt a single token refresh on demand. Returns the new token on success, or null.
+	// Uses a ref for authToken to avoid stale closures — after a successful refresh,
+	// in-flight requests that still hold the old token would fail if they attempted
+	// to refresh an already-rotated token.
 	const attemptRefresh = React.useCallback(async (): Promise<string | null> => {
-		if (!authToken) return null;
+		const currentToken = authTokenRef.current;
+		if (!currentToken) return null;
 		try {
-			const tokenVal = String(authToken);
+			const tokenVal = String(currentToken);
 			if (authDebug)
 				console.debug(
 					'attemptRefresh: calling refresh endpoint, token prefix=',
@@ -414,7 +423,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			if (authDebug) console.error('attemptRefresh: error', e);
 			return null;
 		}
-	}, [authToken, authDebug]);
+	}, [authDebug]);
 
 	// Register API interceptor callbacks
 	useEffect(() => {
@@ -1035,6 +1044,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	// the result into `user.dashboard`. Returns true on success.
 	const refreshDashboard = React.useCallback(
 		async (force = false): Promise<boolean> => {
+			console.log({ force, authToken });
 			if (!user || !authToken) return false;
 
 			// If not forced, skip fetching when dashboard-like data already exists

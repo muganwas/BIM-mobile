@@ -190,8 +190,11 @@ export interface MicroTransaction {
 	status: TransactionStatus; // Status of the micro transaction
 	routerName: string; // Name of the router associated with the micro transaction
 	date: Date;
+	created_at: Date; // Timestamp of when the micro transaction was created
 	reason: 'wifi' | 'subscription' | 'other'; // Reason for the micro transaction
 	description?: string; // Optional description for the micro transaction
+	type: TransactionType; // Type of the micro transaction
+	router: ApiRouter
 	method: TransactionMethod; // Reference to the transaction method used
 }
 

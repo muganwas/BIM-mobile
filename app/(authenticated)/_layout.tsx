@@ -198,6 +198,7 @@ export default function DrawerLayout() {
 		online,
 		handleGoBack,
 		authToken,
+		verifyingAuth,
 	} = useGeneral();
 	const drawerBackground = useThemeColor({}, 'drawerBackground');
 	const drawerActiveBackground = useThemeColor({}, 'drawerActiveBackground');
@@ -210,14 +211,14 @@ export default function DrawerLayout() {
 
 	const router = useRouter();
 
-	// Redirect to login if no auth token is present. Render nothing while redirecting
-	// to avoid flashing protected UI. useRouter is safe to call at top-level in the
-	// component body and React.useEffect handles the navigation side-effect.
+	// Redirect to login only after auth verification is complete and no token is present.
+	// During startup, verifyingAuth is true while the token is loaded from SecureStore
+	// and verified with the backend — we must wait for this to finish before deciding.
 	React.useEffect(() => {
-		if (!authToken) {
+		if (!authToken && !verifyingAuth) {
 			router.replace('/(auth)/login');
 		}
-	}, [authToken, router]);
+	}, [authToken, verifyingAuth, router]);
 
 	if (!authToken) {
 		return (

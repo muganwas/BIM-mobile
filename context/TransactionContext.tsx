@@ -18,6 +18,7 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
+	useRef,
 	useState,
 } from 'react';
 import { useGeneral } from './GeneralContext';
@@ -200,21 +201,19 @@ export const TransactionProvider = ({
 		async () => {
 			try {
 				if (!authToken) {
-					console.error('fetchPurchases: No authentication token available');
-					return handleLogout(); // Ensure user is logged out if no token
+					return handleLogout();
 				}
-				console.log('fetchPurchases: fetching purchases from API');
-				const res = await UserService.fetchPurchases(authToken); // Adjust parameters as needed
+				const res = await UserService.fetchPurchases(authToken);
 				if (res && res.ok) {
 					const json = await res.json();
-					console.log('fetchPurchases: fetched purchases from API', json.transactions.links);
-					if (Array.isArray(json.purchases))
-						setPurchases(json.purchases as MicroTransaction[]);
+					// API v1 returns paginated response: { transactions: { data: [...], links: [...] } }
+					const txData = json.transactions?.data;
+					if (Array.isArray(txData))
+						setPurchases(txData as MicroTransaction[]);
 					if (Array.isArray(json.voucherUsers))
 						setVoucherUsers(json.voucherUsers as VoucherUser[]);
 					return;
 				}
-				console.log('fetchPurchases: API response not OK', res);
 			} catch (e) {
 				console.error('fetchPurchases: failed to fetch from API', e);
 			}
@@ -224,119 +223,127 @@ export const TransactionProvider = ({
 		[authToken, handleLogout]
 	);
 
+	// Prevent re-running the data-loading effect on every token rotation.
+	// Once data is loaded for the current user session, subsequent runs
+	// (caused by user being re-set from attemptRefresh) are skipped.
+	const dataLoadedRef = useRef(false);
+
+	// Dashboard data arrives asynchronously: refreshDashboard in GeneralContext
+	// fetches /dashboard and stores it in user.dashboard AFTER the initial login.
+	// Process it in a separate effect that re-runs whenever user changes.
 	useEffect(() => {
+		if (!user) return;
+		const sd = ((user as any)?.dashboard ?? (user as any)) || null;
+		if (
+			sd &&
+			(sd.recentTransactions ||
+				sd.todayTransactions !== undefined ||
+				sd.routerBalances ||
+				sd.chartData)
+		) {
+			setServerDashboard(sd);
+			try {
+				setDailyPurchasesTotal(Number(sd.todayTransactions) || 0);
+				setWeeklyPurchasesTotal(Number(sd.weekTransactions) || 0);
+				setMonthlyPurchasesTotal(Number(sd.monthTransactions) || 0);
+				if (Array.isArray(sd.chartData)) {
+					setLastSevenDaysPurchases(
+						sd.chartData.map((c: any) => ({
+							date: new Date(c.date),
+							day: new Date(c.date).toLocaleDateString('en-US', {
+								weekday: 'long',
+							}),
+							amount: Number(c.total) || 0,
+						}))
+					);
+				}
+				if (Array.isArray(sd.recentTransactions)) {
+					setLastFiveTransactions(
+						sd.recentTransactions.slice(0, 5).map((rt: any) => ({
+							id: rt.id ?? String(rt.created_at || Math.random()),
+							amount: Number(rt.amount) || 0,
+							status: rt.status || 'completed',
+							routerName: rt.router_name || rt.router_id || '',
+							date: rt.created_at ? new Date(rt.created_at) : new Date(),
+							reason: rt.reason || 'other',
+							description: undefined,
+							method: { type: rt.type || 'mobile-money' },
+						}))
+					);
+				}
+				if (Array.isArray(sd.routerBalances)) {
+					setPurchasesPerRouter(
+						sd.routerBalances.map((rb: any) => ({
+							name: rb.name,
+							location: rb.location ?? '',
+							amount: Number(rb.balance) || 0,
+						}))
+					);
+				}
+				setDailyVoucherUsersTotal(Number(sd.todayUsers) || 0);
+				setWeeklyVoucherUsersTotal(Number(sd.weekUsers) || 0);
+				setMonthlyVoucherUsersTotal(Number(sd.monthUsers) || 0);
+				if (Array.isArray(sd.voucherUsers)) {
+					setLastSevenVoucherUsers(
+						sd.voucherUsers.slice(0, 7) as VoucherUser[]
+					);
+				}
+			} catch (e) {
+				console.error(
+					'TransactionContext: failed to map server dashboard metrics',
+					e
+				);
+			}
+		}
+	}, [user]);
+
+	// Load API data (routers, packages, purchases, banks, documents) once per session.
+	useEffect(() => {
+		if (!user) {
+			dataLoadedRef.current = false;
+			return;
+		}
+		if (dataLoadedRef.current) return;
+		dataLoadedRef.current = true;
+
 		(async () => {
-			if (user) {
-				// If the backend returned pre-computed dashboard data with the user
-				// prefer it as the initial state rather than generating local mock data.
-				const sd = ((user as any)?.dashboard ?? (user as any)) || null;
-				if (
-					sd &&
-					(sd.recentTransactions ||
-						sd.todayTransactions !== undefined ||
-						sd.routerBalances ||
-						sd.chartData)
-				) {
-					setServerDashboard(sd);
-					try {
-						setDailyPurchasesTotal(Number(sd.todayTransactions) || 0);
-						setWeeklyPurchasesTotal(Number(sd.weekTransactions) || 0);
-						setMonthlyPurchasesTotal(Number(sd.monthTransactions) || 0);
-						if (Array.isArray(sd.chartData)) {
-							setLastSevenDaysPurchases(
-								sd.chartData.map((c: any) => ({
-									date: new Date(c.date),
-									day: new Date(c.date).toLocaleDateString('en-US', {
-										weekday: 'long',
-									}),
-									amount: Number(c.total) || 0,
-								}))
-							);
-						}
-						if (Array.isArray(sd.recentTransactions)) {
-							setLastFiveTransactions(
-								sd.recentTransactions.slice(0, 5).map((rt: any) => ({
-									id: rt.id ?? String(rt.created_at || Math.random()),
-									amount: Number(rt.amount) || 0,
-									status: rt.status || 'completed',
-									routerName: rt.router_name ||
-										rt.router_id ||
-										'',
-									date: rt.created_at ? new Date(rt.created_at) : new Date(),
-									reason: rt.reason || 'other',
-									description: undefined,
-									method: { type: rt.type || 'mobile-money' },
-								}))
-							);
-						}
-						if (Array.isArray(sd.routerBalances)) {
-							setPurchasesPerRouter(
-								sd.routerBalances.map((rb: any) => ({
-									name: rb.name,
-									location: rb.location ?? '',
-									amount: Number(rb.balance) || 0,
-								}))
-							);
-						}
-						setDailyVoucherUsersTotal(Number(sd.todayUsers) || 0);
-						setWeeklyVoucherUsersTotal(Number(sd.weekUsers) || 0);
-						setMonthlyVoucherUsersTotal(Number(sd.monthUsers) || 0);
-						if (Array.isArray(sd.voucherUsers)) {
-							setLastSevenVoucherUsers(
-								sd.voucherUsers.slice(0, 7) as VoucherUser[]
-							);
-						}
-					} catch (e) {
-						console.error(
-							'TransactionContext: failed to map server dashboard metrics',
-							e
-						);
+			setLoading(true);
+			try {
+				// Ensure routers are fetched first so purchases can reference them.
+				await fetchRouters();
+				const fetchOperations = [
+					{ name: 'Packages', fn: fetchPackages() },
+					{ name: 'Micro Transactions', fn: fetchPurchases() },
+					{ name: 'Banks', fn: fetchBanks() },
+					{ name: 'Documents', fn: fetchDocuments() },
+				];
+
+				const results = await Promise.allSettled(
+					fetchOperations.map((op) => op.fn)
+				);
+
+				results.forEach((result, index) => {
+					const operationName = fetchOperations[index].name;
+					if (result.status === 'rejected') {
+						console.error(`Failed to fetch ${operationName}:`, result.reason);
 					}
-				}
+				});
 
-				setLoading(true);
-				try {
-					// Ensure routers are fetched first so purchases can reference them.
-					const routersData = await fetchRouters();
+				const failures = results.filter(
+					(result) => result.status === 'rejected'
+				);
 
-					const fetchOperations = [
-						{ name: 'Packages', fn: fetchPackages() },
-						{
-							name: 'Micro Transactions',
-							fn: fetchPurchases(),
-						},
-						{ name: 'Banks', fn: fetchBanks() },
-						{ name: 'Documents', fn: fetchDocuments() },
-					];
-
-					const results = await Promise.allSettled(
-						fetchOperations.map((op) => op.fn)
+				if (failures.length > 0) {
+					ShowAlert(
+						`Failed to load ${failures.length} out of ${results.length} data sources`,
+						'Error'
 					);
-
-					// Log errors if any; successful fetches are not noisy in production
-					results.forEach((result, index) => {
-						const operationName = fetchOperations[index].name;
-						if (result.status === 'rejected') {
-							console.error(`Failed to fetch ${operationName}:`, result.reason);
-						}
-					});
-
-					const failures = results.filter(
-						(result) => result.status === 'rejected'
-					);
-
-					if (failures.length > 0) {
-						ShowAlert(
-							`Failed to load ${failures.length} out of ${results.length} data sources`,
-							'Error'
-						);
-					}
-				} catch (error) {
-					console.error('Unexpected error during data fetching:', error);
-					ShowAlert('Unexpected error occurred while loading data', 'Error');
-				} finally {
-					setLoading(false);
 				}
+			} catch (error) {
+				console.error('Unexpected error during data fetching:', error);
+				ShowAlert('Unexpected error occurred while loading data', 'Error');
+			} finally {
+				setLoading(false);
 			}
 		})();
 	}, [

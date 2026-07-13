@@ -57,6 +57,7 @@ export default function HomeScreen() {
 	const [refreshing, setRefreshing] = useState(false);
 	const onRefresh = useCallback(async () => {
 		setRefreshing(true);
+		console.log('Refreshing dashboard...');
 		try {
 			// Force a refresh to bypass the short-circuit when dashboard already exists
 			await (refreshDashboard
