@@ -5,10 +5,10 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import {
-	StyleSheet,
-	TextStyle,
-	TouchableOpacity,
-	ViewStyle,
+    StyleSheet,
+    TextStyle,
+    TouchableOpacity,
+    ViewStyle,
 } from 'react-native';
 import { SFSymbols6_0 } from 'sf-symbols-typescript';
 
@@ -25,6 +25,7 @@ export type ThemedButtonProps = {
 	icon?: SFSymbols6_0;
 	iconColor?: string;
 	disabled?: boolean;
+	loading?: boolean;
 };
 
 export function ThemedButton({
@@ -40,6 +41,7 @@ export function ThemedButton({
 	iconColor,
 	numberOfLines,
 	disabled,
+	loading,
 }: ThemedButtonProps) {
 	const colorScheme = useColorScheme() ?? 'light';
 	const presetBg = useThemeColor({}, 'tint');
@@ -59,19 +61,19 @@ export function ThemedButton({
 					backgroundColor,
 					maxWidth: '100%',
 					flexShrink: 0,
-					opacity: disabled ? 0.6 : 1,
+					opacity: disabled || loading ? 0.6 : 1,
 				},
 				style,
 			]}
 			onPress={onPress}
-			disabled={!!disabled}
+			disabled={!!disabled || !!loading}
 		>
 			<ThemedView
 				style={styles.buttonContent}
 				lightColor='transparent'
 				darkColor='transparent'
 			>
-				{icon && (
+				{icon && !loading && (
 					<IconSymbol name={icon} size={20} color={iconColor || textColor} />
 				)}
 				<ThemedText
@@ -84,7 +86,7 @@ export function ThemedButton({
 					lightColor={textColor}
 					darkColor={textColor}
 				>
-					{title}
+					{loading ? '…' : title}
 				</ThemedText>
 			</ThemedView>
 		</TouchableOpacity>

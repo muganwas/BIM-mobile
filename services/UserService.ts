@@ -9,6 +9,14 @@ function buildHeaders(token?: string) {
 	return headers;
 }
 
+export interface TransactionFilters {
+	start_date?: string; // YYYY-MM-DD
+	end_date?: string;   // YYYY-MM-DD
+	status?: string;
+	type?: string;
+	router_id?: string;
+}
+
 export async function fetchDashboard(token?: string) {
 	return apiFetch((apiBaseUrl || '') + '/dashboard', {
 		method: 'GET',
@@ -16,8 +24,22 @@ export async function fetchDashboard(token?: string) {
 	});
 }
 
-export async function fetchPurchases(token?: string) {
-	return apiFetch((apiBaseUrl || '') + `/transactions`, {
+export async function fetchPurchases(token?: string, filters?: TransactionFilters) {
+	let url = (apiBaseUrl || '') + '/transactions';
+
+	// Build query string from non-empty filter values
+	if (filters) {
+		const params = new URLSearchParams();
+		Object.entries(filters).forEach(([key, value]) => {
+			if (value !== undefined && value !== null && value !== '') {
+				params.append(key, value);
+			}
+		});
+		const qs = params.toString();
+		if (qs) url += '?' + qs;
+	}
+
+	return apiFetch(url, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});

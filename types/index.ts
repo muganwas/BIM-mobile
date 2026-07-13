@@ -183,7 +183,7 @@ export type TransactionType =
 	| 'cash'
 	| 'mobile-money';
 
-export type TransactionStatus = 'pending' | 'completed' | 'failed';
+export type TransactionStatus = 'pending' | 'successful' | 'failed';
 export interface MicroTransaction {
 	id: string;
 	amount: number;

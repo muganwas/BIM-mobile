@@ -285,6 +285,8 @@ const translations: Translations = {
 				all: 'All',
 				approved: 'Approved',
 				pending: 'Pending',
+				successful: 'Successful',
+				failed: 'Failed',
 				debit: 'Debit',
 				credit: 'Credit',
 				colHash: '#',

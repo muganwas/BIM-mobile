@@ -5,6 +5,7 @@ import { ThemedDropdown } from '@/components/ThemedDropdown';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
+import { apiBaseUrl } from '@/constants/API';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
@@ -12,8 +13,9 @@ import { useTransaction } from '@/context/TransactionContext';
 import { formatAmount } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
+import type { TransactionFilters } from '@/services/UserService';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function TransactionsScreen() {
@@ -38,22 +40,25 @@ export default function TransactionsScreen() {
 	const dangerButton = useThemeColor({}, 'dangerButton');
 	const mutedTextLight = useThemeColor({}, 'mutedText', 'light');
 	const mutedTextDark = useThemeColor({}, 'mutedText', 'dark');
-	const { purchases, fetchPurchases } = useTransaction();
-	const { user, language } = useGeneral();
+	const { purchases, fetchPurchases, totalAmount } = useTransaction();
+	const { user, language, authToken } = useGeneral();
 
 	const [refreshing, setRefreshing] = useState(false);
+	const [filterLoading, setFilterLoading] = useState(false);
+
+	// Keep a ref of the active filters so the auto-fetch interval can reuse them
+	const activeFiltersRef = useRef<TransactionFilters | undefined>(undefined);
 
 	const handleRefresh = useCallback(async () => {
 		setRefreshing(true);
 		try {
-			if (user) await fetchPurchases();
-			else await fetchPurchases();
+			await fetchPurchases(activeFiltersRef.current);
 		} catch (e) {
 			console.error('[TransactionsScreen] refresh failed', e);
 		} finally {
 			setRefreshing(false);
 		}
-	}, [fetchPurchases, user]);
+	}, [fetchPurchases]);
 	const t = translations[language].categories.transactions;
 	console.log({ router: purchases && purchases[0]?.router });
 
@@ -66,7 +71,7 @@ export default function TransactionsScreen() {
 	// Dropdown local
 	const [showStatusDd, setShowStatusDd] = useState(false);
 	const [showTypeDd, setShowTypeDd] = useState(false);
-	const statusOptions = useMemo(() => [t.all, t.pending, t.approved], [t]);
+	const statusOptions = useMemo(() => [t.all, t.pending, t.successful, t.failed], [t]);
 	const typeOptions = useMemo(() => [t.all, t.debit, t.credit], [t]);
 
 	// Refs for dropdown containers (avoid any-casts)
@@ -86,6 +91,7 @@ export default function TransactionsScreen() {
 	// Auto-fetch purchases on an interval when the list is empty.
 	// Rate-limited to at most 2 calls per minute (every 30s).
 	// Manual refresh (pull-to-refresh) bypasses this limit.
+	// Respects any active filters so filtered views stay up-to-date.
 	const autoFetchIntervalMs = 30_000;
 	const lastAutoFetchRef = useRef(0);
 
@@ -97,13 +103,13 @@ export default function TransactionsScreen() {
 			if (now - lastAutoFetchRef.current < autoFetchIntervalMs) return;
 
 			lastAutoFetchRef.current = now;
-			fetchPurchases().catch(() => {});
+			fetchPurchases(activeFiltersRef.current).catch(() => {});
 		}, autoFetchIntervalMs);
 
 		// Run once immediately on mount (or when user becomes available)
 		if (purchases.length === 0) {
 			lastAutoFetchRef.current = Date.now();
-			fetchPurchases().catch(() => {});
+			fetchPurchases(activeFiltersRef.current).catch(() => {});
 		}
 
 		return () => clearInterval(intervalId);
@@ -112,37 +118,12 @@ export default function TransactionsScreen() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user]);
 
-	// Derived filtered/paginated data
-	const filtered = useMemo(() => {
-		return purchases.filter((p) => {
-			const inStart = startDate ? p.created_at >= startDate : true;
-			const inEnd = endDate ? p.created_at <= endDate : true;
-			const matchesStatus =
-				!status || status.toLowerCase() === t.all.toLowerCase()
-					? true
-					: p.status.toLowerCase() === status.toLowerCase();
-			const matchesType =
-				!type || type.toLowerCase() === t.all.toLowerCase()
-					? true
-					: p.method.type.toLowerCase() === type.toLowerCase();
-			return inStart && inEnd && matchesStatus && matchesType;
-		});
-	}, [purchases, startDate, endDate, status, type, t.all]);
-
-	const totalBalance = useMemo(
-		() => {
-			// every purchase has a router, so we can safely get the last purchase's router balance
-			return purchases[purchases.length - 1]?.router?.balance ?? 0;
-		},
-		[purchases]
-	);
-	console.log('Total balance', totalBalance);
-
-	const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+	// Pagination — server handles filtering, so paginate purchases directly
+	const totalPages = Math.max(1, Math.ceil(purchases.length / pageSize));
 	const paged = useMemo(() => {
 		const start = (page - 1) * pageSize;
-		return filtered.slice(start, start + pageSize);
-	}, [filtered, page]);
+		return purchases.slice(start, start + pageSize);
+	}, [purchases, page]);
 
 	// Predefine table headers (so metadata like length is known before render)
 	const txHeaders = useMemo(
@@ -158,21 +139,141 @@ export default function TransactionsScreen() {
 		[t]
 	);
 
-	// Button handlers (stubs)
-	const handleApplyFilters = () => {
-		// Reset to first page; extend to trigger fetch if needed
+	// Button handlers
+	const handleApplyFilters = useCallback(async () => {
+		// Build filter payload – only include non-"All" values so the server
+		// returns everything when no specific filter is selected.
+		const filters: TransactionFilters = {};
+
+		if (startDate) {
+			// Format as YYYY-MM-DD
+			const y = startDate.getFullYear();
+			const m = String(startDate.getMonth() + 1).padStart(2, '0');
+			const d = String(startDate.getDate()).padStart(2, '0');
+			filters.start_date = `${y}-${m}-${d}`;
+		}
+		if (endDate) {
+			const y = endDate.getFullYear();
+			const m = String(endDate.getMonth() + 1).padStart(2, '0');
+			const d = String(endDate.getDate()).padStart(2, '0');
+			filters.end_date = `${y}-${m}-${d}`;
+		}
+		if (status && status.toLowerCase() !== t.all.toLowerCase()) {
+			filters.status = status.toLowerCase();
+		}
+		if (type && type.toLowerCase() !== t.all.toLowerCase()) {
+			filters.type = type.toLowerCase();
+		}
+
+		// Persist for auto-fetch
+		activeFiltersRef.current = Object.keys(filters).length > 0 ? filters : undefined;
+
+		setFilterLoading(true);
 		setPage(1);
-	};
+		try {
+			await fetchPurchases(filters);
+		} catch (e) {
+			console.error('[TransactionsScreen] applyFilters failed', e);
+		} finally {
+			setFilterLoading(false);
+		}
+	}, [startDate, endDate, status, type, t.all, fetchPurchases]);
 
-	const handleExportExcel = () => {
-		// TODO: Implement export to Excel
-		console.log('Export to Excel clicked');
-	};
+	const handleExportExcel = useCallback(async () => {
+		try {
+			const params = new URLSearchParams();
+			if (startDate) {
+				const y = startDate.getFullYear();
+				const m = String(startDate.getMonth() + 1).padStart(2, '0');
+				const d = String(startDate.getDate()).padStart(2, '0');
+				params.append('start_date', `${y}-${m}-${d}`);
+			}
+			if (endDate) {
+				const y = endDate.getFullYear();
+				const m = String(endDate.getMonth() + 1).padStart(2, '0');
+				const d = String(endDate.getDate()).padStart(2, '0');
+				params.append('end_date', `${y}-${m}-${d}`);
+			}
+			if (type && type.toLowerCase() !== t.all.toLowerCase()) {
+				params.append('type', type.toLowerCase());
+			}
+			if (status && status.toLowerCase() !== t.all.toLowerCase()) {
+				params.append('status', status.toLowerCase());
+			}
+			const qs = params.toString();
+			const url = `${apiBaseUrl || ''}/transactions/export/excel${qs ? '?' + qs : ''}`;
 
-	const handleExportPdf = () => {
-		// TODO: Implement export to PDF
-		console.log('Export to PDF clicked');
-	};
+			// Use a direct fetch with auth header to download the file
+			const headers: Record<string, string> = {};
+			if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+			const res = await fetch(url, { headers });
+			if (!res.ok) {
+				console.error('[TransactionsScreen] export Excel failed', res.status);
+				return;
+			}
+			const blob = await res.blob();
+			const reader = new FileReader();
+			reader.onload = () => {
+				if (typeof reader.result === 'string') {
+					Linking.openURL(reader.result);
+				}
+			};
+			reader.onerror = () => {
+				console.error('[TransactionsScreen] FileReader error');
+			};
+			reader.readAsDataURL(blob);
+		} catch (e) {
+			console.error('[TransactionsScreen] export Excel failed', e);
+		}
+	}, [startDate, endDate, type, status, t.all, authToken]);
+
+	const handleExportPdf = useCallback(async () => {
+		try {
+			const params = new URLSearchParams();
+			if (startDate) {
+				const y = startDate.getFullYear();
+				const m = String(startDate.getMonth() + 1).padStart(2, '0');
+				const d = String(startDate.getDate()).padStart(2, '0');
+				params.append('start_date', `${y}-${m}-${d}`);
+			}
+			if (endDate) {
+				const y = endDate.getFullYear();
+				const m = String(endDate.getMonth() + 1).padStart(2, '0');
+				const d = String(endDate.getDate()).padStart(2, '0');
+				params.append('end_date', `${y}-${m}-${d}`);
+			}
+			if (type && type.toLowerCase() !== t.all.toLowerCase()) {
+				params.append('type', type.toLowerCase());
+			}
+			if (status && status.toLowerCase() !== t.all.toLowerCase()) {
+				params.append('status', status.toLowerCase());
+			}
+			const qs = params.toString();
+			const url = `${apiBaseUrl || ''}/transactions/export/pdf${qs ? '?' + qs : ''}`;
+
+			// Use a direct fetch with auth header to download the file
+			const headers: Record<string, string> = {};
+			if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+			const res = await fetch(url, { headers });
+			if (!res.ok) {
+				console.error('[TransactionsScreen] export PDF failed', res.status);
+				return;
+			}
+			const blob = await res.blob();
+			const reader = new FileReader();
+			reader.onload = () => {
+				if (typeof reader.result === 'string') {
+					Linking.openURL(reader.result);
+				}
+			};
+			reader.onerror = () => {
+				console.error('[TransactionsScreen] FileReader error');
+			};
+			reader.readAsDataURL(blob);
+		} catch (e) {
+			console.error('[TransactionsScreen] export PDF failed', e);
+		}
+	}, [startDate, endDate, type, status, t.all, authToken]);
 
 	const handlePrevPage = () => {
 		setPage((p) => Math.max(1, p - 1));
@@ -309,6 +410,7 @@ export default function TransactionsScreen() {
 					<ThemedButton
 						title={t.applyFilters}
 						onPress={handleApplyFilters}
+						loading={filterLoading}
 						style={{ backgroundColor: bim }}
 						lightTextColor={whiteLight}
 						darkTextColor={whiteDark}
@@ -359,7 +461,7 @@ export default function TransactionsScreen() {
 								fontSize: fontSize['heading.two'],
 							}}
 						>
-							{formatAmount(totalBalance, 2)}
+							{formatAmount(totalAmount, 2)}
 						</ThemedText>
 					</ThemedView>
 				</ThemedView>

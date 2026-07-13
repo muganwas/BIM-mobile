@@ -3,6 +3,7 @@ import { ShowAlert } from '@/helpers';
 import { fetchBanks as serviceFetchBanks } from '@/services/BankService';
 import { fetchPackages as serviceFetchPackages } from '@/services/PackageService';
 import { fetchRouters as serviceFetchRouters } from '@/services/RouterService';
+import type { TransactionFilters } from '@/services/UserService';
 import * as UserService from '@/services/UserService';
 import {
 	Bank,
@@ -44,7 +45,10 @@ export interface TransactionContextType {
 	fetchBanks: () => Promise<void>;
 	fetchRouters: () => Promise<GetRoutersResponse | null>;
 	fetchPackages: () => Promise<void>;
-	fetchPurchases: () => Promise<void>;
+	fetchPurchases: (filters?: TransactionFilters) => Promise<void>;
+
+	// Server-computed total across all transactions (from /transactions total_amount)
+	totalAmount: number;
 
 	// Optional dashboard data provided by the server on successful login
 	serverDashboard?: any | null;
@@ -118,6 +122,9 @@ export const TransactionProvider = ({
 	const [lastSevenVoucherUsers, setLastSevenVoucherUsers] = useState<
 		VoucherUser[]
 	>([]);
+
+	// Server-computed total from /transactions response (total_amount)
+	const [totalAmount, setTotalAmount] = useState<number>(0);
 
 	const fetchDocuments = useCallback(
 		async () => {
@@ -198,18 +205,24 @@ export const TransactionProvider = ({
 	);
 
 	const fetchPurchases = useCallback(
-		async () => {
+		async (filters?: TransactionFilters) => {
 			try {
 				if (!authToken) {
 					return handleLogout();
 				}
-				const res = await UserService.fetchPurchases(authToken);
+				const res = await UserService.fetchPurchases(authToken, filters);
 				if (res && res.ok) {
 					const json = await res.json();
 					// API v1 returns paginated response: { transactions: { data: [...], links: [...] } }
 					const txData = json.transactions?.data;
 					if (Array.isArray(txData))
 						setPurchases(txData as MicroTransaction[]);
+					// Capture server-computed total_amount (respects active filters)
+					if (typeof json.total_amount === 'number') {
+						setTotalAmount(json.total_amount);
+					} else if (typeof json.total_amount === 'string') {
+						setTotalAmount(parseFloat(json.total_amount));
+					}
 					if (Array.isArray(json.voucherUsers))
 						setVoucherUsers(json.voucherUsers as VoucherUser[]);
 					return;
@@ -262,7 +275,7 @@ export const TransactionProvider = ({
 						sd.recentTransactions.slice(0, 5).map((rt: any) => ({
 							id: rt.id ?? String(rt.created_at || Math.random()),
 							amount: Number(rt.amount) || 0,
-							status: rt.status || 'completed',
+							status: rt.status || 'successful',
 							routerName: rt.router_name || rt.router_id || '',
 							date: rt.created_at ? new Date(rt.created_at) : new Date(),
 							reason: rt.reason || 'other',
@@ -378,6 +391,7 @@ export const TransactionProvider = ({
 				fetchRouters,
 				fetchPackages,
 				fetchPurchases,
+				totalAmount,
 				serverDashboard,
 				setServerDashboard,
 				// Dashboard-derived UI metrics

@@ -1,20 +1,20 @@
 import {
-	generateRandomInt,
-	generateRandomNumbers,
-	generateRandomString,
-	randomDateBetweenDaysAgo,
-	toLocalISOString,
+    generateRandomInt,
+    generateRandomNumbers,
+    generateRandomString,
+    randomDateBetweenDaysAgo,
+    toLocalISOString,
 } from '@/helpers';
 import {
-	Bank,
-	DocumentProps,
-	HardWareInfo,
-	InternetPackage,
-	MicroTransaction,
-	NetRouter,
-	TransactionMethod,
-	TransactionStatus,
-	VoucherUser,
+    Bank,
+    DocumentProps,
+    HardWareInfo,
+    InternetPackage,
+    MicroTransaction,
+    NetRouter,
+    TransactionMethod,
+    TransactionStatus,
+    VoucherUser,
 } from '@/types';
 
 const packageNames: InternetPackage['name'][] = [
@@ -134,7 +134,7 @@ export function generateMicroTransaction(
 	overrides: Partial<MicroTransaction> = {}
 ): MicroTransaction {
 	const date = overrides.date ?? randomDateBetweenDaysAgo(6);
-	const statuses: TransactionStatus[] = ['completed', 'pending', 'failed'];
+	const statuses: TransactionStatus[] = ['successful', 'pending', 'failed'];
 	return {
 		id: overrides.id ?? generateRandomNumbers(10),
 		amount: overrides.amount ?? generateRandomInt(1000, 20000),
