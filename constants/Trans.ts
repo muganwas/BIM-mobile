@@ -137,6 +137,7 @@ const translations: Translations = {
 				transactions: 'Transactions',
 				packages: 'Packages',
 				vouchers: 'Vouchers',
+				connector: 'Connector',
 				banks: 'Banks',
 				documents: 'Documents',
 				profile: 'My Profile',

@@ -79,6 +79,7 @@ const MAPPING: IconMapping = {
 		type: 'material-community',
 		name: 'calendar-month-outline',
 	},
+	key: { type: 'material-community', name: 'key' },
 	menu: { type: 'material-community', name: 'menu' },
 	account: { type: 'material-community', name: 'account-outline' },
 	cash: { type: 'material-community', name: 'cash-multiple' },

@@ -13,6 +13,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
+import { SecurityProvider } from '@/context/SecurityContext';
 import { TransactionProvider } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useRouter } from 'expo-router';
@@ -43,6 +44,7 @@ function CustomDrawerContent(props: any) {
 				'transactions',
 				'withdraw',
 				'banks',
+				'connector',
 				'documents',
 			]),
 		[]
@@ -109,6 +111,9 @@ function CustomDrawerContent(props: any) {
 						break;
 					case 'withdraw':
 						icon = <IconSymbol size={24} name='withdrawal' color={iconColor} />;
+						break;
+					case 'connector':
+						icon = <IconSymbol size={24} name='key' color={iconColor} />;
 						break;
 					case 'banks':
 						icon = <IconSymbol size={24} name='bank' color={iconColor} />;
@@ -232,6 +237,7 @@ export default function DrawerLayout() {
 
 	return (
 		<TransactionProvider>
+		<SecurityProvider>
 			<Drawer
 				drawerContent={(props: any) => <CustomDrawerContent {...props} />}
 				screenOptions={{
@@ -287,11 +293,13 @@ export default function DrawerLayout() {
 				<Drawer.Screen name='transactions' />
 				<Drawer.Screen name='withdraw' />
 				<Drawer.Screen name='banks' />
+				<Drawer.Screen name='connector' />
 				<Drawer.Screen name='documents' />
 				<Drawer.Screen name='profile' />
 				<Drawer.Screen name='notifications' />
 				{/* Add more drawer screens as needed */}
 			</Drawer>
+		</SecurityProvider>
 		</TransactionProvider>
 	);
 }
