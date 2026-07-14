@@ -1,4 +1,4 @@
-import { apiFetch, registerAuthCallbacks } from '@/helpers/api';
+import { apiFetch, registerAuthCallbacks, resetInterceptorState } from '@/helpers/api';
 
 // Mock helpers to avoid expo-constants issues
 jest.mock('@/helpers', () => ({
@@ -19,6 +19,7 @@ describe('apiFetch Interceptor', () => {
         onRefreshToken = jest.fn();
         onLogout = jest.fn();
         registerAuthCallbacks({ onRefreshToken, onLogout });
+        resetInterceptorState();
     });
 
     test('retries request on 401 if refresh succeeds', async () => {

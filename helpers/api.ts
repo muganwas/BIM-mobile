@@ -18,8 +18,24 @@ let authCallbacks: AuthCallbacks | null = null;
 let isRefreshing = false;
 let refreshSubscribers: ((token: string | null) => void)[] = [];
 
+// Prevent cascading refreshes: after a successful refresh, block
+// subsequent refresh attempts for a short cooldown period so that
+// in-flight requests with the new token don't trigger another cycle.
+let lastRefreshTime = 0;
+const REFRESH_COOLDOWN_MS = 5_000;
+
 export function registerAuthCallbacks(callbacks: AuthCallbacks) {
 	authCallbacks = callbacks;
+}
+
+/**
+ * Reset interceptor state. Useful in tests to clear cooldown and
+ * refresh flags between test cases.
+ */
+export function resetInterceptorState() {
+	isRefreshing = false;
+	refreshSubscribers = [];
+	lastRefreshTime = 0;
 }
 
 /**
@@ -43,6 +59,7 @@ function onRefreshComplete(token: string | null) {
  * It will add the header only when the request target appears to be the configured apiBaseUrl.
  * 
  * Handles 401 Unauthorized responses by attempting to refresh the token and retrying the request.
+ * Handles network errors with exponential backoff — no automatic logout for connectivity issues.
  */
 export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 	const url = typeof input === 'string' ? input : (input as Request).url;
@@ -79,80 +96,140 @@ export async function apiFetch(input: RequestInfo, init?: RequestInit) {
 		headers,
 	};
 
-	try {
-		let response = await fetch(input, mergedInit);
+	// ---- network-error retry with exponential backoff ----
+	const MAX_RETRIES = 3;
+	const BASE_DELAY_MS = 1_000; // 1s → 2s → 4s
 
-		// Intercept 401s if we have callbacks and aren't skipping
-		if (response.status === 401 && !skipInterceptor && authCallbacks) {
-			try {
-				console.log('API: 401 received, attempting token refresh...');
-				
-				// If a refresh is already in progress, wait for it
-				if (isRefreshing) {
-					console.log('API: Token refresh already in progress, waiting...');
-					const newToken = await new Promise<string | null>((resolve) => {
-						subscribeTokenRefresh((token) => {
-							resolve(token);
-						});
-					});
-					
-					if (newToken) {
-						console.log('API: Using refreshed token, retrying request...');
-						headers['Authorization'] = `Bearer ${newToken}`;
-						const retryInit = {
-							...mergedInit,
-							headers,
-						};
-						response = await fetch(input, retryInit);
-					} else {
-						console.log('API: Token refresh failed (from queue), logging out...');
-						authCallbacks.onLogout();
-					}
-				} else {
-					// We're the first to attempt refresh
-					isRefreshing = true;
-					const newToken = await authCallbacks.onRefreshToken();
-					isRefreshing = false;
-					
-					// Notify all waiting requests
-					onRefreshComplete(newToken);
-					
-					if (newToken) {
-						console.log('API: Token refresh successful, retrying request...');
-						// Update Authorization header with new token
-						headers['Authorization'] = `Bearer ${newToken}`;
-						const retryInit = {
-							...mergedInit,
-							headers,
-						};
-						response = await fetch(input, retryInit);
-					} else {
-						console.log('API: Token refresh failed, logging out...');
-						authCallbacks.onLogout();
-					}
-				}
-			} catch (e) {
-				isRefreshing = false;
-				onRefreshComplete(null);
-				console.error('API: Error during token refresh interceptor', e);
-				authCallbacks.onLogout();
+	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+		try {
+			let response = await fetch(input, mergedInit);
+
+			// -- 401 interception (auth token refresh) --
+			if (response.status === 401 && !skipInterceptor && authCallbacks) {
+				response = await handle401(response, input, mergedInit, headers);
 			}
+
+			return response;
+		} catch (error) {
+			const isNetworkError = error instanceof TypeError;
+
+			if (isNetworkError && attempt < MAX_RETRIES) {
+				const delay = BASE_DELAY_MS * Math.pow(2, attempt);
+				console.log(
+					`API: Network error, retrying in ${delay}ms ` +
+					`(attempt ${attempt + 1}/${MAX_RETRIES})…`
+				);
+				await new Promise((resolve) => setTimeout(resolve, delay));
+				continue;
+			}
+
+			// Exhausted retries or non-network error
+			if (isNetworkError) {
+				console.error(
+					`API: Request failed after ${MAX_RETRIES + 1} attempts:`,
+					error
+				);
+			} else {
+				console.error('API Request Failed:', error);
+			}
+			ShowAlert(
+				'Network request failed. Please check your connection.',
+				'Error'
+			);
+			return new Response(
+				JSON.stringify({
+					error: 'Network request failed',
+					message: 'Network request failed',
+				}),
+				{
+					status: 503,
+					statusText: 'Service Unavailable',
+					headers: { 'Content-Type': 'application/json' },
+				}
+			);
+		}
+	}
+
+	// TypeScript: unreachable, but satisfies the return type
+	throw new Error('unreachable');
+}
+
+/**
+ * Handle a 401 response: attempt token refresh and retry the original
+ * request. Network errors during this process are NOT treated as auth
+ * failures — they bubble up to the caller's retry loop.
+ */
+async function handle401(
+	response: Response,
+	input: RequestInfo,
+	mergedInit: RequestInit,
+	headers: Record<string, string>
+): Promise<Response> {
+	// Cooldown guard: if we just refreshed, don't trigger another
+	// cycle — in-flight requests with the new token can collide
+	// and cause cascading refreshes that eventually log the user out.
+	const now = Date.now();
+	if (now - lastRefreshTime < REFRESH_COOLDOWN_MS) {
+		console.log(
+			'API: 401 received but within refresh cooldown, returning 401 as-is'
+		);
+		return response;
+	}
+
+	console.log('API: 401 received, attempting token refresh...');
+
+	if (!authCallbacks) return response;
+
+	// If a refresh is already in progress, wait for it
+	if (isRefreshing) {
+		console.log('API: Token refresh already in progress, waiting...');
+		const newToken = await new Promise<string | null>((resolve) => {
+			subscribeTokenRefresh((token) => {
+				resolve(token);
+			});
+		});
+
+		if (newToken) {
+			console.log('API: Using refreshed token, retrying request...');
+			headers['Authorization'] = `Bearer ${newToken}`;
+			return await fetch(input, { ...mergedInit, headers });
 		}
 
+		// Refresh completed but returned null — auth failure, not network
+		console.log('API: Token refresh failed (from queue), logging out...');
+		authCallbacks.onLogout();
 		return response;
-	} catch (error) {
-		console.error('API Request Failed:', error);
-		ShowAlert('Network request failed. Please check your connection.', 'Error');
-		// Return a mock error response so the app doesn't crash on .json()
-		return new Response(
-			JSON.stringify({ error: 'Network request failed', message: 'Network request failed' }),
-			{
-				status: 503,
-				statusText: 'Service Unavailable',
-				headers: { 'Content-Type': 'application/json' },
-			}
-		);
 	}
+
+	// We're the first to attempt refresh
+	isRefreshing = true;
+	lastRefreshTime = Date.now();
+
+	let newToken: string | null = null;
+	try {
+		newToken = await authCallbacks.onRefreshToken();
+	} catch (e) {
+		// If onRefreshToken threw a network error, don't logout —
+		// the caller's retry loop will handle it.
+		isRefreshing = false;
+		lastRefreshTime = 0; // reset cooldown so next attempt can refresh
+		onRefreshComplete(null);
+		throw e; // bubble up to apiFetch's retry loop
+	}
+
+	isRefreshing = false;
+	onRefreshComplete(newToken);
+
+	if (newToken) {
+		console.log('API: Token refresh successful, retrying request...');
+		headers['Authorization'] = `Bearer ${newToken}`;
+		return await fetch(input, { ...mergedInit, headers });
+	}
+
+	// Token refresh returned null — genuine auth failure
+	console.log('API: Token refresh failed, logging out...');
+	authCallbacks.onLogout();
+	return response;
 }
 
 export default apiFetch;

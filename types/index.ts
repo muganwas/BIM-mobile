@@ -1,17 +1,6 @@
-import { DashboardSummary } from './dashboard';
-
-export interface User {
-	id: string;
-	name: string;
-	email: string;
-	phone?: string; // Optional, can be used for login or registration
-	avatarUrl?: string;
-	userLanguage?: langCode; // Optional, can be used to store user's preferred language
-	createdAt: Date;
-	updatedAt: Date;
-	// Optional typed dashboard data returned by some login/refresh endpoints
-	dashboard?: DashboardSummary;
-}
+import { VoucherUser } from './security';
+export * from './dashboard';
+export * from './security';
 
 export type headerOptions =
 	| 'notifications'
@@ -149,31 +138,6 @@ export interface DocumentProps {
 	url: string; // URL to access the document
 	createdAt?: Date;
 	updatedAt?: Date;
-}
-
-export interface Bank {
-	id: string;
-	name: string; // Name of the bank
-	accountNumber: string; // Account number of the bank
-	accountHolderName: string; // Name of the account holder
-	SWIFTCode: string;
-	currency: string;
-	branch?: string; // Optional branch name
-	createdAt?: Date;
-	updatedAt?: Date;
-}
-
-export interface VoucherUser {
-	voucherCode: string;
-	password?: string;
-	package: string;
-	status: 'active' | 'inactive';
-	macAddress: string; // MAC address of the user
-	uptime: number; // Uptime of the user in minutes
-	bytesIn: number; // Data usage in bytes
-	bytesOut: number; // Data usage in bytes
-	comment: string;
-	createdAt: string;
 }
 
 export type TransactionType =
@@ -315,4 +279,3 @@ export interface GetRouterHotspotUsersResponse {
 	users: HotspotUser[];
 }
 
-export * from './dashboard';
