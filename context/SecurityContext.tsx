@@ -1,10 +1,11 @@
 import * as ConnectorService from '@/services/ConnectorService';
 import type { WireguardKey } from '@/types/security';
 import {
-    createContext,
-    useCallback,
-    useContext,
-    useState,
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useState,
 } from 'react';
 import { useGeneral } from './GeneralContext';
 
@@ -13,7 +14,7 @@ export interface SecurityContextType {
 	wireguardKeys: WireguardKey[];
 	/** Whether a WireGuard operation is in flight */
 	loading: boolean;
-
+	setLoading: (loading: boolean) => void;
 	/** Fetch all WireGuard keys from the API */
 	fetchWireguardKeys: () => Promise<void>;
 	/** Create a new WireGuard key pair */
@@ -201,11 +202,22 @@ export const SecurityProvider = ({
 		[authToken, handleLogout, fetchWireguardKeys],
 	);
 
+
+	useEffect(() => {
+		(async function () {
+			if (authToken) {
+			
+			fetchWireguardKeys();
+		}
+		})();
+	}, [fetchWireguardKeys, authToken]);
+
 	return (
 		<SecurityContext.Provider
 			value={{
 				wireguardKeys,
 				loading,
+				setLoading,
 				fetchWireguardKeys,
 				createWireguardKey,
 				updateWireguardKey,

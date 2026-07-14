@@ -5,10 +5,10 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import {
-    StyleSheet,
-    TextStyle,
-    TouchableOpacity,
-    ViewStyle,
+	StyleSheet,
+	TextStyle,
+	TouchableOpacity,
+	ViewStyle,
 } from 'react-native';
 import { SFSymbols6_0 } from 'sf-symbols-typescript';
 
@@ -105,6 +105,8 @@ const styles = StyleSheet.create({
 	buttonContent: {
 		flexDirection: 'row',
 		alignItems: 'center',
+		justifyContent: 'space-between',
+		gap: 5,
 	},
 	buttonText: {
 		fontSize: 16,

@@ -55,6 +55,10 @@ const MAPPING: IconMapping = {
 		type: 'material-community',
 		name: 'eye-outline',
 	},
+	'eye.fill': {
+		type: 'material-community',
+		name: 'eye',
+	},
 	'edit.outline': {
 		type: 'material-community',
 		name: 'pencil-outline',
@@ -62,6 +66,10 @@ const MAPPING: IconMapping = {
 	'delete.outline': {
 		type: 'material-community',
 		name: 'delete-outline',
+	},
+	'delete.fill': {
+		type: 'material-community',
+		name: 'delete',
 	},
 	'password.outline': {
 		type: 'material-community',

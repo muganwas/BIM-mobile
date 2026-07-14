@@ -1097,6 +1097,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					}
 				} catch (e) {
 					console.debug('[GeneralContext] refreshDashboard parse failed:', e);
+					return false;
 				}
 				return false;
 			} catch (e) {
