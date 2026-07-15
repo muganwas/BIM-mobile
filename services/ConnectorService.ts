@@ -23,23 +23,25 @@ export async function getWireguardKey(id: string, token?: string) {
 	});
 }
 
-export async function createWireguardKey(keyName: string, token?: string) {
+export async function createWireguardKey(keyName: string, address?: string, port?: number, token?: string) {
 	return apiFetch((apiBaseUrl || '') + '/connector', {
 		method: 'POST',
 		headers: buildHeaders(token),
-		body: JSON.stringify({ key_name: keyName }),
+		body: JSON.stringify({ key_name: keyName, my_address: address, endpoint_port: port }),
 	});
 }
 
 export async function updateWireguardKey(
 	id: string,
 	keyName: string,
+	address?: string,
+	port?: string,
 	token?: string,
 ) {
 	return apiFetch((apiBaseUrl || '') + `/connector/${id}`, {
 		method: 'PUT',
 		headers: buildHeaders(token),
-		body: JSON.stringify({ key_name: keyName }),
+		body: JSON.stringify({ key_name: keyName, my_address: address, endpoint_port: port }),
 	});
 }
 

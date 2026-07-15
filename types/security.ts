@@ -39,7 +39,7 @@ export interface WireguardKey {
     endpoint_port: number;
     ip_address: string;
     my_address: string;
-    status: 'active' | 'inactive';
+    status: 'active' | 'inactive' | 'pending';
     radius_secret: string;
     radius_nas_shortname: string;
     radius_nas_type: string;
@@ -52,14 +52,14 @@ export interface WireguardKey {
 }
 
 export interface User {
-	id: string;
-	name: string;
-	email: string;
-	phone?: string; // Optional, can be used for login or registration
-	avatarUrl?: string;
-	userLanguage?: langCode; // Optional, can be used to store user's preferred language
-	createdAt: Date;
-	updatedAt: Date;
-	// Optional typed dashboard data returned by some login/refresh endpoints
-	dashboard?: DashboardSummary;
+    id: string;
+    name: string;
+    email: string;
+    phone?: string; // Optional, can be used for login or registration
+    avatarUrl?: string;
+    userLanguage?: langCode; // Optional, can be used to store user's preferred language
+    createdAt: Date;
+    updatedAt: Date;
+    // Optional typed dashboard data returned by some login/refresh endpoints
+    dashboard?: DashboardSummary;
 }

@@ -18,7 +18,7 @@ export interface SecurityContextType {
 	/** Fetch all WireGuard keys from the API */
 	fetchWireguardKeys: () => Promise<void>;
 	/** Create a new WireGuard key pair */
-	createWireguardKey: (keyName: string) => Promise<WireguardKey | null>;
+	createWireguardKey: (keyName: string, address?: string, port?: number) => Promise<WireguardKey | null>;
 	/** Update the display name of a WireGuard key */
 	updateWireguardKey: (id: string, keyName: string) => Promise<WireguardKey | null>;
 	/** Delete a WireGuard key */
@@ -69,14 +69,14 @@ export const SecurityProvider = ({
 	// --------------- create ---------------
 
 	const createWireguardKey = useCallback(
-		async (keyName: string): Promise<WireguardKey | null> => {
+		async (keyName: string, address?: string, port?: number): Promise<WireguardKey | null> => {
 			if (!authToken) {
 				handleLogout();
 				return null;
 			}
 			setLoading(true);
 			try {
-				const res = await ConnectorService.createWireguardKey(keyName, authToken);
+				const res = await ConnectorService.createWireguardKey(keyName, address, port, authToken);
 				if (res && res.ok) {
 					const json = await res.json();
 					const newKey = json.key as WireguardKey;
@@ -206,9 +206,9 @@ export const SecurityProvider = ({
 	useEffect(() => {
 		(async function () {
 			if (authToken) {
-			
-			fetchWireguardKeys();
-		}
+
+				fetchWireguardKeys();
+			}
 		})();
 	}, [fetchWireguardKeys, authToken]);
 

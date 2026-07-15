@@ -86,19 +86,19 @@ export default function CreateVouchers({
 	const headerTitle = titleOverride
 		? titleOverride
 		: mode === 'edit'
-		? translations[language].categories.buttons.saveChanges
-		: effectiveMultiple
-		? translations[language].categories.vouchers.createHotspotVouchers
-		: translations[language].categories.vouchers.createHotspotVoucher;
+			? translations[language].categories.buttons.saveChanges
+			: effectiveMultiple
+				? translations[language].categories.vouchers.createHotspotVouchers
+				: translations[language].categories.vouchers.createHotspotVoucher;
 
 	const primaryButtonTitle = (
 		primaryButtonLabelOverride
 			? primaryButtonLabelOverride
 			: mode === 'edit'
-			? translations[language].categories.buttons.saveChanges
-			: effectiveMultiple
-			? translations[language].categories.buttons.generateUsersAndPdf
-			: translations[language].categories.buttons.generateUserAndPdf
+				? translations[language].categories.buttons.saveChanges
+				: effectiveMultiple
+					? translations[language].categories.buttons.generateUsersAndPdf
+					: translations[language].categories.buttons.generateUserAndPdf
 	).toUpperCase();
 
 	const onCancel = () => toggleVisible(false);
@@ -126,7 +126,7 @@ export default function CreateVouchers({
 					extra,
 					true
 				);
-			} catch {}
+			} catch { }
 		};
 		doScroll();
 		setTimeout(doScroll, Platform.OS === 'ios' ? 260 : 80);
@@ -170,8 +170,8 @@ export default function CreateVouchers({
 				<ThemedInput
 					label={translations[language].categories.hotspots.title}
 					placeholder={translations[language].categories.hotspots.title}
-					value={hotspot.ssid}
-					setValue={() => {}}
+					value={hotspot.name}
+					setValue={() => { }}
 					editable={false}
 					style={{
 						backgroundColor: bg,

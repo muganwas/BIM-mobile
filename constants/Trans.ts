@@ -309,6 +309,7 @@ const translations: Translations = {
 			},
 			connector: {
 				title: 'Connector - Wireguard Keys',
+				overlayTitle: 'Generate Wireguard Key',
 				newKeyButton: 'Generate Key',
 				id: 'ID',
 				keyName: 'Key Name',
@@ -320,6 +321,7 @@ const translations: Translations = {
 				actions: 'Actions',
 				view: 'View',
 				delete: 'Delete',
+				cancel: 'Cancel',
 			},
 			documents: {
 				title: 'Documents',
