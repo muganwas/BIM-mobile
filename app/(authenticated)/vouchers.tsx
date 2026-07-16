@@ -29,7 +29,7 @@ export default function VouchersScreen() {
 	const whiteLight = useThemeColor({}, 'white', 'light');
 	const whiteDark = useThemeColor({}, 'white', 'dark');
 	const router = useRouter();
-	const { packages, fetchPackages, routers } = useTransaction();
+	const { packages, fetchPackages, routers, } = useTransaction();
 	const { user, language } = useGeneral();
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh

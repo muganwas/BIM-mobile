@@ -26,7 +26,7 @@ export default function OverlayContainer({
 	horizontalPadding = 20,
 	verticalPadding = 0,
 	children,
-	onTouch = () => {},
+	onTouch = () => { },
 	useNativeModal,
 	onRequestClose,
 	contentFill = false,
@@ -136,7 +136,7 @@ export default function OverlayContainer({
 			try {
 				onRequestClose?.();
 				onTouch?.();
-			} catch {}
+			} catch { }
 			return true;
 		});
 		return () => sub.remove();
@@ -202,7 +202,7 @@ export default function OverlayContainer({
 					extra,
 					true
 				);
-			} catch {}
+			} catch { }
 		};
 		// try multiple times to survive differing animation timings
 		doScroll();
@@ -244,9 +244,9 @@ export default function OverlayContainer({
 		const _computedPad =
 			centerLiftOnKeyboard && position === 'center' && kbVisible
 				? Math.round(
-						(kbHeight + insets.bottom) *
-							Math.max(0, Math.min(centerLiftRatio, 1))
-				  )
+					(kbHeight + insets.bottom) *
+					Math.max(0, Math.min(centerLiftRatio, 1))
+				)
 				: 0;
 		// Clamp to 1-2px visual gap as requested
 		const containerBottomPad = Math.min(2, _computedPad);
@@ -265,12 +265,14 @@ export default function OverlayContainer({
 		);
 		const maxScrollableHeight = kbVisible
 			? Math.max(
-					0,
-					windowHeight -
-						availableScreenHeight -
-						40 -
-						(autoKeyboardInset && kbVisible ? kbHeight : 0)
-			  )
+				0,
+				windowHeight -
+				insets.top -
+				insets.bottom -
+				(verticalPadding ?? 0) * 2 -
+				40 -
+				(autoKeyboardInset && kbVisible ? kbHeight : 0)
+			)
 			: availableScreenHeight;
 		return (
 			<Portal>
@@ -306,10 +308,10 @@ export default function OverlayContainer({
 								position === 'bottom'
 									? 'flex-end'
 									: position === 'top'
-									? 'flex-start'
-									: position === 'center' && centerLiftOnKeyboard && kbVisible
-									? 'flex-start'
-									: 'center',
+										? 'flex-start'
+										: position === 'center' && centerLiftOnKeyboard && kbVisible
+											? 'flex-start'
+											: 'center',
 							zIndex: 999,
 							elevation: 999,
 						}}
@@ -375,8 +377,8 @@ export default function OverlayContainer({
 	const _computedPadModal =
 		centerLiftOnKeyboard && position === 'center' && kbVisible
 			? Math.round(
-					(kbHeight + insets.bottom) * Math.max(0, Math.min(centerLiftRatio, 1))
-			  )
+				(kbHeight + insets.bottom) * Math.max(0, Math.min(centerLiftRatio, 1))
+			)
 			: 0;
 	const containerBottomPadModal = Math.min(2, _computedPadModal);
 	const baseVerticalModal = verticalPadding ?? 0;
@@ -387,18 +389,18 @@ export default function OverlayContainer({
 
 	const maxScrollableHeightModal = kbVisible
 		? Math.max(
-				0,
-				windowHeight -
-					insets.top -
-					insets.bottom -
-					(verticalPadding ?? 0) * 2 -
-					40 -
-					(autoKeyboardInset && kbVisible ? kbHeight : 0)
-		  )
+			0,
+			windowHeight -
+			insets.top -
+			insets.bottom -
+			(verticalPadding ?? 0) * 2 -
+			40 -
+			(autoKeyboardInset && kbVisible ? kbHeight : 0)
+		)
 		: Math.max(
-				0,
-				windowHeight - insets.top - insets.bottom - (verticalPadding ?? 0) * 2
-		  );
+			0,
+			windowHeight - insets.top - insets.bottom - (verticalPadding ?? 0) * 2
+		);
 	return (
 		<Modal
 			transparent={Platform.OS !== 'android'}
@@ -444,10 +446,10 @@ export default function OverlayContainer({
 							position === 'bottom'
 								? 'flex-end'
 								: position === 'top'
-								? 'flex-start'
-								: position === 'center' && centerLiftOnKeyboard && kbVisible
-								? 'flex-start'
-								: 'center',
+									? 'flex-start'
+									: position === 'center' && centerLiftOnKeyboard && kbVisible
+										? 'flex-start'
+										: 'center',
 						zIndex: 999,
 						elevation: 999,
 					}}

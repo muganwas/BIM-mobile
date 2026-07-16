@@ -41,7 +41,7 @@ function RootLayoutContent() {
 	useEffect(() => {
 		try {
 			console.debug('[RootLayout] mounted @', Date.now());
-		} catch {}
+		} catch { }
 	}, []);
 
 	useEffect(() => {
@@ -71,7 +71,7 @@ function RootLayoutContent() {
 				'@',
 				Date.now()
 			);
-		} catch {}
+		} catch { }
 
 		// Hide the splash only after fonts have loaded and auth verification
 		// has finished. Wait until after React Native interactions complete and
@@ -83,7 +83,7 @@ function RootLayoutContent() {
 					'[RootLayout] waiting for interactions before hideAsync @',
 					Date.now()
 				);
-			} catch {}
+			} catch { }
 
 			const interactionHandle = InteractionManager.runAfterInteractions(() => {
 				try {
@@ -91,7 +91,7 @@ function RootLayoutContent() {
 						'[RootLayout] interactions finished; scheduling paint ticks + hide in 200ms @',
 						Date.now()
 					);
-				} catch {}
+				} catch { }
 
 				// Two RAFs ensure the UI has a chance to paint.
 				requestAnimationFrame(() => {
@@ -106,7 +106,7 @@ function RootLayoutContent() {
 										'[RootLayout] native splash: not using JS API; assuming auto-hide (app already ready) @',
 										Date.now()
 									);
-								} catch {}
+								} catch { }
 								hiddenRef.current = true;
 							}, 120) as unknown as number;
 							return;
@@ -122,7 +122,7 @@ function RootLayoutContent() {
 									'[RootLayout] appReady received; native splash assumed auto-hide @',
 									Date.now()
 								);
-							} catch {}
+							} catch { }
 							hiddenRef.current = true;
 						});
 
@@ -133,7 +133,7 @@ function RootLayoutContent() {
 									'[RootLayout] appReady timeout; native splash assumed auto-hide @',
 									Date.now()
 								);
-							} catch {}
+							} catch { }
 							readyCancel();
 							hiddenRef.current = true;
 						}, 800) as unknown as number;
@@ -150,13 +150,13 @@ function RootLayoutContent() {
 							'[RootLayout] safety fallback attempting hideAsync @',
 							Date.now()
 						);
-					} catch {}
+					} catch { }
 					try {
 						console.debug(
 							'[RootLayout] safety fallback: native splash assumed auto-hide @',
 							Date.now()
 						);
-					} catch {}
+					} catch { }
 					hiddenRef.current = true;
 				}
 			}, 10000) as unknown as number;
@@ -164,7 +164,7 @@ function RootLayoutContent() {
 			return () => {
 				try {
 					interactionHandle.cancel?.();
-				} catch {}
+				} catch { }
 				if (scheduledTimeoutRef.current) {
 					clearTimeout(scheduledTimeoutRef.current as unknown as number);
 					scheduledTimeoutRef.current = null;
@@ -238,11 +238,11 @@ function RootLayoutContent() {
 export default function RootLayout() {
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
-			<PortalProvider>
-				<GeneralProvider>
+			<GeneralProvider>
+				<PortalProvider>
 					<RootLayoutContent />
-				</GeneralProvider>
-			</PortalProvider>
+				</PortalProvider>
+			</GeneralProvider>
 		</GestureHandlerRootView>
 	);
 }

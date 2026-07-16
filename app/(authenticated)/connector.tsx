@@ -1,3 +1,4 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -9,18 +10,18 @@ import { useSecurity } from '@/context/SecurityContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import GenerateWireguardKey from '@/views/GenerateWireguardKey';
-import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Animated, RefreshControl, StyleSheet, useAnimatedValue } from 'react-native';
+import { Animated, GestureResponderEvent, RefreshControl, StyleSheet, useAnimatedValue } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { SFSymbols6_0 } from 'sf-symbols-typescript';
 
 export default function ConnectorLayout() {
 	useTrackHistory('/(authenticated)/connector');
-	const router = useRouter();
 	const fadeAnim = useAnimatedValue(0);
 	const { user, language, authToken } = useGeneral();
 	const bg = useThemeColor({}, 'background');
+	const backgroundLight = useThemeColor({}, 'background', 'light');
+	const backgroundDark = useThemeColor({}, 'background', 'dark');
 	const textColor = useThemeColor({}, 'text');
 	const titleBg = useThemeColor({}, 'titleBg');
 	const white = useThemeColor({}, 'white');
@@ -29,7 +30,7 @@ export default function ConnectorLayout() {
 	const lime = useThemeColor({}, 'lime');
 	const listItemBackground = useThemeColor({}, 'listItemBackground');
 	const borderDark = useThemeColor({}, 'borderDark');
-	const { wireguardKeys, loading, setLoading, fetchWireguardKeys, createWireguardKey } = useSecurity();
+	const { wireguardKeys, loading, setLoading, fetchWireguardKeys, createWireguardKey, deleteWireguardKey } = useSecurity();
 
 	const [showGenerateKeyModal, setShowGenerateKeyModal] = useState(false);
 
@@ -124,9 +125,6 @@ export default function ConnectorLayout() {
 	}
 
 	const handleGenerateKey = async (keyName: string, address?: string, port?: number) => {
-		if (!authToken) {
-			return;
-		}
 		setLoading(true);
 		try {
 			await createWireguardKey(keyName, address, port);
@@ -137,12 +135,42 @@ export default function ConnectorLayout() {
 		}
 	}
 
+	const onRefresh = async () => {
+		setLoading(true);
+		try {
+			await fetchWireguardKeys();
+		} catch (e) {
+			console.error('[ConnectorLayout] refresh failed', e);
+		} finally {
+			setLoading(false);
+		}
+	}
+
+	const onDeleteKey = async (id: string) => {
+		setLoading(true);
+		try {
+			await deleteWireguardKey(id);
+		} catch (e) {
+			console.error('[ConnectorLayout] delete key failed', e);
+		} finally {
+			setLoading(false);
+		}
+	}
+
 	return (
 		<>
-			<ThemedView
-				style={styles.container}
-				lightColor={bg}
-				darkColor={bg}
+			<ParallaxScrollView
+				onRefresh={onRefresh}
+				refreshing={loading}
+				headerBackgroundColor={{
+					light: backgroundLight,
+					dark: backgroundDark,
+				}}
+				containerStyle={styles.container}
+				contentStyle={{ paddingHorizontal: 10 }}
+				onTouchStart={(e: GestureResponderEvent) => {
+					e.stopPropagation(); // Prevent touch events from propagating to the drawer
+				}}
 			>
 				<ThemedView
 					style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
@@ -168,7 +196,7 @@ export default function ConnectorLayout() {
 				}}>
 					<ThemedButton
 						title={translations[language].categories.connector.newKeyButton.toUpperCase()}
-						onPress={toggleGenerateKeyModal}
+						onPress={() => toggleGenerateKeyModal()}
 						lightColor={bim}
 						darkColor={bim}
 						darkTextColor={white}
@@ -381,7 +409,7 @@ export default function ConnectorLayout() {
 												title={translations[
 													language
 												].categories.connector.delete.toUpperCase()}
-												onPress={() => { }}
+												onPress={() => onDeleteKey(key.id)}
 												lightColor={white}
 												darkColor={white}
 												darkTextColor={error}
@@ -396,7 +424,7 @@ export default function ConnectorLayout() {
 						</ThemedView>
 					</ScrollView>
 				</TileContainer>
-			</ThemedView>
+			</ParallaxScrollView>
 			<GenerateWireguardKey
 				fadeAnim={fadeAnim}
 				toggleVisible={toggleGenerateKeyModal}

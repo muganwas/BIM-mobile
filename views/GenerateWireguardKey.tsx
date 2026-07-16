@@ -43,10 +43,12 @@ export default function GenerateWireguardKey({
     const cancelButton = useThemeColor({}, 'cancelButton');
     const bim = useThemeColor({}, 'bim');
     const white = useThemeColor({}, 'white');
+    const errorColor = useThemeColor({}, 'error');
     const inputBorder = useThemeColor({}, 'inputBorder');
     const [keyname, setKeyname] = useState('');
     const [endpointAddress, setEndpointAddress] = useState('');
     const [endpointPort, setEndpointPort] = useState('');
+    const [inputErrors, setInputErrors] = useState<{ [key: string]: boolean }>({});
     const scrollRef = useRef<any>(null);
     const addressInputRef = useRef<RNTextInput | null>(null);
     const portInputRef = useRef<RNTextInput | null>(null);
@@ -55,10 +57,16 @@ export default function GenerateWireguardKey({
 
     const onCancel = () => toggleVisible(false);
     const onGenerate = () => {
+        if (keyname.trim() === '' || keyname.length < 3) {
+            setInputErrors((prev) => ({ ...prev, keyname: true }));
+            return;
+        } else {
+            setInputErrors((prev) => ({ ...prev, keyname: false }));
+        }
         generateWireguardKeys({
             name: keyname,
-            endpointAddress: endpointAddress || undefined,
-            endpointPort: endpointPort ? parseInt(endpointPort, 10) : undefined,
+            endpointAddress: endpointAddress.trim(),
+            endpointPort: parseInt(endpointPort.trim()),
         });
     };
 
@@ -95,8 +103,7 @@ export default function GenerateWireguardKey({
             bottomPadding={16}
             keyboardGap={40}
             getScrollRef={(r) => (scrollRef.current = r)}
-            centerLiftOnKeyboard
-            centerLiftRatio={0.9}
+            centerLiftOnKeyboard={false}
         >
             <ThemedView
                 style={{
@@ -122,11 +129,11 @@ export default function GenerateWireguardKey({
                     label={translations[language].categories.connector.keyName}
                     placeholder={translations[language].categories.connector.keyName}
                     value={keyname}
-                    setValue={() => { }}
-                    editable={false}
+                    setValue={setKeyname}
+                    editable={true}
                     style={{
                         backgroundColor: bg,
-                        borderColor: inputBorder,
+                        borderColor: inputErrors.keyname ? errorColor : inputBorder,
                         borderWidth: 1,
                     }}
                     containerStyle={{ marginBottom: 4 }}
