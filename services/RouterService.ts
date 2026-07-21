@@ -78,6 +78,13 @@ export async function getRouterHotspots(routerId: string, token?: string) {
 	return resp;
 }
 
+export async function pingRouter(routerId: string, token?: string) {
+	return apiFetch((apiBaseUrl || '') + `/routers/${routerId}/ping`, {
+		method: 'GET',
+		headers: buildHeaders(token),
+	});
+}
+
 export async function getRouterHotspotUsers(
 	routerId: string,
 	hotspotId: string,
@@ -114,6 +121,7 @@ export default {
 	fetchRouters,
 	getRouterById,
 	getRouterStatus,
+	pingRouter,
 	getRouterHotspots,
 	getRouterHotspotUsers,
 };

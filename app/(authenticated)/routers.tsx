@@ -12,9 +12,10 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
+import { pingRouter } from '@/services/RouterService';
 import { ApiRouter } from '@/types';
 import RouterOverlay from '@/views/Router';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
 	Animated,
@@ -48,7 +49,8 @@ export default function RoutersScreen() {
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [editRouterId, setEditRouterId] = useState<string | undefined>();
 	const [activeRouter, setActiveRouter] = useState<string | undefined>();
-	const { language } = useGeneral();
+	const { language, authToken } = useGeneral();
+	const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
 
 	// compute initial values for edit modal when a router is selected
 	const editInitial = useMemo(() => {
@@ -79,6 +81,26 @@ export default function RoutersScreen() {
 		`router-list-header-${Math.random().toString(36).slice(2)}`
 	);
 
+	useFocusEffect(
+		useCallback(() => {
+			if (!routers?.data || !authToken) return;
+			routers.data.forEach(async (r) => {
+				if (!r.id) return;
+				try {
+					const resp = await pingRouter(r.id, authToken);
+					if (resp.ok) {
+						const json = await resp.json();
+						setOnlineStatus((prev) => ({ ...prev, [r.id!]: json.online === true }));
+					} else {
+						setOnlineStatus((prev) => ({ ...prev, [r.id!]: false }));
+					}
+				} catch {
+					setOnlineStatus((prev) => ({ ...prev, [r.id!]: false }));
+				}
+			});
+		}, [routers?.data, authToken])
+	);
+
 	// explicitly track this page in app history
 	useTrackHistory('/(authenticated)/routers');
 
@@ -107,6 +129,11 @@ export default function RoutersScreen() {
 			key: 'type',
 			label: translations[language].categories.dashboard.type,
 			width: 120,
+		},
+		{
+			key: 'status',
+			label: translations[language].categories.dashboard.status || 'Status',
+			width: 80,
 		},
 		{
 			key: 'ip',
@@ -361,6 +388,21 @@ export default function RoutersScreen() {
 											darkColor={textColor}
 										>
 											{router.type}
+										</ThemedText>
+										<ThemedText
+											numberOfLines={1}
+											style={{
+												paddingRight: 8,
+												width: 80,
+											}}
+											lightColor={onlineStatus[router.id!] ? lime : errorColor}
+											darkColor={onlineStatus[router.id!] ? lime : errorColor}
+										>
+											{onlineStatus[router.id!] === undefined
+												? '—'
+												: onlineStatus[router.id!]
+													? 'Online'
+													: 'Offline'}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
