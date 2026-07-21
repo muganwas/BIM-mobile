@@ -56,15 +56,16 @@ export default function RoutersScreen() {
 		const r = routers?.data.find((x) => x.id === editRouterId);
 		return r
 			? {
-					name: r.name,
-					location: r.location,
-					type: r.type,
-					ipAddress: r.ip_address,
-					username: r.router_user,
-					password: r.router_password,
-			  }
+				name: r.name,
+				location: r.location,
+				type: r.type,
+				ipAddress: r.ip_address,
+				username: r.router_user,
+				password: r.router_password,
+			}
 			: undefined;
 	}, [routers, editRouterId]);
+	console.log({ router: routers?.data[0]?.id })
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
 	const routerListDetailsId = useRef(
@@ -461,23 +462,23 @@ export default function RoutersScreen() {
 						password,
 					}) => {
 						if (!editRouterId || !routers) return;
-						
+
 						// Optimistic update for ApiRouter structure
 						const updatedData = routers?.data.map((r) =>
-								r.id === editRouterId
-									? {
-											...r,
-											name,
-											location,
-											type,
-											router_user: username,
-											router_password: password,
-											ip_address: ipAddress,
-											updated_at: new Date().toISOString(),
-									  }
-									: r
-							);
-						
+							r.id === editRouterId
+								? {
+									...r,
+									name,
+									location,
+									type,
+									router_user: username,
+									router_password: password,
+									ip_address: ipAddress,
+									updated_at: new Date().toISOString(),
+								}
+								: r
+						);
+
 						setRoutersResponse({
 							routers: {
 								...routers,
@@ -485,7 +486,7 @@ export default function RoutersScreen() {
 							},
 							message: 'Router updated successfully',
 						});
-						
+
 						setShowEditModal(false);
 						setEditRouterId(undefined);
 					}}
