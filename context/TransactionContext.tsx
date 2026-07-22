@@ -1,4 +1,3 @@
-import { packages as defaultPackages } from '@/constants';
 import { ShowAlert } from '@/helpers';
 import { fetchBanks as serviceFetchBanks } from '@/services/BankService';
 import { fetchPackages as serviceFetchPackages } from '@/services/PackageService';
@@ -9,8 +8,8 @@ import {
 	Bank,
 	DocumentProps,
 	GetRoutersResponse,
-	InternetPackage,
 	MicroTransaction,
+	RadiusProfile,
 	Transaction,
 	VoucherUser
 } from '@/types';
@@ -33,8 +32,8 @@ export interface TransactionContextType {
 	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 	voucherUsers: VoucherUser[];
 	setVoucherUsers: React.Dispatch<React.SetStateAction<VoucherUser[]>>;
-	packages: InternetPackage[];
-	setPackages: React.Dispatch<React.SetStateAction<InternetPackage[]>>;
+	packages: RadiusProfile[];
+	setPackages: React.Dispatch<React.SetStateAction<RadiusProfile[]>>;
 	routers: GetRoutersResponse['routers'] | null;
 	setRoutersResponse: React.Dispatch<React.SetStateAction<GetRoutersResponse | null>>;
 	banks: Bank[];
@@ -82,7 +81,7 @@ export const TransactionProvider = ({
 	const [purchases, setPurchases] = useState<MicroTransaction[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [voucherUsers, setVoucherUsers] = useState<VoucherUser[]>([]);
-	const [packages, setPackages] = useState<InternetPackage[]>([]);
+	const [packages, setPackages] = useState<RadiusProfile[]>([]);
 	const [routersResponse, setRoutersResponse] = useState<GetRoutersResponse | null>(null);
 	const [banks, setBanks] = useState<Bank[]>([]);
 	const [documents, setDocuments] = useState<DocumentProps[]>([]);
@@ -187,19 +186,26 @@ export const TransactionProvider = ({
 	const fetchPackages = useCallback(
 		async () => {
 			try {
+				console.log('[TransactionContext] fetching packages from API');
 				const res = await serviceFetchPackages(authToken ?? undefined);
 				if (res && res.ok) {
 					const json = await res.json();
+					// New RADIUS profiles response: { success: true, profiles: [...] }
+					console.log('[TransactionContext] fetchPackages response', json);
+					if (json?.profiles && Array.isArray(json.profiles)) {
+						console.log('[TransactionContext] fetched packages from API', json.profiles);
+						setPackages(json.profiles as RadiusProfile[]);
+						return;
+					}
+					// Legacy: direct array response
 					if (Array.isArray(json)) {
-						setPackages(json as InternetPackage[]);
+						setPackages(json as RadiusProfile[]);
 						return;
 					}
 				}
 			} catch (e) {
 				console.error('fetchPackages: failed to fetch from API', e);
 			}
-			// Fallback to project defaults
-			setPackages(defaultPackages || []);
 		},
 		[authToken]
 	);

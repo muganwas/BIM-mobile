@@ -111,6 +111,17 @@ export interface GetRoutersResponse {
 
 export type InternetPackageName = 'short' | 'daily' | 'weekly' | 'monthly';
 
+/** RADIUS hotspot user profile returned by the /packages endpoint */
+export interface RadiusProfile {
+	name: string; // Profile name
+	display_name: string;
+	["rate-limit"]?: string;
+	["shared-users"]?: number;
+	["session-timeout"]?: string;
+	["router-name"]?: string;
+	["simultaneous-use"]?: number;
+}
+
 export interface InternetPackage {
 	id?: string;
 	tag: string;

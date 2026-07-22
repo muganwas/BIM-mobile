@@ -2,29 +2,33 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-// colors handled via useThemeColor
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshControl, StyleSheet } from 'react-native';
+import { RadiusProfile } from '@/types';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
+import { RefreshControl, StyleSheet, TouchableOpacity } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackagesScreen() {
 	useTrackHistory('/(authenticated)/packages');
 	const bg = useThemeColor({}, 'background');
+	const bimColor = useThemeColor({}, 'bim');
 	const textColor = useThemeColor({}, 'text');
 	const titleBg = useThemeColor({}, 'titleBg');
 	const listItemBackground = useThemeColor({}, 'listItemBackground');
 	const borderDark = useThemeColor({}, 'borderDark');
 	const lime = useThemeColor({}, 'lime');
-	const white = useThemeColor({}, 'white');
-	const router = useRouter();
-	const { packages, fetchPackages, routers } = useTransaction();
+	const yellow = useThemeColor({}, 'yellow');
+	const errorColor = useThemeColor({}, 'error');
+	const authButtonText = useThemeColor({}, 'authButtonText');
+	const { packages, fetchPackages } = useTransaction();
+	const { language } = useGeneral();
 
 	const [refreshing, setRefreshing] = useState(false);
 
@@ -38,63 +42,63 @@ export default function PackagesScreen() {
 			setRefreshing(false);
 		}
 	}, [fetchPackages]);
-	const { user, language } = useGeneral();
 
-	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
-	const packageRouterListDetailsId = useRef(
-		`package-router-list-details-${Math.random().toString(36).slice(2)}`
+	// stable per-mount ids
+	const packageListDetailsId = useRef(
+		`package-list-details-${Math.random().toString(36).slice(2)}`
+	);
+	const packageListId = useRef(
+		`package-list-${Math.random().toString(36).slice(2)}`
+	);
+	const packageListHeaderId = useRef(
+		`package-list-header-${Math.random().toString(36).slice(2)}`
 	);
 
-	const packageRouterListId = useRef(
-		`package-router-list-${Math.random().toString(36).slice(2)}`
-	);
-	const packageRouterListHeaderId = useRef(
-		`package-router-list-header-${Math.random().toString(36).slice(2)}`
-	);
-
-	useEffect(() => {
-		if (user && packages.length === 0) {
+	// Fetch profiles when screen comes into focus
+	useFocusEffect(
+		useCallback(() => {
 			(async () => {
 				await fetchPackages();
 			})();
-		}
-	}, [user, packages, fetchPackages]);
-
-	// Predefine header columns outside JSX for stability/consistency
-	const packageHeaders = useMemo(
-		() => [
-			{
-				key: 'name',
-				label: translations[language].categories.dashboard.name,
-				width: 120,
-			},
-			{
-				key: 'location',
-				label: translations[language].categories.dashboard.location,
-				width: 120,
-			},
-			{
-				key: 'ip',
-				label: translations[language].categories.dashboard.ipAddress,
-				width: 120,
-			},
-			{
-				key: 'username',
-				label: translations[language].categories.dashboard.routerUsername,
-				width: 120,
-			},
-			{
-				key: 'actions',
-				label: translations[language].categories.dashboard.actions,
-				width: 120,
-				textAlign: 'center' as const,
-			},
-		],
-		[language]
+		}, [fetchPackages])
 	);
+
+	// Column definitions
+	const packageHeaders = [
+		{ key: 'name', label: 'Profile Name', width: 140 },
+		{ key: 'session_timeout', label: 'Session Timeout', width: 120 },
+		{ key: 'rate_limit', label: 'Rate Limit', width: 120 },
+		{ key: 'shared_users', label: 'Simultaneous Use', width: 120 },
+		{
+			key: 'actions',
+			label: translations[language].categories.dashboard.actions,
+			width: 120,
+			textAlign: 'center' as const,
+		},
+	];
+
+	// Cast packages to RadiusProfile[] since we now receive RADIUS profiles
+	const profiles = (packages as RadiusProfile[]) || [];
+
+	const handleViewProfile = (profile: RadiusProfile) => {
+		// TODO: navigate to profile detail view
+	};
+
+	const handleEditProfile = (profile: RadiusProfile) => {
+		// TODO: open edit modal
+	};
+
+	const handleDeleteProfile = (profile: RadiusProfile) => {
+		// TODO: confirm and delete
+	};
+
+	const handleCreateProfile = () => {
+		// TODO: open create modal
+	};
 
 	return (
 		<ThemedView lightColor={bg} darkColor={bg} style={styles.container}>
+			{/* Header section */}
 			<ThemedView
 				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
 				lightColor={bg}
@@ -110,7 +114,7 @@ export default function PackagesScreen() {
 						fontWeight: fontWeight['heading.one'],
 					}}
 				>
-					{translations[language].categories.packages.title}
+					Packages / Profiles
 				</ThemedText>
 				<ThemedText
 					style={{
@@ -119,12 +123,37 @@ export default function PackagesScreen() {
 					lightColor={textColor}
 					darkColor={textColor}
 				>
-					{translations[language].categories.packages.subtitle}
+					Profiles are global and shared across all routers using RADIUS authentication.
 				</ThemedText>
 			</ThemedView>
 
+			{/* Create New Profile button */}
+			<ThemedView
+				style={{
+					width: '100%',
+					paddingVertical: 8,
+					alignItems: 'flex-end',
+				}}
+				lightColor={bg}
+				darkColor={bg}
+			>
+				<ThemedButton
+					title="CREATE NEW PROFILE"
+					onPress={handleCreateProfile}
+					style={{
+						borderRadius: 8,
+						width: 180,
+					}}
+					darkColor={bimColor}
+					lightColor={bimColor}
+					darkTextColor={authButtonText}
+					lightTextColor={authButtonText}
+				/>
+			</ThemedView>
+
+			{/* Available Profiles tile */}
 			<TileContainer
-				id={packageRouterListId.current}
+				id={packageListId.current}
 				backgroundColor={bg}
 				style={{
 					flexDirection: 'column',
@@ -133,6 +162,29 @@ export default function PackagesScreen() {
 					padding: 0,
 				}}
 			>
+				{/* Tile title */}
+				<ThemedView
+					style={{
+						paddingHorizontal: 10,
+						paddingVertical: 8,
+						borderBottomWidth: 1,
+						borderBottomColor: borderDark,
+					}}
+					lightColor={titleBg}
+					darkColor={titleBg}
+				>
+					<ThemedText
+						style={{
+							fontSize: fontSize['heading.two'],
+							fontWeight: fontWeight['heading.two'],
+						}}
+						lightColor={textColor}
+						darkColor={textColor}
+					>
+						Available Profiles
+					</ThemedText>
+				</ThemedView>
+
 				<ScrollView
 					style={{ width: '100%' }}
 					horizontal
@@ -143,8 +195,9 @@ export default function PackagesScreen() {
 						lightColor={bg}
 						darkColor={bg}
 					>
+						{/* Column headers */}
 						<ThemedView
-							id={packageRouterListHeaderId.current}
+							id={packageListHeaderId.current}
 							style={{
 								flexDirection: 'row',
 								justifyContent: 'space-between',
@@ -176,99 +229,128 @@ export default function PackagesScreen() {
 								</ThemedText>
 							))}
 						</ThemedView>
+
+						{/* Profile rows */}
 						<ScrollView
-							id={packageRouterListDetailsId.current}
+							id={packageListDetailsId.current}
 							style={{
 								flexDirection: 'column',
 								backgroundColor: bg,
 							}}
-							refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+							refreshControl={
+								<RefreshControl
+									refreshing={refreshing}
+									onRefresh={handleRefresh}
+								/>
+							}
 						>
-							{routers?.data.map((r, index) => (
+							{profiles.length === 0 ? (
 								<ThemedView
-									key={index}
 									style={{
-										flexDirection: 'row',
-										width: '100%',
+										paddingVertical: 30,
 										alignItems: 'center',
-										paddingVertical: 5,
-										paddingHorizontal: 10,
-										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
-										justifyContent: 'space-between',
-										borderBottomWidth: index < routers?.data.length - 1 ? 1 : 0,
-										borderBottomColor: borderDark,
 									}}
 									lightColor={bg}
 									darkColor={bg}
 								>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											width: 120,
-											paddingRight: 8,
-											overflow: 'hidden',
-										}}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{r.name}
+									<ThemedText lightColor={textColor} darkColor={textColor}>
+										No profiles found. Create one to get started.
 									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											paddingRight: 8,
-											width: 120,
-										}}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{r.location}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											paddingRight: 8,
-											width: 120,
-										}}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{r?.ip_address}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											paddingRight: 8,
-											width: 120,
-										}}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{r.router_user}
-									</ThemedText>
+								</ThemedView>
+							) : (
+								profiles.map((profile, index) => (
 									<ThemedView
+										key={profile.name + '-' + index}
 										style={{
 											flexDirection: 'row',
+											width: '100%',
+											alignItems: 'center',
+											paddingVertical: 5,
+											paddingHorizontal: 10,
+											backgroundColor:
+												index % 2 === 0 ? listItemBackground : bg,
 											justifyContent: 'space-between',
-											width: 120,
+											borderBottomWidth:
+												index < profiles.length - 1 ? 1 : 0,
+											borderBottomColor: borderDark,
 										}}
-										lightColor='transparent'
-										darkColor='transparent'
+										lightColor={bg}
+										darkColor={bg}
 									>
-										<ThemedButton
-											title={translations[
-												language
-											].categories.buttons.hotspots.toUpperCase()}
-											onPress={() => router.push(`/routers/hotspots/packages/${r.id}`)}
-											lightColor={lime}
-											darkColor={lime}
-											darkTextColor={white}
-											lightTextColor={white}
-											style={{ flex: 1 }}
-										/>
+										<ThemedText
+											numberOfLines={1}
+											style={{
+												width: 140,
+												paddingRight: 8,
+												overflow: 'hidden',
+											}}
+											lightColor={textColor}
+											darkColor={textColor}
+										>
+											{profile.display_name}
+										</ThemedText>
+										<ThemedText
+											numberOfLines={1}
+											style={{
+												width: 120,
+												paddingRight: 8,
+											}}
+											lightColor={textColor}
+											darkColor={textColor}
+										>
+											{profile["session-timeout"] || '—'}
+										</ThemedText>
+										<ThemedText
+											numberOfLines={1}
+											style={{
+												width: 120,
+												paddingRight: 8,
+											}}
+											lightColor={textColor}
+											darkColor={textColor}
+										>
+											{profile["rate-limit"] || '—'}
+										</ThemedText>
+										<ThemedText
+											numberOfLines={1}
+											style={{
+												width: 120,
+												paddingRight: 8,
+											}}
+											lightColor={textColor}
+											darkColor={textColor}
+										>
+											{profile["simultaneous-use"] ?? '—'}
+										</ThemedText>
+										<ThemedView
+											style={{
+												flexDirection: 'row',
+												justifyContent: 'space-between',
+												gap: 5,
+												width: 120,
+											}}
+											lightColor='transparent'
+											darkColor='transparent'
+										>
+											<TouchableOpacity
+												onPress={() => handleViewProfile(profile)}
+											>
+												<IconSymbol color={lime} name='eye.outline' />
+											</TouchableOpacity>
+											<TouchableOpacity
+												onPress={() => handleEditProfile(profile)}
+											>
+												<IconSymbol color={yellow} name='edit.outline' />
+											</TouchableOpacity>
+											<TouchableOpacity
+												onPress={() => handleDeleteProfile(profile)}
+											>
+												<IconSymbol color={errorColor} name='delete.outline' />
+											</TouchableOpacity>
+										</ThemedView>
 									</ThemedView>
-								</ThemedView>
-							))}
+								))
+							)}
 						</ScrollView>
 					</ThemedView>
 				</ScrollView>
@@ -281,10 +363,5 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		padding: 16,
-	},
-	routerItem: {
-		padding: 12,
-		borderBottomWidth: 1,
-		borderBottomColor: '#eee',
 	},
 });
