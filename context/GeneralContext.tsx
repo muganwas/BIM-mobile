@@ -153,8 +153,8 @@ const runtime: any =
 	typeof globalThis !== 'undefined'
 		? globalThis
 		: typeof global !== 'undefined'
-		? global
-		: {};
+			? global
+			: {};
 
 export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
@@ -247,7 +247,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					useNativeDriver: true,
 				}).start();
 			}
-		} catch {}
+		} catch { }
 	}, [verifyingAuth]);
 
 	// Determine whether to enable detailed auth lifecycle debug. Sources:
@@ -278,7 +278,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const authDebug = Boolean(
 		(_envDebug || _winDebug) &&
-			(!_ttlMs || Date.now() - (_enabledAt || 0) < _ttlMs)
+		(!_ttlMs || Date.now() - (_enabledAt || 0) < _ttlMs)
 	);
 
 	// Load persisted history from AsyncStorage on mount (React Native compatible)
@@ -327,9 +327,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			console.log('Logout already in progress, ignoring duplicate call');
 			return;
 		}
-		
+
 		isLoggingOutRef.current = true;
-		
+
 		try {
 			// 1. Attempt backend logout (best effort)
 			try {
@@ -337,7 +337,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				if (token) {
 					// We don't await the result or check success/failure for UI purposes
 					// The user wants to be logged out regardless of server status.
-					await AuthService.logout(String(token)).catch(() => {});
+					await AuthService.logout(String(token)).catch(() => { });
 				}
 			} catch {
 				// Ignore token lookup errors
@@ -349,12 +349,12 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				// Clear credentials
 				await SecureStore.deleteItemAsync('auth_token');
 				await SecureStore.deleteItemAsync('totp_secret');
-				
+
 				// Clear user data
 				await AsyncStorage.removeItem('user_id');
 				await AsyncStorage.removeItem('user_email');
 				await AsyncStorage.removeItem('user_phone');
-				
+
 				// Reset state
 				setUser(null);
 				setNotifications([]);
@@ -416,9 +416,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						'auth_token',
 						newToken
 					);
-				} catch {}
+				} catch { }
 				setAuthToken(newToken);
-				
+
 				if (refJson && (refJson as any).user) {
 					setUser((refJson as any).user as any);
 				}
@@ -503,11 +503,11 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 							if (anyRouter?.replace) {
 								try {
 									anyRouter.replace('/(authenticated)/home');
-								} catch {}
+								} catch { }
 							} else if (anyRouter?.push) {
 								try {
 									anyRouter.push('/(authenticated)/home');
-								} catch {}
+								} catch { }
 							} else {
 								let attempts = 0;
 								const maxAttempts = 12;
@@ -517,13 +517,13 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 										try {
 											ar.replace('/(authenticated)/home');
 											return;
-										} catch {}
+										} catch { }
 									}
 									if (ar?.push) {
 										try {
 											ar.push('/(authenticated)/home');
 											return;
-										} catch {}
+										} catch { }
 									}
 									attempts++;
 									if (attempts < maxAttempts) setTimeout(tryNav, 100);
@@ -535,7 +535,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 								tryNav();
 							}
 						}
-					} catch {}
+					} catch { }
 				}
 
 				// Support token expiry from either token_meta.expires_at or top-level expires_at
@@ -748,7 +748,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					last.includes('/(authenticated)/routers/hotspots')
 				)
 					return prev;
-			} catch {}
+			} catch { }
 
 			// If the routers parent is being pushed AFTER a routers detail is already last,
 			// reorder so the parent sits immediately before the current detail (keep detail last).
@@ -776,7 +776,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					persist(reordered);
 					return reordered;
 				}
-			} catch {}
+			} catch { }
 
 			if (prev.length > 0 && prev[prev.length - 1] === current) {
 				if (debug)
@@ -824,7 +824,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			return () => {
 				try {
 					delete (runtime as any).__BIM_DUMP_HISTORY__;
-				} catch {}
+				} catch { }
 			};
 		}
 	}, [history]);
@@ -839,13 +839,13 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					try {
 						(router.replace as any)(path);
 						return;
-					} catch {}
+					} catch { }
 				}
 				if ((router as any)?.push) {
 					try {
 						(router.push as any)(path);
 						return;
-					} catch {}
+					} catch { }
 				}
 				if (attempt < maxAttempts) {
 					setTimeout(() => tryNavigate(attempt + 1), 100);
@@ -863,7 +863,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const handleGoBack = useCallback(() => {
 		navigatingBackRef.current = true;
 		const prev = historyRef.current || [];
-		let action: () => void = () => {};
+		let action: () => void = () => { };
 
 		if (runtime?.__BIM_HISTORY_DEBUG__)
 			console.debug('handleGoBack using history', prev);
@@ -875,7 +875,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				const anyRouter = router as any;
 				currentPath =
 					anyRouter?.pathname || anyRouter?.asPath || anyRouter?.route || '';
-			} catch {}
+			} catch { }
 			if (currentPath && /\/routers\/hotspots\//.test(currentPath)) {
 				action = () => navigateToPath('/(authenticated)/packages');
 			} else {
@@ -950,58 +950,58 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			);
 			if (hasDashboard) {
 				try {
-				// Map server-provided dashboard fields into typed structures and coerce numeric strings to numbers
-				const dashboard: DashboardSummary = {
-					chartData: Array.isArray(data.chartData)
-						? data.chartData.map((c: any) => ({
+					// Map server-provided dashboard fields into typed structures and coerce numeric strings to numbers
+					const dashboard: DashboardSummary = {
+						chartData: Array.isArray(data.chartData)
+							? data.chartData.map((c: any) => ({
 								date: String(c.date),
 								total: parseAmount(c.total),
-						  }))
-						: undefined,
-					monthTransactions: parseAmount(data.monthTransactions),
-					monthUsers:
-						typeof data.monthUsers !== 'undefined'
-							? Number(data.monthUsers)
+							}))
 							: undefined,
-					recentTransactions: Array.isArray(data.recentTransactions)
-						? data.recentTransactions.map((t: any) => ({
+						monthTransactions: parseAmount(data.monthTransactions),
+						monthUsers:
+							typeof data.monthUsers !== 'undefined'
+								? Number(data.monthUsers)
+								: undefined,
+						recentTransactions: Array.isArray(data.recentTransactions)
+							? data.recentTransactions.map((t: any) => ({
 								...t,
 								amount: parseAmount(t.amount),
-						  }))
-						: undefined,
-					routerBalances: Array.isArray(data.routerBalances)
-						? data.routerBalances.map((r: any) => ({
+							}))
+							: undefined,
+						routerBalances: Array.isArray(data.routerBalances)
+							? data.routerBalances.map((r: any) => ({
 								...r,
 								balance: parseAmount(r.balance),
-						  }))
-						: undefined,
-					todayTransactions: parseAmount(data.todayTransactions),
-					todayUsers:
-						typeof data.todayUsers !== 'undefined'
-							? Number(data.todayUsers)
+							}))
 							: undefined,
-					weekTransactions: parseAmount(data.weekTransactions),
-					weekUsers:
-						typeof data.weekUsers !== 'undefined'
-							? Number(data.weekUsers)
-							: undefined,
-				};
+						todayTransactions: parseAmount(data.todayTransactions),
+						todayUsers:
+							typeof data.todayUsers !== 'undefined'
+								? Number(data.todayUsers)
+								: undefined,
+						weekTransactions: parseAmount(data.weekTransactions),
+						weekUsers:
+							typeof data.weekUsers !== 'undefined'
+								? Number(data.weekUsers)
+								: undefined,
+					};
 
-				// Merge user info (if any) with typed dashboard payload so consumers can access both.
-				const mergedUser = {
-					...(data.user || {}),
-					dashboard,
-				};
-				setUser(mergedUser as any);
-				setLastDashboardUpdated(Date.now());
+					// Merge user info (if any) with typed dashboard payload so consumers can access both.
+					const mergedUser = {
+						...(data.user || {}),
+						dashboard,
+					};
+					setUser(mergedUser as any);
+					setLastDashboardUpdated(Date.now());
 
-				// If server returned a token as part of the login payload, persist it
-				if (data && data.token) {
-					await SecureStore.setItemAsync('auth_token', String(data.token));
-					setAuthToken(String(data.token));
-				}
-				return navigateToPath('/(authenticated)/home');
-				} catch(e) {
+					// If server returned a token as part of the login payload, persist it
+					if (data && data.token) {
+						await SecureStore.setItemAsync('auth_token', String(data.token));
+						setAuthToken(String(data.token));
+					}
+					return navigateToPath('/(authenticated)/home');
+				} catch (e) {
 					console.error('[GeneralContext] Error setting last dashboard updated:', e);
 				}
 			}
@@ -1025,7 +1025,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				} else {
 					setPending2FAMethod('totp');
 				}
-			} catch(e) {
+			} catch (e) {
 				console.error('[GeneralContext] Error determining 2FA method:', e);
 				setPending2FAMethod(null);
 			}
@@ -1092,7 +1092,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 									const out = { ...base, dashboard: json } as any;
 									try {
 										setLastDashboardUpdated(Date.now());
-									} catch {}
+									} catch { }
 									return out;
 								} catch {
 									return prev;
@@ -1158,7 +1158,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						String(text) && String(text).trim()
 							? String(text)
 							: tr.categories.auth['registrationFailed'] ||
-							  'Registration failed',
+							'Registration failed',
 				});
 				return;
 			}
@@ -1207,7 +1207,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						String(text) && String(text).trim()
 							? String(text)
 							: tr.categories.auth['otpVerificationFailed'] ||
-							  'OTP verification failed',
+							'OTP verification failed',
 				});
 				return;
 			}
@@ -1239,7 +1239,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					String(msg) && String(msg).trim()
 						? String(msg)
 						: tr.categories.auth['otpVerificationFailed'] ||
-						  'OTP verification failed',
+						'OTP verification failed',
 			});
 		}
 	};
@@ -1276,7 +1276,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						String(text) && String(text).trim()
 							? String(text)
 							: tr.categories.auth['setupAuthenticator.verifyFailed'] ||
-							  '2FA verification failed',
+							'2FA verification failed',
 				});
 				return false;
 			}
@@ -1324,7 +1324,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					setUser(mergedUser as any);
 					try {
 						setLastDashboardUpdated(Date.now());
-					} catch {}
+					} catch { }
 				}
 				// Show success toast if backend provided a message
 				try {
@@ -1333,7 +1333,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						tr.categories.auth['setupAuthenticator.loginSuccess'] ||
 						'Login successful';
 					setAppMessage?.({ type: 'message', message: String(successMessage) });
-				} catch {}
+				} catch { }
 			} catch (e) {
 				console.error('handleVerify2FA: error persisting auth state', e);
 			}
@@ -1404,7 +1404,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						String(text) && String(text).trim()
 							? String(text)
 							: tr.categories.auth['setupAuthenticator.setupFailed'] ||
-							  'TOTP setup failed',
+							'TOTP setup failed',
 				});
 				return null;
 			}
@@ -1526,7 +1526,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			<Loader
 				showOverlay={verifyingAuth}
 				fadeAnim={loaderFadeAnimRef.current}
-				toggleShowOverlay={() => {}}
+				toggleShowOverlay={() => { }}
 			/>
 			{/* Global toast for app messages/errors */}
 			<Toast
@@ -1539,7 +1539,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						// fire-and-forget the action; it will update app state/message as needed
 						try {
 							void appMessage.action();
-						} catch {}
+						} catch { }
 					} else {
 						setAppMessage(null);
 					}

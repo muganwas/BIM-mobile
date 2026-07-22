@@ -17,8 +17,8 @@ import { isAppReady, onAppReady } from '@/helpers/appReady';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import {
-	Animated,
 	ActivityIndicator,
+	Animated,
 	ImageBackground,
 	InteractionManager,
 	StyleSheet,
