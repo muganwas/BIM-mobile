@@ -18,8 +18,10 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import {
 	Animated,
+	ActivityIndicator,
 	ImageBackground,
 	InteractionManager,
+	StyleSheet,
 	Text,
 	useAnimatedValue,
 	View,
@@ -173,32 +175,35 @@ function RootLayoutContent() {
 			};
 		}
 	}, [loaded, verifyingAuth]);
-	if (!loaded) {
+	if (!loaded || verifyingAuth) {
 		// While fonts or other assets load, render a full-screen placeholder
 		// matching the native splash background to avoid a black flash and to
 		// prevent a second splash from briefly appearing.
 		const schemeKey = (colorScheme as any) || 'light';
 		const bg = (Colors as any)[schemeKey]?.background ?? '#ffffff';
-		return (
-			<View
-				style={{
-					flex: 1,
-					justifyContent: 'center',
-					alignItems: 'center',
-					backgroundColor: bg,
-				}}
-			>
-				<ImageBackground
-					source={require('../assets/images/splash-icon.png')}
-					resizeMode='contain'
+
+		if (!loaded) {
+			return (
+				<View
 					style={{
 						flex: 1,
-						alignItems: 'center',
 						justifyContent: 'center',
+						alignItems: 'center',
+						backgroundColor: bg,
 					}}
-				/>
-			</View>
-		);
+				>
+					<ImageBackground
+						source={require('../assets/images/splash-icon.png')}
+						resizeMode='contain'
+						style={{
+							flex: 1,
+							alignItems: 'center',
+							justifyContent: 'center',
+						}}
+					/>
+				</View>
+			);
+		}
 	}
 
 	return (
@@ -230,6 +235,21 @@ function RootLayoutContent() {
 				<Stack.Screen name='(authenticated)' options={{ headerShown: false }} />
 				<Stack.Screen name='+not-found' />
 			</Stack>
+			{/* Auth-verification loader: blocks UI until token is verified. Simple
+			    absolute overlay — no Portal/Modal needed, guaranteed to appear. */}
+			{verifyingAuth && (
+				<View
+					style={{
+						...StyleSheet.absoluteFillObject,
+						backgroundColor: 'rgba(0,0,0,0.5)',
+						justifyContent: 'center',
+						alignItems: 'center',
+						zIndex: 1000,
+					}}
+				>
+					<ActivityIndicator size="large" color="#fff" />
+				</View>
+			)}
 			<StatusBar style='auto' />
 		</ThemeProvider>
 	);

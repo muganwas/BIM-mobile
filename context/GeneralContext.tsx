@@ -233,14 +233,20 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const [history, setHistory] = useState<string[]>([]);
 
-	// Animate loader fade when verifyingAuth changes so overlay is actually visible
+	// Show loader instantly on auth check, animate only the fade-out
 	useEffect(() => {
 		try {
-			Animated.timing(loaderFadeAnimRef.current, {
-				toValue: verifyingAuth ? 1 : 0,
-				duration: 220,
-				useNativeDriver: true,
-			}).start();
+			if (verifyingAuth) {
+				// Appear immediately — no animation delay
+				loaderFadeAnimRef.current.setValue(1);
+			} else {
+				// Smooth fade-out when auth resolves
+				Animated.timing(loaderFadeAnimRef.current, {
+					toValue: 0,
+					duration: 250,
+					useNativeDriver: true,
+				}).start();
+			}
 		} catch {}
 	}, [verifyingAuth]);
 
@@ -1516,11 +1522,11 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			}}
 		>
 			{children}
-			{/* Global loader shown while auth token is being verified */}
+			{/* Global loader shown while auth token is being verified — non-dismissible */}
 			<Loader
 				showOverlay={verifyingAuth}
 				fadeAnim={loaderFadeAnimRef.current}
-				toggleShowOverlay={() => setVerifyingAuth(false)}
+				toggleShowOverlay={() => {}}
 			/>
 			{/* Global toast for app messages/errors */}
 			<Toast
