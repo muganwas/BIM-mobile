@@ -183,14 +183,19 @@ const translations: Translations = {
 					'Are you sure you want to delete this router? This action cannot be undone.',
 			},
 			packages: {
-				title: 'Packages',
-				subtitle: 'Select router to view associated packages',
+				title: 'Packages / Profiles',
+				subtitle: 'Profiles are global and shared across all routers using RADIUS authentication.',
 				packagesOnHotspot: 'Packages on Hotspot: {hotspotName}',
 				usersPerDevice: 'Users per device',
+				availableProfiles: 'Available Profiles',
 				bandwidth: 'Bandwidth',
+				createProfile: 'Create New Profile',
 				durationHours: 'Duration (hrs)',
 				deleteMessage:
 					'Are you sure you want to delete this package? This action cannot be undone.',
+				view: 'View',
+				edit: 'Edit',
+				delete: 'Delete',
 			},
 			internetPackage: {
 				createTitle: 'Create Internet Package',

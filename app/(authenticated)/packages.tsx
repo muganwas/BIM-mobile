@@ -2,7 +2,6 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
@@ -12,7 +11,7 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import { RadiusProfile } from '@/types';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { RefreshControl, StyleSheet, TouchableOpacity } from 'react-native';
+import { RefreshControl, StyleSheet } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackagesScreen() {
@@ -23,7 +22,8 @@ export default function PackagesScreen() {
 	const titleBg = useThemeColor({}, 'titleBg');
 	const listItemBackground = useThemeColor({}, 'listItemBackground');
 	const borderDark = useThemeColor({}, 'borderDark');
-	const lime = useThemeColor({}, 'lime');
+	const lightBlue = useThemeColor({}, 'lightBlue');
+	const white = useThemeColor({}, 'white');
 	const yellow = useThemeColor({}, 'yellow');
 	const errorColor = useThemeColor({}, 'error');
 	const authButtonText = useThemeColor({}, 'authButtonText');
@@ -72,7 +72,7 @@ export default function PackagesScreen() {
 		{
 			key: 'actions',
 			label: translations[language].categories.dashboard.actions,
-			width: 120,
+			width: 280,
 			textAlign: 'center' as const,
 		},
 	];
@@ -114,7 +114,7 @@ export default function PackagesScreen() {
 						fontWeight: fontWeight['heading.one'],
 					}}
 				>
-					Packages / Profiles
+					{translations[language].categories.packages.title}
 				</ThemedText>
 				<ThemedText
 					style={{
@@ -123,7 +123,7 @@ export default function PackagesScreen() {
 					lightColor={textColor}
 					darkColor={textColor}
 				>
-					Profiles are global and shared across all routers using RADIUS authentication.
+					{translations[language].categories.packages.subtitle}
 				</ThemedText>
 			</ThemedView>
 
@@ -138,11 +138,10 @@ export default function PackagesScreen() {
 				darkColor={bg}
 			>
 				<ThemedButton
-					title="CREATE NEW PROFILE"
+					title={translations[language].categories.packages.createProfile}
 					onPress={handleCreateProfile}
 					style={{
 						borderRadius: 8,
-						width: 180,
 					}}
 					darkColor={bimColor}
 					lightColor={bimColor}
@@ -167,11 +166,9 @@ export default function PackagesScreen() {
 					style={{
 						paddingHorizontal: 10,
 						paddingVertical: 8,
-						borderBottomWidth: 1,
-						borderBottomColor: borderDark,
 					}}
-					lightColor={titleBg}
-					darkColor={titleBg}
+					lightColor={'transparent'}
+					darkColor={'transparent'}
 				>
 					<ThemedText
 						style={{
@@ -181,7 +178,7 @@ export default function PackagesScreen() {
 						lightColor={textColor}
 						darkColor={textColor}
 					>
-						Available Profiles
+						{translations[language].categories.packages.availableProfiles}
 					</ThemedText>
 				</ThemedView>
 
@@ -324,29 +321,51 @@ export default function PackagesScreen() {
 										</ThemedText>
 										<ThemedView
 											style={{
+												display: 'flex',
 												flexDirection: 'row',
 												justifyContent: 'space-between',
-												gap: 5,
-												width: 120,
+												gap: 2,
+												width: 280,
 											}}
 											lightColor='transparent'
 											darkColor='transparent'
 										>
-											<TouchableOpacity
+											<ThemedButton
 												onPress={() => handleViewProfile(profile)}
-											>
-												<IconSymbol color={lime} name='eye.outline' />
-											</TouchableOpacity>
-											<TouchableOpacity
+												style={styles.actionButton}
+												textStyle={styles.actionButtonText}
+												icon='eye.outline'
+												title={translations[language].categories.packages.view}
+												darkColor={lightBlue}
+												lightColor={lightBlue}
+												lightTextColor={white}
+												darkTextColor={white}
+												iconColor={white}
+											/>
+											<ThemedButton
 												onPress={() => handleEditProfile(profile)}
-											>
-												<IconSymbol color={yellow} name='edit.outline' />
-											</TouchableOpacity>
-											<TouchableOpacity
+												style={styles.actionButton}
+												textStyle={styles.actionButtonText}
+												icon='edit.outline'
+												title={translations[language].categories.packages.edit}
+												darkColor={yellow}
+												lightColor={yellow}
+												lightTextColor={white}
+												darkTextColor={white}
+												iconColor={white}
+											/>
+											<ThemedButton
 												onPress={() => handleDeleteProfile(profile)}
-											>
-												<IconSymbol color={errorColor} name='delete.outline' />
-											</TouchableOpacity>
+												style={styles.actionButton}
+												textStyle={styles.actionButtonText}
+												icon='delete.outline'
+												title={translations[language].categories.packages.delete}
+												darkColor={errorColor}
+												lightColor={errorColor}
+												lightTextColor={white}
+												darkTextColor={white}
+												iconColor={white}
+											/>
 										</ThemedView>
 									</ThemedView>
 								))
@@ -363,5 +382,18 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		padding: 16,
+	},
+	actionButton: {
+		display: 'flex',
+		flex: 1,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		padding: 5,
+		gap: 3,
+		borderRadius: 4,
+	},
+	actionButtonText: {
+		fontSize: 12,
 	},
 });

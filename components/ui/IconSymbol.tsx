@@ -21,7 +21,7 @@ type IconConfig = {
 };
 
 type IconMapping = Record<string, IconConfig>;
-type IconSymbolName = keyof typeof MAPPING;
+export type IconSymbolName = keyof typeof MAPPING;
 
 /**
  * Add your SF Symbols to Material Icons/Ionicons mappings here.

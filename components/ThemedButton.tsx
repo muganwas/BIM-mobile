@@ -1,7 +1,7 @@
 /** Button from TouchableOpacity */
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { IconSymbol, IconSymbolName } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import {
@@ -10,7 +10,6 @@ import {
 	TouchableOpacity,
 	ViewStyle,
 } from 'react-native';
-import { SFSymbols6_0 } from 'sf-symbols-typescript';
 
 export type ThemedButtonProps = {
 	title: string;
@@ -22,7 +21,7 @@ export type ThemedButtonProps = {
 	lightColor?: string;
 	darkColor?: string;
 	numberOfLines?: number;
-	icon?: SFSymbols6_0;
+	icon?: IconSymbolName;
 	iconColor?: string;
 	disabled?: boolean;
 	loading?: boolean;
