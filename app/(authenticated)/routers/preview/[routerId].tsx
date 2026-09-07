@@ -33,8 +33,8 @@ export default function RouterDetailsScreen() {
 	const navigation = useNavigation<any>();
 	const router = useRouter();
 	const { routerId, name } = useLocalSearchParams() as { routerId?: string, name?: string };
-	const { handleUpdateHistory, language, authToken } = useGeneral();
-	
+	const { handleUpdateHistory, language, authToken, routersLastFetched, setRoutersLastFetched } = useGeneral();
+
 	// Theme helpers
 	const background = useThemeColor({}, 'background');
 	const backgroundLight = useThemeColor({}, 'background', 'light');
@@ -50,7 +50,7 @@ export default function RouterDetailsScreen() {
 	const bim = useThemeColor({}, 'bim');
 	const whiteLight = useThemeColor({}, 'white', 'light');
 	const whiteDark = useThemeColor({}, 'white', 'dark');
-	
+
 	// State
 	const [apiRouter, setApiRouter] = useState<Partial<ApiRouter>>();
 	const [routerStatus, setRouterStatus] = useState<RouterStatus | undefined>();
@@ -80,12 +80,13 @@ export default function RouterDetailsScreen() {
 
 	// Fetch router data, status, and hotspots
 	const fetchRouterData = useCallback(async () => {
-		if (!routerId || !authToken) return;
+		console.log({ lastFetched: routersLastFetched[routerId || ''] });
+		if (!routerId || !authToken || (routerId && routersLastFetched[routerId] && Date.now() - new Date(routersLastFetched[routerId]!).getTime() < 60000)) return;
 		console.log('[RouterDetailsScreen] Fetching data for router ID:', routerId);
 		setLoading(true);
 		try {
-			if (name && routerId) 
-			 	setApiRouter({ name, id: routerId });
+			if (name && routerId)
+				setApiRouter({ name, id: routerId });
 			const routerResponse = await getRouterById(routerId, authToken);
 			if (routerResponse && routerResponse.ok) {
 				const routerData = await routerResponse.json();
@@ -116,12 +117,13 @@ export default function RouterDetailsScreen() {
 				const hotspotsData = await hotspotsResponse.json();
 				if (hotspotsData.hotspots) setHotspots(hotspotsData.hotspots);
 			}
+			setRoutersLastFetched && setRoutersLastFetched((prev) => ({ ...prev, [routerId]: new Date().toISOString() }));
 		} catch (error) {
 			console.error('[RouterDetailsScreen] Failed to fetch router data:', error);
 		} finally {
 			setLoading(false);
 		}
-	}, [routerId, name, authToken]);
+	}, [routerId, name, authToken, routersLastFetched, setRoutersLastFetched]);
 
 	useEffect(() => {
 		void fetchRouterData();

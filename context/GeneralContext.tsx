@@ -33,7 +33,7 @@ const DEV_OTP = env('DEV_OTP');
 
 type RouterType = ReturnType<typeof useRouter>;
 
-export interface AuthContextType {
+export interface GeneralContextType {
 	user: UserProps | null;
 	authToken?: string | null;
 	setAuthToken?: React.Dispatch<React.SetStateAction<string | null>>;
@@ -119,6 +119,10 @@ export interface AuthContextType {
 		} | null>
 	>;
 	online: boolean;
+	routersLastFetched: { [routerId: string]: string };
+	setRoutersLastFetched?: React.Dispatch<
+		React.SetStateAction<{ [routerId: string]: string }>
+	>;
 	router: RouterType;
 	// Global app message (shown in Toast)
 	appMessage?: {
@@ -142,7 +146,7 @@ export interface AuthContextType {
 	verifyingAuth?: boolean;
 }
 
-const GeneralContext = createContext<AuthContextType | undefined>(undefined);
+const GeneralContext = createContext<GeneralContextType | undefined>(undefined);
 
 const HISTORY_KEY = 'BIM_history_v1';
 const MAX_HISTORY = 5;
@@ -213,6 +217,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		[language]
 	);
 	const [online, setOnline] = useState<boolean>(true);
+	const [routersLastFetched, setRoutersLastFetched] = useState<{ [routerId: string]: string }>({});
 	const [selectedOption, setSelectedOption] = useState<
 		headerOptions | undefined
 	>(undefined);
@@ -1507,6 +1512,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setPending2FAMethod,
 				pendingPhone,
 				setPendingPhone,
+				routersLastFetched,
+				setRoutersLastFetched,
 				online,
 				appMessage,
 				setAppMessage,
