@@ -1,16 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
 	Animated,
 	findNodeHandle,
 	Platform,
 	TextInput as RNTextInput,
-	useColorScheme,
-	View,
+	useColorScheme
 } from 'react-native';
 
 import OverlayContainer from '@/components/OverlayContainer';
 import { ThemedButton } from '@/components/ThemedButton';
-import { ThemedDropdown } from '@/components/ThemedDropdown';
 import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -50,20 +48,12 @@ export default function CreateProfile({
 	const bim = useThemeColor({}, 'bim');
 	const white = useThemeColor({}, 'white');
 	const inputBorder = useThemeColor({}, 'inputBorder');
-
-	const [numberOfUsers, setNumberOfUsers] = useState('1');
-	const [pkg, setPkg] = useState(initialPkg || '');
-	const [showPackageDropdown, setShowPackageDropdown] = useState(false);
-	const pkgContainerRef = useRef<View>(null);
 	const scrollRef = useRef<any>(null);
-	const numberInputRef = useRef<RNTextInput | null>(null);
-
-	useEffect(() => {
-		if (visible) {
-			setNumberOfUsers('1');
-			setPkg(initialPkg || '');
-		}
-	}, [visible, initialPkg]);
+	const sessionTimeoutInputRef = useRef<RNTextInput | null>(null);
+	const [profileName, setProfileName] = useState<string | undefined>();
+	const [sessionTimeout, setSessionTimeout] = useState<number | undefined>();
+	const [rateLimit, setRateLimit] = useState<string | undefined>();
+	const [simultaneousConnections, setSimultaneousConnections] = useState<number | undefined>();
 
 	// no explicit keyboard listeners needed; OverlayContainer handles insets
 
@@ -124,15 +114,14 @@ export default function CreateProfile({
 					lightColor={screenTitleText}
 					darkColor={screenTitleText}
 				>
-					{'Create Profile'}
+					{translations[language].categories.packages.createProfile}
 				</ThemedText>
 
 				<ThemedInput
-					label={translations[language].categories.hotspots.title}
-					placeholder={translations[language].categories.hotspots.title}
-					value={''}
-					setValue={() => { }}
-					editable={false}
+					label={translations[language].categories.packages.profileName}
+					placeholder={translations[language].categories.packages.profileName}
+					value={profileName}
+					setValue={v => setProfileName(v)}
 					style={{
 						backgroundColor: bg,
 						borderColor: inputBorder,
@@ -142,13 +131,13 @@ export default function CreateProfile({
 				/>
 
 				<ThemedInput
-					ref={numberInputRef as any}
-					label={translations[language].categories.vouchers.numberOfUsers}
-					placeholder={translations[language].categories.vouchers.numberOfUsers}
+					ref={sessionTimeoutInputRef as any}
+					label={translations[language].categories.packages.sessionTimeout}
+					placeholder={translations[language].categories.packages.sessionTimeout}
 					keyboardType='number-pad'
-					value={numberOfUsers}
-					setValue={setNumberOfUsers}
-					onFocus={() => scrollToInput(numberInputRef)}
+					value={sessionTimeout?.toString()}
+					setValue={v => setSessionTimeout(v ? parseInt(v) : undefined)}
+					onFocus={() => scrollToInput(sessionTimeoutInputRef, 64)}
 					editable={true}
 					style={{
 						backgroundColor: bg,
@@ -158,20 +147,30 @@ export default function CreateProfile({
 					containerStyle={{ marginBottom: 4 }}
 				/>
 
-				<ThemedDropdown
-					label={translations[language].categories.vouchers.package}
-					placeholder={translations[language].categories.vouchers.package}
-					value={pkg}
-					setValue={setPkg}
-					options={packageOptions}
-					isAnimatable={true}
-					keyboardVisible={keyboardVisible}
-					containerRef={pkgContainerRef}
-					id={'package-select'}
-					showDropdown={showPackageDropdown}
-					setShowDropdown={setShowPackageDropdown}
-					openDirection='down'
-					style={{ marginTop: 4 }}
+				<ThemedInput
+					label={translations[language].categories.packages.rateLimit}
+					placeholder={translations[language].categories.packages.rateLimit}
+					value={rateLimit}
+					setValue={v => setRateLimit(v)}
+					style={{
+						backgroundColor: bg,
+						borderColor: inputBorder,
+						borderWidth: 1,
+					}}
+					containerStyle={{ marginBottom: 4 }}
+				/>
+				<ThemedInput
+					label={translations[language].categories.packages.simultaneousConnections}
+					placeholder={translations[language].categories.packages.simultaneousConnections}
+					keyboardType='number-pad'
+					value={simultaneousConnections?.toString()}
+					setValue={v => setSimultaneousConnections(v ? parseInt(v) : undefined)}
+					style={{
+						backgroundColor: bg,
+						borderColor: inputBorder,
+						borderWidth: 1,
+					}}
+					containerStyle={{ marginBottom: 4 }}
 				/>
 
 				<ThemedView

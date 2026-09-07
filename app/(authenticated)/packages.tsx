@@ -17,7 +17,6 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackagesScreen() {
 	useTrackHistory('/(authenticated)/packages');
-	const createProfileModalRef = useRef(null);
 	const createProfileModalAnim = useAnimatedValue(0);
 	const bg = useThemeColor({}, 'background');
 	const bimColor = useThemeColor({}, 'bim');
@@ -72,10 +71,10 @@ export default function PackagesScreen() {
 
 	// Column definitions
 	const packageHeaders = [
-		{ key: 'name', label: 'Profile Name', width: 140 },
-		{ key: 'session_timeout', label: 'Session Timeout', width: 120 },
-		{ key: 'rate_limit', label: 'Rate Limit', width: 120 },
-		{ key: 'shared_users', label: 'Simultaneous Use', width: 120 },
+		{ key: 'profileName', label: translations[language].categories.packages.profileName, width: 140 },
+		{ key: 'sessionTimeout', label: translations[language].categories.packages.sessionTimeout, width: 120 },
+		{ key: 'rateLimit', label: translations[language].categories.packages.rateLimit, width: 120 },
+		{ key: 'simultaneousConnections', label: translations[language].categories.packages.simultaneousConnections, width: 120 },
 		{
 			key: 'actions',
 			label: translations[language].categories.dashboard.actions,

@@ -191,6 +191,10 @@ const translations: Translations = {
 				bandwidth: 'Bandwidth',
 				createProfile: 'Create New Profile',
 				durationHours: 'Duration (hrs)',
+				profileName: 'Profile Name',
+				sessionTimeout: 'Session Timeout',
+				rateLimit: 'Rate Limit',
+				simultaneousConnections: 'Simultaneous Use',
 				deleteMessage:
 					'Are you sure you want to delete this package? This action cannot be undone.',
 				view: 'View',
