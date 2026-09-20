@@ -117,6 +117,17 @@ export async function getRouterHotspotUsers(
 	return resp;
 }
 
+export async function getRouterActiveUsers(routerId: string, token?: string) {
+	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspots/active`;
+	console.log('[getRouterHotspotActiveUsers] url', url);
+	const resp = await apiFetch(url, {
+		method: 'GET',
+		headers: buildHeaders(token),
+	});
+
+	return resp;
+}
+
 export default {
 	fetchRouters,
 	getRouterById,
@@ -124,4 +135,5 @@ export default {
 	pingRouter,
 	getRouterHotspots,
 	getRouterHotspotUsers,
+	getRouterActiveUsers,
 };

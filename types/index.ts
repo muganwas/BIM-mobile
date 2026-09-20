@@ -72,17 +72,23 @@ export interface NetRouter {
 }
 
 export interface ApiRouter {
-	id: string;
-	name: string;
-	location: string;
-	type: string;
-	ip_address: string;
-	router_user: string;
-	router_password: string;
-	balance: string;
-	user_id: number;
-	created_at: string;
-	updated_at: string;
+	"id": string;
+	"name": string;
+	"location": string;
+	"type": string;
+	"ip_address": string;
+	"router_user": string;
+	"router_password": string;
+	"balance": string;
+	"isp_id?": string;
+	"device_id"?: string;
+	"auth_key"?: string;
+	"last_heartbeat_at"?: string;
+	"last_system_info"?: RouterSystemInfo;
+	"user_id": number;
+	"created_at": string;
+	"updated_at": string;
+	"hotspot_dns"?: string;
 }
 
 
@@ -275,6 +281,8 @@ export interface HotspotActiveUser {
 	'mac-address': string;
 	'packets-in'?: string;
 	'packets-out'?: string;
+	'start-date'?: string;
+	'start-date-iso'?: string;
 	radius?: string;
 	server: string;
 	'session-time-left'?: string;
@@ -288,5 +296,40 @@ export interface GetRouterHotspotUsersResponse {
 	hotspotServers: any[];
 	profiles: any[];
 	users: HotspotUser[];
+}
+
+export interface RouterSystemInfo {
+	arch?: string;
+	version?: string;
+	board?: string;
+	platform?: string;
+	build_time?: string;
+}
+
+export interface RouterActiveUsersResponse {
+	"router": {
+		"id": string;
+		"name": string;
+		"location": string;
+		"type": string;
+		"ip_address": string;
+		"router_user": string;
+		"router_password": string;
+		"balance": string;
+		"isp_id": string;
+		"device_id": string;
+		"auth_key": string;
+		"last_heartbeat_at": string;
+		"last_system_info": RouterSystemInfo;
+		"user_id": number;
+		"created_at": string;
+		"updated_at": string;
+		"hotspot_dns": string;
+	};
+	"active": HotspotActiveUser[];
+	"active_meta": {
+		"total": number;
+	};
+	"message": string;
 }
 

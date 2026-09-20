@@ -174,9 +174,9 @@ export default function RoutersScreen() {
 		setShowCreateModal(true);
 	};
 
-	const handleViewRouter = (netRouter: ApiRouter) => {
-		if (!netRouter.id) return;
-		router.push({ pathname: '/routers/preview/[routerId]', params: { ...netRouter, routerId: netRouter.id } });
+	const handleViewRouter = (Router: ApiRouter) => {
+		if (!Router.id) return;
+		router.push({ pathname: '/routers/preview/[routerId]', params: { ...Router, routerId: Router.id } as any });
 	};
 	const handleEditRouter = (routerId: string) => {
 		if (!routerId) return;

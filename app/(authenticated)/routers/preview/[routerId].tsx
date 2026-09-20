@@ -80,7 +80,6 @@ export default function RouterDetailsScreen() {
 
 	// Fetch router data, status, and hotspots
 	const fetchRouterData = useCallback(async () => {
-		console.log({ lastFetched: routersLastFetched[routerId || ''] });
 		if (!routerId || !authToken || (routerId && routersLastFetched[routerId] && Date.now() - new Date(routersLastFetched[routerId]!).getTime() < 60000)) return;
 		console.log('[RouterDetailsScreen] Fetching data for router ID:', routerId);
 		setLoading(true);
@@ -140,13 +139,12 @@ export default function RouterDetailsScreen() {
 		}
 	}, [fetchRouterData]);
 
-	const handleViewHotspotUsers = (hotspot: Hotspot) => {
-		const hotspotId = hotspot['.id'];
-		if (!hotspotId) return;
-		router.push({
-			pathname: `/routers/vouchers/${routerId}/${hotspotId}`,
-			params: { ...hotspot, disabled: String(hotspot.disabled) }
-		} as any);
+	const handleViewRouterDetails = (routerId?: string) => {
+		if (!routerId) {
+			console.error('[RouterDetailsScreen] No routerId provided for view details');
+			return;
+		}
+		router.push(`/routers/details/${routerId}`);
 	};
 
 
@@ -537,7 +535,7 @@ export default function RouterDetailsScreen() {
 												paddingHorizontal: 12,
 												borderRadius: 8,
 											}}
-											onPress={() => handleViewHotspotUsers(hotspot)}
+											onPress={() => handleViewRouterDetails(routerId)}
 										>
 											<ThemedText lightColor={whiteLight} darkColor={whiteDark}>
 												{translations[language].categories.buttons.viewDetails}
