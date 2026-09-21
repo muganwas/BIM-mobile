@@ -132,8 +132,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 .env.development
-.gitignore
-.gitignore
 .env.production
 .env.staging
 
@@ -146,3 +144,14 @@ release.keystore
 google-services.json
 GoogleService-Info.plist
 backend-api.json
+
+# Android local config and build output (machine-generated / IDE-specific)
+android/local.properties
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/app/.cxx/
+
+# Expo local state, generated types and web cache
+.expo/
