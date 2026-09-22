@@ -194,12 +194,12 @@ export default function RouterDetails() {
                     </ScrollView>
                 </ThemedView>
                 <TileContainer id={routerId || 'new-router' + generateRandomInt(1000, 9999)} backgroundColor={background} style={{ marginHorizontal: 10, padding: 10 }}>
-                    <ThemedView style={{ display: activeTab === 'active' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }} lightColor={background} darkColor={background}>
+                    <ThemedView style={{ display: activeTab === 'active' ? 'flex' : 'none', flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }} lightColor={background} darkColor={background}>
                         <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start' }} lightColor={background} darkColor={background}>
                             <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.activeSessions}</ThemedText>
                         </ThemedView>
-                        <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start' }} lightColor={background} darkColor={background}>
-                            <ScrollView style={{ width: '100%' }} horizontal showsHorizontalScrollIndicator={true}>
+                        <ThemedView style={{ flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start' }} lightColor={background} darkColor={background}>
+                            <ScrollView style={{ width: '100%' }} horizontal nestedScrollEnabled showsHorizontalScrollIndicator={true}>
                                 <ThemedView style={{ flexDirection: 'row' }} lightColor={background} darkColor={background}>
                                     <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
                                         <ThemedView style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
@@ -209,7 +209,7 @@ export default function RouterDetails() {
                                                 </ThemedText>
                                             ))}
                                         </ThemedView>
-                                        {/* <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
+                                        <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
                                             {activeUsers.map((user, index) => (
                                                 <ThemedView key={index} style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
                                                     <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[0].width }}>{user.server}</ThemedText>
@@ -224,7 +224,7 @@ export default function RouterDetails() {
                                                     <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[9].width }}>{user['start-date'] || '-'}</ThemedText>
                                                 </ThemedView>
                                             ))}
-                                        </ThemedView> */}
+                                        </ThemedView>
                                     </ThemedView>
                                 </ThemedView>
                             </ScrollView>
