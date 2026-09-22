@@ -17,6 +17,7 @@ import { ActivityIndicator } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 type routerTab = 'active' | 'users' | 'cookies' | 'hosts' | 'dhcp_leases' | 'traffic';
+type ActiveMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
 
 export default function RouterDetails() {
     const { handleUpdateHistory, language, authToken, routersLastFetched, setRoutersLastFetched } = useGeneral();
@@ -30,6 +31,7 @@ export default function RouterDetails() {
     const [activeTab, setActiveTab] = useState<routerTab>('active');
     const [retrying, setRetrying] = useState(false);
     const [activeUsers, setActiveUsers] = useState<HotspotActiveUser[]>([]);
+    const [activeMeta, setActiveMeta] = useState<ActiveMeta | undefined>();
     const tabTitleKeys: Record<routerTab, { width: number, key: string }[]> = {
         active: [
             { width: 100, key: 'server' },
@@ -59,7 +61,7 @@ export default function RouterDetails() {
     useTrackHistory(
         routerId
             ? `/(authenticated)/routers/details/${routerId}`
-            : '/(authenticated)/routers/preview'
+            : '/(authenticated)/routers'
     );
 
     useEffect(() => {
@@ -70,15 +72,16 @@ export default function RouterDetails() {
         });
     }, [navigation]);
 
-    const fetchActiveUsers = useCallback(async (isRetry = false) => {
+    const fetchActiveUsers = useCallback(async (params?: { isRetry?: boolean; page?: number }) => {
         if (!routerId || !authToken) return;
         setLoading(true);
-        setRetrying(isRetry);
+        setRetrying(params?.isRetry ?? false);
         try {
-            const resp = await getRouterActiveUsers(routerId, authToken);
+            const resp = await getRouterActiveUsers({ routerId, token: authToken, page: params?.page });
             if (resp.ok) {
                 const data = await resp.json();
                 setActiveUsers(data?.active || []);
+                setActiveMeta(data?.active_meta || undefined);
             } else {
                 console.error('[RouterDetails] fetchActiveUsers failed', resp.status, resp.statusText);
             }
@@ -87,13 +90,13 @@ export default function RouterDetails() {
         } finally {
             setLoading(false);
         }
-    }, [routerId, authToken]);
+    }, [routerId, authToken, activeMeta?.current_page, activeMeta?.last_page]);
 
     useEffect(() => {
         if (!routerId || !authToken) return;
         setLoading(true);
         fetchActiveUsers();
-    }, [routerId, authToken, fetchActiveUsers]);
+    }, [routerId, authToken]);
 
     const handleRefresh = () => {
         //setLoading(true);
@@ -131,7 +134,7 @@ export default function RouterDetails() {
                     >
                         <ThemedView style={{ flexDirection: 'row', marginVertical: 10 }} lightColor={background} darkColor={background}>
                             <ThemedButton
-                                title={translations[language].categories.routers.activeSessions + ` (${activeUsers.length})`}
+                                title={translations[language].categories.routers.activeSessions + ` (${activeMeta?.total ?? 0})`}
                                 onPress={() => setActiveTab('active')}
                                 darkTextColor={activeTab === 'active' ? bim : tabText}
                                 lightTextColor={activeTab === 'active' ? bim : tabText}
@@ -210,20 +213,73 @@ export default function RouterDetails() {
                                             ))}
                                         </ThemedView>
                                         <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                            {activeUsers.map((user, index) => (
-                                                <ThemedView key={index} style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[0].width }}>{user.server}</ThemedText>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[1].width }}>{user.user}</ThemedText>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[2].width }}>{user.address}</ThemedText>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[3].width }}>{user['mac-address']}</ThemedText>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[4].width }}>{user.uptime}</ThemedText>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[5].width }}>{user['bytes-in']}</ThemedText>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[6].width }}>{user['bytes-out']}</ThemedText>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[7].width }}>{user['session-time-left'] || '-'}</ThemedText>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[8].width }}>{user['login-by'] || '-'}</ThemedText>
-                                                    <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[9].width }}>{user['start-date'] || '-'}</ThemedText>
-                                                </ThemedView>
-                                            ))}
+                                            <ThemedView>
+                                                {activeUsers.map((user, index) => (
+                                                    <ThemedView key={index} style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[0].width }}>{user.server}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[1].width }}>{user.user}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[2].width }}>{user.address}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[3].width }}>{user['mac-address']}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[4].width }}>{user.uptime}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[5].width }}>{user['bytes-in']}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[6].width }}>{user['bytes-out']}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[7].width }}>{user['session-time-left'] || '-'}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[8].width }}>{user['login-by'] || '-'}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[9].width }}>{user['start-date'] || '-'}</ThemedText>
+                                                    </ThemedView>
+                                                ))}
+                                            </ThemedView>
+                                            <ThemedView style={{ height: 50, flexDirection: 'row', gap: 10, display: (activeMeta?.total ?? 0 > 1) && (activeMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }} lightColor={background} darkColor={background}>
+                                                <ThemedButton
+                                                    title={translations[language].categories.buttons.first}
+                                                    onPress={() => {
+                                                        if (activeMeta && activeMeta.current_page > 1) {
+                                                            fetchActiveUsers({ page: 1 });
+                                                        }
+                                                    }}
+                                                    disabled={activeMeta?.current_page === 1}
+                                                    darkColor={background}
+                                                    lightColor={background}
+                                                    textStyle={{ color: activeMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
+                                                />
+                                                <ThemedButton
+                                                    title={translations[language].categories.buttons.previous}
+                                                    onPress={() => {
+                                                        if (activeMeta && activeMeta.current_page > 1) {
+                                                            fetchActiveUsers({ page: activeMeta.current_page > 1 ? activeMeta.current_page - 1 : 1 });
+                                                        }
+                                                    }}
+                                                    disabled={activeMeta?.current_page === 1}
+                                                    darkColor={background}
+                                                    lightColor={background}
+                                                    textStyle={{ color: activeMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
+                                                />
+                                                <ThemedButton
+                                                    title={translations[language].categories.buttons.next}
+                                                    onPress={() => {
+                                                        if (activeMeta && activeMeta.current_page < activeMeta.last_page) {
+                                                            fetchActiveUsers({ page: activeMeta.current_page + 1 });
+                                                        }
+                                                    }
+                                                    }
+                                                    disabled={activeMeta?.current_page === activeMeta?.last_page}
+                                                    darkColor={background}
+                                                    lightColor={background}
+                                                    textStyle={{ color: activeMeta?.current_page === activeMeta?.last_page ? tabText : bim, fontSize: 14 }}
+                                                />
+                                                <ThemedButton
+                                                    title={translations[language].categories.buttons.last}
+                                                    onPress={() => {
+                                                        if (activeMeta && activeMeta.current_page < activeMeta.last_page) {
+                                                            fetchActiveUsers({ page: activeMeta.last_page });
+                                                        }
+                                                    }}
+                                                    disabled={activeMeta?.current_page === activeMeta?.last_page}
+                                                    darkColor={background}
+                                                    lightColor={background}
+                                                    textStyle={{ color: activeMeta?.current_page === activeMeta?.last_page ? tabText : bim, fontSize: 14 }}
+                                                />
+                                            </ThemedView>
                                         </ThemedView>
                                     </ThemedView>
                                 </ThemedView>

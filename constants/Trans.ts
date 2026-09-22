@@ -129,6 +129,10 @@ const translations: Translations = {
 				createPackage: 'Create package',
 				createNewPackage: 'Create new package',
 				retry: 'Retry',
+				previous: 'Previous',
+				next: 'Next',
+				first: 'First',
+				last: 'Last',
 			},
 			navigation: {
 				home: 'Dashboard',

@@ -67,7 +67,7 @@ export default function RouterDetailsScreen() {
 	useTrackHistory(
 		routerId
 			? `/(authenticated)/routers/preview/${routerId}`
-			: '/(authenticated)/routers/preview'
+			: '/(authenticated)/routers'
 	);
 
 	useEffect(() => {

@@ -8,6 +8,7 @@
 		"start:prod": "dotenv -e .env.production expo start",
 		"reset-project": "node ./scripts/reset-project.js",
 		"android": "expo run:android --device",
+		"emulator:up": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/emulator-up.ps1",
 		"ios": "expo run:ios --device",
 		"web": "expo start --web",
 		"test": "jest --verbose",

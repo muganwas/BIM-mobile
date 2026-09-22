@@ -117,8 +117,8 @@ export async function getRouterHotspotUsers(
 	return resp;
 }
 
-export async function getRouterActiveUsers(routerId: string, token?: string) {
-	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspots/active`;
+export async function getRouterActiveUsers({ routerId, token, page, limit }: { routerId: string; token?: string; page?: number; limit?: number }) {
+	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspots/active?per_page=${limit || 8}&page=${page || 1}`;
 	console.log('[getRouterHotspotActiveUsers] url', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
