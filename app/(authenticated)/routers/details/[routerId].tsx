@@ -9,7 +9,7 @@ import { generateRandomInt } from "@/helpers";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import useTrackHistory from "@/hooks/useTrackHistory";
 import { getRouterActiveUsers, getRouterUsers } from "@/services/RouterService";
-import { GetRouterActiveUsersResponse, GetRouterUsersResponse, HotspotActiveUser, HotspotUser, UsersMeta } from "@/types";
+import { Cookie, CookiesMeta, GetRouterActiveUsersResponse, GetRouterUsersResponse, HotspotActiveUser, HotspotUser, UsersMeta } from "@/types";
 import { useNavigation } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -33,7 +33,11 @@ export default function RouterDetails() {
     const [retrying, setRetrying] = useState(false);
     const [activeUsers, setActiveUsers] = useState<HotspotActiveUser[]>([]);
     const [users, setUsers] = useState<HotspotUser[]>([]);
+    const [cookies, setCookies] = useState<Cookie[]>([]);
     const [usersMeta, setUsersMeta] = useState<UsersMeta | undefined>();
+    const [hostsMeta, setHostsMeta] = useState<UsersMeta | undefined>();
+    const [dhcpLeasesMeta, setDhcpLeasesMeta] = useState<UsersMeta | undefined>();
+    const [cookiesMeta, setCookiesMeta] = useState<CookiesMeta | undefined>();
     const [activeMeta, setActiveMeta] = useState<UsersMeta | undefined>();
     const tabTitleKeys: Record<routerTab, { width: number, key: string }[]> = {
         active: [
@@ -179,7 +183,7 @@ export default function RouterDetails() {
                     >
                         <ThemedView style={{ flexDirection: 'row', marginVertical: 10 }} lightColor={background} darkColor={background}>
                             <ThemedButton
-                                title={translations[language].categories.routers.activeSessions + ` (${activeMeta?.total ?? 0})`}
+                                title={translations[language].categories.routers.activeSessions + ` (${activeMeta?.total ?? ''})`}
                                 onPress={() => setActiveTab('active')}
                                 darkTextColor={activeTab === 'active' ? bim : tabText}
                                 lightTextColor={activeTab === 'active' ? bim : tabText}
@@ -189,7 +193,7 @@ export default function RouterDetails() {
 
                             />
                             <ThemedButton
-                                title={translations[language].categories.routers.users + ` (${usersMeta?.total ?? 0})`}
+                                title={translations[language].categories.routers.users + `${usersMeta?.total && usersMeta?.total > 0 ? ` (${usersMeta?.total ?? ''})` : ''}`}
                                 onPress={() => setActiveTab('users')}
                                 darkTextColor={activeTab === 'users' ? bim : tabText}
                                 lightTextColor={activeTab === 'users' ? bim : tabText}
@@ -199,7 +203,7 @@ export default function RouterDetails() {
 
                             />
                             <ThemedButton
-                                title={translations[language].categories.routers.cookies}
+                                title={translations[language].categories.routers.cookies + `${cookiesMeta?.total && cookiesMeta?.total > 0 ? ` (${cookiesMeta?.total ?? ''})` : ''}`}
                                 onPress={() => setActiveTab('cookies')}
                                 darkTextColor={activeTab === 'cookies' ? bim : tabText}
                                 lightTextColor={activeTab === 'cookies' ? bim : tabText}
@@ -209,7 +213,7 @@ export default function RouterDetails() {
 
                             />
                             <ThemedButton
-                                title={translations[language].categories.routers.hosts}
+                                title={translations[language].categories.routers.hosts + `${hostsMeta?.total && hostsMeta?.total > 0 ? ` (${hostsMeta?.total ?? ''})` : ''}`}
                                 onPress={() => setActiveTab('hosts')}
                                 darkTextColor={activeTab === 'hosts' ? bim : tabText}
                                 lightTextColor={activeTab === 'hosts' ? bim : tabText}
@@ -219,7 +223,7 @@ export default function RouterDetails() {
 
                             />
                             <ThemedButton
-                                title={translations[language].categories.routers.dhcpLeases}
+                                title={translations[language].categories.routers.dhcpLeases + `${dhcpLeasesMeta?.total && dhcpLeasesMeta?.total > 0 ? ` (${dhcpLeasesMeta?.total ?? ''})` : ''}`}
                                 onPress={() => setActiveTab('dhcp_leases')}
                                 darkTextColor={activeTab === 'dhcp_leases' ? bim : tabText}
                                 lightTextColor={activeTab === 'dhcp_leases' ? bim : tabText}

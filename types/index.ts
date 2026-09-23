@@ -300,7 +300,42 @@ export interface RouterSystemInfo {
 	build_time?: string;
 }
 
+export type Cookie = {
+	".id": string;
+	user: string;
+	"mac-address": string;
+	"expires-in": string;
+	"mac-cookie": boolean;
+}
+
+export type CookiesMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
+
 export type UsersMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
+
+export interface GetRouterCookiesResponse {
+	"router": {
+		"id": string;
+		"name": string;
+		"location": string;
+		"type": string;
+		"ip_address": string;
+		"router_user": string;
+		"router_password": string;
+		"balance": string;
+		"isp_id": string;
+		"device_id": string;
+		"auth_key": string;
+		"last_heartbeat_at": string;
+		"last_system_info": RouterSystemInfo;
+		"user_id": number;
+		"created_at": string;
+		"updated_at": string;
+		"hotspot_dns": string;
+	};
+	"cookies": Cookie[];
+	"cookies_meta": CookiesMeta;
+	"message": string;
+}
 
 export interface GetRouterActiveUsersResponse {
 	"router": {
