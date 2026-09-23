@@ -109,6 +109,28 @@ export async function getRouterActiveUsers({ routerId, token, page, limit }: { r
 	return resp;
 }
 
+export async function getRouterCookies({ routerId, token, page, limit }: { routerId: string; token?: string; page?: number; limit?: number }) {
+	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspot-cookies?per_page=${limit || 8}&page=${page || 1}`;
+	console.log('[getRouterCookies] url', url);
+	const resp = await apiFetch(url, {
+		method: 'GET',
+		headers: buildHeaders(token),
+	});
+
+	return resp;
+}
+
+export async function deleteRouterCookie({ routerId, cookieId, token }: { routerId: string; cookieId: string; token?: string }) {
+	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspot-cookies/${cookieId}`;
+	console.log('[removeRouterCookie] url', url);
+	const resp = await apiFetch(url, {
+		method: 'DELETE',
+		headers: buildHeaders(token),
+	});
+
+	return resp;
+}
+
 export default {
 	fetchRouters,
 	getRouterById,
@@ -117,4 +139,6 @@ export default {
 	getRouterHotspots,
 	getRouterUsers,
 	getRouterActiveUsers,
+	getRouterCookies,
+	deleteRouterCookie
 };

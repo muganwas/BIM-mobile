@@ -8,8 +8,8 @@ import { useGeneral } from "@/context/GeneralContext";
 import { generateRandomInt } from "@/helpers";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import useTrackHistory from "@/hooks/useTrackHistory";
-import { getRouterActiveUsers, getRouterUsers } from "@/services/RouterService";
-import { Cookie, CookiesMeta, GetRouterActiveUsersResponse, GetRouterUsersResponse, HotspotActiveUser, HotspotUser, UsersMeta } from "@/types";
+import { deleteRouterCookie, getRouterActiveUsers, getRouterCookies, getRouterUsers } from "@/services/RouterService";
+import { Cookie, CookiesMeta, GetRouterActiveUsersResponse, GetRouterCookiesResponse, GetRouterUsersResponse, HotspotActiveUser, HotspotUser, UsersMeta } from "@/types";
 import { useNavigation } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -27,6 +27,8 @@ export default function RouterDetails() {
     const tabText = useThemeColor({}, 'heading.one');
     const titleText = useThemeColor({}, 'headers');
     const background = useThemeColor({}, 'background');
+    const white = useThemeColor({}, 'white');
+    const red = useThemeColor({}, 'error');
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<routerTab>('active');
     const [lastFetched, setLastFetched] = useState<{ activeUsers: string | undefined, users: string | undefined, cookies: string | undefined, hosts: string | undefined, dhcp_leases: string | undefined }>({ activeUsers: undefined, users: undefined, cookies: undefined, hosts: undefined, dhcp_leases: undefined });
@@ -61,7 +63,7 @@ export default function RouterDetails() {
             { width: 80, key: 'bytesOut' },
             { width: 140, key: 'comment' }
         ],
-        cookies: [{ width: 100, key: 'cookies' }],
+        cookies: [{ width: 80, key: 'user' }, { width: 120, key: 'mac' }, { width: 120, key: 'macCookie' }, { width: 140, key: 'expiresIn' }, { width: 120, key: 'actions' }],
         hosts: [{ width: 100, key: 'hosts' }],
         dhcp_leases: [{ width: 100, key: 'dhcpLeases' }],
         traffic: [{ width: 100, key: 'traffic' }],
@@ -95,6 +97,9 @@ export default function RouterDetails() {
         if (activeTab === 'users' && (!lastFetched.users || (Date.now() - new Date(lastFetched.users).getTime() > cooloffTime))) {
             fetchUsers({ isRetry: false, page: usersMeta?.current_page ?? 1 });
         }
+        if (activeTab === 'cookies' && (!lastFetched.cookies || (Date.now() - new Date(lastFetched.cookies).getTime() > cooloffTime))) {
+            fetchCookies({ isRetry: false, page: cookiesMeta?.current_page ?? 1 });
+        }
     }, [routerId, authToken, loading, activeTab, lastFetched.users, lastFetched.activeUsers, lastFetched.cookies, lastFetched.hosts, lastFetched.dhcp_leases]);
 
     const fetchActiveUsers = useCallback(async (params?: { isRetry?: boolean; page?: number }) => {
@@ -116,7 +121,7 @@ export default function RouterDetails() {
         } finally {
             setLoading(false);
         }
-    }, [routerId, authToken, activeMeta?.current_page, activeMeta?.last_page]);
+    }, [routerId, authToken]);
 
     const fetchUsers = useCallback(async (params?: { isRetry?: boolean; page?: number }) => {
         if (!routerId || !authToken) return;
@@ -139,6 +144,44 @@ export default function RouterDetails() {
         }
     }, [routerId, authToken]);
 
+    const fetchCookies = useCallback(async (params?: { isRetry?: boolean; page?: number }) => {
+        if (!routerId || !authToken) return;
+        setLoading(true);
+        setRetrying(params?.isRetry ?? false);
+        try {
+            const resp = await getRouterCookies({ routerId, token: authToken, page: params?.page, limit: 10 });
+            if (resp.ok) {
+                const data: GetRouterCookiesResponse = await resp.json();
+                setCookies(data?.cookies || []);
+                setCookiesMeta(data?.cookies_meta || undefined);
+                setLastFetched((prev) => ({ ...prev, cookies: new Date().toISOString() }));
+            } else {
+                console.error('[RouterDetails] fetchCookies failed', resp.status, resp.statusText);
+            }
+        } catch (error) {
+            console.error('[RouterDetails] fetchCookies error', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [routerId, authToken]);
+
+    const removeCookie = useCallback(async (cookieId: string) => {
+        if (!routerId || !authToken) return;
+        setLoading(true);
+        try {
+            const resp = await deleteRouterCookie({ routerId, token: authToken, cookieId });
+            if (resp.ok) {
+                setCookies((prev) => prev.filter((cookie) => cookie['.id'] !== cookieId));
+            } else {
+                console.error('[RouterDetails] removeCookie failed', resp.status, resp.statusText);
+            }
+        } catch (error) {
+            console.error('[RouterDetails] removeCookie error', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [routerId, authToken]);
+
     const handleRefresh = () => {
         setLoading(true);
         try {
@@ -146,6 +189,8 @@ export default function RouterDetails() {
                 fetchActiveUsers({ isRetry: true, page: activeMeta?.current_page ?? 1 });
             if (activeTab === 'users')
                 fetchUsers({ isRetry: true, page: usersMeta?.current_page ?? 1 });
+            if (activeTab === 'cookies')
+                fetchCookies({ isRetry: true, page: cookiesMeta?.current_page ?? 1 });
         } catch (error) {
             console.error('[RouterDetails] handleRefresh error', error);
         }
@@ -336,7 +381,11 @@ export default function RouterDetails() {
                             </ThemedView>
                         </ThemedView>
                     </ThemedView>
-                    <ThemedView style={{ display: activeTab === 'users' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignSelf: 'stretch', alignItems: 'flex-start', marginHorizontal: 20 }} lightColor={background} darkColor={background}>
+                    <ThemedView
+                        style={{ display: activeTab === 'users' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignSelf: 'stretch', alignItems: 'flex-start', marginHorizontal: 20 }}
+                        lightColor={background}
+                        darkColor={background}
+                    >
                         <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start' }} lightColor={background} darkColor={background}>
                             <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.users}</ThemedText>
                         </ThemedView>
@@ -421,6 +470,108 @@ export default function RouterDetails() {
                                     darkColor={background}
                                     lightColor={background}
                                     textStyle={{ color: usersMeta?.current_page === usersMeta?.last_page ? tabText : bim, fontSize: 14 }}
+                                />
+                            </ThemedView>
+                        </ThemedView>
+                    </ThemedView>
+                    <ThemedView
+                        style={{ display: activeTab === 'cookies' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignSelf: 'stretch', alignItems: 'flex-start', marginHorizontal: 20 }}
+                        lightColor={background}
+                        darkColor={background}
+                    >
+                        <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start' }} lightColor={background} darkColor={background}>
+                            <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.cookies}</ThemedText>
+                        </ThemedView>
+                        <ThemedView style={{ flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', flexDirection: "column" }} lightColor={background} darkColor={background}>
+                            <ScrollView style={{ width: '100%' }} horizontal nestedScrollEnabled showsHorizontalScrollIndicator={true}>
+                                <ThemedView style={{ flexDirection: 'row' }} lightColor={background} darkColor={background}>
+                                    <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
+                                        <ThemedView style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
+                                            {tabTitleKeys.cookies.map((a) => (
+                                                <ThemedText key={a.key} style={{ fontSize: 16, fontWeight: 'bold', color: titleText, width: a.width }}>
+                                                    {translations[language].categories.routers[a.key]}
+                                                </ThemedText>
+                                            ))}
+                                        </ThemedView>
+                                        <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
+                                            <ThemedView style={{ flexDirection: 'column' }} lightColor={background} darkColor={background}>
+                                                {cookies.map((cookie, index) => (
+                                                    <ThemedView key={index} style={{ flexDirection: 'row', gap: 10, padding: 5 }} lightColor={background} darkColor={background}>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[0].width }}>{cookie.user}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[1].width }}>{cookie["mac-address"]}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[2].width, paddingLeft: 5 }}>{cookie['mac-cookie']}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[3].width }}>{cookie['expires-in']}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[4].width }}>
+                                                            <ThemedButton
+                                                                title={translations[language].categories.buttons.remove}
+                                                                onPress={() => {
+                                                                    removeCookie(cookie['.id']);
+                                                                }}
+                                                                lightColor={red}
+                                                                darkColor={red}
+                                                                lightTextColor={white}
+                                                                darkTextColor={white}
+                                                            />
+                                                        </ThemedText>
+                                                    </ThemedView>
+                                                ))}
+                                            </ThemedView>
+
+                                        </ThemedView>
+                                    </ThemedView>
+                                </ThemedView>
+                            </ScrollView>
+                            <ThemedView
+                                style={{ height: 50, flexDirection: 'row', gap: 10, display: (cookiesMeta?.total ?? 0 > 1) && (cookiesMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
+                                lightColor={background}
+                                darkColor={background}>
+                                <ThemedButton
+                                    title={translations[language].categories.buttons.first}
+                                    onPress={() => {
+                                        if (cookiesMeta && cookiesMeta.current_page > 1) {
+                                            fetchCookies({ page: 1 });
+                                        }
+                                    }}
+                                    disabled={cookiesMeta?.current_page === 1}
+                                    darkColor={background}
+                                    lightColor={background}
+                                    textStyle={{ color: cookiesMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
+                                />
+                                <ThemedButton
+                                    title={translations[language].categories.buttons.previous}
+                                    onPress={() => {
+                                        if (cookiesMeta && cookiesMeta.current_page > 1) {
+                                            fetchCookies({ page: cookiesMeta.current_page > 1 ? cookiesMeta.current_page - 1 : 1 });
+                                        }
+                                    }}
+                                    disabled={cookiesMeta?.current_page === 1}
+                                    darkColor={background}
+                                    lightColor={background}
+                                    textStyle={{ color: cookiesMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
+                                />
+                                <ThemedButton
+                                    title={translations[language].categories.buttons.next}
+                                    onPress={() => {
+                                        if (cookiesMeta && cookiesMeta.current_page < cookiesMeta.last_page) {
+                                            fetchCookies({ page: cookiesMeta.current_page + 1 });
+                                        }
+                                    }}
+                                    disabled={cookiesMeta?.current_page === cookiesMeta?.last_page}
+                                    darkColor={background}
+                                    lightColor={background}
+                                    textStyle={{ color: cookiesMeta?.current_page === cookiesMeta?.last_page ? tabText : bim, fontSize: 14 }}
+                                />
+                                <ThemedButton
+                                    title={translations[language].categories.buttons.last}
+                                    onPress={() => {
+                                        if (cookiesMeta && cookiesMeta.current_page < cookiesMeta.last_page) {
+                                            fetchCookies({ page: cookiesMeta.last_page });
+                                        }
+                                    }}
+                                    disabled={cookiesMeta?.current_page === cookiesMeta?.last_page}
+                                    darkColor={background}
+                                    lightColor={background}
+                                    textStyle={{ color: cookiesMeta?.current_page === cookiesMeta?.last_page ? tabText : bim, fontSize: 14 }}
                                 />
                             </ThemedView>
                         </ThemedView>
