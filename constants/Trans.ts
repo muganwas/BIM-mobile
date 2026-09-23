@@ -201,6 +201,7 @@ const translations: Translations = {
 				timeLeft: 'Time Left',
 				loginBy: 'Login By',
 				startDate: 'Start Date',
+				comment: 'Comment',
 			},
 			packages: {
 				title: 'Packages / Profiles',

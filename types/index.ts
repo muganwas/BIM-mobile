@@ -261,6 +261,8 @@ export interface HotspotUser {
 	uptime: string;
 	comment?: string;
 	server?: string;
+	address?: string;
+	online: boolean;
 	"bytes-in": string;
 	"bytes-out": string;
 	"mac-address": string;
@@ -290,14 +292,6 @@ export interface HotspotActiveUser {
 	user: string;
 }
 
-export interface GetRouterHotspotUsersResponse {
-	active: HotspotActiveUser[];
-	active_by_user: Record<string, HotspotActiveUser[][]>;
-	hotspotServers: any[];
-	profiles: any[];
-	users: HotspotUser[];
-}
-
 export interface RouterSystemInfo {
 	arch?: string;
 	version?: string;
@@ -306,7 +300,9 @@ export interface RouterSystemInfo {
 	build_time?: string;
 }
 
-export interface RouterActiveUsersResponse {
+export type UsersMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
+
+export interface GetRouterActiveUsersResponse {
 	"router": {
 		"id": string;
 		"name": string;
@@ -327,9 +323,32 @@ export interface RouterActiveUsersResponse {
 		"hotspot_dns": string;
 	};
 	"active": HotspotActiveUser[];
-	"active_meta": {
-		"total": number;
+	"active_meta": UsersMeta;
+	"message": string;
+}
+
+export interface GetRouterUsersResponse {
+	"router": {
+		"id": string;
+		"name": string;
+		"location": string;
+		"type": string;
+		"ip_address": string;
+		"router_user": string;
+		"router_password": string;
+		"balance": string;
+		"isp_id": string;
+		"device_id": string;
+		"auth_key": string;
+		"last_heartbeat_at": string;
+		"last_system_info": RouterSystemInfo;
+		"user_id": number;
+		"created_at": string;
+		"updated_at": string;
+		"hotspot_dns": string;
 	};
+	"users": HotspotUser[];
+	"users_meta": UsersMeta;
 	"message": string;
 }
 

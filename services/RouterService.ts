@@ -85,41 +85,22 @@ export async function pingRouter(routerId: string, token?: string) {
 	});
 }
 
-export async function getRouterHotspotUsers(
-	routerId: string,
-	hotspotId: string,
-	token?: string
+export async function getRouterUsers(
+	{ routerId, token, page, limit }: { routerId: string; token?: string, page?: number, limit?: number }
 ) {
-	const url = `${apiBaseUrl || ''}/vouchers/${routerId}/hotspots/${hotspotId}`;
-	console.log('[getRouterHotspotUsers] url', url);
+	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspots/users?per_page=${limit || 8}&page=${page || 1}`;
+	console.log('[getRouterUsers] url', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});
-
-	if (resp.status === 202) {
-		try {
-			const body = await resp.json().catch(() => ({}));
-			const cacheKey = body?.cache_key || body?.cacheKey || null;
-			if (cacheKey) {
-				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey, token);
-				return new Response(JSON.stringify(polled ?? {}), {
-					status: 200,
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
-		} catch (e) {
-			console.error('[getRouterHotspotUsers] polling failed', e);
-			return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-		}
-	}
 
 	return resp;
 }
 
 export async function getRouterActiveUsers({ routerId, token, page, limit }: { routerId: string; token?: string; page?: number; limit?: number }) {
 	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspots/active?per_page=${limit || 8}&page=${page || 1}`;
-	console.log('[getRouterHotspotActiveUsers] url', url);
+	console.log('[getRouterActiveUsers] url', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
 		headers: buildHeaders(token),
@@ -134,6 +115,6 @@ export default {
 	getRouterStatus,
 	pingRouter,
 	getRouterHotspots,
-	getRouterHotspotUsers,
+	getRouterUsers,
 	getRouterActiveUsers,
 };

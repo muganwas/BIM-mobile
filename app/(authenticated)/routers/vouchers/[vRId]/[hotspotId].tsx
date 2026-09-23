@@ -3,7 +3,6 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
@@ -11,19 +10,16 @@ import { useTransaction } from '@/context/TransactionContext';
 import { generateRandomInt, translateWithVariables } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { getRouterHotspotUsers } from '@/services/RouterService';
-import { ApiRouter, GetRouterHotspotUsersResponse, Hotspot } from '@/types';
+import { ApiRouter, GetRouterUsersResponse, Hotspot } from '@/types';
 import CreateVouchers from '@/views/CreateVouchers';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
 	ActivityIndicator,
 	Animated,
-	RefreshControl,
 	StyleSheet,
-	TouchableOpacity,
 	useAnimatedValue,
-	useColorScheme,
+	useColorScheme
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -59,7 +55,7 @@ export default function HotspotVouchersScreen() {
 	const white = useThemeColor({}, 'white');
 	const [netRouter, setNetRouter] = useState<ApiRouter | undefined>();
 	const [hotSpot, setHotSpot] = useState<Hotspot | undefined>();
-	const [usersResponse, setUsersResponse] = useState<GetRouterHotspotUsersResponse | null>(null);
+	const [usersResponse, setUsersResponse] = useState<GetRouterUsersResponse | null>(null);
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [promptTitle, setPromptTitle] = useState('');
 	const [promptMessage, setPromptMessage] = useState('');
@@ -98,20 +94,20 @@ export default function HotspotVouchersScreen() {
 		if (isRetry) setRetrying(true);
 
 		try {
-			const response = await getRouterHotspotUsers(vRId, hotspotId, authToken);
-			console.log('[fetchUsers] response status:', response.status);
-			if (response && response.ok) {
-				const data: GetRouterHotspotUsersResponse = await response.json();
-				setUsersResponse(data);
-				// Set hotspot from response if available
-				if (data.hotspotServers && data.hotspotServers.length > 0) {
-					// Find the matching hotspot or default to first
-					const match = data.hotspotServers.find(h => h['.id'] === hotspotId) || data.hotspotServers[0];
-					setHotSpot(match);
-				}
-				// Reset retry count on success
-				retryCount.current = 0;
-			}
+			// const response = await getRouterUsers({ routerId: vRId, token: authToken });
+			// console.log('[fetchUsers] response status:', response.status);
+			// if (response && response.ok) {
+			// 	const data: GetRouterUsersResponse = await response.json();
+			// 	setUsersResponse(data);
+			// 	// Set hotspot from response if available
+			// 	if (data.hotspotServers && data.hotspotServers.length > 0) {
+			// 		// Find the matching hotspot or default to first
+			// 		const match = data.hotspotServers.find(h => h['.id'] === hotspotId) || data.hotspotServers[0];
+			// 		setHotSpot(match);
+			// 	}
+			// 	// Reset retry count on success
+			// 	retryCount.current = 0;
+			// }
 		} catch (error) {
 			console.error('Error fetching hotspot users:', error);
 			// Avoid automatic retry to reduce resource usage; rely on manual retry
@@ -472,7 +468,7 @@ export default function HotspotVouchersScreen() {
 										{translations[language].categories.vouchers.actions}
 									</ThemedText>
 								</ThemedView>
-								<ScrollView
+								{/* <ScrollView
 									nativeID={`hotspot-list-details-${hotspotId}`}
 									style={{
 										flexDirection: 'column',
@@ -533,12 +529,12 @@ export default function HotspotVouchersScreen() {
 												lightColor={textLight}
 												darkColor={textDark}
 											>
-												{/* Status is not explicitly in the new user object, maybe infer or use new field? Using 'comment' as proxy for now or just N/A if not found. 
+												/** Status is not explicitly in the new user object, maybe infer or use new field? Using 'comment' as proxy for now or just N/A if not found. 
                                                 Actually log shows 'uptime' 'time-left'. 
                                                 Old code used 'user.status'. 
                                                 New object doesn't have status. 
                                                 Maybe check time-left?
-                                            */}
+                                            
 												{user['session-time-left'] === 'Unlimited' ? 'Active' : (user['session-time-left'] || 'N/A')}
 											</ThemedText>
 											<ThemedText
@@ -651,7 +647,7 @@ export default function HotspotVouchersScreen() {
 											</ThemedView>
 										</ThemedView>
 									))}
-								</ScrollView>
+								</ScrollView> */}
 							</ThemedView>
 						</ScrollView>
 					</TileContainer>
