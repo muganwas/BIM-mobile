@@ -8,7 +8,7 @@ export type headerOptions =
 	| 'language'
 	| 'search'
 	| undefined;
-
+export type stringifiedBool = "true" | "false";
 export interface Transaction {
 	id: string;
 	amount: number;
@@ -262,7 +262,7 @@ export interface HotspotUser {
 	comment?: string;
 	server?: string;
 	address?: string;
-	online: boolean;
+	online: stringifiedBool;
 	"bytes-in": string;
 	"bytes-out": string;
 	"mac-address": string;
@@ -305,12 +305,30 @@ export type Cookie = {
 	user: string;
 	"mac-address": string;
 	"expires-in": string;
-	"mac-cookie": boolean;
+	"mac-cookie": stringifiedBool;
 }
 
-export type CookiesMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
+export type Host = {
+	".id": string;
+	"mac-address": string;
+	"address": string;
+	"to-address": string;
+	"server": string;
+	"uptime": string;
+	"idle-time": string;
+	"keepalive-timeout": string;
+	"host-dead-time": string;
+	"bytes-in": string;
+	"bytes-out": string;
+	"packets-in": string;
+	"packets-out": string;
+	"found-by": string;
+	"DHCP": stringifiedBool;
+	"authorized": stringifiedBool;
+	"bypassed": stringifiedBool
+}
 
-export type UsersMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
+export type PaginatedResourcesMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
 
 export interface GetRouterCookiesResponse {
 	"router": {
@@ -333,7 +351,7 @@ export interface GetRouterCookiesResponse {
 		"hotspot_dns": string;
 	};
 	"cookies": Cookie[];
-	"cookies_meta": CookiesMeta;
+	"cookies_meta": PaginatedResourcesMeta;
 	"message": string;
 }
 
@@ -358,7 +376,7 @@ export interface GetRouterActiveUsersResponse {
 		"hotspot_dns": string;
 	};
 	"active": HotspotActiveUser[];
-	"active_meta": UsersMeta;
+	"active_meta": PaginatedResourcesMeta;
 	"message": string;
 }
 
@@ -383,7 +401,32 @@ export interface GetRouterUsersResponse {
 		"hotspot_dns": string;
 	};
 	"users": HotspotUser[];
-	"users_meta": UsersMeta;
+	"users_meta": PaginatedResourcesMeta;
+	"message": string;
+}
+
+export interface GetRouterHostsResponse {
+	"router": {
+		"id": string;
+		"name": string;
+		"location": string;
+		"type": string;
+		"ip_address": string;
+		"router_user": string;
+		"router_password": string;
+		"balance": string;
+		"isp_id": string;
+		"device_id": string;
+		"auth_key": string;
+		"last_heartbeat_at": string;
+		"last_system_info": RouterSystemInfo;
+		"user_id": number;
+		"created_at": string;
+		"updated_at": string;
+		"hotspot_dns": string;
+	};
+	"hosts": Host[];
+	"hosts_meta": PaginatedResourcesMeta;
 	"message": string;
 }
 

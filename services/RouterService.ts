@@ -131,6 +131,17 @@ export async function deleteRouterCookie({ routerId, cookieId, token }: { router
 	return resp;
 }
 
+export async function getRouterHosts({ routerId, token, page, limit }: { routerId: string; token?: string; page?: number; limit?: number }) {
+	const url = `${apiBaseUrl || ''}/routers/${routerId}/hosts?per_page=${limit || 8}&page=${page || 1}`;
+	console.log('[getRouterHosts] url ', url);
+	const resp = await apiFetch(url, {
+		method: 'GET',
+		headers: buildHeaders(token),
+	});
+
+	return resp;
+}
+
 export default {
 	fetchRouters,
 	getRouterById,
@@ -140,5 +151,6 @@ export default {
 	getRouterUsers,
 	getRouterActiveUsers,
 	getRouterCookies,
-	deleteRouterCookie
+	deleteRouterCookie,
+	getRouterHosts
 };

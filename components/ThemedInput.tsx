@@ -28,7 +28,7 @@ export type ThemedInputProps = TextInputProps & {
 	containerStyle?: ViewStyle;
 	countStyle?: ViewStyle;
 	numberInWordsStyle?: ViewStyle;
-	setValue: (value: string | undefined) => void;
+	setValue: (value: string) => void;
 };
 
 export const ThemedInput = forwardRef<TextInput, ThemedInputProps>(

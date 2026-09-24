@@ -200,6 +200,7 @@ const translations: Translations = {
 				server: 'Server',
 				user: 'User',
 				address: 'Address',
+				toAddress: 'To Address',
 				mac: 'MAC',
 				bytesIn: 'Bytes In',
 				bytesOut: 'Bytes Out',
