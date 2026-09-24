@@ -2,6 +2,7 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { PromptButton } from '@/types';
 import { TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OverlayContainer from './OverlayContainer';
 import { ThemedButton } from './ThemedButton';
 import { ThemedText } from './ThemedText';
@@ -26,6 +27,7 @@ export default function Prompt({
 	buttons: PromptButton[];
 }) {
 	const bg = useThemeColor({}, 'background');
+	const insets = useSafeAreaInsets();
 	const titleColor = useThemeColor({}, 'screenTitleText');
 	const textColor = useThemeColor({}, 'text');
 	return (
@@ -43,6 +45,8 @@ export default function Prompt({
 					padding: 20,
 					borderRadius: 10,
 					width: '80%',
+					alignSelf: "center",
+					marginTop: insets.top + 5,
 					alignItems: 'center',
 				}}
 			>

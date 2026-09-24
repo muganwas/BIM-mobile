@@ -184,6 +184,7 @@ const translations: Translations = {
 				firmwareVersion: 'Firmware Version',
 				model: 'Model',
 				hotspotsTitle: 'Hotspot Servers for Router',
+				deleteCookieConfirm: "Are you sure you want to delete this cookie? This action cannot be undone.",
 				deleteMessage:
 					'Are you sure you want to delete this router? This action cannot be undone.',
 				routerDetails: 'Router Details',

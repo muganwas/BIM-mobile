@@ -7,7 +7,6 @@
   "compilerOptions": {
     "strict": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
     "types": [],
     "jsx": "react-jsx",
     "paths": {

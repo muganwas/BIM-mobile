@@ -1,4 +1,5 @@
 import ParallaxScrollView from "@/components/ParallaxScrollView";
+import Prompt from "@/components/Prompt";
 import { ThemedButton } from "@/components/ThemedButton";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -8,27 +9,33 @@ import { useGeneral } from "@/context/GeneralContext";
 import { generateRandomInt } from "@/helpers";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import useTrackHistory from "@/hooks/useTrackHistory";
-import { deleteRouterCookie, getRouterActiveUsers, getRouterCookies, getRouterUsers } from "@/services/RouterService";
+import { getRouterActiveUsers, getRouterCookies, getRouterUsers } from "@/services/RouterService";
 import { Cookie, CookiesMeta, GetRouterActiveUsersResponse, GetRouterCookiesResponse, GetRouterUsersResponse, HotspotActiveUser, HotspotUser, UsersMeta } from "@/types";
 import { useNavigation } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator } from "react-native";
+import { ActivityIndicator, Animated, useAnimatedValue, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 type routerTab = 'active' | 'users' | 'cookies' | 'hosts' | 'dhcp_leases' | 'traffic';
 const cooloffTime = 1000 * 60; // 1 minute
 
 export default function RouterDetails() {
+    const colorScheme = useColorScheme() ?? 'light';
+
     const { handleUpdateHistory, language, authToken } = useGeneral();
     const { routerId } = useLocalSearchParams() as { routerId?: string };
     const navigation = useNavigation();
+    const promptFadeAnim = useAnimatedValue(0);
+    const promptCancelButton = useThemeColor({}, "cancelButton");
+    const dangerButton = useThemeColor({}, "dangerButton");
     const bim = useThemeColor({}, 'bim');
     const tabText = useThemeColor({}, 'heading.one');
     const titleText = useThemeColor({}, 'headers');
     const background = useThemeColor({}, 'background');
     const white = useThemeColor({}, 'white');
     const red = useThemeColor({}, 'error');
+    const [showPrompt, setShowPrompt] = useState(false);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<routerTab>('active');
     const [lastFetched, setLastFetched] = useState<{ activeUsers: string | undefined, users: string | undefined, cookies: string | undefined, hosts: string | undefined, dhcp_leases: string | undefined }>({ activeUsers: undefined, users: undefined, cookies: undefined, hosts: undefined, dhcp_leases: undefined });
@@ -36,6 +43,7 @@ export default function RouterDetails() {
     const [activeUsers, setActiveUsers] = useState<HotspotActiveUser[]>([]);
     const [users, setUsers] = useState<HotspotUser[]>([]);
     const [cookies, setCookies] = useState<Cookie[]>([]);
+    const [activeCookie, setActiveCookie] = useState<string>();
     const [usersMeta, setUsersMeta] = useState<UsersMeta | undefined>();
     const [hostsMeta, setHostsMeta] = useState<UsersMeta | undefined>();
     const [dhcpLeasesMeta, setDhcpLeasesMeta] = useState<UsersMeta | undefined>();
@@ -165,21 +173,23 @@ export default function RouterDetails() {
         }
     }, [routerId, authToken]);
 
-    const removeCookie = useCallback(async (cookieId: string) => {
-        if (!routerId || !authToken) return;
-        setLoading(true);
-        try {
-            const resp = await deleteRouterCookie({ routerId, token: authToken, cookieId });
-            if (resp.ok) {
-                setCookies((prev) => prev.filter((cookie) => cookie['.id'] !== cookieId));
-            } else {
-                console.error('[RouterDetails] removeCookie failed', resp.status, resp.statusText);
-            }
-        } catch (error) {
-            console.error('[RouterDetails] removeCookie error', error);
-        } finally {
-            setLoading(false);
-        }
+    const handleRemoveCookie = useCallback(async (cId?: string) => {
+        const cookieId = cId ?? activeCookie;
+        return console.log({ cookieId })
+        // if (!routerId || !authToken || !cookieId) return;
+        // setLoading(true);
+        // try {
+        //     const resp = await deleteRouterCookie({ routerId, token: authToken, cookieId });
+        //     if (resp.ok) {
+        //         setCookies((prev) => prev.filter((cookie) => cookie['.id'] !== cookieId));
+        //     } else {
+        //         console.error('[RouterDetails] removeCookie failed', resp.status, resp.statusText);
+        //     }
+        // } catch (error) {
+        //     console.error('[RouterDetails] removeCookie error', error);
+        // } finally {
+        //     setLoading(false);
+        // }
     }, [routerId, authToken]);
 
     const handleRefresh = () => {
@@ -196,6 +206,23 @@ export default function RouterDetails() {
         }
         setLoading(false);
     };
+    const toggleShowPrompt = (v?: boolean) => {
+        const value = v ?? !showPrompt;
+        if (value) {
+            Animated.timing(promptFadeAnim, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: true,
+            }).start(() => setShowPrompt(true));
+        } else {
+            Animated.timing(promptFadeAnim, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+            }).start();
+            setShowPrompt(false);
+        }
+    }
     if (loading) {
         return (
             <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} lightColor={background} darkColor={background}>
@@ -505,7 +532,8 @@ export default function RouterDetails() {
                                                             <ThemedButton
                                                                 title={translations[language].categories.buttons.remove}
                                                                 onPress={() => {
-                                                                    removeCookie(cookie['.id']);
+                                                                    setActiveCookie(cookie['.id']);
+                                                                    toggleShowPrompt(true);
                                                                 }}
                                                                 lightColor={red}
                                                                 darkColor={red}
@@ -578,6 +606,28 @@ export default function RouterDetails() {
                     </ThemedView>
                 </TileContainer>
             </ParallaxScrollView>
+            <Prompt
+                id='delete-cookie-prompt'
+                fadeAnim={promptFadeAnim}
+                onClose={() => toggleShowPrompt(false)}
+                visible={showPrompt}
+                title={translations[language].categories.dashboard.confirmDeleteTitle}
+                message={translations[language].categories.routers.deleteCookieConfirm}
+                buttons={[
+                    {
+                        title: translations[language].categories.buttons.cancel,
+                        color: promptCancelButton,
+                        textColor: white,
+                        action: () => toggleShowPrompt(false),
+                    },
+                    {
+                        title: translations[language].categories.buttons.delete,
+                        color: dangerButton,
+                        textColor: white,
+                        action: handleRemoveCookie,
+                    },
+                ]}
+            />
         </>
     )
 }
