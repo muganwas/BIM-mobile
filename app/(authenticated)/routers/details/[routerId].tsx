@@ -9,11 +9,20 @@ import { useGeneral } from "@/context/GeneralContext";
 import { generateRandomInt } from "@/helpers";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import useTrackHistory from "@/hooks/useTrackHistory";
-import { deleteRouterCookie, getRouterActiveUsers, getRouterCookies, getRouterHosts, getRouterUsers } from "@/services/RouterService";
+import {
+    deleteRouterCookie,
+    getRouterActiveUsers,
+    getRouterCookies,
+    getRouterDHCPLeases,
+    getRouterHosts,
+    getRouterUsers
+} from "@/services/RouterService";
 import {
     Cookie,
+    DHCPLease,
     GetRouterActiveUsersResponse,
     GetRouterCookiesResponse,
+    GetRouterDHCPLeasesResponse,
     GetRouterHostsResponse,
     GetRouterUsersResponse,
     Host,
@@ -53,10 +62,11 @@ export default function RouterDetails() {
     const [users, setUsers] = useState<HotspotUser[]>([]);
     const [cookies, setCookies] = useState<Cookie[]>([]);
     const [hosts, setHosts] = useState<Host[]>([]);
+    const [DHCPLeases, setDHCPLeases] = useState<DHCPLease[]>([]);
     const [activeCookie, setActiveCookie] = useState<string>();
     const [usersMeta, setUsersMeta] = useState<PaginatedResourcesMeta | undefined>();
     const [hostsMeta, setHostsMeta] = useState<PaginatedResourcesMeta | undefined>();
-    const [dhcpLeasesMeta, setDhcpLeasesMeta] = useState<PaginatedResourcesMeta | undefined>();
+    const [DHCPLeasesMeta, setDHCPLeasesMeta] = useState<PaginatedResourcesMeta | undefined>();
     const [cookiesMeta, setCookiesMeta] = useState<PaginatedResourcesMeta | undefined>();
     const [activeMeta, setActiveMeta] = useState<PaginatedResourcesMeta | undefined>();
     const tabTitleKeys: Record<routerTab, { width: number, key: string }[]> = {
@@ -95,7 +105,13 @@ export default function RouterDetails() {
             { width: 80, key: 'server' },
             { width: 80, key: 'uptime' }
         ],
-        dhcp_leases: [{ width: 100, key: 'dhcpLeases' }],
+        dhcp_leases: [
+            { width: 140, key: 'address' },
+            { width: 140, key: 'mac' },
+            { width: 80, key: 'server' },
+            { width: 150, key: 'hostName' },
+            { width: 100, key: 'expiresAfter' }
+        ],
         traffic: [{ width: 100, key: 'traffic' }],
     };
 
@@ -203,6 +219,26 @@ export default function RouterDetails() {
         }
     }, [routerId, authToken]);
 
+    const fetchDHCPLeases = useCallback(async (params?: { isRetry?: boolean; page?: number }) => {
+        if (!routerId || !authToken) return;
+        setLoading(true);
+        setRetrying(params?.isRetry ?? false);
+        try {
+            const resp = await getRouterDHCPLeases({ routerId, token: authToken, page: params?.page, limit: 10 });
+            if (resp.ok) {
+                const data: GetRouterDHCPLeasesResponse = await resp.json();
+                setDHCPLeases(data?.leases || []);
+                setDHCPLeasesMeta(data?.leases_meta || undefined);
+                setLastFetched((prev) => ({ ...prev, dhcp_leases: new Date().toISOString() }));
+            } else {
+                console.error('[RouterDetails] fetchDHCPLeases failed', resp.status, resp.statusText);
+            }
+        } catch (error) {
+            console.error('[RouterDetails] fetchDHCPLeases error', error);
+        } finally {
+            setLoading(false)
+        }
+    }, [routerId, authToken]);
 
     useEffect(() => {
         if (!routerId || !authToken || loading) return;
@@ -218,9 +254,9 @@ export default function RouterDetails() {
         if (activeTab === 'hosts' && (!lastFetched.hosts || (Date.now() - new Date(lastFetched.hosts).getTime() > cooloffTime))) {
             fetchHosts({ isRetry: false, page: hostsMeta?.current_page ?? 1 });
         }
-        // if (activeTab === 'dhcp_leases' && (!lastFetched.dhcp_leases || (Date.now() - new Date(lastFetched.dhcp_leases).getTime() > cooloffTime))) {
-        //     fetchDhcpLeases({ isRetry: false, page: dhcpLeasesMeta?.current_page ?? 1 });
-        // }
+        if (activeTab === 'dhcp_leases' && (!lastFetched.dhcp_leases || (Date.now() - new Date(lastFetched.dhcp_leases).getTime() > cooloffTime))) {
+            fetchDHCPLeases({ isRetry: false, page: DHCPLeasesMeta?.current_page ?? 1 });
+        }
 
     }, [
         routerId,
@@ -231,8 +267,9 @@ export default function RouterDetails() {
         fetchUsers,
         fetchCookies,
         fetchHosts,
+        fetchDHCPLeases,
         hostsMeta?.current_page,
-        dhcpLeasesMeta?.current_page,
+        DHCPLeasesMeta?.current_page,
         activeMeta?.current_page,
         usersMeta?.current_page,
         cookiesMeta?.current_page,
@@ -364,7 +401,7 @@ export default function RouterDetails() {
 
                             />
                             <ThemedButton
-                                title={translations[language].categories.routers.dhcpLeases + `${dhcpLeasesMeta?.total && dhcpLeasesMeta?.total > 0 ? ` (${dhcpLeasesMeta?.total ?? ''})` : ''}`}
+                                title={translations[language].categories.routers.dhcpLeases + `${DHCPLeasesMeta?.total && DHCPLeasesMeta?.total > 0 ? ` (${DHCPLeasesMeta?.total ?? ''})` : ''}`}
                                 onPress={() => setActiveTab('dhcp_leases')}
                                 darkTextColor={activeTab === 'dhcp_leases' ? bim : tabText}
                                 lightTextColor={activeTab === 'dhcp_leases' ? bim : tabText}
@@ -387,7 +424,11 @@ export default function RouterDetails() {
                     </ScrollView>
                 </ThemedView>
                 <TileContainer id={routerId || 'new-router' + generateRandomInt(1000, 9999)} backgroundColor={background} style={{ marginHorizontal: 10, padding: 10 }}>
-                    <ThemedView style={{ display: activeTab === 'active' ? 'flex' : 'none', flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }} lightColor={background} darkColor={background}>
+                    <ThemedView
+                        style={{ display: activeTab === 'active' ? 'flex' : 'none', flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }}
+                        lightColor={background}
+                        darkColor={background}
+                    >
                         <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start' }} lightColor={background} darkColor={background}>
                             <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.activeSessions}</ThemedText>
                         </ThemedView>
@@ -760,6 +801,98 @@ export default function RouterDetails() {
                                     darkColor={background}
                                     lightColor={background}
                                     textStyle={{ color: hostsMeta?.current_page === hostsMeta?.last_page ? tabText : bim, fontSize: 14 }}
+                                />
+                            </ThemedView>
+                        </ThemedView>
+                    </ThemedView>
+                    <ThemedView
+                        style={{ display: activeTab === 'dhcp_leases' ? 'flex' : 'none', flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }}
+                        lightColor={background}
+                        darkColor={background}
+                    >
+                        <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start' }} lightColor={background} darkColor={background}>
+                            <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.activeSessions}</ThemedText>
+                        </ThemedView>
+                        <ThemedView style={{ flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', flexDirection: "column" }} lightColor={background} darkColor={background}>
+                            <ScrollView style={{ width: '100%' }} horizontal nestedScrollEnabled showsHorizontalScrollIndicator={true}>
+                                <ThemedView style={{ flexDirection: 'row' }} lightColor={background} darkColor={background}>
+                                    <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
+                                        <ThemedView style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
+                                            {tabTitleKeys.dhcp_leases.map((a) => (
+                                                <ThemedText key={a.key} style={{ fontSize: 16, fontWeight: 'bold', color: titleText, width: a.width }}>
+                                                    {translations[language].categories.routers[a.key]}
+                                                </ThemedText>
+                                            ))}
+                                        </ThemedView>
+                                        <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
+                                            <ThemedView>
+                                                {DHCPLeases.map((lease, index) => (
+                                                    <ThemedView key={index} style={{ flexDirection: 'row', gap: 10, padding: 5 }} lightColor={background} darkColor={background}>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[0].width }}>{lease.address}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[1].width }}>{lease['mac-address']}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[2].width }}>{lease.server}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[3].width }} numberOfLines={1}>{lease["host-name"]}</ThemedText>
+                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[4].width }}>{lease['expires-after']}</ThemedText>
+                                                    </ThemedView>
+                                                ))}
+                                            </ThemedView>
+                                        </ThemedView>
+                                    </ThemedView>
+                                </ThemedView>
+                            </ScrollView>
+                            <ThemedView
+                                style={{ height: 50, flexDirection: 'row', gap: 10, display: (DHCPLeasesMeta?.total ?? 0 > 1) && (DHCPLeasesMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
+                                lightColor={background}
+                                darkColor={background}
+                            >
+                                <ThemedButton
+                                    title={translations[language].categories.buttons.first}
+                                    onPress={() => {
+                                        if (DHCPLeasesMeta && DHCPLeasesMeta.current_page > 1) {
+                                            fetchDHCPLeases({ page: 1 });
+                                        }
+                                    }}
+                                    disabled={DHCPLeasesMeta?.current_page === 1}
+                                    darkColor={background}
+                                    lightColor={background}
+                                    textStyle={{ color: DHCPLeasesMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
+                                />
+                                <ThemedButton
+                                    title={translations[language].categories.buttons.previous}
+                                    onPress={() => {
+                                        if (DHCPLeasesMeta && DHCPLeasesMeta.current_page > 1) {
+                                            fetchDHCPLeases({ page: DHCPLeasesMeta.current_page > 1 ? DHCPLeasesMeta.current_page - 1 : 1 });
+                                        }
+                                    }}
+                                    disabled={DHCPLeasesMeta?.current_page === 1}
+                                    darkColor={background}
+                                    lightColor={background}
+                                    textStyle={{ color: DHCPLeasesMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
+                                />
+                                <ThemedButton
+                                    title={translations[language].categories.buttons.next}
+                                    onPress={() => {
+                                        if (DHCPLeasesMeta && DHCPLeasesMeta.current_page < DHCPLeasesMeta.last_page) {
+                                            fetchDHCPLeases({ page: DHCPLeasesMeta.current_page + 1 });
+                                        }
+                                    }
+                                    }
+                                    disabled={DHCPLeasesMeta?.current_page === DHCPLeasesMeta?.last_page}
+                                    darkColor={background}
+                                    lightColor={background}
+                                    textStyle={{ color: DHCPLeasesMeta?.current_page === DHCPLeasesMeta?.last_page ? tabText : bim, fontSize: 14 }}
+                                />
+                                <ThemedButton
+                                    title={translations[language].categories.buttons.last}
+                                    onPress={() => {
+                                        if (DHCPLeasesMeta && DHCPLeasesMeta.current_page < DHCPLeasesMeta.last_page) {
+                                            fetchDHCPLeases({ page: DHCPLeasesMeta.last_page });
+                                        }
+                                    }}
+                                    disabled={DHCPLeasesMeta?.current_page === DHCPLeasesMeta?.last_page}
+                                    darkColor={background}
+                                    lightColor={background}
+                                    textStyle={{ color: DHCPLeasesMeta?.current_page === DHCPLeasesMeta?.last_page ? tabText : bim, fontSize: 14 }}
                                 />
                             </ThemedView>
                         </ThemedView>

@@ -91,7 +91,6 @@ export interface ApiRouter {
 	"hotspot_dns"?: string;
 }
 
-
 export interface GetRoutersResponse {
 	routers: {
 		current_page: number;
@@ -328,105 +327,67 @@ export type Host = {
 	"bypassed": stringifiedBool
 }
 
+export type DHCPLease = {
+	".id": string;
+	"address": string;
+	"mac-address": string;
+	"client-id": string;
+	"address-list": string;
+	"server": string;
+	"dhcp-option": string;
+	"agent-remote-id": string;
+	"status": string;
+	"expires-after": string;
+	"last-seen": string;
+	"active-address": string;
+	"active-mac-address": string;
+	"active-client-id": string;
+	"active-server": string;
+	"active-agent-circuit-id": string;
+	"active-agent-remote-id": string;
+	"host-name": string;
+	"class-id": string;
+	"radius": stringifiedBool;
+	"dynamic": stringifiedBool;
+	"blocked": stringifiedBool;
+	"disabled": stringifiedBool;
+}
+
 export type PaginatedResourcesMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
 
 export interface GetRouterCookiesResponse {
-	"router": {
-		"id": string;
-		"name": string;
-		"location": string;
-		"type": string;
-		"ip_address": string;
-		"router_user": string;
-		"router_password": string;
-		"balance": string;
-		"isp_id": string;
-		"device_id": string;
-		"auth_key": string;
-		"last_heartbeat_at": string;
-		"last_system_info": RouterSystemInfo;
-		"user_id": number;
-		"created_at": string;
-		"updated_at": string;
-		"hotspot_dns": string;
-	};
+	"router": ApiRouter;
 	"cookies": Cookie[];
 	"cookies_meta": PaginatedResourcesMeta;
 	"message": string;
 }
 
 export interface GetRouterActiveUsersResponse {
-	"router": {
-		"id": string;
-		"name": string;
-		"location": string;
-		"type": string;
-		"ip_address": string;
-		"router_user": string;
-		"router_password": string;
-		"balance": string;
-		"isp_id": string;
-		"device_id": string;
-		"auth_key": string;
-		"last_heartbeat_at": string;
-		"last_system_info": RouterSystemInfo;
-		"user_id": number;
-		"created_at": string;
-		"updated_at": string;
-		"hotspot_dns": string;
-	};
+	"router": ApiRouter;
 	"active": HotspotActiveUser[];
 	"active_meta": PaginatedResourcesMeta;
 	"message": string;
 }
 
 export interface GetRouterUsersResponse {
-	"router": {
-		"id": string;
-		"name": string;
-		"location": string;
-		"type": string;
-		"ip_address": string;
-		"router_user": string;
-		"router_password": string;
-		"balance": string;
-		"isp_id": string;
-		"device_id": string;
-		"auth_key": string;
-		"last_heartbeat_at": string;
-		"last_system_info": RouterSystemInfo;
-		"user_id": number;
-		"created_at": string;
-		"updated_at": string;
-		"hotspot_dns": string;
-	};
+	"router": ApiRouter;
 	"users": HotspotUser[];
 	"users_meta": PaginatedResourcesMeta;
 	"message": string;
 }
 
 export interface GetRouterHostsResponse {
-	"router": {
-		"id": string;
-		"name": string;
-		"location": string;
-		"type": string;
-		"ip_address": string;
-		"router_user": string;
-		"router_password": string;
-		"balance": string;
-		"isp_id": string;
-		"device_id": string;
-		"auth_key": string;
-		"last_heartbeat_at": string;
-		"last_system_info": RouterSystemInfo;
-		"user_id": number;
-		"created_at": string;
-		"updated_at": string;
-		"hotspot_dns": string;
-	};
+	"router": ApiRouter;
 	"hosts": Host[];
 	"hosts_meta": PaginatedResourcesMeta;
 	"message": string;
+}
+
+export interface GetRouterDHCPLeasesResponse {
+	"router": ApiRouter,
+	"leases": DHCPLease[];
+	"leases_meta": PaginatedResourcesMeta;
+	"message": string;
+
 }
 

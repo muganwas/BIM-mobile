@@ -142,6 +142,17 @@ export async function getRouterHosts({ routerId, token, page, limit }: { routerI
 	return resp;
 }
 
+export async function getRouterDHCPLeases({ routerId, token, page, limit }: { routerId: string; token?: string; page?: number; limit?: number }) {
+	const url = `${apiBaseUrl || ''}/routers/${routerId}/dhcp/leases?per_page=${limit || 8}&page=${page || 1}`;
+	console.log('[getRouterDHCPLeases] url ', url);
+	const resp = await apiFetch(url, {
+		method: 'GET',
+		headers: buildHeaders(token),
+	});
+
+	return resp;
+}
+
 export default {
 	fetchRouters,
 	getRouterById,
@@ -152,5 +163,6 @@ export default {
 	getRouterActiveUsers,
 	getRouterCookies,
 	deleteRouterCookie,
-	getRouterHosts
+	getRouterHosts,
+	getRouterDHCPLeases
 };
