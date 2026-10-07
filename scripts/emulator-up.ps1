@@ -21,6 +21,10 @@
     Keep the existing quick-boot snapshot instead of cold booting. Faster, but a
     stale/black snapshot will be restored. Use only once the snapshot is known-good.
 
+.PARAMETER AvdName
+    Name of the AVD to boot. If omitted, uses Pixel_10_Pro_XL when available, or
+    the only installed AVD.
+
 .PARAMETER SkipLaunch
     Only prepare the device; do not start Metro / open the app.
 
@@ -31,7 +35,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$AvdName = 'Pixel_10_Pro_XL',
+    [string]$AvdName,
     [switch]$FastBoot,
     [switch]$SkipLaunch
 )
@@ -48,6 +52,25 @@ $Adb      = Join-Path $Sdk 'platform-tools\adb.exe'
 $Emulator = Join-Path $Sdk 'emulator\emulator.exe'
 foreach ($exe in @($Adb, $Emulator)) {
     if (-not (Test-Path $exe)) { throw "Missing executable: $exe" }
+}
+
+$availableAvds = @(& $Emulator -list-avds | Where-Object { $_.Trim() })
+if (-not $availableAvds.Count) {
+    throw "No Android Virtual Devices are installed. Create one in Android Studio Device Manager."
+}
+if (-not $AvdName) {
+    if ($availableAvds -contains 'Pixel_10_Pro_XL') {
+        $AvdName = 'Pixel_10_Pro_XL'
+    }
+    elseif ($availableAvds.Count -eq 1) {
+        $AvdName = $availableAvds[0]
+    }
+    else {
+        throw "Multiple AVDs are installed. Specify one with -AvdName: $($availableAvds -join ', ')"
+    }
+}
+if ($availableAvds -notcontains $AvdName) {
+    throw "AVD '$AvdName' is not installed. Available AVDs: $($availableAvds -join ', ')"
 }
 
 $MetroPort = 8081
@@ -72,10 +95,15 @@ else {
 
     Start-Process -FilePath $Emulator -ArgumentList $bootArgs -WindowStyle Minimized
 
-    Write-Host '      Waiting for device to answer adb ...'
-    & $Adb wait-for-device
-    $serial = Get-EmulatorSerial
-    if (-not $serial) { throw 'Emulator started but never appeared in `adb devices`.' }
+    Write-Host '      Waiting for emulator to answer adb ...'
+    $deviceDeadline = (Get-Date).AddMinutes(2)
+    while (-not $serial -and (Get-Date) -lt $deviceDeadline) {
+        Start-Sleep -Seconds 2
+        $serial = Get-EmulatorSerial
+    }
+    if (-not $serial) {
+        throw "Emulator '$AvdName' did not appear in adb within 2 minutes. Check the Android Emulator output for startup errors."
+    }
 }
 
 # --- 2. Wait for real boot completion ---------------------------------------
