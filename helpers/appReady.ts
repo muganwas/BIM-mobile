@@ -1,11 +1,12 @@
 let _ready = false;
+// eslint-disable-next-line @typescript-eslint/array-type
 let _callbacks: Array<() => void> = [];
 
 export function onAppReady(cb: () => void) {
 	if (_ready) {
 		// call on next tick if already ready
 		setTimeout(cb, 0);
-		return () => {};
+		return () => { };
 	}
 	_callbacks.push(cb);
 	return () => {

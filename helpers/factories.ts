@@ -1,20 +1,21 @@
 import {
-    generateRandomInt,
-    generateRandomNumbers,
-    generateRandomString,
-    randomDateBetweenDaysAgo,
-    toLocalISOString,
+	generateRandomInt,
+	generateRandomNumbers,
+	generateRandomString,
+	randomDateBetweenDaysAgo,
+	toLocalISOString,
 } from '@/helpers';
 import {
-    Bank,
-    DocumentProps,
-    HardWareInfo,
-    InternetPackage,
-    MicroTransaction,
-    NetRouter,
-    TransactionMethod,
-    TransactionStatus,
-    VoucherUser,
+	Bank,
+	DocumentProps,
+	HardWareInfo,
+	InternetPackage,
+	MicroTransaction,
+	NetRouter,
+	NetworkInfo,
+	TransactionMethod,
+	TransactionStatus,
+	VoucherUser,
 } from '@/types';
 
 const packageNames: InternetPackage['name'][] = [
@@ -31,7 +32,7 @@ export function generateNetRouter(
 	const id = overrides.id ?? `R-${generateRandomNumbers(6)}`;
 	const name = overrides.name ?? `${id}`;
 	const location = overrides.location ?? `Location ${generateRandomInt(1, 10)}`;
-	const networkInfo = overrides.networkInfo ?? {
+	const networkInfo: NetworkInfo = overrides.networkInfo ?? {
 		mac: `00:1A:2B:3C:4D:${String(idx).padStart(2, '0')}`,
 		ipv4: `192.168.${generateRandomInt(0, 255)}.${idx}`,
 		ipv6: `::ffff:192.168.${generateRandomInt(0, 255)}.${idx}`,
@@ -40,11 +41,11 @@ export function generateNetRouter(
 		uptime: `${generateRandomInt(0, 999999)}`,
 		hotspots: Array.from({ length: generateRandomInt(1, 2) }).map(
 			(_, hIdx) => ({
-				id: `${id}-hs-${hIdx + 1}`,
-				ssid: `SSID-${generateRandomNumbers(4)}`,
+				".id": `${id}-hs-${hIdx + 1}`,
+				name: `SSID-${generateRandomNumbers(4)}`,
 				interface: `wlan${hIdx}`,
 				profile: `default-profile-${hIdx + 1}`,
-				status: Math.random() > 0.5 ? 'enabled' : 'disabled',
+				disabled: Math.random() > 0.5 ? true : false,
 				// Optionally include connected users for this hotspot
 				users: Array.from({ length: generateRandomInt(1, 5) }).map(() => ({
 					voucherCode: generateRandomNumbers(6),
@@ -253,7 +254,7 @@ export function generateDocument(
 	const status: DocumentProps['status'] =
 		overrides.status ??
 		statusPool[
-			documentId.charCodeAt(documentId.length - 1) % statusPool.length
+		documentId.charCodeAt(documentId.length - 1) % statusPool.length
 		];
 
 	return {
@@ -265,16 +266,16 @@ export function generateDocument(
 			(type === 'passport'
 				? 'Passport'
 				: type === 'driver-license'
-				? 'Driver License'
-				: type === 'id-card'
-				? 'ID Card'
-				: type === 'incorporation-certificate'
-				? 'Incorporation Certificate'
-				: type === 'tax-document'
-				? 'Tax Document'
-				: type === 'articles-of-association'
-				? 'Articles of Association'
-				: 'Document'),
+					? 'Driver License'
+					: type === 'id-card'
+						? 'ID Card'
+						: type === 'incorporation-certificate'
+							? 'Incorporation Certificate'
+							: type === 'tax-document'
+								? 'Tax Document'
+								: type === 'articles-of-association'
+									? 'Articles of Association'
+									: 'Document'),
 		type,
 		url: overrides.url ?? `https://example.com/documents/${documentId}.${ext}`,
 		status,
@@ -312,10 +313,10 @@ export function generateInternetPackage(
 			(name === 'short'
 				? 1
 				: name === 'daily'
-				? 24
-				: name === 'weekly'
-				? 168
-				: 720),
+					? 24
+					: name === 'weekly'
+						? 168
+						: 720),
 		createdAt: overrides.createdAt ?? new Date(),
 		updatedAt: overrides.updatedAt ?? new Date(),
 	};
