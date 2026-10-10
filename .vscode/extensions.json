@@ -1,5 +1,6 @@
 {
     "recommendations": [
+        "continue.continue",
         "vizards.deepseek-v4-for-copilot"
     ],
     "//": "Expo/React Native (TypeScript) project. Java + Spring tooling is intentionally unused:",

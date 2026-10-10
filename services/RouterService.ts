@@ -153,6 +153,27 @@ export async function getRouterDHCPLeases({ routerId, token, page, limit }: { ro
 	return resp;
 }
 
+export async function getRouterPurchaseGuard({ routerId, token }: { routerId: string; token?: string }) {
+	const url = `${apiBaseUrl || ''}/routers/${routerId}/purchase-guard`;
+	console.log('[getRouterPurchaseGuard] url ', url);
+	const resp = await apiFetch(url, {
+		method: 'GET',
+		headers: buildHeaders(token),
+	});
+	return resp;
+}
+
+export async function updateRouterPurchaseGuard({ routerId, token, value }: { routerId: string; token?: string; value: boolean }) {
+	const url = `${apiBaseUrl || ''}/routers/${routerId}/purchase-guard`;
+	console.log('[updateRouterPurchaseGuard] url ', url);
+	const resp = await apiFetch(url, {
+		method: 'POST',
+		headers: buildHeaders(token),
+		body: JSON.stringify({ notify_existing_voucher: value }),
+	});
+	return resp;
+}
+
 export default {
 	fetchRouters,
 	getRouterById,
@@ -164,5 +185,6 @@ export default {
 	getRouterCookies,
 	deleteRouterCookie,
 	getRouterHosts,
-	getRouterDHCPLeases
+	getRouterPurchaseGuard,
+	updateRouterPurchaseGuard,
 };

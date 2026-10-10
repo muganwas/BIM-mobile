@@ -1,15 +1,16 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { ThemedSwitch } from '@/components/ThemedSwitch';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
-import { generateRandomInt, msToHms } from '@/helpers';
+import { generateRandomInt, msToHms, ShowAlert, toBoolean } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { getRouterById, getRouterHotspots, getRouterStatus } from '@/services/RouterService';
-import { ApiRouter, Hotspot } from '@/types';
+import { getRouterById, getRouterHotspots, getRouterPurchaseGuard, getRouterStatus, updateRouterPurchaseGuard } from '@/services/RouterService';
+import { ApiRouter, GetPurchaseGuardResponse, GetRouterResponse, Hotspot, PostPurchaseGuardResponse } from '@/types';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
@@ -40,7 +41,7 @@ export default function RouterDetailsScreen() {
 	const backgroundLight = useThemeColor({}, 'background', 'light');
 	const backgroundDark = useThemeColor({}, 'background', 'dark');
 	const headingOneLight = useThemeColor({}, 'heading.one', 'light');
-	const headingOneDark = useThemeColor({}, 'heading.one', 'dark');
+	const headingOneDark = useThemeColor({}, 'heading.one', 'dark');;
 	const textLight = useThemeColor({}, 'text', 'light');
 	const textDark = useThemeColor({}, 'text', 'dark');
 	const titleBgLight = useThemeColor({}, 'titleBg', 'light');
@@ -55,6 +56,7 @@ export default function RouterDetailsScreen() {
 	const [apiRouter, setApiRouter] = useState<Partial<ApiRouter>>();
 	const [routerStatus, setRouterStatus] = useState<RouterStatus | undefined>();
 	const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+	const [routerPurchaseGuard, setRouterPurchaseGuard] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 
@@ -88,8 +90,8 @@ export default function RouterDetailsScreen() {
 				setApiRouter({ name, id: routerId });
 			const routerResponse = await getRouterById(routerId, authToken);
 			if (routerResponse && routerResponse.ok) {
-				const routerData = await routerResponse.json();
-				if (routerData.router) setApiRouter({ ...routerData });
+				const routerData: GetRouterResponse = await routerResponse.json();
+				if (routerData.router) setApiRouter({ ...routerData.router });
 			}
 
 			const statusResponse = await getRouterStatus(routerId, authToken);
@@ -116,9 +118,16 @@ export default function RouterDetailsScreen() {
 				const hotspotsData = await hotspotsResponse.json();
 				if (hotspotsData.hotspots) setHotspots(hotspotsData.hotspots);
 			}
+			const routerPurchaseGuard = await getRouterPurchaseGuard({ routerId, token: authToken });
+			if (routerPurchaseGuard && routerPurchaseGuard.ok) {
+				const routerPurchaseGuardData: GetPurchaseGuardResponse = await routerPurchaseGuard.json();
+				if (routerPurchaseGuardData.success) setRouterPurchaseGuard(toBoolean(routerPurchaseGuardData.data.notify_existing_voucher));
+			}
+
 			setRoutersLastFetched && setRoutersLastFetched((prev) => ({ ...prev, [routerId]: new Date().toISOString() }));
 		} catch (error) {
 			console.error('[RouterDetailsScreen] Failed to fetch router data:', error);
+			ShowAlert('Failed to fetch router data', 'Error')
 		} finally {
 			setLoading(false);
 		}
@@ -127,6 +136,26 @@ export default function RouterDetailsScreen() {
 	useEffect(() => {
 		void fetchRouterData();
 	}, [fetchRouterData]);
+
+	const handleUpdateRouterPurchaseGuard = useCallback(async (v: boolean) => {
+		if (!routerId || !authToken) return;
+		setLoading(true);
+		try {
+			const routerUpdateResult = await updateRouterPurchaseGuard({ routerId, token: authToken, value: v });
+			if (routerUpdateResult.ok) {
+				const routerPurchaseGuardData: PostPurchaseGuardResponse = await routerUpdateResult.json();
+				if (routerPurchaseGuardData.success)
+					setRouterPurchaseGuard(toBoolean(routerPurchaseGuardData.data.notify_existing_voucher));
+
+			}
+		} catch (error) {
+			console.error('[RouterDetailsScreen] Failed to fetch router data:', error);
+			ShowAlert("Something went wrong, please try again.", "Error");
+		}
+		finally {
+			setLoading(false);
+		}
+	}, [routerId, authToken])
 
 	const handleRefresh = useCallback(async () => {
 		setRefreshing(true);
@@ -146,7 +175,6 @@ export default function RouterDetailsScreen() {
 		}
 		router.push(`/routers/details/${routerId}`);
 	};
-
 
 
 	if (loading) {
@@ -170,36 +198,6 @@ export default function RouterDetailsScreen() {
 			refreshing={refreshing}
 		>
 			<TileContainer
-				id={routerId || 'new-router'}
-				backgroundColor={background}
-				style={{
-					flexDirection: 'column',
-					boxSizing: 'border-box',
-					overflow: 'hidden',
-					paddingBottom: 10,
-					marginHorizontal: 20,
-				}}
-			>
-				<ThemedView
-					lightColor={backgroundLight}
-					darkColor={backgroundDark}
-					style={{ flexDirection: 'column' }}
-				>
-					<ThemedText
-						style={{
-							fontSize: fontSize['heading.one'],
-							fontWeight: fontWeight['heading.two'],
-							marginBottom: 10,
-						}}
-						lightColor={headingOneLight}
-						darkColor={headingOneDark}
-					>
-						{translations[language].categories.routers.routerHash}
-					</ThemedText>
-					<ThemedText>{routerId}</ThemedText>
-				</ThemedView>
-			</TileContainer>
-			<TileContainer
 				id={routerId || 'new-router-' + generateRandomInt(1000, 9999)}
 				backgroundColor={background}
 				style={{
@@ -210,6 +208,61 @@ export default function RouterDetailsScreen() {
 					marginHorizontal: 20,
 				}}
 			>
+				<ThemedView
+					id='router-tile-title'
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
+					style={{ padding: 10 }}
+				>
+					<ThemedText
+						style={{
+							fontSize: fontSize['heading.one'],
+							fontWeight: fontWeight['heading.two'],
+						}}
+						lightColor={headingOneLight}
+						darkColor={headingOneDark}
+					>
+						{translations[language].categories.routers.router}
+					</ThemedText>
+				</ThemedView>
+				<ThemedView
+					id='router-id-container'
+					lightColor={titleBgLight}
+					darkColor={titleBgDark}
+					style={{ flexDirection: 'column', paddingHorizontal: 10, paddingVertical: 5, marginHorizontal: 10, alignSelf: 'stretch', borderRadius: 5 }}
+				>
+					<ThemedText
+						style={{
+							fontSize: fontSize['heading.two'],
+							fontWeight: fontWeight['heading.two'],
+							marginBottom: 10,
+						}}
+						lightColor={headingOneLight}
+						darkColor={headingOneDark}
+					>
+						{translations[language].categories.routers.routerID}
+					</ThemedText>
+					<ThemedText>{routerId}</ThemedText>
+				</ThemedView>
+				<ThemedView
+					id='wireguard-key-container'
+					lightColor={titleBgLight}
+					darkColor={titleBgDark}
+					style={{ flexDirection: 'column', paddingHorizontal: 10, paddingVertical: 5, marginHorizontal: 10, alignSelf: 'stretch', borderRadius: 5 }}
+				>
+					<ThemedText
+						style={{
+							fontSize: fontSize['heading.two'],
+							fontWeight: fontWeight['heading.two'],
+							marginBottom: 10,
+						}}
+						lightColor={headingOneLight}
+						darkColor={headingOneDark}
+					>
+						{translations[language].categories.routers.wireguardPublicKey}
+					</ThemedText>
+					<ThemedText>{apiRouter?.wireguard_public_key}</ThemedText>
+				</ThemedView>
 				<ThemedView
 					lightColor={backgroundLight}
 					darkColor={backgroundDark}
@@ -319,9 +372,59 @@ export default function RouterDetailsScreen() {
 						>
 							{`${translations[language].categories.routers.cpuLoad}:`}
 						</ThemedText>
-						<ThemedText style={{ marginLeft: 10 }}>
+						<ThemedText lightColor={textLight} darkColor={textDark} style={{ marginLeft: 10 }}>
 							{routerStatus?.['cpu-load'] ? routerStatus?.['cpu-load'] + '%' : 'N/A'}
 						</ThemedText>
+					</ThemedView>
+				</ThemedView>
+			</TileContainer>
+			<TileContainer
+				id={routerId || 'purchase-warning-' + generateRandomInt(1000, 9999)}
+				backgroundColor={background}
+				style={{
+					flexDirection: 'column',
+					boxSizing: 'border-box',
+					overflow: 'hidden',
+					padding: 0,
+					marginHorizontal: 20,
+				}}
+			>
+				<ThemedView
+					lightColor={backgroundLight}
+					darkColor={backgroundDark}
+					style={{ flexDirection: 'column', padding: 10 }}
+				>
+					<ThemedText
+						style={{
+							fontSize: fontSize['heading.two'],
+							fontWeight: fontWeight['heading.two'],
+							marginBottom: 10,
+						}}
+						lightColor={headingOneLight}
+						darkColor={headingOneDark}
+					>
+						{translations[language].categories.vouchers.purchaseWarningTitle}
+					</ThemedText>
+					<ThemedText
+						lightColor={textLight}
+						darkColor={textDark}
+					>
+						{translations[language].categories.vouchers.purchaseWarningDesc}
+					</ThemedText>
+					<ThemedView lightColor={backgroundLight} darkColor={backgroundDark} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+						<ThemedSwitch
+							darkColor={bim}
+							lightColor={bim}
+							disabled={loading}
+							thumbColor={bim}
+							value={routerPurchaseGuard}
+							onValueChange={handleUpdateRouterPurchaseGuard}
+						/>
+						<ThemedView lightColor={backgroundLight} darkColor={backgroundDark}>
+							<ThemedText lightColor={textLight} darkColor={textDark}>
+								{translations[language].categories.vouchers.purchaseWarningSwitchLabel}
+							</ThemedText>
+						</ThemedView>
 					</ThemedView>
 				</ThemedView>
 			</TileContainer>

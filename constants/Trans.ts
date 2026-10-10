@@ -159,6 +159,8 @@ const translations: Translations = {
 			},
 			routers: {
 				id: 'ID',
+				routerID: 'Router ID (UUID)',
+				wireguardPublicKey: 'WireGuard Public Key',
 				hotspotName: 'Hotspot Name',
 				interface: 'Interface',
 				profile: 'Profile',
@@ -167,6 +169,7 @@ const translations: Translations = {
 				title: 'Routers',
 				editTitle: 'Edit Router',
 				newTitle: 'Create Router',
+				router: 'Router',
 				routerType: 'Router Type',
 				routerHash: 'Router Hash',
 				routerStatus: 'Router Status',
@@ -269,6 +272,9 @@ const translations: Translations = {
 				password: 'Password',
 				profile: 'Profile',
 				confirmBlockTitle: 'Confirm Block User',
+				purchaseWarningTitle: 'Voucher Purchase Warning',
+				purchaseWarningDesc: 'When this is on, a buyer whose number already holds an unused or active voucher us asked to confirm before a second payment is taken. Vouchers that already have all their device slots in use are not flagged, and neither are expired ones.',
+				purchaseWarningSwitchLabel: 'Warn buyers about an existing voucher.',
 				blockMessage:
 					'Are you sure you want to block this user? They will no longer be able to access the hotspot.',
 				confirmDeleteTitle: 'Confirm Delete User',

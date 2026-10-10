@@ -73,6 +73,7 @@ export interface NetRouter {
 
 export interface ApiRouter {
 	"id": string;
+	"wireguard_public_key": string;
 	"name": string;
 	"location": string;
 	"type": string;
@@ -354,6 +355,10 @@ export type DHCPLease = {
 }
 
 export type PaginatedResourcesMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
+export type PurchaseGuardData = {
+	"router_id": string;
+	"notify_existing_voucher": boolean | stringifiedBool;
+}
 
 export interface GetRouterCookiesResponse {
 	"router": ApiRouter;
@@ -384,10 +389,26 @@ export interface GetRouterHostsResponse {
 }
 
 export interface GetRouterDHCPLeasesResponse {
-	"router": ApiRouter,
+	"router": ApiRouter;
 	"leases": DHCPLease[];
 	"leases_meta": PaginatedResourcesMeta;
 	"message": string;
 
+}
+
+export interface GetRouterResponse {
+	"router": ApiRouter;
+	"message": string;
+}
+
+export interface GetPurchaseGuardResponse {
+	"success": boolean | stringifiedBool;
+	"data": PurchaseGuardData;
+}
+
+export interface PostPurchaseGuardResponse {
+	"success": boolean | stringifiedBool;
+	"message": string;
+	"data": PurchaseGuardData;
 }
 

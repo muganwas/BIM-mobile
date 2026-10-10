@@ -285,3 +285,14 @@ export function validateIPv4(ip: string): boolean {
 	}
 	return true;
 }
+
+/**
+ * convert truthy or falsy values to boolean
+ * convert boolean string equivalents to boolean
+ */
+export function toBoolean(v: string | boolean | number | null | undefined) {
+	if (typeof v === 'string') {
+		return v.toLowerCase() === 'true';
+	}
+	return Boolean(v);
+}
