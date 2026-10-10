@@ -1,5 +1,6 @@
 import { apiBaseUrl } from '@/constants/API';
 import { apiFetch } from '@/helpers/api';
+import EventSource from 'react-native-sse';
 
 function buildHeaders(token?: string) {
 	const headers: Record<string, string> = {
@@ -76,6 +77,58 @@ export async function getRouterHotspots(routerId: string, token?: string) {
 	}
 
 	return resp;
+}
+
+export async function getRouterInterfaces(routerId: string, token?: string) {
+	const resp = await apiFetch((apiBaseUrl || '') + `/routers/${routerId}/interfaces`, {
+		method: 'GET',
+		headers: buildHeaders(token),
+	});
+
+	if (resp.status !== 202) return resp;
+
+	try {
+		const body = await resp.json();
+		const cacheKey = body?.cache_key || body?.cacheKey;
+		if (!cacheKey) {
+			console.error('[getRouterInterfaces] queued response did not include a cache key');
+			return new Response(JSON.stringify(body), {
+				status: 502,
+				headers: { 'Content-Type': 'application/json' },
+			});
+		}
+
+		const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey, token);
+		return new Response(JSON.stringify(polled), {
+			status: 200,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	} catch (error) {
+		console.error('[getRouterInterfaces] queued request failed', error);
+		return new Response(JSON.stringify({ error: String(error) }), {
+			status: 500,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
+}
+
+export function createRouterTrafficEventSource({
+	routerId,
+	iface,
+	token,
+}: {
+	routerId: string;
+	iface: string;
+	token: string;
+}) {
+	const url = `${apiBaseUrl || ''}/routers/${encodeURIComponent(routerId)}/traffic/stream?iface=${encodeURIComponent(iface)}`;
+	return new EventSource<'hello' | 'traffic' | 'bye'>(url, {
+		headers: {
+			...buildHeaders(token),
+			'X-Client-Type': 'api-client',
+		},
+		pollingInterval: 3000,
+	});
 }
 
 export async function pingRouter(routerId: string, token?: string) {
@@ -180,6 +233,8 @@ export default {
 	getRouterStatus,
 	pingRouter,
 	getRouterHotspots,
+	getRouterInterfaces,
+	createRouterTrafficEventSource,
 	getRouterUsers,
 	getRouterActiveUsers,
 	getRouterCookies,

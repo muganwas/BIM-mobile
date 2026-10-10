@@ -15,6 +15,8 @@ import {
     getRouterCookies,
     getRouterDHCPLeases,
     getRouterHosts,
+    getRouterInterfaces,
+    createRouterTrafficEventSource,
     getRouterUsers
 } from "@/services/RouterService";
 import {
@@ -28,26 +30,72 @@ import {
     Host,
     HotspotActiveUser,
     HotspotUser,
-    PaginatedResourcesMeta
+    PaginatedResourcesMeta,
+    RouterTrafficHello,
+    RouterTrafficSample
 } from "@/types";
-import { useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Animated, useAnimatedValue } from "react-native";
+import { ActivityIndicator, Animated, Dimensions, useAnimatedValue } from "react-native";
+import { LineChart } from "react-native-chart-kit";
 import { ScrollView } from "react-native-gesture-handler";
 
 type routerTab = 'active' | 'users' | 'cookies' | 'hosts' | 'dhcp_leases' | 'traffic';
 const cooloffTime = 1000 * 60; // 1 minute
+
+function getInterfaceNames(value: unknown): string[] {
+    if (Array.isArray(value)) {
+        return value.flatMap((item) => {
+            if (typeof item === 'string') return [item.trim()].filter(Boolean);
+            if (!item || typeof item !== 'object') return [];
+            const record = item as Record<string, unknown>;
+            const name = record.name ?? record.interface ?? record['default-name'];
+            if (typeof name === 'string') return [name.trim()].filter(Boolean);
+            return getInterfaceNames(record);
+        });
+    }
+
+    if (!value || typeof value !== 'object') return [];
+    const record = value as Record<string, unknown>;
+    const name = record.name ?? record.interface ?? record['default-name'];
+    if (typeof name === 'string') return [name.trim()].filter(Boolean);
+    for (const key of ['interfaces', 'data', 'result', 'router']) {
+        if (key in record) {
+            const names = getInterfaceNames(record[key]);
+            if (names.length) return names;
+        }
+    }
+    return Object.values(record).flatMap((item) =>
+        item && typeof item === 'object' ? getInterfaceNames(item) : []
+    );
+}
+
+function isTrafficSample(value: unknown): value is RouterTrafficSample {
+    if (!value || typeof value !== 'object') return false;
+    const sample = value as Record<string, unknown>;
+    return typeof sample.t === 'number' && Number.isFinite(sample.t) &&
+        typeof sample.rx === 'number' && Number.isFinite(sample.rx) &&
+        typeof sample.tx === 'number' && Number.isFinite(sample.tx);
+}
+
+function formatTrafficRate(bitsPerSecond: number): string {
+    if (bitsPerSecond >= 1_000_000) return `${(bitsPerSecond / 1_000_000).toFixed(2)} Mbps`;
+    if (bitsPerSecond >= 1_000) return `${(bitsPerSecond / 1_000).toFixed(2)} Kbps`;
+    return `${Math.round(bitsPerSecond)} bps`;
+}
 
 export default function RouterDetails() {
 
     const { handleUpdateHistory, language, authToken } = useGeneral();
     const { routerId } = useLocalSearchParams() as { routerId?: string };
     const navigation = useNavigation();
+    const isFocused = useIsFocused();
     const promptFadeAnim = useAnimatedValue(0);
     const promptCancelButton = useThemeColor({}, "cancelButton");
     const dangerButton = useThemeColor({}, "dangerButton");
     const bim = useThemeColor({}, 'bim');
+    const lightGrey = useThemeColor({}, 'lightGrey');
     const tabText = useThemeColor({}, 'heading.one');
     const titleText = useThemeColor({}, 'headers');
     const background = useThemeColor({}, 'background');
@@ -69,6 +117,14 @@ export default function RouterDetails() {
     const [DHCPLeasesMeta, setDHCPLeasesMeta] = useState<PaginatedResourcesMeta | undefined>();
     const [cookiesMeta, setCookiesMeta] = useState<PaginatedResourcesMeta | undefined>();
     const [activeMeta, setActiveMeta] = useState<PaginatedResourcesMeta | undefined>();
+    const [trafficInterfaces, setTrafficInterfaces] = useState<string[]>([]);
+    const [selectedTrafficInterface, setSelectedTrafficInterface] = useState('');
+    const [trafficSamples, setTrafficSamples] = useState<RouterTrafficSample[]>([]);
+    const [trafficInterfacesLoading, setTrafficInterfacesLoading] = useState(false);
+    const [trafficInterfacesLoaded, setTrafficInterfacesLoaded] = useState(false);
+    const [trafficInterfaceError, setTrafficInterfaceError] = useState('');
+    const [trafficStatus, setTrafficStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
+    const [trafficError, setTrafficError] = useState('');
     const tabTitleKeys: Record<routerTab, { width: number, key: string }[]> = {
         active: [
             { width: 50, key: 'server' },
@@ -240,6 +296,120 @@ export default function RouterDetails() {
         }
     }, [routerId, authToken]);
 
+    const handleOpenTrafficTab = useCallback(async () => {
+        setActiveTab('traffic');
+        if (!routerId || !authToken || trafficInterfacesLoaded || trafficInterfacesLoading) return;
+        setTrafficInterfacesLoading(true);
+        setTrafficInterfaceError('');
+        try {
+            const response = await getRouterInterfaces(routerId, authToken);
+            if (!response.ok) {
+                throw new Error(`Interface request failed (${response.status})`);
+            }
+            const names = getInterfaceNames(await response.json());
+            if (!names.length) {
+                setTrafficInterfaceError(
+                    translations[language].categories.routers.trafficNoInterfaces ||
+                    'No router interfaces were found.'
+                );
+                return;
+            }
+            const uniqueNames = [...new Set(names)];
+            const preferredInterface =
+                uniqueNames.find((name) => name.toLowerCase() === 'ether1') ?? uniqueNames[0];
+            setTrafficInterfaces(uniqueNames);
+            setSelectedTrafficInterface((current) =>
+                uniqueNames.includes(current) ? current : preferredInterface
+            );
+            setTrafficInterfacesLoaded(true);
+        } catch (error) {
+            console.error('[RouterDetails] failed to load router interfaces', error);
+            setTrafficInterfaceError(
+                translations[language].categories.routers.trafficInterfacesError ||
+                'Could not load router interfaces.'
+            );
+        } finally {
+            setTrafficInterfacesLoading(false);
+        }
+    }, [routerId, authToken, trafficInterfacesLoaded, trafficInterfacesLoading, language]);
+
+    useEffect(() => {
+        if (!isFocused || activeTab !== 'traffic' || !routerId || !authToken || !selectedTrafficInterface) {
+            setTrafficStatus('idle');
+            return;
+        }
+
+        let active = true;
+        setTrafficSamples([]);
+        setTrafficError('');
+        setTrafficStatus('connecting');
+        const eventSource = createRouterTrafficEventSource({
+            routerId,
+            iface: selectedTrafficInterface,
+            token: authToken,
+        });
+
+        eventSource.addEventListener('open', () => {
+            if (active) {
+                setTrafficStatus('connected');
+                setTrafficError('');
+            }
+        });
+        eventSource.addEventListener('hello', (event) => {
+            if (!active || !event.data) return;
+            try {
+                const hello = JSON.parse(event.data) as RouterTrafficHello;
+                if (!Array.isArray(hello.samples) || !hello.samples.every(isTrafficSample)) {
+                    throw new Error('Traffic stream sent invalid history data');
+                }
+                setTrafficSamples(hello.samples.slice(-120));
+            } catch (error) {
+                console.error('[RouterDetails] invalid traffic history event', error);
+                setTrafficStatus('error');
+                setTrafficError(
+                    translations[language].categories.routers.trafficInvalidData ||
+                    'Received invalid traffic data.'
+                );
+            }
+        });
+        eventSource.addEventListener('traffic', (event) => {
+            if (!active || !event.data) return;
+            try {
+                const sample: unknown = JSON.parse(event.data);
+                if (!isTrafficSample(sample)) throw new Error('Traffic stream sent an invalid sample');
+                setTrafficSamples((current) => {
+                    const next = current.filter((item) => item.t !== sample.t);
+                    return [...next, sample].sort((a, b) => a.t - b.t).slice(-120);
+                });
+            } catch (error) {
+                console.error('[RouterDetails] invalid traffic sample event', error);
+                setTrafficStatus('error');
+                setTrafficError(
+                    translations[language].categories.routers.trafficInvalidData ||
+                    'Received invalid traffic data.'
+                );
+            }
+        });
+        eventSource.addEventListener('bye', () => {
+            if (active) setTrafficStatus('connecting');
+        });
+        eventSource.addEventListener('error', (event) => {
+            if (!active) return;
+            console.error('[RouterDetails] traffic stream error', event);
+            setTrafficStatus('error');
+            setTrafficError(
+                translations[language].categories.routers.trafficConnectionError ||
+                'Traffic stream connection failed. Retrying...'
+            );
+        });
+
+        return () => {
+            active = false;
+            eventSource.removeAllEventListeners();
+            eventSource.close();
+        };
+    }, [isFocused, activeTab, routerId, authToken, selectedTrafficInterface, language]);
+
     useEffect(() => {
         if (!routerId || !authToken || loading) return;
         if (activeTab === 'active' && (!lastFetched.activeUsers || (Date.now() - new Date(lastFetched.activeUsers).getTime() > cooloffTime))) {
@@ -332,6 +502,11 @@ export default function RouterDetails() {
     if (loading) {
         return (
             <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} lightColor={background} darkColor={background}>
+                <ThemedView lightColor={background} darkColor={background} style={{ display: retrying ? 'flex' : 'none', alignSelf: 'stretch', justifyContent: 'center', alignItems: 'center' }}>
+                    <ThemedText lightColor={lightGrey} darkColor={lightGrey}>
+                        {translations[language].categories.generic.reloading}
+                    </ThemedText>
+                </ThemedView>
                 <ActivityIndicator size="large" color={bim} />
             </ThemedView>
         );
@@ -412,7 +587,7 @@ export default function RouterDetails() {
                             />
                             <ThemedButton
                                 title={translations[language].categories.routers.traffic}
-                                onPress={() => setActiveTab('traffic')}
+                                onPress={handleOpenTrafficTab}
                                 darkTextColor={activeTab === 'traffic' ? bim : tabText}
                                 lightTextColor={activeTab === 'traffic' ? bim : tabText}
                                 lightColor={background}
@@ -896,6 +1071,129 @@ export default function RouterDetails() {
                                 />
                             </ThemedView>
                         </ThemedView>
+                    </ThemedView>
+                    <ThemedView
+                        style={{ display: activeTab === 'traffic' ? 'flex' : 'none', flex: 1, alignSelf: 'stretch', justifyContent: 'flex-start', alignItems: 'stretch', paddingVertical: 10 }}
+                        lightColor={background}
+                        darkColor={background}
+                    >
+                        <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>
+                            {translations[language].categories.routers.traffic}
+                        </ThemedText>
+                        <ThemedText style={{ color: tabText, marginBottom: 8 }}>
+                            {translations[language].categories.routers.trafficInterface || 'Interface'}
+                        </ThemedText>
+                        {trafficInterfacesLoading ? (
+                            <ActivityIndicator color={bim} />
+                        ) : trafficInterfaceError ? (
+                            <ThemedView style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }} lightColor={background} darkColor={background}>
+                                <ThemedText style={{ color: red, flex: 1 }}>{trafficInterfaceError}</ThemedText>
+                                <ThemedButton
+                                    title={translations[language].categories.routers.trafficRetry || 'Retry'}
+                                    onPress={handleOpenTrafficTab}
+                                    lightColor={background}
+                                    darkColor={background}
+                                    lightTextColor={bim}
+                                    darkTextColor={bim}
+                                />
+                            </ThemedView>
+                        ) : trafficInterfaces.length ? (
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 50 }}>
+                                <ThemedView style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} lightColor={background} darkColor={background}>
+                                    {trafficInterfaces.map((iface) => (
+                                        <ThemedButton
+                                            key={iface}
+                                            title={iface}
+                                            onPress={() => setSelectedTrafficInterface(iface)}
+                                            lightColor={selectedTrafficInterface === iface ? bim : background}
+                                            darkColor={selectedTrafficInterface === iface ? bim : background}
+                                            lightTextColor={selectedTrafficInterface === iface ? white : tabText}
+                                            darkTextColor={selectedTrafficInterface === iface ? white : tabText}
+                                        />
+                                    ))}
+                                </ThemedView>
+                            </ScrollView>
+                        ) : (
+                            <ThemedText style={{ color: tabText }}>
+                                {translations[language].categories.routers.trafficChooseInterface || 'Choose an interface to monitor.'}
+                            </ThemedText>
+                        )}
+                        {!!selectedTrafficInterface && (
+                            <>
+                                <ThemedText style={{ color: trafficStatus === 'error' ? red : bim, marginTop: 12 }}>
+                                    {trafficStatus === 'connected'
+                                        ? translations[language].categories.routers.trafficConnected || 'Live'
+                                        : trafficStatus === 'error'
+                                            ? trafficError
+                                            : translations[language].categories.routers.trafficLoading || 'Connecting to traffic stream...'}
+                                </ThemedText>
+                                {trafficSamples.length > 0 && (
+                                    <ThemedView style={{ flexDirection: 'row', gap: 20, marginTop: 8 }} lightColor={background} darkColor={background}>
+                                        <ThemedText style={{ color: tabText }}>
+                                            {translations[language].categories.routers.trafficReceived || 'Received'}: {formatTrafficRate(trafficSamples[trafficSamples.length - 1].rx)}
+                                        </ThemedText>
+                                        <ThemedText style={{ color: tabText }}>
+                                            {translations[language].categories.routers.trafficSent || 'Sent'}: {formatTrafficRate(trafficSamples[trafficSamples.length - 1].tx)}
+                                        </ThemedText>
+                                    </ThemedView>
+                                )}
+                                {trafficSamples.length < 2 ? (
+                                    <ThemedText style={{ color: tabText, marginTop: 10 }}>
+                                        {translations[language].categories.routers.trafficNoSamples || 'Waiting for traffic samples...'}
+                                    </ThemedText>
+                                ) : (
+                                    <>
+                                        <ThemedText style={{ color: tabText, marginTop: 8 }}>
+                                            Rate (Mbps)
+                                        </ThemedText>
+                                        <LineChart
+                                            data={{
+                                                labels: trafficSamples.map((sample, index) => {
+                                                    const labelEvery = Math.ceil(trafficSamples.length / 4);
+                                                    return index % labelEvery === 0 || index === trafficSamples.length - 1
+                                                        ? new Date(sample.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+                                                        : '';
+                                                }),
+                                                datasets: [
+                                                    {
+                                                        data: trafficSamples.map((sample) => sample.rx / 1_000_000),
+                                                        color: (opacity = 1) => `rgba(238, 132, 56, ${opacity})`,
+                                                        strokeWidth: 2,
+                                                    },
+                                                    {
+                                                        data: trafficSamples.map((sample) => sample.tx / 1_000_000),
+                                                        color: (opacity = 1) => `rgba(41, 197, 249, ${opacity})`,
+                                                        strokeWidth: 2,
+                                                    },
+                                                ],
+                                                legend: [
+                                                    translations[language].categories.routers.trafficReceived || 'Received',
+                                                    translations[language].categories.routers.trafficSent || 'Sent',
+                                                ],
+                                            }}
+                                            width={Math.max(250, Dimensions.get('window').width - 100)}
+                                            height={240}
+                                            yAxisSuffix="M"
+                                            yAxisLabel=""
+                                            yLabelsOffset={4}
+                                            segments={4}
+                                            fromZero
+                                            bezier
+                                            withDots={false}
+                                            chartConfig={{
+                                                backgroundGradientFrom: background,
+                                                backgroundGradientTo: background,
+                                                decimalPlaces: 1,
+                                                propsForLabels: { fontSize: 10 },
+                                                color: (opacity = 1) => `rgba(99, 101, 120, ${opacity})`,
+                                                labelColor: (opacity = 1) => `rgba(99, 101, 120, ${opacity})`,
+                                            }}
+                                            style={{ marginTop: 6, borderRadius: 8 }}
+                                        />
+                                    </>
+                                )}
+                            </>
+                        )}
                     </ThemedView>
                 </TileContainer>
             </ParallaxScrollView>

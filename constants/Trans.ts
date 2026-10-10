@@ -5,6 +5,9 @@ const translations: Translations = {
 		name: 'English',
 		active: true, // Set to true only if fully translated
 		categories: {
+			generic: {
+				reloading: 'Reloading...'
+			},
 			auth: {
 				'signUp.title': 'Adventure starts here 🚀',
 				'signUp.subtitle': 'Make your hotspot management easy and fun!',
@@ -202,6 +205,20 @@ const translations: Translations = {
 				hostName: 'Host Name',
 				dhcpLeases: 'DHCP Leases',
 				traffic: 'Traffic',
+				trafficInterface: 'Interface',
+				trafficChooseInterface: 'Choose an interface to monitor.',
+				trafficNoInterfaces: 'No router interfaces were found.',
+				trafficInterfacesError: 'Could not load router interfaces.',
+				trafficLoadingInterfaces: 'Loading interfaces...',
+				trafficLoading: 'Connecting to traffic stream...',
+				trafficReconnecting: 'Reconnecting to traffic stream...',
+				trafficConnectionError: 'Traffic stream connection failed. Retrying...',
+				trafficInvalidData: 'Received invalid traffic data.',
+				trafficConnected: 'Live',
+				trafficNoSamples: 'Waiting for traffic samples...',
+				trafficReceived: 'Received',
+				trafficSent: 'Sent',
+				trafficRetry: 'Retry',
 				server: 'Server',
 				user: 'User',
 				address: 'Address',

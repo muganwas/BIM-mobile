@@ -34,4 +34,13 @@ describe('RouterService', () => {
 		const init = call[1] as any;
 		expect(init.headers.Authorization).toBe('Bearer rtoken');
 	});
+
+	test('getRouterInterfaces calls the router interfaces endpoint', async () => {
+		await RouterService.getRouterInterfaces('router-1', 'rtoken');
+		expect(mockApiFetch).toHaveBeenCalledTimes(1);
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		expect(call[0]).toBe('https://api.example/routers/router-1/interfaces');
+		expect(call[1].method).toBe('GET');
+		expect(call[1].headers.Authorization).toBe('Bearer rtoken');
+	});
 });

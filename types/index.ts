@@ -300,6 +300,20 @@ export interface RouterSystemInfo {
 	build_time?: string;
 }
 
+export interface RouterTrafficSample {
+	t: number;
+	rx: number;
+	tx: number;
+}
+
+export interface RouterTrafficHello {
+	interface: string;
+	units: string;
+	interval_ms: number;
+	latest_at: number | null;
+	samples: RouterTrafficSample[];
+}
+
 export type Cookie = {
 	".id": string;
 	user: string;
@@ -411,4 +425,3 @@ export interface PostPurchaseGuardResponse {
 	"message": string;
 	"data": PurchaseGuardData;
 }
-
