@@ -1,6 +1,7 @@
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import Prompt from "@/components/Prompt";
 import { ThemedButton } from "@/components/ThemedButton";
+import { ThemedDropdown } from "@/components/ThemedDropdown";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import TileContainer from "@/components/TileContainer";
@@ -36,8 +37,8 @@ import {
 } from "@/types";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Animated, Dimensions, useAnimatedValue } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, Dimensions, View, useAnimatedValue } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -119,6 +120,8 @@ export default function RouterDetails() {
     const [activeMeta, setActiveMeta] = useState<PaginatedResourcesMeta | undefined>();
     const [trafficInterfaces, setTrafficInterfaces] = useState<string[]>([]);
     const [selectedTrafficInterface, setSelectedTrafficInterface] = useState('');
+    const [showTrafficInterfaceDropdown, setShowTrafficInterfaceDropdown] = useState(false);
+    const trafficInterfaceDropdownRef = useRef<View>(null);
     const [trafficSamples, setTrafficSamples] = useState<RouterTrafficSample[]>([]);
     const [trafficInterfacesLoading, setTrafficInterfacesLoading] = useState(false);
     const [trafficInterfacesLoaded, setTrafficInterfacesLoaded] = useState(false);
@@ -1098,21 +1101,22 @@ export default function RouterDetails() {
                                 />
                             </ThemedView>
                         ) : trafficInterfaces.length ? (
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 50 }}>
-                                <ThemedView style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} lightColor={background} darkColor={background}>
-                                    {trafficInterfaces.map((iface) => (
-                                        <ThemedButton
-                                            key={iface}
-                                            title={iface}
-                                            onPress={() => setSelectedTrafficInterface(iface)}
-                                            lightColor={selectedTrafficInterface === iface ? bim : background}
-                                            darkColor={selectedTrafficInterface === iface ? bim : background}
-                                            lightTextColor={selectedTrafficInterface === iface ? white : tabText}
-                                            darkTextColor={selectedTrafficInterface === iface ? white : tabText}
-                                        />
-                                    ))}
-                                </ThemedView>
-                            </ScrollView>
+                            <ThemedDropdown
+                                id="traffic-interface"
+                                containerRef={trafficInterfaceDropdownRef}
+                                value={selectedTrafficInterface}
+                                setValue={setSelectedTrafficInterface}
+                                options={trafficInterfaces}
+                                placeholder={translations[language].categories.routers.trafficChooseInterface || 'Choose an interface'}
+                                showDropdown={showTrafficInterfaceDropdown}
+                                setShowDropdown={setShowTrafficInterfaceDropdown}
+                                lightColor={background}
+                                darkColor={background}
+                                style={{ width: '100%', zIndex: showTrafficInterfaceDropdown ? 2 : 0 }}
+                                dropDownStyle={{ width: '100%' }}
+                                isAnimatable={false}
+                                showCheckbox={false}
+                            />
                         ) : (
                             <ThemedText style={{ color: tabText }}>
                                 {translations[language].categories.routers.trafficChooseInterface || 'Choose an interface to monitor.'}
