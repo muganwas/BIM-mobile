@@ -18,14 +18,14 @@ export async function fetchRouters(token?: string) {
 }
 
 export async function getRouterById(routerId: string, token?: string) {
-	return apiFetch((apiBaseUrl || '') + `/routers/${routerId}`, {
+	return apiFetch((apiBaseUrl || '') + `/routers/${encodeURIComponent(routerId)}`, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});
 }
 
 export async function getRouterStatus(routerId: string, token?: string) {
-	const resp = await apiFetch((apiBaseUrl || '') + `/routers/${routerId}/status`, {
+	const resp = await apiFetch((apiBaseUrl || '') + `/routers/${encodeURIComponent(routerId)}/status`, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});
@@ -52,7 +52,7 @@ export async function getRouterStatus(routerId: string, token?: string) {
 }
 
 export async function getRouterHotspots(routerId: string, token?: string) {
-	const url = (apiBaseUrl || '') + `/routers/${routerId}/hotspots`;
+	const url = (apiBaseUrl || '') + `/routers/${encodeURIComponent(routerId)}/hotspots`;
 	const resp = await apiFetch(url, {
 		method: 'GET',
 		headers: buildHeaders(token),
@@ -80,7 +80,7 @@ export async function getRouterHotspots(routerId: string, token?: string) {
 }
 
 export async function getRouterInterfaces(routerId: string, token?: string) {
-	const resp = await apiFetch((apiBaseUrl || '') + `/routers/${routerId}/interfaces`, {
+	const resp = await apiFetch((apiBaseUrl || '') + `/routers/${encodeURIComponent(routerId)}/interfaces`, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});
@@ -132,7 +132,7 @@ export function createRouterTrafficEventSource({
 }
 
 export async function pingRouter(routerId: string, token?: string) {
-	return apiFetch((apiBaseUrl || '') + `/routers/${routerId}/ping`, {
+	return apiFetch((apiBaseUrl || '') + `/routers/${encodeURIComponent(routerId)}/ping`, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});
@@ -141,7 +141,7 @@ export async function pingRouter(routerId: string, token?: string) {
 export async function getRouterUsers(
 	{ routerId, token, page, limit }: { routerId: string; token?: string, page?: number, limit?: number }
 ) {
-	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspots/users?per_page=${limit || 8}&page=${page || 1}`;
+	const url = `${apiBaseUrl || ''}/routers/${encodeURIComponent(routerId)}/hotspots/users?per_page=${limit || 8}&page=${page || 1}`;
 	console.log('[getRouterUsers] url', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
@@ -152,7 +152,7 @@ export async function getRouterUsers(
 }
 
 export async function getRouterActiveUsers({ routerId, token, page, limit }: { routerId: string; token?: string; page?: number; limit?: number }) {
-	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspots/active?per_page=${limit || 8}&page=${page || 1}`;
+	const url = `${apiBaseUrl || ''}/routers/${encodeURIComponent(routerId)}/hotspots/active?per_page=${limit || 8}&page=${page || 1}`;
 	console.log('[getRouterActiveUsers] url', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
@@ -163,7 +163,7 @@ export async function getRouterActiveUsers({ routerId, token, page, limit }: { r
 }
 
 export async function getRouterCookies({ routerId, token, page, limit }: { routerId: string; token?: string; page?: number; limit?: number }) {
-	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspot-cookies?per_page=${limit || 8}&page=${page || 1}`;
+	const url = `${apiBaseUrl || ''}/routers/${encodeURIComponent(routerId)}/hotspot-cookies?per_page=${limit || 8}&page=${page || 1}`;
 	console.log('[getRouterCookies] url', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
@@ -174,7 +174,7 @@ export async function getRouterCookies({ routerId, token, page, limit }: { route
 }
 
 export async function deleteRouterCookie({ routerId, cookieId, token }: { routerId: string; cookieId: string; token?: string }) {
-	const url = `${apiBaseUrl || ''}/routers/${routerId}/hotspot-cookies/${cookieId}`;
+	const url = `${apiBaseUrl || ''}/routers/${encodeURIComponent(routerId)}/hotspot-cookies/${cookieId}`;
 	console.log('[removeRouterCookie] url', url);
 	const resp = await apiFetch(url, {
 		method: 'DELETE',
@@ -185,7 +185,7 @@ export async function deleteRouterCookie({ routerId, cookieId, token }: { router
 }
 
 export async function getRouterHosts({ routerId, token, page, limit }: { routerId: string; token?: string; page?: number; limit?: number }) {
-	const url = `${apiBaseUrl || ''}/routers/${routerId}/hosts?per_page=${limit || 8}&page=${page || 1}`;
+	const url = `${apiBaseUrl || ''}/routers/${encodeURIComponent(routerId)}/hosts?per_page=${limit || 8}&page=${page || 1}`;
 	console.log('[getRouterHosts] url ', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
@@ -196,7 +196,7 @@ export async function getRouterHosts({ routerId, token, page, limit }: { routerI
 }
 
 export async function getRouterDHCPLeases({ routerId, token, page, limit }: { routerId: string; token?: string; page?: number; limit?: number }) {
-	const url = `${apiBaseUrl || ''}/routers/${routerId}/dhcp/leases?per_page=${limit || 8}&page=${page || 1}`;
+	const url = `${apiBaseUrl || ''}/routers/${encodeURIComponent(routerId)}/dhcp/leases?per_page=${limit || 8}&page=${page || 1}`;
 	console.log('[getRouterDHCPLeases] url ', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
@@ -207,7 +207,7 @@ export async function getRouterDHCPLeases({ routerId, token, page, limit }: { ro
 }
 
 export async function getRouterPurchaseGuard({ routerId, token }: { routerId: string; token?: string }) {
-	const url = `${apiBaseUrl || ''}/routers/${routerId}/purchase-guard`;
+	const url = `${apiBaseUrl || ''}/routers/${encodeURIComponent(routerId)}/purchase-guard`;
 	console.log('[getRouterPurchaseGuard] url ', url);
 	const resp = await apiFetch(url, {
 		method: 'GET',
@@ -217,7 +217,7 @@ export async function getRouterPurchaseGuard({ routerId, token }: { routerId: st
 }
 
 export async function updateRouterPurchaseGuard({ routerId, token, value }: { routerId: string; token?: string; value: boolean }) {
-	const url = `${apiBaseUrl || ''}/routers/${routerId}/purchase-guard`;
+	const url = `${apiBaseUrl || ''}/routers/${encodeURIComponent(routerId)}/purchase-guard`;
 	console.log('[updateRouterPurchaseGuard] url ', url);
 	const resp = await apiFetch(url, {
 		method: 'POST',

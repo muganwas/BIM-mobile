@@ -17,7 +17,7 @@ export async function fetchWireguardKeys(token?: string) {
 }
 
 export async function getWireguardKey(id: string, token?: string) {
-	return apiFetch((apiBaseUrl || '') + `/connector/${id}`, {
+	return apiFetch((apiBaseUrl || '') + `/connector/${encodeURIComponent(id)}`, {
 		method: 'GET',
 		headers: buildHeaders(token),
 	});
@@ -38,7 +38,7 @@ export async function updateWireguardKey(
 	port?: string,
 	token?: string,
 ) {
-	return apiFetch((apiBaseUrl || '') + `/connector/${id}`, {
+	return apiFetch((apiBaseUrl || '') + `/connector/${encodeURIComponent(id)}`, {
 		method: 'PUT',
 		headers: buildHeaders(token),
 		body: JSON.stringify({ key_name: keyName, my_address: address, endpoint_port: port }),
@@ -46,21 +46,21 @@ export async function updateWireguardKey(
 }
 
 export async function deleteWireguardKey(id: string, token?: string) {
-	return apiFetch((apiBaseUrl || '') + `/connector/${id}`, {
+	return apiFetch((apiBaseUrl || '') + `/connector/${encodeURIComponent(id)}`, {
 		method: 'DELETE',
 		headers: buildHeaders(token),
 	});
 }
 
 export async function retryWireguardKey(id: string, token?: string) {
-	return apiFetch((apiBaseUrl || '') + `/connector/${id}/retry`, {
+	return apiFetch((apiBaseUrl || '') + `/connector/${encodeURIComponent(id)}/retry`, {
 		method: 'POST',
 		headers: buildHeaders(token),
 	});
 }
 
 export async function repairWireguardKey(id: string, token?: string) {
-	return apiFetch((apiBaseUrl || '') + `/connector/${id}/repair`, {
+	return apiFetch((apiBaseUrl || '') + `/connector/${encodeURIComponent(id)}/repair`, {
 		method: 'POST',
 		headers: buildHeaders(token),
 	});
