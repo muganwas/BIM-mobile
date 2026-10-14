@@ -2,16 +2,18 @@ import Loader from '@/components/Loader';
 import Toast from '@/components/Toast';
 // apiBaseUrl removed — use service layer for endpoints
 import translations from '@/constants/Trans';
-import { delay, normalizePhoneForApi, parseAmount } from '@/helpers';
+import { delay, normalizePhoneForApi, parseAmount, ShowAlert } from '@/helpers';
 import { parseApiError, registerAuthCallbacks } from '@/helpers/api';
 import * as AuthService from '@/services/AuthService';
-import { fetchDashboard } from '@/services/UserService';
+import { fetchDashboard, fetchUser } from '@/services/UserService';
 import {
 	DashboardSummary,
+	GetMeResponse,
 	headerOptions,
 	langCode,
 	notifications,
-	User as UserProps,
+	UserProfile as UserProfileProps,
+	User as UserProps
 } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNetInfo } from '@react-native-community/netinfo';
@@ -35,6 +37,8 @@ type RouterType = ReturnType<typeof useRouter>;
 
 export interface GeneralContextType {
 	user: UserProps | null;
+	userProfile: UserProfileProps | null;
+	setUserProfile: React.Dispatch<React.SetStateAction<UserProfileProps | null>>;
 	authToken?: string | null;
 	setAuthToken?: React.Dispatch<React.SetStateAction<string | null>>;
 	language: langCode;
@@ -57,6 +61,7 @@ export interface GeneralContextType {
 		number: string;
 		password?: string;
 	}) => Promise<void>;
+	handleFetchUserProfile: () => void;
 	handleRegistration: (payload: {
 		phone: string;
 		password: string;
@@ -172,6 +177,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const isLoggingOutRef = React.useRef(false);
 
 	const [user, setUser] = useState<UserProps | null>(null);
+	const [userProfile, setUserProfile] = useState<UserProfileProps | null>(null);
+
 	// Keep an in-memory copy of the auth token for fast checks and guards
 	const [authToken, setAuthToken] = useState<string | null>(null);
 	// Ref always in sync with latest authToken so attemptRefresh never captures a stale value
@@ -1119,6 +1126,23 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		[authToken, user]
 	);
 
+	const handleFetchUserProfile = React.useCallback(() => {
+		if (!user?.id || !authToken) return;
+		(async () => {
+			try {
+				const userData = await fetchUser(authToken);
+				if (userData && userData.ok) {
+					const meResponse: GetMeResponse = await userData.json();
+					setUserProfile({ ...meResponse.user });
+					setUser({ ...user, account: { ...meResponse.active_account } })
+				}
+			} catch (e) {
+				console.log("[GeneralContext fetchUserProfile] ", e);
+				ShowAlert("Profile could not be fetched", "Error");
+			}
+		})();
+	}, [authToken, user])
+
 	// Initial fetch when we become authenticated — do not re-run on unrelated
 	// `user` object changes. The helper will avoid duplicate fetching.
 	useEffect(() => {
@@ -1504,6 +1528,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setSelectedOption,
 				setNotifications,
 				handleAuthentication,
+				setUserProfile,
+				userProfile,
+				handleFetchUserProfile,
 				handleRegistration,
 				handleVerify,
 				handleVerify2FA,

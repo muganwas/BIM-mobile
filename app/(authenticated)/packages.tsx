@@ -10,8 +10,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { RadiusProfile } from '@/types';
 import CreateProfile from '@/views/CreateProfile';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, RefreshControl, StyleSheet, useAnimatedValue } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -30,7 +29,7 @@ export default function PackagesScreen() {
 	const errorColor = useThemeColor({}, 'error');
 	const authButtonText = useThemeColor({}, 'authButtonText');
 	const { packages, fetchPackages } = useTransaction();
-	const { language } = useGeneral();
+	const { language, authToken } = useGeneral();
 
 	const [refreshing, setRefreshing] = useState(false);
 	const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
@@ -60,14 +59,13 @@ export default function PackagesScreen() {
 		`package-list-header-${Math.random().toString(36).slice(2)}`
 	);
 
-	// Fetch profiles when screen comes into focus
-	useFocusEffect(
-		useCallback(() => {
-			(async () => {
-				await fetchPackages();
-			})();
-		}, [fetchPackages])
-	);
+	useEffect(() => {
+		if (!authToken) return;
+		(async () => {
+			await fetchPackages();
+		})();
+	}, [fetchPackages, authToken]);
+
 
 	// Column definitions
 	const packageHeaders = [

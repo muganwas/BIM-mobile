@@ -24,6 +24,14 @@ export async function fetchDashboard(token?: string) {
 	});
 }
 
+export async function fetchUser(token?: string) {
+	return apiFetch(apiBaseUrl || '' + '/me', {
+		method: 'GET',
+		headers: buildHeaders(token),
+	});
+}
+
+
 export async function fetchPurchases(token?: string, filters?: TransactionFilters) {
 	let url = (apiBaseUrl || '') + '/transactions';
 

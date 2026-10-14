@@ -238,7 +238,7 @@ const translations: Translations = {
 				usersPerDevice: 'Users per device',
 				availableProfiles: 'Available Profiles',
 				bandwidth: 'Bandwidth',
-				createProfile: 'Create New Profile',
+				createProfile: 'Create New Profile (Admin)',
 				durationHours: 'Duration (hrs)',
 				profileName: 'Profile Name',
 				sessionTimeout: 'Session Timeout',

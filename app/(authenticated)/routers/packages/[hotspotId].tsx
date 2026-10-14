@@ -14,15 +14,15 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { InternetPackage } from '@/types';
 import InternetPackageOverlay, {
-    InternetPackageOverlayMode,
+	InternetPackageOverlayMode,
 } from '@/views/InternetPackageOverlay';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    Animated,
-    StyleSheet,
-    TouchableOpacity,
-    useColorScheme,
+	Animated,
+	StyleSheet,
+	TouchableOpacity,
+	useColorScheme,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -137,17 +137,17 @@ export default function HotspotPackagesScreen() {
 		width?: number;
 		textAlign?: 'left' | 'center' | 'right';
 	}[] = [
-		{ key: 'name', label: t.dashboard.name, width: 120 },
-		{ key: 'usersPerDevice', label: t.packages.usersPerDevice, width: 140 },
-		{ key: 'bandwidth', label: t.packages.bandwidth, width: 140 },
-		{ key: 'duration', label: t.packages.durationHours, width: 140 },
-		{
-			key: 'actions',
-			label: t.dashboard.actions,
-			width: 120,
-			textAlign: 'center',
-		},
-	];
+			{ key: 'name', label: t.dashboard.name, width: 120 },
+			{ key: 'simultaneous-use', label: t.packages.usersPerDevice, width: 140 },
+			{ key: 'rate-limit', label: t.packages.bandwidth, width: 140 },
+			{ key: 'session-timeout', label: t.packages.durationHours, width: 140 },
+			{
+				key: 'actions',
+				label: t.dashboard.actions,
+				width: 120,
+				textAlign: 'center',
+			},
+		];
 
 	const handleCreateNew = () => {
 		setOverlayMode('create');
@@ -184,23 +184,23 @@ export default function HotspotPackagesScreen() {
 		if (overlayMode === 'create') {
 			const created = factories.generateInternetPackage({
 				name: toPkgName(payload.name),
-				usersPerDevice: payload.usersPerDevice,
-				bandwidth: payload.bandwidth,
-				duration: payload.duration,
+				"simultaneous-use": payload.usersPerDevice,
+				"rate-limit": payload.bandwidth,
+				"session-timeout": String(payload.duration),
 			});
 			setPackages((prev) => [created, ...prev]);
 		} else if (overlayMode === 'edit' && selectedPkg) {
 			setPackages((prev) =>
 				prev.map((p) =>
-					p.id === selectedPkg.id
+					p[".id"] === selectedPkg[".id"]
 						? {
-								...p,
-								name: toPkgName(payload.name),
-								usersPerDevice: payload.usersPerDevice,
-								bandwidth: payload.bandwidth,
-								duration: payload.duration,
-								updatedAt: new Date(),
-						  }
+							...p,
+							name: toPkgName(payload.name),
+							usersPerDevice: payload.usersPerDevice,
+							bandwidth: payload.bandwidth,
+							duration: payload.duration,
+							updatedAt: new Date(),
+						}
 						: p
 				)
 			);
@@ -211,7 +211,7 @@ export default function HotspotPackagesScreen() {
 
 	const confirmDelete = () => {
 		if (!selectedPkg) return setShowPrompt(false);
-		setPackages((prev) => prev.filter((p) => p.id !== selectedPkg.id));
+		setPackages((prev) => prev.filter((p) => p[".id"] !== selectedPkg[".id"]));
 		setShowPrompt(false);
 		setSelectedPkg(undefined);
 	};
@@ -328,7 +328,7 @@ export default function HotspotPackagesScreen() {
 							>
 								{packages.map((p, index) => (
 									<ThemedView
-										key={p.id ?? `${p.tag}-${index}`}
+										key={p[".id"] ?? `${p.name}-${index}`}
 										style={{
 											flexDirection: 'row',
 											width: '100%',
@@ -353,7 +353,7 @@ export default function HotspotPackagesScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{p.tag}
+											{p.name}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -361,7 +361,7 @@ export default function HotspotPackagesScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{p.usersPerDevice}
+											{p["simultaneous-use"]}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -369,7 +369,7 @@ export default function HotspotPackagesScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{p.bandwidth}
+											{p["rate-limit"]}
 										</ThemedText>
 										<ThemedText
 											numberOfLines={1}
@@ -377,7 +377,7 @@ export default function HotspotPackagesScreen() {
 											lightColor={textLight}
 											darkColor={textDark}
 										>
-											{p.duration}
+											{p["session-timeout"]}
 										</ThemedText>
 										<ThemedView
 											style={{
@@ -446,7 +446,7 @@ export default function HotspotPackagesScreen() {
 				visible={showPrompt}
 				title={t.dashboard.confirmDeleteTitle}
 				message={t.packages.deleteMessage}
-					buttons={[
+				buttons={[
 					{
 						title: t.buttons.cancel,
 						color: cancelButton,

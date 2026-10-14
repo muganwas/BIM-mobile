@@ -1,5 +1,7 @@
-import { langCode } from './';
+import { Account, langCode } from './';
 import { DashboardSummary } from './dashboard';
+
+export type Gender = 'male' | 'female' | 'other' | undefined;
 
 export interface Bank {
     id: string;
@@ -50,7 +52,7 @@ export interface WireguardKey {
     created_at: string; // ISO date string
     updated_at: string; // ISO date string
 }
-
+/** From /me endpoint */
 export interface User {
     id: string;
     name: string;
@@ -60,6 +62,22 @@ export interface User {
     userLanguage?: langCode; // Optional, can be used to store user's preferred language
     createdAt: Date;
     updatedAt: Date;
+    account?: Account;
     // Optional typed dashboard data returned by some login/refresh endpoints
     dashboard?: DashboardSummary;
+}
+/** From /profile endpoint */
+export interface UserProfile {
+    "id": string;
+    "name": string;
+    "email": string;
+    "phone": string;
+    "notification_email": string;
+    "avatar": string;
+    "avatar_id": string;
+    "avatar_url": string;
+    "gender": Gender;
+    "email_verified_at": string;
+    "created_at": string;
+    "updated_at": string;
 }

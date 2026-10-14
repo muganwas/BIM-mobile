@@ -158,7 +158,7 @@ export function generateVoucherUserFromPurchase(
 	packages: InternetPackage[] = []
 ): VoucherUser {
 	const pkg = packages.length
-		? packages[generateRandomInt(0, packages.length - 1)].tag
+		? packages[generateRandomInt(0, packages.length - 1)].name
 		: 'short';
 	return {
 		voucherCode: generateRandomNumbers(6),
@@ -291,34 +291,23 @@ export function generateDocuments(count = 2) {
 export function generateInternetPackage(
 	overrides: Partial<InternetPackage> = {}
 ): InternetPackage {
-	const id = overrides.id ?? generateRandomNumbers(6);
+	const id = overrides[".id"] ?? generateRandomNumbers(6);
 	const name =
-		overrides.name ??
-		packageNames[generateRandomInt(0, packageNames.length - 1)];
+		overrides.name || 'BLANK';
 	// Provide a sensible default for usersPerDevice by package name
 	const defaultUsersPerDevice =
-		overrides.usersPerDevice ??
+		overrides['simultaneous-use'] ??
 		(name === 'monthly' ? 3 : name === 'weekly' ? 2 : 1);
 	return {
-		id,
-		tag: overrides.tag ?? `pkg-${id}`,
+		".id": id,
 		name,
-		price: overrides.price ?? generateRandomInt(100, 5000),
-		bandwidth:
-			overrides.bandwidth ??
+		display_name: overrides.display_name || name,
+		"rate-limit":
+			overrides["rate-limit"] ??
 			`${generateRandomInt(1, 100)} MBps/${generateRandomInt(1, 100)} MBps`,
-		usersPerDevice: defaultUsersPerDevice,
-		duration:
-			overrides.duration ??
-			(name === 'short'
-				? 1
-				: name === 'daily'
-					? 24
-					: name === 'weekly'
-						? 168
-						: 720),
-		createdAt: overrides.createdAt ?? new Date(),
-		updatedAt: overrides.updatedAt ?? new Date(),
+		"simultaneous-use": defaultUsersPerDevice,
+		"session-timeout":
+			overrides['session-timeout'] || String(generateRandomInt(6, 10)),
 	};
 }
 

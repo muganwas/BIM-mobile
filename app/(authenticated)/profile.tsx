@@ -15,11 +15,8 @@ import { BackHandler, View } from 'react-native';
 
 export default function ProfileScreen() {
 	useTrackHistory('/(authenticated)/profile');
-	const ctx = useGeneral();
-	const user = ctx.user;
-	const updateProfile = (ctx as any).updateProfile as
-		| ((data: { name?: string; email?: string }) => void)
-		| undefined;
+	const { user, userProfile, setUserProfile } = useGeneral();
+	const updateProfile = setUserProfile;
 	const { language } = useGeneral();
 	const navigation = useNavigation<any>();
 
@@ -71,9 +68,8 @@ export default function ProfileScreen() {
 	// Tile 3: Delete account (confirmation handled elsewhere)
 
 	const handleSaveProfile = () => {
-		if (typeof updateProfile === 'function') {
-			updateProfile({ name: fullName, email });
-		}
+		if (userProfile)
+			setUserProfile({ ...userProfile, name: fullName, email });
 	};
 
 	const handleUpdatePassword = () => {
@@ -135,7 +131,7 @@ export default function ProfileScreen() {
 				>
 					{
 						translations[language].categories.auth[
-							'profile.details.description'
+						'profile.details.description'
 						]
 					}
 				</ThemedText>
@@ -144,7 +140,7 @@ export default function ProfileScreen() {
 					<ThemedInput
 						label={
 							translations[language].categories.auth[
-								'profile.placeholder.fullName'
+							'profile.placeholder.fullName'
 							]
 						}
 						value={fullName}
@@ -155,14 +151,14 @@ export default function ProfileScreen() {
 					<ThemedInput
 						label={
 							translations[language].categories.auth[
-								'profile.placeholder.email'
+							'profile.placeholder.email'
 							]
 						}
 						value={email}
 						setValue={setEmail}
 						placeholder={
 							translations[language].categories.auth[
-								'profile.placeholder.email'
+							'profile.placeholder.email'
 							]
 						}
 						keyboardType='email-address'
@@ -221,7 +217,7 @@ export default function ProfileScreen() {
 				>
 					{
 						translations[language].categories.auth[
-							'profile.password.description'
+						'profile.password.description'
 						]
 					}
 				</ThemedText>
@@ -230,7 +226,7 @@ export default function ProfileScreen() {
 					<ThemedInput
 						label={
 							translations[language].categories.auth[
-								'profile.placeholder.currentPassword'
+							'profile.placeholder.currentPassword'
 							]
 						}
 						value={currentPassword}
@@ -242,7 +238,7 @@ export default function ProfileScreen() {
 					<ThemedInput
 						label={
 							translations[language].categories.auth[
-								'profile.placeholder.newPassword'
+							'profile.placeholder.newPassword'
 							]
 						}
 						value={newPassword}
@@ -254,7 +250,7 @@ export default function ProfileScreen() {
 					<ThemedInput
 						label={
 							translations[language].categories.auth[
-								'profile.placeholder.confirmPassword'
+							'profile.placeholder.confirmPassword'
 							]
 						}
 						value={confirmPassword}

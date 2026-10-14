@@ -1,4 +1,4 @@
-import { VoucherUser } from './security';
+import { UserProfile, VoucherUser } from './security';
 export * from './dashboard';
 export * from './security';
 
@@ -119,25 +119,27 @@ export type InternetPackageName = 'short' | 'daily' | 'weekly' | 'monthly';
 
 /** RADIUS hotspot user profile returned by the /packages endpoint */
 export interface RadiusProfile {
+	".id": string;
 	name: string; // Profile name
 	display_name: string;
-	["rate-limit"]?: string;
-	["shared-users"]?: number;
-	["session-timeout"]?: string;
-	["router-name"]?: string;
-	["simultaneous-use"]?: number;
+	"address-list"?: string;
+	"rate-limit"?: string;
+	"shared-users"?: number;
+	"session-timeout"?: string;
+	"router-name"?: string;
+	"simultaneous-use"?: number;
 }
 
 export interface InternetPackage {
-	id?: string;
-	tag: string;
-	name: InternetPackageName; // Name of the internet package
-	price: number; // Price of the package
-	bandwidth: string; // Bandwidth in MBps/MBps
-	usersPerDevice: number; // Number of users allowed per device
-	duration: number; // Duration in hours
-	createdAt?: Date;
-	updatedAt?: Date;
+	".id": string;
+	name: string; // Profile name
+	display_name: string;
+	"address-list"?: string;
+	"rate-limit"?: string;
+	"shared-users"?: number;
+	"session-timeout"?: string;
+	"router-name"?: string;
+	"simultaneous-use"?: number;
 }
 
 export type identityDocumentType = 'passport' | 'id-card' | 'driver-license';
@@ -374,6 +376,29 @@ export type PurchaseGuardData = {
 	"notify_existing_voucher": boolean | stringifiedBool;
 }
 
+export interface Platform {
+	"role": string;
+	"role_label": string;
+	"is_admin": boolean | stringifiedBool;
+	"is_staff": boolean | stringifiedBool;
+	"is_blog_editor": boolean | stringifiedBool;
+	"blog_editor_scope": string;
+	"can_write_blog_content": boolean | stringifiedBool;
+}
+
+export interface Account {
+	"id": string;
+	"name": string;
+	"type": string;
+	"type_label": string;
+	"is_admin_account": boolean | stringifiedBool;
+	"role": string;
+	"role_label": string;
+	"is_cosignatory": boolean | stringifiedBool;
+	"is_active": boolean | stringifiedBool;
+	"joined_at": string;
+}
+
 export interface GetRouterCookiesResponse {
 	"router": ApiRouter;
 	"cookies": Cookie[];
@@ -420,8 +445,24 @@ export interface GetPurchaseGuardResponse {
 	"data": PurchaseGuardData;
 }
 
+export interface GetRadiusProfileResponse {
+	"success": boolean | stringifiedBool;
+	"profiles": RadiusProfile[];
+}
+
 export interface PostPurchaseGuardResponse {
 	"success": boolean | stringifiedBool;
 	"message": string;
 	"data": PurchaseGuardData;
+}
+
+export interface GetMeResponse {
+	"success": boolean | stringifiedBool;
+	"message": string;
+	"user": UserProfile;
+	"platform": Platform;
+	"home_url": string;
+	"accounts": Account[];
+	"accounts_metadata": PaginatedResourcesMeta;
+	"active_account": Account;
 }
