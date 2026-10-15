@@ -23,15 +23,16 @@ export interface RecentTransaction {
 }
 
 export interface DashboardSummary {
-	chartData?: ChartDataEntry[];
+	chartData: ChartDataEntry[];
 	monthTransactions?: number;
-	monthUsers?: number;
+	monthUsers: number;
 	recentTransactions?: RecentTransaction[];
-	routerBalances?: RouterBalance[];
-	todayTransactions?: number;
-	todayUsers?: number;
-	weekTransactions?: number;
-	weekUsers?: number;
+	routerBalances: RouterBalance[];
+	todayTransactions: number;
+	todayUsers: number;
+	weekTransactions: number;
+	weekUsers: number;
 }
 
 export { };
+

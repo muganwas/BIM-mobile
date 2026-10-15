@@ -1,4 +1,5 @@
-import { UserProfile, VoucherUser } from './security';
+import { ChartDataEntry, RecentTransaction, RouterBalance } from './dashboard';
+import { ServerUser, VoucherUser } from './security';
 export * from './dashboard';
 export * from './security';
 
@@ -386,6 +387,21 @@ export interface Platform {
 	"can_write_blog_content": boolean | stringifiedBool;
 }
 
+
+export interface OnboardingState {
+	completed?: string[];
+	dismissed?: string[];
+}
+
+export interface TokenMeta {
+	"id": number,
+	"name": string,
+	"abilities": string[],
+	"last_used_at": string,
+	"created_at": string,
+	"expires_at"?: string
+}
+
 export interface Account {
 	"id": string;
 	"name": string;
@@ -397,6 +413,24 @@ export interface Account {
 	"is_cosignatory": boolean | stringifiedBool;
 	"is_active": boolean | stringifiedBool;
 	"joined_at": string;
+}
+
+
+export interface GetDashboardResponse {
+	"success": boolean | stringifiedBool,
+	"message": string,
+	"recentTransactions_metadata": PaginatedResourcesMeta,
+	"recentTransactions": RecentTransaction[],
+	"todayTransactions": number,
+	"weekTransactions": number,
+	"monthTransactions": number,
+	"todayUsers": number,
+	"weekUsers": number,
+	"monthUsers": number,
+	"routerBalances_metadata": PaginatedResourcesMeta,
+	"routerBalances": RouterBalance[],
+	"chartData_metadata": PaginatedResourcesMeta,
+	"chartData": ChartDataEntry[]
 }
 
 export interface GetRouterCookiesResponse {
@@ -459,10 +493,49 @@ export interface PostPurchaseGuardResponse {
 export interface GetMeResponse {
 	"success": boolean | stringifiedBool;
 	"message": string;
-	"user": UserProfile;
+	"user": ServerUser;
 	"platform": Platform;
-	"home_url": string;
 	"accounts": Account[];
 	"accounts_metadata": PaginatedResourcesMeta;
 	"active_account": Account;
+}
+
+export interface VerifyTokenResponse {
+	"success": boolean | stringifiedBool;
+	"user": ServerUser,
+	"message": string;
+	"platform": Platform;
+	"active_account": Account;
+	"token": string;
+	"token_meta": TokenMeta
+}
+
+export interface TwoFAVerifyResponse {
+	"success": boolean | stringifiedBool;
+	"message": string,
+	"user": ServerUser,
+	"platform": Platform;
+	"active_account": Account;
+	"token": string,
+	"token_meta": TokenMeta
+}
+
+export interface TwoFASetupResponse {
+	"success": boolean | stringifiedBool;
+	"message": string,
+	"user": ServerUser,
+	"platform": Platform;
+	"active_account": Account;
+	"token": string,
+	"token_meta": TokenMeta
+}
+
+export interface RefreshTokenResponse {
+	"success": boolean | stringifiedBool;
+	"message": string,
+	"user": ServerUser,
+	"platform": Platform;
+	"active_account": Account;
+	"token": string,
+	"token_meta": TokenMeta
 }

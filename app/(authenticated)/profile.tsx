@@ -16,7 +16,6 @@ import { BackHandler, View } from 'react-native';
 export default function ProfileScreen() {
 	useTrackHistory('/(authenticated)/profile');
 	const { user, userProfile, setUserProfile } = useGeneral();
-	const updateProfile = setUserProfile;
 	const { language } = useGeneral();
 	const navigation = useNavigation<any>();
 
@@ -29,6 +28,8 @@ export default function ProfileScreen() {
 	const authButtonText = useThemeColor({}, 'authButtonText');
 	const dangerButton = useThemeColor({}, 'dangerButton');
 	const white = useThemeColor({}, 'white');
+
+	console.log("[Profile] user profile", userProfile)
 
 	useFocusEffect(() => {
 		const backHandler = BackHandler.addEventListener(

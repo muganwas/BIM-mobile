@@ -187,7 +187,7 @@ export const TransactionProvider = ({
 
 	const fetchPackages = useCallback(
 		async () => {
-			if ((packages && packages.length) && packagesLastFetched && (Date.now() - new Date(packagesLastFetched).getTime() < 60000)) return;
+			if ((packages && packages.length > 0) && packagesLastFetched && (Date.now() - new Date(packagesLastFetched).getTime() < 60000)) return;
 			try {
 				console.log('[TransactionContext] fetching packages from API');
 				const res = await serviceFetchPackages(authToken ?? undefined);

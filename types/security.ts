@@ -1,4 +1,4 @@
-import { Account, langCode } from './';
+import { Account, OnboardingState } from './';
 import { DashboardSummary } from './dashboard';
 
 export type Gender = 'male' | 'female' | 'other' | undefined;
@@ -52,23 +52,38 @@ export interface WireguardKey {
     created_at: string; // ISO date string
     updated_at: string; // ISO date string
 }
-/** From /me endpoint */
-export interface User {
-    id: string;
-    name: string;
-    email: string;
-    phone?: string; // Optional, can be used for login or registration
-    avatarUrl?: string;
-    userLanguage?: langCode; // Optional, can be used to store user's preferred language
-    createdAt: Date;
-    updatedAt: Date;
+/** User object from Auth verification /token/verify */
+export interface ServerUser {
+    "id": number;
+    "role_id": number;
+    "name": string;
+    "phone": string;
+    "phone_verified_at"?: string;
+    "email": string;
+    "notification_email"?: string;
+    "avatar": string;
+    "avatar_url": string;
+    "email_verified_at"?: string;
+    "last_activity_at"?: string;
+    "totp_secret": string;
+    "totp_setup_at"?: string;
+    "onboarding_state": OnboardingState;
+    "pre_2fa_token"?: string;
+    "pre_2fa_token_expires_at"?: string;
+    "settings": string[];
+    "created_at": string;
+    "updated_at": string;
+    "gender": Gender
+}
+/** Local app user interface */
+export interface User extends ServerUser {
     account?: Account;
     // Optional typed dashboard data returned by some login/refresh endpoints
     dashboard?: DashboardSummary;
 }
-/** From /profile endpoint */
+/** From /profile endpoint & /me user object */
 export interface UserProfile {
-    "id": string;
+    "id": number;
     "name": string;
     "email": string;
     "phone": string;

@@ -7,17 +7,22 @@ import { parseApiError, registerAuthCallbacks } from '@/helpers/api';
 import * as AuthService from '@/services/AuthService';
 import { fetchDashboard, fetchUser } from '@/services/UserService';
 import {
+	DashboardSummary,
+	GetDashboardResponse,
 	GetMeResponse,
 	headerOptions,
 	langCode,
 	notifications,
-	UserProfile as UserProfileProps,
-	User as UserProps
+	RefreshTokenResponse,
+	TwoFASetupResponse,
+	TwoFAVerifyResponse,
+	User as UserProps,
+	VerifyTokenResponse
 } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNetInfo } from '@react-native-community/netinfo';
 import * as DeviceInfo from 'expo-device';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, {
 	createContext,
@@ -36,8 +41,6 @@ type RouterType = ReturnType<typeof useRouter>;
 
 export interface GeneralContextType {
 	user: UserProps | null;
-	userProfile: UserProfileProps | null;
-	setUserProfile: React.Dispatch<React.SetStateAction<UserProfileProps | null>>;
 	authToken?: string | null;
 	setAuthToken?: React.Dispatch<React.SetStateAction<string | null>>;
 	language: langCode;
@@ -168,6 +171,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
 	const router = useRouter();
+	const pathName = usePathname();
 	const netInfo = useNetInfo();
 	const totalMemory = (DeviceInfo as any)?.totalMemory;
 
@@ -176,7 +180,6 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const isLoggingOutRef = React.useRef(false);
 
 	const [user, setUser] = useState<UserProps | null>(null);
-	const [userProfile, setUserProfile] = useState<UserProfileProps | null>(null);
 
 	// Keep an in-memory copy of the auth token for fast checks and guards
 	const [authToken, setAuthToken] = useState<string | null>(null);
@@ -419,9 +422,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					refreshRes && refreshRes.ok
 				);
 			if (!refreshRes || !refreshRes.ok) return null;
-			const refJson = await refreshRes.json().catch(() => null);
-			if (refJson && (refJson as any).token) {
-				const newToken = String((refJson as any).token);
+			const refJson: RefreshTokenResponse = await refreshRes.json();
+			if (refJson && refJson.token) {
+				const newToken = refJson.token;
 				try {
 					await SecureStore.setItemAsync(
 						'auth_token',
@@ -430,8 +433,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				} catch { }
 				setAuthToken(newToken);
 
-				if (refJson && (refJson as any).user) {
-					setUser((refJson as any).user as any);
+				if (refJson && refJson.user) {
+					setUser(prev => ({ ...prev ?? {}, ...refJson.user, account: refJson.active_account }));
 				}
 				return newToken;
 			}
@@ -475,10 +478,10 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					return;
 				}
 
-				const res = await AuthService.verifyToken(String(authToken));
+				const res = await AuthService.verifyToken(authToken);
 				if (authDebug)
 					console.debug(
-						'verifyAndSchedule: verify response',
+						'[GeneralContext] verifyAndSchedule: verify response',
 						res && res.status,
 						'ok=',
 						res && res.ok
@@ -486,85 +489,44 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				if (!res || !res.ok) {
 					if (authDebug)
 						console.debug(
-							'verifyAndSchedule: verify failed, calling handleLogout'
+							'[GeneralContext] verifyAndSchedule: verify failed, calling handleLogout'
 						);
 					await handleLogout();
 					return;
 				}
 
-				const json = await res.json().catch(() => null);
-				if (authDebug) console.debug('verifyAndSchedule: verify json', json);
+				const json: VerifyTokenResponse = await res.json();
+				if (authDebug) console.debug('[GeneralContext] verifyAndSchedule: verify json', json);
 				if (!json) return;
 
 				// Merge returned user object into state when present
-				if (json && (json as any).user) {
-					setUser((json as any).user as any);
-					try {
-						const anyRouter = router as any;
-						const currentPath =
-							anyRouter?.pathname ||
-							anyRouter?.asPath ||
-							anyRouter?.route ||
-							'';
-						if (
-							!currentPath ||
-							currentPath === '/' ||
-							currentPath.startsWith('/(auth)')
-						) {
-							if (anyRouter?.replace) {
-								try {
-									anyRouter.replace('/(authenticated)/home');
-								} catch { }
-							} else if (anyRouter?.push) {
-								try {
-									anyRouter.push('/(authenticated)/home');
-								} catch { }
-							} else {
-								let attempts = 0;
-								const maxAttempts = 12;
-								const tryNav = () => {
-									const ar = router as any;
-									if (ar?.replace) {
-										try {
-											ar.replace('/(authenticated)/home');
-											return;
-										} catch { }
-									}
-									if (ar?.push) {
-										try {
-											ar.push('/(authenticated)/home');
-											return;
-										} catch { }
-									}
-									attempts++;
-									if (attempts < maxAttempts) setTimeout(tryNav, 100);
-									else if (runtime && runtime.__BIM_HISTORY_DEBUG__)
-										console.warn(
-											'verifyAndSchedule: router not ready, aborting redirect to authenticated home'
-										);
-								};
-								tryNav();
-							}
-						}
-					} catch { }
+				if (json.user) {
+					setUser((prev) => ({ ...prev ?? {}, ...json.user }));
+					console.log("[GeneralContext] path name", pathName)
+					const anyRouter = router;
+					if (
+						!pathName ||
+						pathName === '/' ||
+						pathName.startsWith('/(auth)')
+					) {
+						try {
+							anyRouter.replace('/(authenticated)/home');
+						} catch { console.log("[GeneralContext] Could not navigate") }
+					}
 				}
 
-				// Support token expiry from either token_meta.expires_at or top-level expires_at
+				//Support token expiry from token_meta.expires_at
 				const expiresAt =
-					(json &&
-						(json as any).token_meta &&
-						(json as any).token_meta.expires_at) ||
-					(json && (json as any).expires_at) ||
-					null;
+					json.token_meta.expires_at
 				if (expiresAt) {
 					if (authDebug)
-						console.debug('verifyAndSchedule: token expiresAt=', expiresAt);
+						console.debug('[GeneralContext] verifyAndSchedule: token expiresAt=', expiresAt);
 					const expMs = Date.parse(String(expiresAt));
 					if (!Number.isFinite(expMs)) return;
 					const now = Date.now();
 					const msUntilExpiry = expMs - now;
 					if (authDebug)
-						console.debug('verifyAndSchedule: msUntilExpiry=', msUntilExpiry);
+						console.debug('[GeneralContext] verifyAndSchedule: msUntilExpiry=', msUntilExpiry);
 
 					const REFRESH_BEFORE_MS = 30000; // try refresh 30s before expiry
 
@@ -605,17 +567,17 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						);
 						if (authDebug)
 							console.debug(
-								'verifyAndSchedule: scheduling refresh in ms',
+								'[GeneralContext] verifyAndSchedule: scheduling refresh in ms',
 								msUntilRefresh
 							);
 						expiryTimer = setTimeout(async () => {
 							if (canceled) return;
 							try {
 								if (authDebug)
-									console.debug('verifyAndSchedule: scheduled refresh firing');
+									console.debug('[GeneralContext] verifyAndSchedule: scheduled refresh firing');
 								await doRefresh();
 							} catch (e) {
-								console.error('scheduled token refresh failed', e);
+								console.error('[GeneralContext] scheduled token refresh failed', e);
 							}
 						}, msUntilRefresh);
 					};
@@ -623,7 +585,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					if (msUntilExpiry <= 0) {
 						if (authDebug)
 							console.debug(
-								'verifyAndSchedule: token already expired, attempting immediate refresh'
+								'[GeneralContext] verifyAndSchedule: token already expired, attempting immediate refresh'
 							);
 						await scheduleRefresh(true);
 						return;
@@ -632,7 +594,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					await scheduleRefresh(false);
 				}
 			} catch (e) {
-				console.error('token verification failed', e);
+				console.error('[GeneralContext] token verification failed', e);
 			} finally {
 				setVerifyingAuth(false);
 			}
@@ -650,6 +612,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		authDebug,
 		attemptRefresh,
 		tr,
+		pathName,
 		router,
 		initialTokenChecked,
 	]);
@@ -662,17 +625,17 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				if (t) {
 					if (authDebug)
 						console.debug(
-							'GeneralContext: loaded auth_token from SecureStore',
+							'[GeneralContext] loaded auth_token from SecureStore',
 							t
 						);
 					setAuthToken(String(t));
 				} else {
 					if (authDebug)
-						console.debug('GeneralContext: no auth_token found in SecureStore');
+						console.debug('[GeneralContext] no auth_token found in SecureStore');
 				}
 			} catch (e) {
 				if (authDebug)
-					console.debug('GeneralContext: SecureStore.getItemAsync error', e);
+					console.debug('[GeneralContext] SecureStore.getItemAsync error', e);
 			} finally {
 				// Mark that initial token load has completed so verification can proceed
 				setInitialTokenChecked(true);
@@ -733,23 +696,23 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			// AsyncStorage is used for React Native and web compatibility
 			AsyncStorage.setItem(HISTORY_KEY, payload).catch((e) => {
 				if (runtime?.__BIM_HISTORY_DEBUG__)
-					console.debug('GeneralContext: persist failed', e);
+					console.debug('[GeneralContext] persist failed', e);
 			});
 		} catch (e) {
 			if (runtime?.__BIM_HISTORY_DEBUG__)
-				console.debug('GeneralContext: persist failed', e);
+				console.debug('[GeneralContext] persist failed', e);
 		}
 	};
 
 	const handleUpdateHistory = useCallback((current: string) => {
 		const debug = runtime?.__BIM_HISTORY_DEBUG__;
-		if (debug) console.debug('handleUpdateHistory called with', current);
+		if (debug) console.debug('[GeneralContext] handleUpdateHistory called with', current);
 		setHistory((prev) => {
-			if (debug) console.debug('handleUpdateHistory prev', prev);
+			if (debug) console.debug('[GeneralContext] handleUpdateHistory prev', prev);
 			// If a back navigation is in progress, ignore incidental updates
 			if (navigatingBackRef.current) {
 				if (debug)
-					console.debug('handleUpdateHistory: skipping due to back nav');
+					console.debug('[GeneralContext] handleUpdateHistory: skipping due to back nav');
 				return prev;
 			}
 			try {
@@ -781,7 +744,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					);
 					if (debug)
 						console.debug(
-							'handleUpdateHistory: reorder parent before detail',
+							'[GeneralContext] handleUpdateHistory: reorder parent before detail',
 							reordered
 						);
 					persist(reordered);
@@ -792,7 +755,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			if (prev.length > 0 && prev[prev.length - 1] === current) {
 				if (debug)
 					console.debug(
-						'handleUpdateHistory: identical last entry, skipping',
+						'[GeneralContext] handleUpdateHistory: identical last entry, skipping',
 						current
 					);
 				return prev;
@@ -805,7 +768,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				const updated = [...prev];
 				updated[updated.length - 1] = current;
 				if (debug)
-					console.debug('handleUpdateHistory: replace-last with', updated);
+					console.debug('[GeneralContext] handleUpdateHistory: replace-last with', updated);
 				persist(updated);
 				return updated;
 			}
@@ -814,7 +777,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			if (next.length > MAX_HISTORY) {
 				next.splice(0, next.length - MAX_HISTORY);
 			}
-			if (debug) console.debug('handleUpdateHistory: push next', next);
+			if (debug) console.debug('[GeneralContext] handleUpdateHistory: push next', next);
 			persist(next);
 			return next;
 		});
@@ -862,7 +825,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					setTimeout(() => tryNavigate(attempt + 1), 100);
 				} else if (runtime && runtime.__BIM_HISTORY_DEBUG__)
 					console.warn(
-						'navigateToPath: router not ready, aborting navigation to',
+						'[GeneralContext] navigateToPath: router not ready, aborting navigation to',
 						path
 					);
 			};
@@ -877,7 +840,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		let action: () => void = () => { };
 
 		if (runtime?.__BIM_HISTORY_DEBUG__)
-			console.debug('handleGoBack using history', prev);
+			console.debug('[GeneralContext] handleGoBack using history', prev);
 
 		if (prev.length <= 1 || !prev[prev.length - 2]) {
 			// No previous path recorded, use a fallback navigation
@@ -1000,7 +963,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			// If not forced, skip fetching when dashboard-like data already exists
 			if (!force) {
 				try {
-					const existing = (user as any).dashboard;
+					const existing = user.dashboard;
 					if (
 						existing &&
 						typeof existing === 'object' &&
@@ -1011,39 +974,33 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					) {
 						return false;
 					}
-				} catch {
-					// fallthrough
+				} catch (err: any) {
+					console.log("[GeneralContext] current dashboard err ", err);
 				}
 			}
 
 			try {
 				const resp = await fetchDashboard(String(authToken));
 				try {
-					const json = await (resp as any).json?.();
+					const json: GetDashboardResponse = await resp.json();
 					if (json !== undefined) {
-						const hasDashboard = !!(
-							json &&
-							typeof json === 'object' &&
-							(Array.isArray((json as any).recentTransactions) ||
-								(json as any).todayTransactions !== undefined ||
-								Array.isArray((json as any).routerBalances) ||
-								Array.isArray((json as any).chartData))
-						);
-						if (hasDashboard) {
-							setUser((prev) => {
-								try {
-									const base = prev && typeof prev === 'object' ? prev : {};
-									const out = { ...base, dashboard: json } as any;
-									try {
-										setLastDashboardUpdated(Date.now());
-									} catch { }
-									return out;
-								} catch {
-									return prev;
-								}
-							});
-							return true;
-						}
+						setUser((prev) => {
+							try {
+								setLastDashboardUpdated(Date.now());
+							} catch (err: any) { console.error("[GeneralContext] set last updated error ", err) }
+							const dashboard: DashboardSummary = {
+								chartData: json.chartData,
+								monthTransactions: json.monthTransactions,
+								monthUsers: json.monthUsers,
+								recentTransactions: json.recentTransactions,
+								routerBalances: json.routerBalances,
+								todayTransactions: json.todayTransactions,
+								todayUsers: json.todayUsers,
+								weekTransactions: json.weekTransactions,
+								weekUsers: json.weekUsers
+							}
+							return { ...prev ?? {}, ...user, dashboard };
+						});
 					}
 				} catch (e) {
 					console.debug('[GeneralContext] refreshDashboard parse failed:', e);
@@ -1065,15 +1022,15 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				const userData = await fetchUser(authToken);
 				if (userData && userData.ok) {
 					const meResponse: GetMeResponse = await userData.json();
-					setUserProfile({ ...meResponse.user });
-					setUser({ ...user, account: { ...meResponse.active_account } })
+					if (meResponse && meResponse.user)
+						setUser(prev => ({ ...prev ?? {}, ...meResponse.user, account: meResponse.active_account }))
 				}
 			} catch (e) {
 				console.log("[GeneralContext fetchUserProfile] ", e);
 				ShowAlert("Profile could not be fetched", "Error");
 			}
 		})();
-	}, [authToken, user])
+	}, [authToken, user?.id])
 
 	// Initial fetch when we become authenticated — do not re-run on unrelated
 	// `user` object changes. The helper will avoid duplicate fetching.
@@ -1112,7 +1069,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			});
 			if (!res.ok) {
 				const text = await parseApiError(res);
-				console.info('Registration error response:', text);
+				console.info('[GeneralContext] Registration error response:', text);
 				setAppMessage({
 					type: 'error',
 					message:
@@ -1124,12 +1081,12 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				return;
 			}
 			const data = await res.json();
-			console.info('Registration response data:', data);
+			console.info('[GeneralContext] Registration response data:', data);
 			setPendingPhone(data?.phone || phone);
 			setPendingRegistration({ phone, password, fullName: name, email });
 			router.replace('/(auth)/verify');
 		} catch (error: any) {
-			console.info('Registration error:', error?.message);
+			console.info('[GeneralContext] Registration error:', error?.message);
 			const msg = (error && (error as any).message) || '';
 			setAppMessage({
 				type: 'error',
@@ -1242,59 +1199,41 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				});
 				return false;
 			}
-			const resJson = await res.json();
+			const resJson: TwoFAVerifyResponse = await res.json();
 			console.info('[GeneralContext] 2FA verification response ', { resJson });
 			// If server returned token/user/dashboard, persist and merge into app state
 			try {
-				if (resJson && (resJson as any).token) {
+				if (resJson && resJson.token) {
 					await SecureStore.setItemAsync(
 						'auth_token',
-						String((resJson as any).token)
+						resJson.token
 					);
-					setAuthToken(String((resJson as any).token));
+					setAuthToken(resJson.token);
 				}
-				if (resJson && (resJson as any).user) {
-					const u = (resJson as any).user;
+				if (resJson && resJson.user) {
+					const u = resJson.user;
 					if (u.id !== undefined) {
 						await AsyncStorage.setItem('user_id', String(u.id));
 					}
 					if (u.email)
-						await AsyncStorage.setItem('user_email', String(u.email));
+						await AsyncStorage.setItem('user_email', u.email);
 					if (u.phone)
-						await AsyncStorage.setItem('user_phone', String(u.phone));
+						await AsyncStorage.setItem('user_phone', u.phone);
 					if (u.totp_secret) {
 						await SecureStore.setItemAsync(
 							'totp_secret',
-							String(u.totp_secret)
+							u.totp_secret
 						);
 					}
-					setUser(u as any);
-				}
-				// If server provided dashboard-like fields at top-level, merge into user
-				if (
-					resJson &&
-					typeof resJson === 'object' &&
-					(Array.isArray((resJson as any).recentTransactions) ||
-						(resJson as any).todayTransactions !== undefined ||
-						Array.isArray((resJson as any).routerBalances) ||
-						Array.isArray((resJson as any).chartData))
-				) {
-					const mergedUser = {
-						...((resJson as any).user || {}),
-						...(resJson as any),
-					};
-					setUser(mergedUser as any);
-					try {
-						setLastDashboardUpdated(Date.now());
-					} catch { }
+					setUser(prev => ({ ...prev ?? {}, ...u }));
 				}
 				// Show success toast if backend provided a message
 				try {
 					const successMessage =
-						(resJson && (resJson as any).message) ||
+						(resJson && resJson.message) ||
 						tr.categories.auth['setupAuthenticator.loginSuccess'] ||
 						'Login successful';
-					setAppMessage?.({ type: 'message', message: String(successMessage) });
+					setAppMessage?.({ type: 'message', message: successMessage });
 				} catch { }
 			} catch (e) {
 				console.error('handleVerify2FA: error persisting auth state', e);
@@ -1308,7 +1247,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			setAppMessage({
 				type: 'error',
 				message:
-					(err?.message as string) ||
+					err?.message ||
 					tr.categories.auth['setupAuthenticator.verifyFailed'] ||
 					'2FA verification failed',
 			});
@@ -1370,14 +1309,14 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				});
 				return null;
 			}
-			const json = await (res.ok ? res.json() : null);
+			const json: TwoFASetupResponse = await res.json();
 
 			try {
 				// Persist token and selected user fields to AsyncStorage if present
 				if (json && json.token) {
 					// Store token securely
-					await SecureStore.setItemAsync('auth_token', String(json.token));
-					setAuthToken(String(json.token));
+					await SecureStore.setItemAsync('auth_token', json.token);
+					setAuthToken(json.token);
 				}
 				if (json && json.user) {
 					const user = json.user;
@@ -1385,19 +1324,19 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 						await AsyncStorage.setItem('user_id', String(user.id));
 					}
 					if (user.email) {
-						await AsyncStorage.setItem('user_email', String(user.email));
+						await AsyncStorage.setItem('user_email', user.email);
 					}
 					if (user.phone) {
-						await AsyncStorage.setItem('user_phone', String(user.phone));
+						await AsyncStorage.setItem('user_phone', user.phone);
 					}
 					if (user.totp_secret) {
 						// Store TOTP secret securely
 						await SecureStore.setItemAsync(
 							'totp_secret',
-							String(user.totp_secret)
+							user.totp_secret
 						);
 					}
-					setUser(user as any);
+					setUser(prev => ({ ...prev ?? {}, ...user }));
 				}
 				// Show success toast if backend provided a message, then navigate
 				try {
@@ -1415,10 +1354,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setPending2FAMethod?.(null);
 				router.replace('/(authenticated)/home');
 			} catch (e) {
-				console.error('handleSetupTotp: error persisting auth state', e);
+				console.error('[GeneralContext] handleSetupTotp: error persisting auth state', e);
 			}
-
-			return { json };
 		} catch (err: any) {
 			setAppMessage?.({
 				type: 'error',
@@ -1427,7 +1364,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					tr.categories.auth['setupAuthenticator.setupFailed'] ||
 					'TOTP setup failed',
 			});
-			return null;
+			console.error('[GeneralContext] TOTP setup error ', err);
 		}
 	};
 
@@ -1461,8 +1398,6 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setSelectedOption,
 				setNotifications,
 				handleAuthentication,
-				setUserProfile,
-				userProfile,
 				handleFetchUserProfile,
 				handleRegistration,
 				handleVerify,
