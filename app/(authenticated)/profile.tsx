@@ -10,12 +10,12 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 // avoid importing navigation types from @react-navigation/drawer which may not export them in some versions
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { useFocusEffect, useNavigation } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { BackHandler, View } from 'react-native';
 
 export default function ProfileScreen() {
 	useTrackHistory('/(authenticated)/profile');
-	const { user, userProfile, setUserProfile } = useGeneral();
+	const { user, setUser } = useGeneral();
 	const { language } = useGeneral();
 	const navigation = useNavigation<any>();
 
@@ -29,7 +29,7 @@ export default function ProfileScreen() {
 	const dangerButton = useThemeColor({}, 'dangerButton');
 	const white = useThemeColor({}, 'white');
 
-	console.log("[Profile] user profile", userProfile)
+	console.log("[Profile] user", user)
 
 	useFocusEffect(() => {
 		const backHandler = BackHandler.addEventListener(
@@ -68,10 +68,10 @@ export default function ProfileScreen() {
 
 	// Tile 3: Delete account (confirmation handled elsewhere)
 
-	const handleSaveProfile = () => {
-		if (userProfile)
-			setUserProfile({ ...userProfile, name: fullName, email });
-	};
+	const handleSaveProfile = useCallback(() => {
+		if (user)
+			setUser({ ...user, name: fullName, email });
+	}, [user, email, fullName, setUser]);
 
 	const handleUpdatePassword = () => {
 		// Implement password update flow (call API/context)

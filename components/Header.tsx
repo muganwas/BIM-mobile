@@ -1,5 +1,4 @@
 import avatarMaleImg from '@/assets/images/avatar-male.png';
-import { Colors } from '@/constants/Colors';
 import { fontSize } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -19,9 +18,9 @@ import {
 	StyleSheet,
 	TouchableOpacity,
 	useAnimatedValue,
-	useColorScheme,
 	View,
 } from 'react-native';
+import { SvgUri } from 'react-native-svg';
 import HeaderDropDownContainer from './HeaderDropDownContainer';
 import { ThemedButton } from './ThemedButton';
 import { ThemedInput } from './ThemedInput';
@@ -42,6 +41,111 @@ export type HeaderProps = {
 	online: boolean;
 	handleGoBack?: () => void;
 };
+
+const AVATAR_SIZE = 40;
+
+// The API returns avatar urls pointing at SVG files, which the native <Image /> cannot render
+const isSvgAvatar = (uri?: string | null) => {
+	if (!uri) return false;
+	const normalized = uri.toLowerCase();
+	return (
+		normalized.startsWith('data:image/svg+xml') ||
+		/\.svg([?#]|$)/.test(normalized)
+	);
+};
+
+const AvatarPlaceholder = () => (
+	<Image
+		source={avatarMaleImg}
+		style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+	/>
+);
+
+type UserAvatarProps = {
+	uri?: string | null;
+	online: boolean;
+};
+
+type AvatarStage = 'image' | 'svg' | 'placeholder';
+
+const getInitialAvatarStage = (uri?: string | null): AvatarStage => {
+	if (!uri) return 'placeholder';
+	// Browsers render SVG inside <img>, so the plain <Image /> is enough on web
+	if (Platform.OS === 'web') return 'image';
+	return isSvgAvatar(uri) ? 'svg' : 'image';
+};
+
+function UserAvatar({ uri, online }: UserAvatarProps) {
+	const [stage, setStage] = useState<AvatarStage>(() =>
+		getInitialAvatarStage(uri)
+	);
+
+	const handleError = useCallback(() => {
+		setStage((prev) =>
+			prev === 'image' && Platform.OS !== 'web' ? 'svg' : 'placeholder'
+		);
+	}, []);
+
+	// Give a changed avatar url a fresh attempt
+	useEffect(() => {
+		setStage(getInitialAvatarStage(uri));
+	}, [uri]);
+
+	const statusColor = useThemeColor({}, online ? 'lime' : 'error');
+	const statusRingColor = useThemeColor({}, 'white');
+
+	return (
+		<ThemedView
+			lightColor='transparent'
+			darkColor='transparent'
+			style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, position: 'relative' }}
+		>
+			<ThemedView
+				lightColor='transparent'
+				darkColor='transparent'
+				style={{
+					width: AVATAR_SIZE,
+					height: AVATAR_SIZE,
+					borderRadius: AVATAR_SIZE / 2,
+					overflow: 'hidden',
+				}}
+			>
+				{stage === 'svg' && uri ? (
+					<SvgUri
+						uri={uri}
+						width={AVATAR_SIZE}
+						height={AVATAR_SIZE}
+						onError={handleError}
+						fallback={<AvatarPlaceholder />}
+					/>
+				) : stage === 'image' && uri ? (
+					<Image
+						source={{ uri }}
+						style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }}
+						onError={handleError}
+					/>
+				) : (
+					<AvatarPlaceholder />
+				)}
+			</ThemedView>
+			<ThemedView
+				lightColor={statusColor}
+				darkColor={statusColor}
+				style={{
+					position: 'absolute',
+					bottom: 0,
+					right: 0,
+					width: 10,
+					height: 10,
+					borderWidth: 2,
+					borderColor: statusRingColor,
+					borderRadius: 5,
+				}}
+			/>
+		</ThemedView>
+	);
+}
+
 export default function Header({
 	goback,
 	user,
@@ -55,7 +159,6 @@ export default function Header({
 	online,
 	handleGoBack,
 }: HeaderProps) {
-	const colorScheme = useColorScheme() ?? 'light';
 	const router = useRouter();
 	const profileAnimValue = useAnimatedValue(0);
 	const searchAnimValue = useAnimatedValue(0);
@@ -150,11 +253,29 @@ export default function Header({
 
 	const headingOneColor = useThemeColor({}, 'heading.one');
 
-	// Theme-aware color helpers (replace direct Colors[...] usages)
+	// Theme-aware color helpers
 	const headerBackground = useThemeColor({}, 'headerBackground');
+	const headerDropdownBackground = useThemeColor({}, 'headerDropdownBackground');
 	const textColor = useThemeColor({}, 'text');
 	const headerIcons = useThemeColor({}, 'headerIcons');
 	const inputBackground = useThemeColor({}, 'inputBackground');
+	const inputBorder = useThemeColor({}, 'inputBorder');
+	const border = useThemeColor({}, 'border');
+	const background = useThemeColor({}, 'background');
+	const listItemBackground = useThemeColor({}, 'listItemBackground');
+	const languageButtonBackground = useThemeColor(
+		{},
+		'languageButtonBackground'
+	);
+	const notificationsCount = useThemeColor({}, 'notificationsCount');
+	const notificationsCountBackground = useThemeColor(
+		{},
+		'notificationsCountBackground'
+	);
+	const bimLight = useThemeColor({}, 'bim', 'light');
+	const bimDark = useThemeColor({}, 'bim', 'dark');
+	const authButtonTextLight = useThemeColor({}, 'authButtonText', 'light');
+	const authButtonTextDark = useThemeColor({}, 'authButtonText', 'dark');
 
 	const toggleProfile = useCallback(
 		(v?: boolean) => {
@@ -279,8 +400,8 @@ export default function Header({
 				/>
 			</Animated.View>
 			<ThemedView
-				lightColor={Colors[colorScheme].headerBackground}
-				darkColor={Colors[colorScheme].headerBackground}
+				lightColor={headerBackground}
+				darkColor={headerBackground}
 				style={{
 					flexDirection: 'row',
 					alignItems: 'center',
@@ -311,8 +432,8 @@ export default function Header({
 					}
 				>
 					{notifications &&
-					notifications.length > 0 &&
-					notifications.filter((n) => !n.isRead).length > 0 ? (
+						notifications.length > 0 &&
+						notifications.filter((n) => !n.isRead).length > 0 ? (
 						<IconSymbol
 							name='notifications.outline.badge'
 							size={24}
@@ -339,23 +460,7 @@ export default function Header({
 							: setSelectedOption('profile')
 					}
 				>
-					<Image
-						source={user?.avatarUrl ? { uri: user.avatarUrl } : avatarMaleImg}
-						style={{ width: 40, height: 40, borderRadius: 20 }}
-					/>
-					<View
-						style={{
-							position: 'absolute',
-							bottom: 0,
-							right: 0,
-							backgroundColor: online ? '#72e128' : 'red',
-							width: 10,
-							height: 10,
-							borderWidth: 2,
-							borderColor: '#fff',
-							borderRadius: 5,
-						}}
-					/>
+					<UserAvatar uri={user?.avatar_url} online={online} />
 				</TouchableOpacity>
 			</ThemedView>
 			<HeaderDropDownContainer
@@ -367,7 +472,7 @@ export default function Header({
 					style={{
 						maxHeight: 200,
 						gap: 5,
-						backgroundColor: Colors[colorScheme].headerDropdownBackground,
+						backgroundColor: headerDropdownBackground,
 					}}
 					contentContainerStyle={{
 						flexGrow: 1,
@@ -392,9 +497,9 @@ export default function Header({
 							}}
 							style={{
 								display: value.active ? 'flex' : 'none',
-								borderBottomColor: Colors[colorScheme].border,
-								borderTopColor: Colors[colorScheme].border,
-								backgroundColor: Colors[colorScheme].languageButtonBackground,
+								borderBottomColor: border,
+								borderTopColor: border,
+								backgroundColor: languageButtonBackground,
 								borderTopWidth: 1,
 								paddingVertical: 10,
 								paddingHorizontal: 5,
@@ -405,8 +510,8 @@ export default function Header({
 								style={{
 									fontSize: fontSize['text.medium'],
 								}}
-								lightColor={Colors[colorScheme].text}
-								darkColor={Colors[colorScheme].text}
+								lightColor={textColor}
+								darkColor={textColor}
 							>
 								{value.name}
 							</ThemedText>
@@ -424,8 +529,8 @@ export default function Header({
 						flexDirection: 'column',
 						gap: 10,
 					}}
-					lightColor={Colors[colorScheme].headerDropdownBackground}
-					darkColor={Colors[colorScheme].headerDropdownBackground}
+					lightColor={headerDropdownBackground}
+					darkColor={headerDropdownBackground}
 				>
 					<ThemedView
 						style={{
@@ -433,8 +538,8 @@ export default function Header({
 							justifyContent: 'space-between',
 							alignItems: 'center',
 						}}
-						lightColor={Colors[colorScheme].headerDropdownBackground}
-						darkColor={Colors[colorScheme].headerDropdownBackground}
+						lightColor={headerDropdownBackground}
+						darkColor={headerDropdownBackground}
 					>
 						<ThemedText
 							lightColor={headingOneColor}
@@ -453,8 +558,7 @@ export default function Header({
 								alignItems: 'center',
 								justifyContent: 'center',
 								borderRadius: 80,
-								backgroundColor:
-									Colors[colorScheme].notificationsCountBackground,
+								backgroundColor: notificationsCountBackground,
 							}}
 						>
 							<ThemedText
@@ -464,12 +568,12 @@ export default function Header({
 									padding: 0,
 									margin: 0,
 								}}
-								lightColor={Colors[colorScheme].notificationsCount}
-								darkColor={Colors[colorScheme].notificationsCount}
+								lightColor={notificationsCount}
+								darkColor={notificationsCount}
 							>
 								{notifications &&
-								notifications.length > 0 &&
-								notifications.filter((n) => !n.isRead).length > 0
+									notifications.length > 0 &&
+									notifications.filter((n) => !n.isRead).length > 0
 									? notifications.filter((n) => !n.isRead).length
 									: '0'}{' '}
 								New
@@ -480,8 +584,8 @@ export default function Header({
 						style={{
 							paddingBottom: 3,
 						}}
-						lightColor={Colors[colorScheme].headerBackground}
-						darkColor={Colors[colorScheme].headerBackground}
+						lightColor={headerBackground}
+						darkColor={headerBackground}
 					>
 						{/* Display notifications here last 5 */}
 						{notifications && notifications.length > 0 ? (
@@ -503,9 +607,9 @@ export default function Header({
 										setSelectedOption(undefined);
 									}}
 									style={{
-										borderBottomColor: Colors[colorScheme].border,
-										borderTopColor: Colors[colorScheme].border,
-										backgroundColor: Colors[colorScheme].listItemBackground,
+										borderBottomColor: border,
+										borderTopColor: border,
+										backgroundColor: listItemBackground,
 										borderTopWidth: index === 0 ? 1 : 0,
 										paddingVertical: 0,
 										paddingHorizontal: 5,
@@ -525,8 +629,8 @@ export default function Header({
 							))
 						) : (
 							<ThemedText
-								lightColor={Colors[colorScheme].text}
-								darkColor={Colors[colorScheme].text}
+								lightColor={textColor}
+								darkColor={textColor}
 								style={{
 									fontSize: fontSize['text.small'],
 									padding: 10,
@@ -534,7 +638,7 @@ export default function Header({
 							>
 								{
 									translations[language].categories.notifications[
-										'no.notifications'
+									'no.notifications'
 									]
 								}
 							</ThemedText>
@@ -545,11 +649,11 @@ export default function Header({
 							flexDirection: 'row',
 							justifyContent: 'flex-end',
 							paddingTop: 10,
-							borderTopColor: Colors[colorScheme].inputBorder,
+							borderTopColor: inputBorder,
 							borderTopWidth: 1,
 						}}
-						lightColor={Colors[colorScheme].headerDropdownBackground}
-						darkColor={Colors[colorScheme].headerDropdownBackground}
+						lightColor={headerDropdownBackground}
+						darkColor={headerDropdownBackground}
 					>
 						<ThemedButton
 							title={translations[language].categories.notifications[
@@ -563,10 +667,10 @@ export default function Header({
 								borderRadius: 8,
 								width: '100%',
 							}}
-							darkColor={Colors['dark'].bim}
-							lightColor={Colors['light'].bim}
-							darkTextColor={Colors['dark'].authButtonText}
-							lightTextColor={Colors['light'].authButtonText}
+							darkColor={bimDark}
+							lightColor={bimLight}
+							darkTextColor={authButtonTextDark}
+							lightTextColor={authButtonTextLight}
 						/>
 					</ThemedView>
 				</ThemedView>
@@ -579,35 +683,17 @@ export default function Header({
 				<>
 					<ThemedView
 						style={{
-							backgroundColor: Colors[colorScheme].background,
+							backgroundColor: background,
 							flexDirection: 'row',
 							justifyContent: 'flex-start',
-							borderBottomColor: Colors[colorScheme].border,
+							borderBottomColor: border,
 							borderBottomWidth: 1,
 							paddingBottom: 10,
 							gap: 10,
 						}}
 					>
 						<ThemedView style={{ height: 40, position: 'relative' }}>
-							<Image
-								source={
-									user?.avatarUrl ? { uri: user.avatarUrl } : avatarMaleImg
-								}
-								style={{ width: 40, height: 40, borderRadius: 20 }}
-							/>
-							<View
-								style={{
-									position: 'absolute',
-									bottom: 0,
-									right: 0,
-									backgroundColor: online ? '#72e128' : 'red',
-									width: 10,
-									height: 10,
-									borderWidth: 2,
-									borderColor: '#fff',
-									borderRadius: 5,
-								}}
-							/>
+							<UserAvatar uri={user?.avatar_url} online={online} />
 						</ThemedView>
 						<ThemedView
 							style={{
@@ -619,7 +705,7 @@ export default function Header({
 							<ThemedText
 								style={{
 									fontSize: fontSize['text.large'],
-									color: Colors[colorScheme].text,
+									color: textColor,
 								}}
 							>
 								{user?.name || 'John Doe'}
@@ -627,7 +713,7 @@ export default function Header({
 							<ThemedText
 								style={{
 									fontSize: fontSize['text.medium'],
-									color: Colors[colorScheme].text,
+									color: textColor,
 								}}
 							>
 								{user?.email || 'jd@mail.com'}
@@ -655,12 +741,12 @@ export default function Header({
 							<IconSymbol
 								name='account'
 								size={18}
-								color={Colors[colorScheme].text}
+								color={textColor}
 								style={{ marginRight: 10 }}
 							/>
 							<ThemedText
 								style={{
-									color: Colors[colorScheme].text,
+									color: textColor,
 									fontSize: fontSize['text.medium'],
 								}}
 							>
@@ -681,12 +767,12 @@ export default function Header({
 							<IconSymbol
 								name='logout'
 								size={18}
-								color={Colors[colorScheme].text}
+								color={textColor}
 								style={{ marginRight: 10 }}
 							/>
 							<ThemedText
 								style={{
-									color: Colors[colorScheme].text,
+									color: textColor,
 									fontSize: fontSize['text.medium'],
 								}}
 							>

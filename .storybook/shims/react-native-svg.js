@@ -17,6 +17,17 @@ export const Rect = ({ x, y, width, height, rx, ry, ...rest }) => React.createEl
 export const Line = ({ x1, y1, x2, y2, ...rest }) => React.createElement('line', { x1, y1, x2, y2, ...rest });
 export const Ellipse = ({ cx, cy, rx, ry, ...rest }) => React.createElement('ellipse', { cx, cy, rx, ry, ...rest });
 
+// Remote SVGs can be rendered directly by the browser, so map SvgUri to an <img>.
+export const SvgUri = ({ uri, width, height, style, onError }) =>
+    React.createElement('img', {
+        src: uri || undefined,
+        width,
+        height,
+        style: style && typeof style === 'object' && !Array.isArray(style) ? style : undefined,
+        alt: '',
+        onError: () => onError && onError(new Error(`Failed to load ${uri}`)),
+    });
+
 export default {
     Svg,
     G,
@@ -25,4 +36,5 @@ export default {
     Rect,
     Line,
     Ellipse,
+    SvgUri,
 };

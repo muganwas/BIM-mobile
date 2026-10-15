@@ -41,6 +41,7 @@ type RouterType = ReturnType<typeof useRouter>;
 
 export interface GeneralContextType {
 	user: UserProps | null;
+	setUser: React.Dispatch<React.SetStateAction<UserProps | null>>;
 	authToken?: string | null;
 	setAuthToken?: React.Dispatch<React.SetStateAction<string | null>>;
 	language: langCode;
@@ -984,7 +985,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				try {
 					const json: GetDashboardResponse = await resp.json();
 					if (json !== undefined) {
-						setUser((prev) => {
+						setUser(() => {
 							try {
 								setLastDashboardUpdated(Date.now());
 							} catch (err: any) { console.error("[GeneralContext] set last updated error ", err) }
@@ -999,7 +1000,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 								weekTransactions: json.weekTransactions,
 								weekUsers: json.weekUsers
 							}
-							return { ...prev ?? {}, ...user, dashboard };
+							return { ...user, dashboard };
 						});
 					}
 				} catch (e) {
@@ -1030,7 +1031,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				ShowAlert("Profile could not be fetched", "Error");
 			}
 		})();
-	}, [authToken, user?.id])
+	}, [authToken, user?.id]);
 
 	// Initial fetch when we become authenticated — do not re-run on unrelated
 	// `user` object changes. The helper will avoid duplicate fetching.
@@ -1382,6 +1383,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		<GeneralContext.Provider
 			value={{
 				user,
+				setUser,
 				handleLogout,
 				router,
 				language,
