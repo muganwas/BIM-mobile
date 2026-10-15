@@ -85,6 +85,7 @@ export const TransactionProvider = ({
 	const [routersResponse, setRoutersResponse] = useState<GetRoutersResponse | null>(null);
 	const [banks, setBanks] = useState<Bank[]>([]);
 	const [documents, setDocuments] = useState<DocumentProps[]>([]);
+	const [packagesLastFetched, setPackagesLastFetched] = useState<string | null>(null);
 
 	// Dashboard payload returned by server after login (optional)
 	const [serverDashboard, setServerDashboard] = useState<any | null>(null);
@@ -165,6 +166,7 @@ export const TransactionProvider = ({
 
 	const fetchRouters = useCallback(
 		async (): Promise<GetRoutersResponse | null> => {
+
 			try {
 				const res = await serviceFetchRouters(authToken ?? undefined);
 				if (res && res.ok) {
@@ -185,16 +187,17 @@ export const TransactionProvider = ({
 
 	const fetchPackages = useCallback(
 		async () => {
+			if ((packages && packages.length) && packagesLastFetched && (Date.now() - new Date(packagesLastFetched).getTime() < 60000)) return;
 			try {
 				console.log('[TransactionContext] fetching packages from API');
 				const res = await serviceFetchPackages(authToken ?? undefined);
 				if (res && res.ok) {
 					const json = await res.json();
 					// New RADIUS profiles response: { success: true, profiles: [...] }
-					console.log('[TransactionContext] fetchPackages response', json);
 					if (json?.profiles && Array.isArray(json.profiles)) {
 						console.log('[TransactionContext] fetched packages from API', json.profiles);
 						setPackages(json.profiles as RadiusProfile[]);
+						setPackagesLastFetched(new Date().toISOString())
 						return;
 					}
 					// Legacy: direct array response
@@ -207,7 +210,7 @@ export const TransactionProvider = ({
 				console.error('fetchPackages: failed to fetch from API', e);
 			}
 		},
-		[authToken]
+		[authToken, packagesLastFetched, packages, setPackagesLastFetched]
 	);
 
 	const fetchPurchases = useCallback(

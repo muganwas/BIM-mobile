@@ -2,12 +2,11 @@ import Loader from '@/components/Loader';
 import Toast from '@/components/Toast';
 // apiBaseUrl removed — use service layer for endpoints
 import translations from '@/constants/Trans';
-import { delay, normalizePhoneForApi, parseAmount, ShowAlert } from '@/helpers';
+import { delay, normalizePhoneForApi, ShowAlert } from '@/helpers';
 import { parseApiError, registerAuthCallbacks } from '@/helpers/api';
 import * as AuthService from '@/services/AuthService';
 import { fetchDashboard, fetchUser } from '@/services/UserService';
 import {
-	DashboardSummary,
 	GetMeResponse,
 	headerOptions,
 	langCode,
@@ -949,74 +948,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				return;
 			}
 			const data = await res.json();
-
-			// If the server returned pre-computed dashboard data (no TOTP required),
-			// forward that payload into `user` so TransactionContext can pick it up.
-			const hasDashboard = !!(
-				data &&
-				typeof data === 'object' &&
-				(Array.isArray(data.recentTransactions) ||
-					data.todayTransactions !== undefined ||
-					Array.isArray(data.routerBalances) ||
-					Array.isArray(data.chartData))
-			);
-			if (hasDashboard) {
-				try {
-					// Map server-provided dashboard fields into typed structures and coerce numeric strings to numbers
-					const dashboard: DashboardSummary = {
-						chartData: Array.isArray(data.chartData)
-							? data.chartData.map((c: any) => ({
-								date: String(c.date),
-								total: parseAmount(c.total),
-							}))
-							: undefined,
-						monthTransactions: parseAmount(data.monthTransactions),
-						monthUsers:
-							typeof data.monthUsers !== 'undefined'
-								? Number(data.monthUsers)
-								: undefined,
-						recentTransactions: Array.isArray(data.recentTransactions)
-							? data.recentTransactions.map((t: any) => ({
-								...t,
-								amount: parseAmount(t.amount),
-							}))
-							: undefined,
-						routerBalances: Array.isArray(data.routerBalances)
-							? data.routerBalances.map((r: any) => ({
-								...r,
-								balance: parseAmount(r.balance),
-							}))
-							: undefined,
-						todayTransactions: parseAmount(data.todayTransactions),
-						todayUsers:
-							typeof data.todayUsers !== 'undefined'
-								? Number(data.todayUsers)
-								: undefined,
-						weekTransactions: parseAmount(data.weekTransactions),
-						weekUsers:
-							typeof data.weekUsers !== 'undefined'
-								? Number(data.weekUsers)
-								: undefined,
-					};
-
-					// Merge user info (if any) with typed dashboard payload so consumers can access both.
-					const mergedUser = {
-						...(data.user || {}),
-						dashboard,
-					};
-					setUser(mergedUser as any);
-					setLastDashboardUpdated(Date.now());
-
-					// If server returned a token as part of the login payload, persist it
-					if (data && data.token) {
-						await SecureStore.setItemAsync('auth_token', String(data.token));
-						setAuthToken(String(data.token));
-					}
-					return navigateToPath('/(authenticated)/home');
-				} catch (e) {
-					console.error('[GeneralContext] Error setting last dashboard updated:', e);
-				}
-			}
+			console.log("[GeneralContext] Authentication response", { data });
 
 			// Determine which 2FA method the backend expects when redirecting to verify
 			try {
@@ -1255,6 +1187,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				navigateToPath('/(auth)/setup-2fa');
 				return;
 			}
+			console.log("[GeneralContext] VerfiyOTP response", { resJson });
 			// Success - clear pending state and navigate to home
 			setPendingRegistration?.(null);
 			setPendingPhone?.(null);
@@ -1310,7 +1243,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				return false;
 			}
 			const resJson = await res.json();
-			console.info('2FA verification response data:', resJson);
+			console.info('[GeneralContext] 2FA verification response ', { resJson });
 			// If server returned token/user/dashboard, persist and merge into app state
 			try {
 				if (resJson && (resJson as any).token) {
