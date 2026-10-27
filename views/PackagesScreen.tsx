@@ -10,7 +10,7 @@ import {
 
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Prompt from '@/components/Prompt';
-import { SegmentedTabs, SegmentedTab } from '@/components/SegmentedTabs';
+import { SegmentedTab, SegmentedTabs } from '@/components/SegmentedTabs';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -65,6 +65,10 @@ export default function PackagesScreen() {
 	const { routers, fetchRouters } = useTransaction();
 
 	const bg = useThemeColor({}, 'background');
+	const tropicalBlue = useThemeColor({}, 'tropicalBlue');
+	const skyMist = useThemeColor({}, 'skyMist');
+	const bimColor = useThemeColor({}, 'bim');
+	const white = useThemeColor({}, 'white');
 	const textColor = useThemeColor({}, 'text');
 	const mutedText = useThemeColor({}, 'mutedText');
 	const border = useThemeColor({}, 'borderDark');
@@ -417,39 +421,39 @@ export default function PackagesScreen() {
 				const payload =
 					values.planMode === 'shared'
 						? {
-								label: values.label,
-								label_translations: labelTranslations,
-								profile: values.profileGroup,
-								scope: values.isGlobal ? 'global' : 'owner',
-						  }
+							label: values.label,
+							label_translations: labelTranslations,
+							profile: values.profileGroup,
+							scope: values.isGlobal ? 'global' : 'owner',
+						}
 						: {
-								label: values.label,
-								label_translations: labelTranslations,
-								price: values.price ?? 0,
-								profile: {
-									duration: values.duration,
-									bandwidth: values.bandwidth,
-									devices: values.devices,
-								},
-								is_active: true,
-								scope: 'owner',
-						  };
+							label: values.label,
+							label_translations: labelTranslations,
+							price: values.price ?? 0,
+							profile: {
+								duration: values.duration,
+								bandwidth: values.bandwidth,
+								devices: values.devices,
+							},
+							is_active: true,
+							scope: 'owner',
+						};
 				response = await PackageService.createPortalPackage(payload, authToken);
 			} else if (editingPackage) {
 				const payload = editingPackage.profile?.shared
 					? {
-							label: values.label,
-							label_translations: labelTranslations,
-					  }
+						label: values.label,
+						label_translations: labelTranslations,
+					}
 					: {
-							label: values.label,
-							label_translations: labelTranslations,
-							price: values.price,
-							duration: values.duration,
-							bandwidth: values.bandwidth,
-							devices: values.devices,
-							is_active: values.isActive,
-					  };
+						label: values.label,
+						label_translations: labelTranslations,
+						price: values.price,
+						duration: values.duration,
+						bandwidth: values.bandwidth,
+						devices: values.devices,
+						is_active: values.isActive,
+					};
 				response = await PackageService.updatePortalPackage(
 					editingPackage.id,
 					payload,
@@ -481,17 +485,17 @@ export default function PackagesScreen() {
 			const response =
 				profileFormMode === 'create'
 					? await PackageService.createSharedProfile(
-							{
-								name: values.name,
-								price: values.price ?? 0,
-								no_of_users: values.devices,
-								bandwidth: values.bandwidth,
-								duration: values.duration,
-							},
-							authToken
-					  )
+						{
+							name: values.name,
+							price: values.price ?? 0,
+							no_of_users: values.devices,
+							bandwidth: values.bandwidth,
+							duration: values.duration,
+						},
+						authToken
+					)
 					: editingProfile
-					? await PackageService.updateSharedProfile(
+						? await PackageService.updateSharedProfile(
 							editingProfile.group,
 							{
 								name: values.name,
@@ -503,8 +507,8 @@ export default function PackagesScreen() {
 								duration: values.duration,
 							},
 							authToken
-					  )
-					: null;
+						)
+						: null;
 
 			if (!response || !response.ok) {
 				await showError(response, 'Could not save the RADIUS profile.');
@@ -549,12 +553,12 @@ export default function PackagesScreen() {
 				prev.map((item) =>
 					item.id === pkg.id
 						? {
-								...item,
-								routers: Array.isArray(json?.routers)
-									? json.routers
-									: item.routers,
-								rate_limits: json?.rate_limits ?? item.rate_limits,
-						  }
+							...item,
+							routers: Array.isArray(json?.routers)
+								? json.routers
+								: item.routers,
+							rate_limits: json?.rate_limits ?? item.rate_limits,
+						}
 						: item
 				)
 			);
@@ -1212,21 +1216,25 @@ export default function PackagesScreen() {
 								onPress={openCreateProfile}
 								style={styles.headerButton}
 								icon='plus'
-								darkColor='transparent'
-								lightColor='transparent'
-								darkTextColor={selectedBg}
-								lightTextColor={selectedBg}
+								darkColor={bimColor}
+								lightColor={bimColor}
+								darkTextColor={white}
+								lightTextColor={white}
 							/>
 						) : null}
 						<ThemedButton
 							title={buttonsCopy.portalLang}
 							onPress={() => router.replace('/(authenticated)/translation')}
-							style={styles.headerButton}
+							style={[styles.headerButton, {
+								borderRadius: 8,
+								borderColor: skyMist,
+								borderWidth: 1,
+							}]}
 							icon='translate'
 							darkColor='transparent'
 							lightColor='transparent'
-							darkTextColor={selectedBg}
-							lightTextColor={selectedBg}
+							darkTextColor={tropicalBlue}
+							lightTextColor={tropicalBlue}
 						/>
 					</ThemedView>
 				</ThemedView>
@@ -1250,10 +1258,10 @@ export default function PackagesScreen() {
 				{activeTab === 'packages'
 					? renderPackagesTab()
 					: activeTab === 'routers'
-					? renderRoutersTab()
-					: activeTab === 'profiles'
-					? renderProfilesTab()
-					: renderTrialTab()}
+						? renderRoutersTab()
+						: activeTab === 'profiles'
+							? renderProfilesTab()
+							: renderTrialTab()}
 			</ParallaxScrollView>
 
 			<PackageForm

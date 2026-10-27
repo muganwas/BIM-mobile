@@ -1,6 +1,6 @@
 import { ThemedView } from '@/components/ThemedView';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { StyleSheet, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
 
 export default function DashboardTile({
 	id,
@@ -10,7 +10,7 @@ export default function DashboardTile({
 }: {
 	id: string;
 	backgroundColor?: string;
-	style?: ViewStyle;
+	style?: StyleProp<ViewStyle>;
 	children: React.ReactNode;
 }) {
 	const dayTransactionsBackground = useThemeColor({}, 'dayTransactionsBackground');

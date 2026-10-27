@@ -5,17 +5,18 @@ import { IconSymbol, IconSymbolName } from '@/components/ui/IconSymbol';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import {
+	StyleProp,
 	StyleSheet,
 	TextStyle,
 	TouchableOpacity,
-	ViewStyle,
+	ViewStyle
 } from 'react-native';
 
 export type ThemedButtonProps = {
 	title: string;
 	onPress: () => void;
-	style?: ViewStyle;
-	textStyle?: TextStyle;
+	style?: StyleProp<ViewStyle>;
+	textStyle?: StyleProp<TextStyle>;
 	lightTextColor?: string;
 	darkTextColor?: string;
 	lightColor?: string;

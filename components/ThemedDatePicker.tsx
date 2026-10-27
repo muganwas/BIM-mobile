@@ -9,10 +9,12 @@ import DateTimePicker, {
 import { useMemo, useState } from 'react';
 import {
 	Platform,
+	StyleProp,
 	TextStyle,
 	TouchableOpacity,
 	useColorScheme,
 	ViewStyle,
+	type TextInputProps
 } from 'react-native';
 
 export type ThemedDatePickerProps = {
@@ -24,9 +26,9 @@ export type ThemedDatePickerProps = {
 	minDate?: Date;
 	maxDate?: Date;
 	disabled?: boolean;
-	containerStyle?: ViewStyle;
-	labelStyle?: TextStyle;
-	inputStyle?: any;
+	containerStyle?: StyleProp<ViewStyle>;
+	labelStyle?: StyleProp<TextStyle>;
+	inputStyle?: StyleProp<TextInputProps>;
 	displayFormat?: (d: Date) => string;
 	showClearButton?: boolean;
 };
@@ -123,7 +125,7 @@ export default function ThemedDatePicker({
 						editable={false}
 						placeholder={placeholder || label}
 						value={formatted}
-						setValue={() => {}}
+						setValue={() => { }}
 						style={[
 							{
 								paddingRight: 44,

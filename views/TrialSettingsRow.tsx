@@ -111,7 +111,7 @@ export default function TrialSettingsRow({
 						}}
 						loading={saving}
 						disabled={!canSave}
-						style={{ alignSelf: 'flex-end' }}
+						style={{ alignSelf: 'flex-end', flex: 1, height: 50 }}
 						lightColor={buttonBg}
 						darkColor={buttonBg}
 						lightTextColor={buttonText}
@@ -131,6 +131,7 @@ const styles = StyleSheet.create({
 	},
 	header: {
 		flexDirection: 'row',
+		width: '100%',
 		alignItems: 'center',
 		justifyContent: 'space-between',
 		gap: 8,

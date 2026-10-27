@@ -1,12 +1,13 @@
 import { forwardRef, useCallback, useState } from 'react';
 import {
+	StyleProp,
 	StyleSheet,
 	TextInput,
 	TextStyle,
 	TouchableOpacity,
 	View,
 	ViewStyle,
-	type TextInputProps,
+	type TextInputProps
 } from 'react-native';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -20,14 +21,14 @@ export type ThemedInputProps = TextInputProps & {
 	darkColor?: string;
 	fontFamily?: string;
 	label?: string;
-	labelStyle?: TextStyle;
+	labelStyle?: StyleProp<TextStyle>;
 	lines?: number;
 	showCount?: boolean;
 	numberInWords?: string;
 	numberToWords?: boolean;
-	containerStyle?: ViewStyle;
-	countStyle?: ViewStyle;
-	numberInWordsStyle?: ViewStyle;
+	containerStyle?: StyleProp<ViewStyle>;
+	countStyle?: StyleProp<ViewStyle>;
+	numberInWordsStyle?: StyleProp<ViewStyle>;
 	setValue: (value: string) => void;
 };
 

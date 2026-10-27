@@ -5,6 +5,7 @@ import {
 	Image,
 	Keyboard,
 	Animated as Reanimated,
+	StyleProp,
 	StyleSheet,
 	Text,
 	TextStyle,
@@ -13,7 +14,7 @@ import {
 	useAnimatedValue,
 	View,
 	type ViewProps,
-	ViewStyle,
+	ViewStyle
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedRef } from 'react-native-reanimated';
@@ -37,7 +38,7 @@ export type ThemedDropdownProps = ViewProps & {
 	showDropdown?: boolean;
 	delayTouch?: boolean;
 	label?: string;
-	labelStyle?: TextStyle;
+	labelStyle?: StyleProp<TextStyle>;
 	setShowDropdown?: (v: boolean) => void;
 	multiselect?: boolean;
 	onSelect?: () => void;
@@ -49,7 +50,7 @@ export type ThemedDropdownProps = ViewProps & {
 	id?: string;
 	toggleMainScroll?: (v: boolean) => void;
 	options: string[];
-	dropDownStyle?: ViewStyle;
+	dropDownStyle?: StyleProp<ViewStyle>;
 	openDirection?: 'down' | 'up';
 };
 
@@ -65,7 +66,7 @@ export const ThemedDropdown = ({
 	selectedValues,
 	showCheckbox = true,
 	showDropdown = false,
-	setShowDropdown = () => {},
+	setShowDropdown = () => { },
 	multiselect,
 	placeholder,
 	dropDownStyle,
@@ -89,6 +90,14 @@ export const ThemedDropdown = ({
 	const textColor = useThemeColor({}, 'text');
 	const inputBorder = useThemeColor({}, 'inputBorder');
 	const inputBackground = useThemeColor({}, 'inputBackground');
+	const flattenedDropdownStyle = StyleSheet.flatten([
+		styles.dropdown,
+		dropDownStyle,
+	]);
+	const dropdownBackgroundColor =
+		typeof flattenedDropdownStyle?.backgroundColor === 'string'
+			? flattenedDropdownStyle.backgroundColor
+			: (styles.dropdown.backgroundColor as string);
 	const dropdownAnimVal = useAnimatedValue(0);
 	// On web there's no native animated driver available. Only enable native driver when
 	// running in a true native environment (no document global).
@@ -218,39 +227,41 @@ export const ThemedDropdown = ({
 					</View>
 				</TouchableOpacity>
 				<AnimContainer
-					generalStyle={{
-						...styles.dropdown,
-						...dropDownStyle,
-						position: 'absolute',
-						display: dropdownVisible ? 'flex' : 'none',
-						transformOrigin: 'top',
-						shadowColor: '#000',
-						shadowOffset: { width: 0, height: 2 },
-						shadowOpacity: 0.1,
-						shadowRadius: 10,
-						elevation: 6,
-						zIndex: 3000,
-						// Position relative to trigger to avoid misalignment
-						...(openDirection === 'down'
-							? { top: '100%', marginTop: 6 }
-							: { bottom: '100%', marginBottom: 6 }),
-					}}
+					generalStyle={[
+						styles.dropdown,
+						dropDownStyle,
+						{
+							position: 'absolute',
+							display: dropdownVisible ? 'flex' : 'none',
+							transformOrigin: 'top',
+							shadowColor: '#000',
+							shadowOffset: { width: 0, height: 2 },
+							shadowOpacity: 0.1,
+							shadowRadius: 10,
+							elevation: 6,
+							zIndex: 3000,
+							// Position relative to trigger to avoid misalignment
+							...(openDirection === 'down'
+								? { top: '100%', marginTop: 6 }
+								: { bottom: '100%', marginBottom: 6 }),
+						}
+					]}
 					animStyle={{
 						transform: [
 							// Change from simple translateY to scale origin from bottom
 							openDirection === 'down'
 								? {
-										translateY: dropdownAnimVal.interpolate({
-											inputRange: [0, 1],
-											outputRange: [20, 0],
-										}),
-								  }
+									translateY: dropdownAnimVal.interpolate({
+										inputRange: [0, 1],
+										outputRange: [20, 0],
+									}),
+								}
 								: {
-										translateY: dropdownAnimVal.interpolate({
-											inputRange: [0, 1],
-											outputRange: [-20, 0],
-										}),
-								  },
+									translateY: dropdownAnimVal.interpolate({
+										inputRange: [0, 1],
+										outputRange: [-20, 0],
+									}),
+								},
 							{
 								scaleY: dropdownAnimVal.interpolate({
 									inputRange: [0, 1],
@@ -259,14 +270,14 @@ export const ThemedDropdown = ({
 							},
 						],
 					}}
-					lightColor={dropDownStyle?.backgroundColor as string}
-					darkColor={dropDownStyle?.backgroundColor as string}
+					lightColor={dropdownBackgroundColor}
+					darkColor={dropdownBackgroundColor}
 				>
 					<ScrollView
 						ref={scrollRef}
 						nestedScrollEnabled={true}
 						keyboardShouldPersistTaps='handled'
-						style={{ backgroundColor: '#fff', maxHeight: 220 }}
+						style={{ backgroundColor: dropdownBackgroundColor, maxHeight: 220 }}
 						contentContainerStyle={{ paddingBottom: 16 }}
 						showsVerticalScrollIndicator
 						onTouchStart={() => {
@@ -298,7 +309,7 @@ export const ThemedDropdown = ({
 							resetIsCrollingTimeout.current &&
 								clearTimeout(resetIsCrollingTimeout.current);
 						}}
-						onScroll={() => {}}
+						onScroll={() => { }}
 					>
 						<ThemedView
 							style={[
@@ -308,8 +319,8 @@ export const ThemedDropdown = ({
 									padding: 8,
 								},
 							]}
-							lightColor='#fff'
-							darkColor='#fff'
+							lightColor={dropdownBackgroundColor}
+							darkColor={dropdownBackgroundColor}
 						>
 							{!multiselect &&
 								options?.map((option, i) => (
@@ -317,7 +328,10 @@ export const ThemedDropdown = ({
 										style={[
 											styles.option,
 											{
-												backgroundColor: value === option ? '#002060' : '#fff',
+												backgroundColor:
+													value === option
+														? '#002060'
+														: dropdownBackgroundColor,
 												borderRadius: 4,
 											},
 										]}
@@ -374,7 +388,7 @@ export const ThemedDropdown = ({
 											{
 												backgroundColor: selectedValues?.includes(option)
 													? '#002060'
-													: '#fff',
+													: dropdownBackgroundColor,
 
 												borderRadius: 4,
 											},
@@ -393,7 +407,7 @@ export const ThemedDropdown = ({
 											onPressEnd && onPressEnd(option);
 										}}
 										activeOpacity={0.6}
-										underlayColor='#fff'
+										underlayColor={dropdownBackgroundColor}
 										delayPressIn={50} // Wait longer before registering press
 									>
 										<ThemedView
