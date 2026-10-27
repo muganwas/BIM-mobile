@@ -261,7 +261,39 @@ const translations: Translations = {
 				visibleOnRouters: 'Visible on Routers',
 				actions: 'Actions',
 				noPackages: 'No packages found, create one to get started.',
-				noProfiles: 'No profiles found, create one to get started.'
+				noProfiles: 'No profiles found, create one to get started.',
+				tabPackages: 'Packages',
+				tabRoutersRateLimits: 'Routers & rate limits',
+				tabRadiusProfiles: 'RADIUS profiles',
+				tabFreeTrial: 'Free trial',
+				portalPackagesDescription:
+					'These are the buy buttons customers see on the captive portal. The routers count summarises where each package is offered.',
+				addPackage: 'Add package',
+				editPackage: 'Edit package',
+				deletePackage: 'Delete package',
+				createGlobalProfile: 'Create global profile',
+				radiusProfilesDescription:
+					'Shared profiles are available to every router. Private profiles created by owner packages are listed with their owner.',
+				routersRateLimitsDescription:
+					'Tick a router to offer the package there. Leave Rate limit blank to inherit the plan speed, or enter a speed to override it on that router only.',
+				freeTrialDescription:
+					'Switch the free trial on per router. When active, Try for Free is the first button on the portal for each device once per 24 hours.',
+				owner: 'Owner',
+				plan: 'Plan',
+				devices: 'Devices',
+				routersCount: 'Routers',
+				globalPackage: 'global package',
+				ownerPackage: 'owner package',
+				planSpeed: 'Plan speed',
+				saveRouterSettings: 'Save router settings',
+				reconnectVouchers:
+					'Reconnect online vouchers now (brief drop; MAC cookies log them back in)',
+				effective: 'Effective',
+				trialStatus: 'Status',
+				trialTime: 'Trial time (minutes)',
+				enabled: 'enabled',
+				disabled: 'disabled',
+				save: 'Save'
 			},
 			internetPackage: {
 				createTitle: 'Create Internet Package',

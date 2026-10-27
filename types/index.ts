@@ -126,6 +126,122 @@ export interface InternetPackage {
 	"simultaneous-use"?: number;
 }
 
+/** Shared RADIUS plan returned by GET /profiles. */
+export interface SharedRadiusProfile {
+	group: string;
+	name: string;
+	display_name: string;
+	shared: boolean;
+	price: number | null;
+	duration: string | null;
+	duration_seconds: number;
+	rate_limit: string | null;
+	devices: number;
+}
+
+export interface PackageOwner {
+	type: 'platform' | 'account' | 'user';
+	id: number | null;
+	name: string;
+}
+
+export interface PackageRateLimit {
+	rate_limit: string | null;
+	is_open: boolean;
+	effective_rate_limit: string | null;
+	source: 'override' | 'profile';
+	editable: boolean;
+}
+
+/** A router association on a portal package. */
+export interface PackageRouter {
+	id: string;
+	name: string;
+	location: string | null;
+	visible: boolean;
+	source: 'default' | 'override';
+	heartbeat_state: 'fresh' | 'stale' | 'never';
+	portal_url?: string | null;
+	rate_limit: string | null;
+	rate_limit_open: boolean;
+	effective_rate_limit: string | null;
+	rate_limit_source: 'override' | 'profile';
+	rate_limit_editable: boolean;
+}
+
+export interface PortalPackageProfile {
+	group: string;
+	name: string;
+	display_name: string;
+	shared: boolean;
+	price: number | null;
+	duration: string | null;
+	duration_seconds: number;
+	rate_limit: string | null;
+	devices: number;
+	editable: boolean;
+}
+
+/** A sellable package as returned by GET /packages. */
+export interface PortalPackage {
+	id: string;
+	label: string;
+	label_key: string | null;
+	label_translations: Record<string, string>;
+	price: number;
+	rad_group: string;
+	duration_label: string | null;
+	sort: number;
+	is_active: boolean;
+	is_global: boolean;
+	is_trial: boolean;
+	account_id: number | null;
+	user_id: number | null;
+	owner: PackageOwner;
+	profile: PortalPackageProfile;
+	routers: PackageRouter[];
+	rate_limits: Record<string, PackageRateLimit>;
+	created_at?: string | null;
+	updated_at?: string | null;
+}
+
+export interface TrialSettings {
+	router_id: string;
+	enabled: boolean;
+	duration_minutes: number;
+	cooldown_hours: number;
+}
+
+export interface GetPortalPackagesResponse {
+	success: boolean | stringifiedBool;
+	message: string;
+	scope: 'visible' | 'global' | 'owner' | 'all';
+	packages: PortalPackage[];
+	packages_metadata: PaginatedResourcesMeta;
+}
+
+export interface GetPackageRoutersResponse {
+	success: boolean | stringifiedBool;
+	message: string;
+	package_id: string;
+	routers: PackageRouter[];
+	rate_limits: Record<string, PackageRateLimit>;
+}
+
+export interface GetSharedRadiusProfilesResponse {
+	success: boolean | stringifiedBool;
+	message: string;
+	scope: 'shared';
+	profiles: SharedRadiusProfile[];
+	profiles_metadata: PaginatedResourcesMeta;
+}
+
+export interface GetTrialSettingsResponse {
+	success: boolean | stringifiedBool;
+	message: string;
+	trial_settings: TrialSettings;
+}
+
 export type identityDocumentType = 'passport' | 'id-card' | 'driver-license';
 export type companyDocumentType =
 	| 'incorporation-certificate'
