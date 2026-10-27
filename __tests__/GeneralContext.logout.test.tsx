@@ -27,6 +27,7 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
+  usePathname: jest.fn(() => '/'),
 }));
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),
@@ -56,7 +57,7 @@ jest.mock('expo-device', () => ({
     totalMemory: 1000,
 }));
 jest.mock('@react-native-community/netinfo', () => ({
-    useNetInfo: () => ({ isConnected: true, isInternetReachable: true }),
+    useNetInfo: () => ({ isConnected: true, isInternetReachable: false }),
 }));
 
 describe('GeneralContext Logout', () => {
@@ -81,6 +82,10 @@ describe('GeneralContext Logout', () => {
 
     const { result } = renderHook(() => useGeneral(), { wrapper });
 
+    act(() => {
+      result.current.setAuthToken?.('test-token');
+    });
+
     await act(async () => {
       await result.current.handleLogout();
     });
@@ -94,6 +99,7 @@ describe('GeneralContext Logout', () => {
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith('user_id');
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith('user_email');
     expect(AsyncStorage.removeItem).toHaveBeenCalledWith('user_phone');
+    expect(result.current.authToken).toBeNull();
 
     // Verify: Redirected to login
     expect(mockRouterReplace).toHaveBeenCalledWith('/(auth)/login');

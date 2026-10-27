@@ -1,4 +1,4 @@
-import { Account, OnboardingState } from './';
+import { Account, OnboardingState, Platform } from './';
 import { DashboardSummary } from './dashboard';
 
 export type Gender = 'male' | 'female' | 'other' | undefined;
@@ -78,6 +78,7 @@ export interface ServerUser {
 /** Local app user interface */
 export interface User extends ServerUser {
     account?: Account;
+    platform?: Platform;
     // Optional typed dashboard data returned by some login/refresh endpoints
     dashboard?: DashboardSummary;
 }

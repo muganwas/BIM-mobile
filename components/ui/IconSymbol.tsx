@@ -97,12 +97,15 @@ const MAPPING: IconMapping = {
 	doubleRight: { type: 'material', name: 'keyboard-double-arrow-right' },
 	vouchers: { type: 'material-community', name: 'ticket-account' },
 	transactions: { type: 'material-community', name: 'handshake' },
+	translation: { type: 'material-community', name: 'translate' },
 	packages: { type: 'material-community', name: 'package-variant' },
 	plus: { type: 'material', name: 'add' },
 	'plus.circle.fill': { type: 'material', name: 'add-circle' },
 	translate: { type: 'material', name: 'translate' },
 	settings: { type: 'ionicon', name: 'settings' },
 	close: { type: 'ionicon', name: 'close' },
+	package: { type: 'material-community', name: 'package-variant-closed' },
+	info: { type: 'material-community', name: 'information-outline' }
 };
 
 /**

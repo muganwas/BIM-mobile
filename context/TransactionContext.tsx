@@ -5,6 +5,7 @@ import { fetchRouters as serviceFetchRouters } from '@/services/RouterService';
 import type { TransactionFilters } from '@/services/UserService';
 import * as UserService from '@/services/UserService';
 import {
+	ApiRouter,
 	Bank,
 	DocumentProps,
 	GetRoutersResponse,
@@ -34,7 +35,9 @@ export interface TransactionContextType {
 	setVoucherUsers: React.Dispatch<React.SetStateAction<VoucherUser[]>>;
 	packages: RadiusProfile[];
 	setPackages: React.Dispatch<React.SetStateAction<RadiusProfile[]>>;
-	routers: GetRoutersResponse['routers'] | null;
+	routers: ApiRouter[] | null;
+	setRouters: React.Dispatch<React.SetStateAction<ApiRouter[] | null>>;
+	routersResponse: GetRoutersResponse | null;
 	setRoutersResponse: React.Dispatch<React.SetStateAction<GetRoutersResponse | null>>;
 	banks: Bank[];
 	setBanks: React.Dispatch<React.SetStateAction<Bank[]>>;
@@ -83,6 +86,7 @@ export const TransactionProvider = ({
 	const [voucherUsers, setVoucherUsers] = useState<VoucherUser[]>([]);
 	const [packages, setPackages] = useState<RadiusProfile[]>([]);
 	const [routersResponse, setRoutersResponse] = useState<GetRoutersResponse | null>(null);
+	const [routers, setRouters] = useState<ApiRouter[] | null>(null);
 	const [banks, setBanks] = useState<Bank[]>([]);
 	const [documents, setDocuments] = useState<DocumentProps[]>([]);
 	const [packagesLastFetched, setPackagesLastFetched] = useState<string | null>(null);
@@ -170,9 +174,10 @@ export const TransactionProvider = ({
 			try {
 				const res = await serviceFetchRouters(authToken ?? undefined);
 				if (res && res.ok) {
-					const json = await res.json();
-					if (json?.routers?.data && Array.isArray(json.routers.data)) {
-						setRoutersResponse(json as GetRoutersResponse);
+					const json: GetRoutersResponse = await res.json();
+					if (json && json.routers) {
+						setRoutersResponse(json);
+						setRouters(json.routers);
 						return json as GetRoutersResponse;
 					}
 				}
@@ -389,7 +394,9 @@ export const TransactionProvider = ({
 				loading,
 				setLoading,
 				setPackages,
-				routers: routersResponse?.routers || null,
+				routers,
+				setRouters,
+				routersResponse,
 				setRoutersResponse,
 				banks,
 				setBanks,

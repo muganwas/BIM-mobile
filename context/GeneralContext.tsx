@@ -344,6 +344,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		}
 
 		isLoggingOutRef.current = true;
+		authTokenRef.current = null;
+		setAuthToken(null);
 
 		try {
 			// 1. Attempt backend logout (best effort)
@@ -435,7 +437,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setAuthToken(newToken);
 
 				if (refJson && refJson.user) {
-					setUser(prev => ({ ...prev ?? {}, ...refJson.user, account: refJson.active_account }));
+					setUser(prev => ({ ...prev ?? {}, ...refJson.user, platform: refJson.platform, account: refJson.active_account }));
 				}
 				return newToken;
 			}
@@ -502,7 +504,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 				// Merge returned user object into state when present
 				if (json.user) {
-					setUser((prev) => ({ ...prev ?? {}, ...json.user }));
+					setUser((prev) => ({ ...prev ?? {}, ...json.user, platform: json.platform }));
 					console.log("[GeneralContext] path name", pathName)
 					const anyRouter = router;
 					if (
@@ -1024,7 +1026,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				if (userData && userData.ok) {
 					const meResponse: GetMeResponse = await userData.json();
 					if (meResponse && meResponse.user)
-						setUser(prev => ({ ...prev ?? {}, ...meResponse.user, account: meResponse.active_account }))
+						setUser(prev => ({ ...prev ?? {}, ...meResponse.user, platform: meResponse.platform, account: meResponse.active_account }))
 				}
 			} catch (e) {
 				console.log("[GeneralContext fetchUserProfile] ", e);
@@ -1226,7 +1228,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 							u.totp_secret
 						);
 					}
-					setUser(prev => ({ ...prev ?? {}, ...u }));
+					setUser(prev => ({ ...prev ?? {}, ...u, platform: resJson.platform, account: resJson.active_account }));
 				}
 				// Show success toast if backend provided a message
 				try {
@@ -1337,7 +1339,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 							user.totp_secret
 						);
 					}
-					setUser(prev => ({ ...prev ?? {}, ...user }));
+					setUser(prev => ({ ...prev ?? {}, ...user, account: json.active_account, platform: json.platform }));
 				}
 				// Show success toast if backend provided a message, then navigate
 				try {

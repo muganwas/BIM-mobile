@@ -1,7 +1,9 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
@@ -10,16 +12,22 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { RadiusProfile } from '@/types';
 import CreateProfile from '@/views/CreateProfile';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, RefreshControl, StyleSheet, useAnimatedValue } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 export default function PackagesScreen() {
 	useTrackHistory('/(authenticated)/packages');
+	const router = useRouter();
 	const createProfileModalAnim = useAnimatedValue(0);
 	const bg = useThemeColor({}, 'background');
+	const headerIcons = useThemeColor({}, 'headerIcons');
 	const bimColor = useThemeColor({}, 'bim');
 	const textColor = useThemeColor({}, 'text');
+	const tropicalBlue = useThemeColor({}, 'tropicalBlue');
+	const skyMist = useThemeColor({}, 'skyMist');
+	const titleText = useThemeColor({}, 'heading.one');
 	const titleBg = useThemeColor({}, 'titleBg');
 	const listItemBackground = useThemeColor({}, 'listItemBackground');
 	const borderDark = useThemeColor({}, 'borderDark');
@@ -29,7 +37,7 @@ export default function PackagesScreen() {
 	const errorColor = useThemeColor({}, 'error');
 	const authButtonText = useThemeColor({}, 'authButtonText');
 	const { packages, fetchPackages } = useTransaction();
-	const { language, authToken } = useGeneral();
+	const { language, authToken, user } = useGeneral();
 
 	const [refreshing, setRefreshing] = useState(false);
 	const [showCreateProfileModal, setShowCreateProfileModal] = useState(false);
@@ -58,6 +66,15 @@ export default function PackagesScreen() {
 	const packageListHeaderId = useRef(
 		`package-list-header-${Math.random().toString(36).slice(2)}`
 	);
+	const profileListDetailsId = useRef(
+		`profile-list-details-${Math.random().toString(36).slice(2)}`
+	);
+	const profileListId = useRef(
+		`profile-list-${Math.random().toString(36).slice(2)}`
+	);
+	const profileListHeaderId = useRef(
+		`profile-list-header-${Math.random().toString(36).slice(2)}`
+	);
 
 	useEffect(() => {
 		if (!authToken) return;
@@ -68,7 +85,7 @@ export default function PackagesScreen() {
 
 
 	// Column definitions
-	const packageHeaders = [
+	const profilesHeader = [
 		{ key: 'profileName', label: translations[language].categories.packages.profileName, width: 140 },
 		{ key: 'sessionTimeout', label: translations[language].categories.packages.sessionTimeout, width: 120 },
 		{ key: 'rateLimit', label: translations[language].categories.packages.rateLimit, width: 120 },
@@ -80,6 +97,20 @@ export default function PackagesScreen() {
 			textAlign: 'center' as const,
 		},
 	];
+	const packagesHeader = [
+		{ key: 'label', label: translations[language].categories.packages.label, width: 140 },
+		{ key: 'price', label: translations[language].categories.packages.price, width: 120 },
+		{ key: 'radiusGroup', label: translations[language].categories.packages.radiusGroup, width: 120 },
+		{ key: 'simultaneousDevices', label: translations[language].categories.packages.simultaneousDevices, width: 120 },
+		{ key: 'active', label: translations[language].categories.packages.active, width: 100 },
+		{ key: 'visibleOnRouters', label: translations[language].categories.packages.visibleOnRouters, width: 140 },
+		{
+			key: 'package-actions',
+			label: translations[language].categories.dashboard.actions,
+			width: 280,
+			textAlign: 'center' as const,
+		},
+	]
 
 	const toggleCreateProfileModal = (show?: boolean) => {
 		const targetValue = show ?? showCreateProfileModal;
@@ -98,6 +129,10 @@ export default function PackagesScreen() {
 			}).start();
 			setShowCreateProfileModal(false);
 		}
+	}
+
+	const handleGoToLangVue = () => {
+		return router.replace('/(authenticated)/translation')
 	}
 
 	// Cast packages to RadiusProfile[] since we now receive RADIUS profiles
@@ -121,13 +156,16 @@ export default function PackagesScreen() {
 
 	return (
 		<>
-			<ThemedView lightColor={bg} darkColor={bg} style={styles.container}>
+			<ParallaxScrollView
+				headerBackgroundColor={{
+					light: bg,
+					dark: bg,
+				}}
+				containerStyle={{ flex: 1 }}
+				contentStyle={{ padding: 16 }}
+			>
 				{/* Header section */}
-				<ThemedView
-					style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
-					lightColor={bg}
-					darkColor={bg}
-				>
+				<ThemedView style={{ flexDirection: 'row', flexWrap: 'wrap' }} lightColor={bg} darkColor={bg}>
 					<ThemedText
 						lightColor={textColor}
 						darkColor={textColor}
@@ -140,8 +178,61 @@ export default function PackagesScreen() {
 					>
 						{translations[language].categories.packages.title}
 					</ThemedText>
+					{/* Language and  Create New Profile buttons */}
+					<ThemedView
+						style={{
+							width: '100%',
+							paddingVertical: 8,
+							alignItems: 'flex-end',
+							alignSelf: 'flex-end',
+							gap: 10
+						}}
+						lightColor={bg}
+						darkColor={bg}
+					>
+						<ThemedButton
+							title={translations[language].categories.buttons.portalLang}
+							onPress={() => handleGoToLangVue()}
+							style={{
+								borderRadius: 8,
+								borderColor: skyMist,
+								borderWidth: 1,
+							}}
+							icon="translate"
+							darkColor={'transparent'}
+							lightColor={'transparent'}
+							darkTextColor={tropicalBlue}
+							lightTextColor={tropicalBlue}
+						/>
+						<ThemedButton
+							title={translations[language].categories.buttons.createProfile}
+							onPress={() => {
+								setCreateProfileMode('create');
+								toggleCreateProfileModal(true);
+							}}
+							style={{
+								borderRadius: 8,
+								display: user?.platform?.is_admin ? 'flex' : 'none'
+							}}
+							icon="plus"
+							darkColor={bimColor}
+							lightColor={bimColor}
+							darkTextColor={authButtonText}
+							lightTextColor={authButtonText}
+						/>
+					</ThemedView>
+				</ThemedView>
+
+				{/** Section description */}
+				<ThemedView
+					style={{ width: '100%', flexDirection: 'row', alignItems: 'flex-start', gap: 5, marginVertical: 10 }}
+					lightColor={bg}
+					darkColor={bg}
+				>
+					<IconSymbol color={titleText} name='info' />
 					<ThemedText
 						style={{
+							flexShrink: 1,
 							fontSize: fontSize['text.medium'],
 						}}
 						lightColor={textColor}
@@ -151,35 +242,257 @@ export default function PackagesScreen() {
 					</ThemedText>
 				</ThemedView>
 
-				{/* Create New Profile button */}
-				<ThemedView
-					style={{
-						width: '100%',
-						paddingVertical: 8,
-						alignItems: 'flex-end',
-					}}
-					lightColor={bg}
-					darkColor={bg}
+				{/** Available portal packages */}
+				<TileContainer
+					id={packageListId.current}
+					style={{ marginBottom: 10 }}
+					backgroundColor={bg}
 				>
-					<ThemedButton
-						title={translations[language].categories.packages.createProfile}
-						onPress={() => {
-							setCreateProfileMode('create');
-							toggleCreateProfileModal(true);
-						}}
-						style={{
-							borderRadius: 8,
-						}}
-						darkColor={bimColor}
-						lightColor={bimColor}
-						darkTextColor={authButtonText}
-						lightTextColor={authButtonText}
-					/>
-				</ThemedView>
+					<ThemedView style={{ flexDirection: 'column', width: '100%' }} lightColor='transparent' darkColor='transparent'>
+						<ThemedView style={{ flexDirection: 'row', gap: 5 }} darkColor='transparent' lightColor='transparent'>
+							<IconSymbol color={headerIcons} name='package' />
+							<ThemedText style={{ fontWeight: fontWeight['heading.one'], fontSize: fontSize['heading.two'] }} lightColor={titleText} darkColor={titleText}>
+								{translations[language].categories.packages.portalPackages}
+							</ThemedText>
+						</ThemedView>
+						<ThemedView
+							style={{
+								width: '100%',
+								paddingVertical: 8,
+								alignItems: 'flex-end',
+								alignSelf: 'flex-end',
+								gap: 10
+							}}
+							lightColor={bg}
+							darkColor={bg}
+						>
+							<ThemedButton
+								title={translations[language].categories.buttons.addPackage}
+								onPress={() => handleGoToLangVue()}
+								style={{
+									borderRadius: 8,
+								}}
+								icon="plus"
+								darkColor={bimColor}
+								lightColor={bimColor}
+								darkTextColor={white}
+								lightTextColor={white}
+							/>
+						</ThemedView>
+						<ThemedView
+							style={{ width: '100%', flexDirection: 'row', alignItems: 'flex-start', gap: 5, marginVertical: 10 }}
+							lightColor={bg}
+							darkColor={bg}
+						>
+							<IconSymbol color={titleText} name='info' />
+							<ThemedText
+								style={{
+									flexShrink: 1,
+									fontSize: fontSize['text.medium'],
+								}}
+								lightColor={textColor}
+								darkColor={textColor}
+							>
+								{translations[language].categories.packages.portalPackagesInfo}
+							</ThemedText>
+						</ThemedView>
+						<ScrollView
+							style={{ width: '100%' }}
+							horizontal
+							showsHorizontalScrollIndicator={true}
+						>
+							<ThemedView
+								style={{ flexDirection: 'column' }}
+								lightColor={bg}
+								darkColor={bg}
+							>
+								{/* Column headers */}
+								<ThemedView
+									id={packageListHeaderId.current}
+									style={{
+										flexDirection: 'row',
+										justifyContent: 'space-between',
+										gap: 10,
+										paddingHorizontal: 10,
+										paddingVertical: 10,
+										borderBottomWidth: 1,
+										borderBottomColor: borderDark,
+									}}
+									lightColor={titleBg}
+									darkColor={titleBg}
+								>
+									{packagesHeader.map((col) => (
+										<ThemedText
+											key={`package-hdr-${col.key}`}
+											numberOfLines={1}
+											ellipsizeMode='tail'
+											style={{
+												fontSize: fontSize['text.medium'],
+												width: col.width,
+												textTransform: 'uppercase',
+												paddingRight: 8,
+												...(col.textAlign ? { textAlign: col.textAlign } : {}),
+											}}
+											lightColor={textColor}
+											darkColor={textColor}
+										>
+											{col.label}
+										</ThemedText>
+									))}
+								</ThemedView>
+
+								{/* Profile rows */}
+								<ScrollView
+									id={packageListDetailsId.current}
+									style={{
+										flexDirection: 'column',
+										backgroundColor: bg,
+									}}
+									refreshControl={
+										<RefreshControl
+											refreshing={refreshing}
+											onRefresh={handleRefresh}
+										/>
+									}
+								>
+									{packages.length === 0 ? (
+										<ThemedView
+											style={{
+												paddingVertical: 30,
+												alignItems: 'center',
+											}}
+											lightColor={bg}
+											darkColor={bg}
+										>
+											<ThemedText lightColor={textColor} darkColor={textColor}>
+												{translations[language].categories.packages.noPackages}
+											</ThemedText>
+										</ThemedView>
+									) : (
+										packages.map((pckg, index) => (
+											<ThemedView
+												key={pckg.name + '-' + index}
+												style={{
+													flexDirection: 'row',
+													width: '100%',
+													alignItems: 'center',
+													paddingVertical: 5,
+													paddingHorizontal: 10,
+													backgroundColor:
+														index % 2 === 0 ? listItemBackground : bg,
+													justifyContent: 'space-between',
+													borderBottomWidth:
+														index < packages.length - 1 ? 1 : 0,
+													borderBottomColor: borderDark,
+												}}
+												lightColor={bg}
+												darkColor={bg}
+											>
+												<ThemedText
+													numberOfLines={1}
+													style={{
+														width: packagesHeader[0].width,
+														paddingRight: 8,
+														overflow: 'hidden',
+													}}
+													lightColor={textColor}
+													darkColor={textColor}
+												>
+													{pckg.display_name}
+												</ThemedText>
+												<ThemedText
+													numberOfLines={1}
+													style={{
+														width: packagesHeader[1].width,
+														paddingRight: 8,
+													}}
+													lightColor={textColor}
+													darkColor={textColor}
+												>
+													{pckg["session-timeout"] || '—'}
+												</ThemedText>
+												<ThemedText
+													numberOfLines={1}
+													style={{
+														width: packagesHeader[2].width,
+														paddingRight: 8,
+													}}
+													lightColor={textColor}
+													darkColor={textColor}
+												>
+													{pckg["rate-limit"] || '—'}
+												</ThemedText>
+												<ThemedText
+													numberOfLines={1}
+													style={{
+														width: packagesHeader[3].width,
+														paddingRight: 8,
+													}}
+													lightColor={textColor}
+													darkColor={textColor}
+												>
+													{pckg["simultaneous-use"] ?? '—'}
+												</ThemedText>
+												<ThemedView
+													style={{
+														display: 'flex',
+														flexDirection: 'row',
+														justifyContent: 'space-between',
+														gap: 2,
+														width: packagesHeader[4].width,
+													}}
+													lightColor='transparent'
+													darkColor='transparent'
+												>
+													<ThemedButton
+														onPress={() => handleViewProfile(pckg)}
+														style={styles.actionButton}
+														textStyle={styles.actionButtonText}
+														icon='eye.outline'
+														title={translations[language].categories.packages.view}
+														darkColor={lightBlue}
+														lightColor={lightBlue}
+														lightTextColor={white}
+														darkTextColor={white}
+														iconColor={white}
+													/>
+													<ThemedButton
+														onPress={() => handleEditProfile(pckg)}
+														style={styles.actionButton}
+														textStyle={styles.actionButtonText}
+														icon='edit.outline'
+														title={translations[language].categories.packages.edit}
+														darkColor={yellow}
+														lightColor={yellow}
+														lightTextColor={white}
+														darkTextColor={white}
+														iconColor={white}
+													/>
+													<ThemedButton
+														onPress={() => handleDeleteProfile(pckg)}
+														style={styles.actionButton}
+														textStyle={styles.actionButtonText}
+														icon='delete.outline'
+														title={translations[language].categories.packages.delete}
+														darkColor={errorColor}
+														lightColor={errorColor}
+														lightTextColor={white}
+														darkTextColor={white}
+														iconColor={white}
+													/>
+												</ThemedView>
+											</ThemedView>
+										))
+									)}
+								</ScrollView>
+							</ThemedView>
+						</ScrollView>
+					</ThemedView>
+				</TileContainer>
 
 				{/* Available Profiles tile */}
 				<TileContainer
-					id={packageListId.current}
+					id={profileListId.current}
 					backgroundColor={bg}
 					style={{
 						flexDirection: 'column',
@@ -221,7 +534,7 @@ export default function PackagesScreen() {
 						>
 							{/* Column headers */}
 							<ThemedView
-								id={packageListHeaderId.current}
+								id={profileListHeaderId.current}
 								style={{
 									flexDirection: 'row',
 									justifyContent: 'space-between',
@@ -234,7 +547,7 @@ export default function PackagesScreen() {
 								lightColor={titleBg}
 								darkColor={titleBg}
 							>
-								{packageHeaders.map((col) => (
+								{profilesHeader.map((col) => (
 									<ThemedText
 										key={`hdr-${col.key}`}
 										numberOfLines={1}
@@ -256,7 +569,7 @@ export default function PackagesScreen() {
 
 							{/* Profile rows */}
 							<ScrollView
-								id={packageListDetailsId.current}
+								id={profileListDetailsId.current}
 								style={{
 									flexDirection: 'column',
 									backgroundColor: bg,
@@ -278,7 +591,7 @@ export default function PackagesScreen() {
 										darkColor={bg}
 									>
 										<ThemedText lightColor={textColor} darkColor={textColor}>
-											No profiles found. Create one to get started.
+											{translations[language].categories.packages.noProfiles}
 										</ThemedText>
 									</ThemedView>
 								) : (
@@ -401,7 +714,7 @@ export default function PackagesScreen() {
 						</ThemedView>
 					</ScrollView>
 				</TileContainer>
-			</ThemedView>
+			</ParallaxScrollView>
 			<CreateProfile
 				createProfile={handleCreateProfile}
 				mode={createProfileMode}

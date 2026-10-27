@@ -42,20 +42,21 @@ export default function RoutersScreen() {
 	const listItemBackground = useThemeColor({}, 'listItemBackground');
 	// borderColor unused; Colors[colorScheme] is used directly where needed
 	const router = useRouter();
-	const { routers, setRoutersResponse, fetchRouters } = useTransaction();
+	const { routers, setRouters, fetchRouters } = useTransaction();
+	const { language, authToken } = useGeneral();
 	const promptFadeAnim = useAnimatedValue(0);
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [showCreateModal, setShowCreateModal] = useState(false);
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [editRouterId, setEditRouterId] = useState<string | undefined>();
 	const [activeRouter, setActiveRouter] = useState<string | undefined>();
-	const { language, authToken } = useGeneral();
+	const [refreshing, setRefreshing] = useState(false);
 	const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
 
 	// compute initial values for edit modal when a router is selected
 	const editInitial = useMemo(() => {
-		if (!editRouterId || routers?.data) return undefined;
-		const r = routers?.data.find((x) => x.id === editRouterId);
+		if (!editRouterId || !routers) return undefined;
+		const r = routers.find((x) => x.id === editRouterId);
 		return r
 			? {
 				name: r.name,
@@ -67,7 +68,6 @@ export default function RoutersScreen() {
 			}
 			: undefined;
 	}, [routers, editRouterId]);
-	console.log({ router: routers?.data[0]?.id })
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
 	const routerListDetailsId = useRef(
@@ -83,8 +83,8 @@ export default function RoutersScreen() {
 
 	useFocusEffect(
 		useCallback(() => {
-			if (!routers?.data || !authToken) return;
-			routers.data.forEach(async (r) => {
+			if (!routers || !authToken) return;
+			routers.forEach(async (r) => {
 				if (!r.id) return;
 				try {
 					const resp = await pingRouter(r.id, authToken);
@@ -98,7 +98,7 @@ export default function RoutersScreen() {
 					setOnlineStatus((prev) => ({ ...prev, [r.id!]: false }));
 				}
 			});
-		}, [routers?.data, authToken])
+		}, [routers, authToken])
 	);
 
 	// explicitly track this page in app history
@@ -185,25 +185,9 @@ export default function RoutersScreen() {
 	};
 	const handleDeleteRouter = () => {
 		// Delete router logic here
-		if (!routers?.data) return;
-		//update state
-		const updatedRouters = routers.data.filter(
-			(r) => r.id !== activeRouter
-		);
-		// Assuming there's a method in the context to update routers
-		setRoutersResponse({
-			routers: {
-				...routers,
-				data: updatedRouters
-			},
-			message: 'Router deleted successfully',
-		});
+		if (!routers) return;
 		toggleShowPrompt(false);
 	};
-
-	const routersList = routers?.data || [];
-
-	const [refreshing, setRefreshing] = useState(false);
 
 	const handleRefresh = useCallback(async () => {
 		setRefreshing(true);
@@ -325,7 +309,7 @@ export default function RoutersScreen() {
 									backgroundColor: bg,
 								}}
 							>
-								{routersList.map((router, index) => (
+								{routers?.map((router, index) => (
 									<ThemedView
 										key={index}
 										style={{
@@ -337,7 +321,7 @@ export default function RoutersScreen() {
 											justifyContent: 'space-between',
 											backgroundColor:
 												index % 2 === 0 ? listItemBackground : bg,
-											borderBottomWidth: index < routersList.length - 1 ? 1 : 0,
+											borderBottomWidth: index < routers.length - 1 ? 1 : 0,
 											borderBottomColor: borderDark,
 										}}
 										lightColor={bg}
@@ -448,7 +432,7 @@ export default function RoutersScreen() {
 											</TouchableOpacity>
 											<TouchableOpacity
 												onPress={() => {
-													const r = routersList.find(
+													const r = routers?.find(
 														(r) => r.id === router?.id
 													);
 													if (!r) return;
@@ -506,7 +490,7 @@ export default function RoutersScreen() {
 						if (!editRouterId || !routers) return;
 
 						// Optimistic update for ApiRouter structure
-						const updatedData = routers?.data.map((r) =>
+						const updatedData: ApiRouter[] = routers.map((r) =>
 							r.id === editRouterId
 								? {
 									...r,
@@ -521,13 +505,7 @@ export default function RoutersScreen() {
 								: r
 						);
 
-						setRoutersResponse({
-							routers: {
-								...routers,
-								data: updatedData
-							},
-							message: 'Router updated successfully',
-						});
+						setRouters(updatedData)
 
 						setShowEditModal(false);
 						setEditRouterId(undefined);

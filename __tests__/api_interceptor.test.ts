@@ -67,6 +67,33 @@ describe('apiFetch Interceptor', () => {
         expect(mockFetch).toHaveBeenCalledTimes(1); // No retry
         expect(res.status).toBe(401);
     });
+
+    test('concurrent 401 responses wait for the in-flight refresh', async () => {
+        let resolveRefresh: (token: string) => void = () => {};
+        onRefreshToken.mockImplementation(
+            () => new Promise<string>((resolve) => {
+                resolveRefresh = resolve;
+            })
+        );
+        mockFetch
+            .mockResolvedValueOnce({ status: 401, ok: false, headers: new Map() })
+            .mockResolvedValueOnce({ status: 401, ok: false, headers: new Map() })
+            .mockResolvedValueOnce({ status: 200, ok: true, headers: new Map() })
+            .mockResolvedValueOnce({ status: 200, ok: true, headers: new Map() });
+
+        const firstRequest = apiFetch('https://api.example/first');
+        const secondRequest = apiFetch('https://api.example/second');
+
+        await Promise.resolve();
+        await Promise.resolve();
+        resolveRefresh('new-token');
+
+        const responses = await Promise.all([firstRequest, secondRequest]);
+
+        expect(onRefreshToken).toHaveBeenCalledTimes(1);
+        expect(mockFetch).toHaveBeenCalledTimes(4);
+        expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    });
     
     test('skips interceptor if X-Skip-Interceptor is present', async () => {
         mockFetch.mockResolvedValueOnce({

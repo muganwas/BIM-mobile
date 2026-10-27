@@ -94,25 +94,8 @@ export interface ApiRouter {
 }
 
 export interface GetRoutersResponse {
-	routers: {
-		current_page: number;
-		data: ApiRouter[];
-		first_page_url: string;
-		from: number;
-		last_page: number;
-		last_page_url: string;
-		links: {
-			url: string | null;
-			label: string;
-			active: boolean;
-		}[];
-		next_page_url: string | null;
-		path: string;
-		per_page: number;
-		prev_page_url: string | null;
-		to: number;
-		total: number;
-	};
+	routers: ApiRouter[];
+	success: boolean | stringifiedBool;
 	message: string;
 }
 

@@ -165,17 +165,6 @@ async function handle401(
 	mergedInit: RequestInit,
 	headers: Record<string, string>
 ): Promise<Response> {
-	// Cooldown guard: if we just refreshed, don't trigger another
-	// cycle — in-flight requests with the new token can collide
-	// and cause cascading refreshes that eventually log the user out.
-	const now = Date.now();
-	if (now - lastRefreshTime < REFRESH_COOLDOWN_MS) {
-		console.log(
-			'API: 401 received but within refresh cooldown, returning 401 as-is'
-		);
-		return response;
-	}
-
 	console.log('API: 401 received, attempting token refresh...');
 
 	if (!authCallbacks) return response;
@@ -198,6 +187,17 @@ async function handle401(
 		// Refresh completed but returned null — auth failure, not network
 		console.log('API: Token refresh failed (from queue), logging out...');
 		authCallbacks.onLogout();
+		return response;
+	}
+
+	// Avoid starting another refresh immediately after a completed one.
+	// Requests that arrived during the refresh are handled above and wait
+	// for its result instead of returning their stale 401.
+	const now = Date.now();
+	if (now - lastRefreshTime < REFRESH_COOLDOWN_MS) {
+		console.log(
+			'API: 401 received but within refresh cooldown, returning 401 as-is'
+		);
 		return response;
 	}
 
@@ -283,7 +283,7 @@ export async function parseApiError(res: Response): Promise<string> {
 			try {
 				const text = await res.text();
 				if (text) return text;
-			} catch {}
+			} catch { }
 		}
 	} catch {
 		// ignore and continue to generic fallback
@@ -299,63 +299,63 @@ export async function parseApiError(res: Response): Promise<string> {
 export async function pollQueuedOperation(
 	cacheKey: string,
 	token?: string,
-{
- 	maxAttempts = 30,
- 	intervalMs = 2000,
-} = {}
+	{
+		maxAttempts = 30,
+		intervalMs = 2000,
+	} = {}
 ) {
- 	if (!cacheKey) throw new Error('cacheKey required for polling');
- 	const pollUrl = `${apiBaseUrl}/router-operations/poll`;
+	if (!cacheKey) throw new Error('cacheKey required for polling');
+	const pollUrl = `${apiBaseUrl}/router-operations/poll`;
 	const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 	if (token) headers['Authorization'] = `Bearer ${token}`;
 
- 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
- 		try {
- 			const resp = await apiFetch(pollUrl, {
- 				method: 'POST',
+	for (let attempt = 0; attempt < maxAttempts; attempt++) {
+		try {
+			const resp = await apiFetch(pollUrl, {
+				method: 'POST',
 				headers,
- 				body: JSON.stringify({ cache_key: cacheKey }),
- 			});
+				body: JSON.stringify({ cache_key: cacheKey }),
+			});
 
- 			// If non-json or error status, treat as retryable unless final
- 			let json: any = null;
- 			try {
- 				json = await resp.json();
- 			} catch (_e) {
+			// If non-json or error status, treat as retryable unless final
+			let json: any = null;
+			try {
+				json = await resp.json();
+			} catch (_e) {
 				console.log('[pollQueuedOperation] attempt', attempt + 1, 'HTTP', resp.status, '— not JSON');
 				console.log('[pollQueuedOperation] error:', _e);
 				json = null;
- 			}
+			}
 
- 			if (json && typeof json === 'object') {
-					console.log(
-						'[pollQueuedOperation] attempt',
-						attempt + 1,
-						'HTTP',
-						resp.status,
-						'body:',
-						JSON.stringify(json)//.slice(0, 300)
+			if (json && typeof json === 'object') {
+				console.log(
+					'[pollQueuedOperation] attempt',
+					attempt + 1,
+					'HTTP',
+					resp.status,
+					'body:',
+					JSON.stringify(json)//.slice(0, 300)
 				);
 
- 				const status = (json.status || '').toString().toLowerCase();
+				const status = (json.status || '').toString().toLowerCase();
 				if (status === 'success' || status === 'done') {
- 					// Prefer returning the data payload if present
- 					return json.data ?? json;
- 				}
- 				if (status === 'error' || status === 'failed') {
- 					throw new Error(json.error || json.message || 'Queued operation failed');
- 				}
- 			} else {
+					// Prefer returning the data payload if present
+					return json.data ?? json;
+				}
+				if (status === 'error' || status === 'failed') {
+					throw new Error(json.error || json.message || 'Queued operation failed');
+				}
+			} else {
 				console.log('[pollQueuedOperation] attempt', attempt + 1, 'HTTP', resp.status, '— empty or non-object response');
- 			}
- 		} catch (e) {
- 			// Log and continue to retry until attempts exhausted
- 			console.warn('[pollQueuedOperation] attempt', attempt + 1, 'failed:', e);
- 		}
+			}
+		} catch (e) {
+			// Log and continue to retry until attempts exhausted
+			console.warn('[pollQueuedOperation] attempt', attempt + 1, 'failed:', e);
+		}
 
- 		// wait before next attempt
- 		await new Promise((r) => setTimeout(r, intervalMs));
- 	}
+		// wait before next attempt
+		await new Promise((r) => setTimeout(r, intervalMs));
+	}
 
- 	throw new Error('Queued operation timed out');
+	throw new Error('Queued operation timed out');
 }
