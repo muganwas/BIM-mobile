@@ -219,7 +219,7 @@ export default function PackageRoutersCard({ pkg, saving, onSave }: Props) {
 				>
 					{t('reconnectVouchers')}
 				</ThemedText>
-				<ThemedSwitch value={reconnect} onValueChange={setReconnect} />
+				<ThemedSwitch value={reconnect} thumbColor={'white'} onValueChange={setReconnect} />
 			</ThemedView>
 
 			<ThemedButton
@@ -261,6 +261,7 @@ const styles = StyleSheet.create({
 		fontSize: 13,
 	},
 	routerRow: {
+		width: '100%',
 		gap: 6,
 		paddingVertical: 10,
 	},

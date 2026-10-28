@@ -111,20 +111,37 @@ export default function OverlayContainer({
 		};
 	}, [showOverlay, shouldUseNativeModal, isAndroid]);
 
-	// Keep portal mounted until fade reaches 0 when closing (custom overlay only)
+	// Keep portal mounted until fade reaches 0 when closing (custom overlay only).
+	// Callers often animate the fade value first and only then set showOverlay
+	// to false, so the listener can miss the final frame. Check the current
+	// value synchronously and keep a fallback timer to guarantee unmounting.
 	useEffect(() => {
 		if (shouldUseNativeModal) return;
-		// When opening, ensure rendered
 		if (showOverlay) {
 			setRendered(true);
+			return;
+		}
+		const currentValue =
+			typeof fadeAnim?.__getValue === 'function'
+				? fadeAnim.__getValue()
+				: 0;
+		if (currentValue <= 0.01) {
+			setRendered(false);
+			setMounted(false);
+			return;
 		}
 		const id = fadeAnim?.addListener?.(({ value }: { value: number }) => {
-			if (!showOverlay && (value ?? 0) <= 0.01) {
+			if ((value ?? 0) <= 0.01) {
 				setRendered(false);
 				setMounted(false);
 			}
 		});
+		const fallback = setTimeout(() => {
+			setRendered(false);
+			setMounted(false);
+		}, 500);
 		return () => {
+			clearTimeout(fallback);
 			if (id && fadeAnim?.removeListener) fadeAnim.removeListener(id);
 		};
 	}, [showOverlay, shouldUseNativeModal, fadeAnim]);
@@ -276,8 +293,11 @@ export default function OverlayContainer({
 			: availableScreenHeight;
 		return (
 			<Portal>
-				{/* absorb touches behind overlay */}
-				<View style={StyleSheet.absoluteFill} pointerEvents='auto'>
+				{/* absorb touches behind overlay, but never after the overlay closes */}
+				<View
+					style={StyleSheet.absoluteFill}
+					pointerEvents={showOverlay ? 'auto' : 'none'}
+				>
 					{/* Backdrop: static semi-opaque black, animate opacity */}
 					<Animated.View
 						style={[

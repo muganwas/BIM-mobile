@@ -25,6 +25,10 @@ import {
 	isTruthy,
 	translateWithVariables,
 } from '@/helpers/index';
+import {
+	canDeletePortalPackage,
+	canDeleteSharedRadiusProfile,
+} from '@/helpers/permissions';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import * as PackageService from '@/services/PackageService';
@@ -85,6 +89,14 @@ export default function PackagesScreen() {
 	const isAdmin = isTruthy(user?.platform?.is_admin);
 	const isStaff = isTruthy(user?.platform?.is_staff);
 	const canManageProfiles = isAdmin || isStaff;
+	// Deletion rules are checked locally to avoid a pointless server round trip.
+	// "No voucher users assigned" stays a server-side check, since this screen
+	// has no per-package user counts.
+	const canDeleteProfile = canDeleteSharedRadiusProfile(user);
+	const canDeletePackage = useCallback(
+		(pkg: PortalPackage) => canDeletePortalPackage(user, pkg),
+		[user]
+	);
 
 	const packagesCopy = (translations[language]?.categories?.packages ??
 		translations.en.categories.packages) as Record<string, string>;
@@ -622,6 +634,13 @@ export default function PackagesScreen() {
 	};
 
 	const requestDeletePackage = (pkg: PortalPackage) => {
+		if (!canDeletePackage(pkg)) {
+			setAppMessage?.({
+				type: 'error',
+				message: t('deletePackageForbidden'),
+			});
+			return;
+		}
 		setConfirmTarget({
 			type: 'package',
 			id: pkg.id,
@@ -632,6 +651,13 @@ export default function PackagesScreen() {
 	};
 
 	const requestDeleteProfile = (profile: SharedRadiusProfile) => {
+		if (!canDeleteProfile) {
+			setAppMessage?.({
+				type: 'error',
+				message: t('deleteProfileForbidden'),
+			});
+			return;
+		}
 		setConfirmTarget({
 			type: 'profile',
 			id: profile.group,
@@ -646,6 +672,24 @@ export default function PackagesScreen() {
 	const handleConfirmDelete = async () => {
 		if (!authToken || !confirmTarget) return;
 		const target = confirmTarget;
+		if (target.type === 'package') {
+			const pkg = portalPackages.find((item) => item.id === target.id);
+			if (!pkg || !canDeletePackage(pkg)) {
+				toggleConfirm(false);
+				setAppMessage?.({
+					type: 'error',
+					message: t('deletePackageForbidden'),
+				});
+				return;
+			}
+		} else if (!canDeleteProfile) {
+			toggleConfirm(false);
+			setAppMessage?.({
+				type: 'error',
+				message: t('deleteProfileForbidden'),
+			});
+			return;
+		}
 		setSavingKey(`delete-${target.type}-${target.id}`);
 		try {
 			const response =
@@ -853,17 +897,18 @@ export default function PackagesScreen() {
 									lightTextColor={textColor}
 									darkTextColor={textColor}
 								/>
-								<ThemedButton
-									title={t('delete')}
-									onPress={() => requestDeletePackage(pkg)}
-									icon='delete.outline'
-									disabled={!canManage}
-									style={styles.actionButton}
-									lightColor={errorColor}
-									darkColor={errorColor}
-									lightTextColor='#fff'
-									darkTextColor='#fff'
-								/>
+								{canDeletePackage(pkg) ? (
+									<ThemedButton
+										title={t('delete')}
+										onPress={() => requestDeletePackage(pkg)}
+										icon='delete.outline'
+										style={styles.actionButton}
+										lightColor={errorColor}
+										darkColor={errorColor}
+										lightTextColor='#fff'
+										darkTextColor='#fff'
+									/>
+								) : null}
 							</ThemedView>
 						</TileContainer>
 					);
@@ -966,17 +1011,6 @@ export default function PackagesScreen() {
 				>
 					{t('tabRadiusProfiles')}
 				</ThemedText>
-				{canManageProfiles ? (
-					<ThemedButton
-						title={t('createGlobalProfile')}
-						onPress={openCreateProfile}
-						icon='plus'
-						lightColor={selectedBg}
-						darkColor={selectedBg}
-						lightTextColor={selectedText}
-						darkTextColor={selectedText}
-					/>
-				) : null}
 			</ThemedView>
 			<ThemedText
 				style={styles.help}
@@ -985,6 +1019,15 @@ export default function PackagesScreen() {
 			>
 				{t('radiusProfilesDescription')}
 			</ThemedText>
+			{canManageProfiles && !canDeleteProfile ? (
+				<ThemedText
+					style={styles.help}
+					lightColor={mutedText}
+					darkColor={mutedText}
+				>
+					{t('profilesDeleteAdminOnly')}
+				</ThemedText>
+			) : null}
 
 			{profilesError ? (
 				<ThemedView style={styles.empty} lightColor={chipBg} darkColor={chipBg}>
@@ -1131,16 +1174,18 @@ export default function PackagesScreen() {
 									lightTextColor={textColor}
 									darkTextColor={textColor}
 								/>
-								<ThemedButton
-									title={t('delete')}
-									onPress={() => requestDeleteProfile(profile)}
-									icon='delete.outline'
-									style={styles.actionButton}
-									lightColor={errorColor}
-									darkColor={errorColor}
-									lightTextColor='#fff'
-									darkTextColor='#fff'
-								/>
+								{canDeleteProfile ? (
+									<ThemedButton
+										title={t('delete')}
+										onPress={() => requestDeleteProfile(profile)}
+										icon='delete.outline'
+										style={styles.actionButton}
+										lightColor={errorColor}
+										darkColor={errorColor}
+										lightTextColor='#fff'
+										darkTextColor='#fff'
+									/>
+								) : null}
 							</ThemedView>
 						) : null}
 					</TileContainer>

@@ -16,7 +16,7 @@ export function ThemedSwitch({
 }: ThemedSwitchProps) {
     const enabledTrackColor = useThemeColor(
         { light: lightColor, dark: darkColor },
-        'tint'
+        'bim'
     );
     const disabledTrackColor = useThemeColor({}, 'inputBorder');
     const disabledThumbColor = useThemeColor({}, 'lightGrey');

@@ -378,10 +378,17 @@ const translations: Translations = {
 				deleteFailed: 'Could not delete the selected item.',
 				deleted: 'Deleted.',
 				deletePackageTitle: 'Delete package',
-				deletePackageConfirm: 'Delete "{label}"? This cannot be undone.',
+				deletePackageConfirm:
+					'Delete "{label}"? This cannot be undone. It can only be deleted while no voucher users are assigned to it.',
+				deletePackageForbidden:
+					'Only an administrator can delete this package.',
 				deleteProfileTitle: 'Delete RADIUS profile',
 				deleteProfileConfirm:
-					'Delete "{name}"? Packages selling this plan may stop working.'
+					'Delete "{name}"? Packages selling this plan may stop working. It can only be deleted while no voucher users are assigned to it.',
+				deleteProfileForbidden:
+					'Only an administrator can delete shared RADIUS profiles.',
+				profilesDeleteAdminOnly:
+					'Only admins can delete shared profiles. A profile can only be deleted while no voucher users are assigned to it.'
 			},
 			internetPackage: {
 				createTitle: 'Create Internet Package',
