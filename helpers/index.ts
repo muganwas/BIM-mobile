@@ -19,6 +19,10 @@ export function filterCharacters(
 	else return ''; // Return anything that has been input
 }
 
+export function isTruthy(value: unknown) {
+	return value === true || value === 'true' || value === 1 || value === '1';
+}
+
 export function translateWithVariables(
 	text: string,
 	variables: Record<string, string | number>

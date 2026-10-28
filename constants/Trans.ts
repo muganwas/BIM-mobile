@@ -257,43 +257,131 @@ const translations: Translations = {
 				Price: 'Price ({currency})',
 				radiusGroup: 'Radius Group',
 				simultaneousDevices: 'Simultaneous Devices',
-				active: 'Acive',
+				active: 'Active',
 				visibleOnRouters: 'Visible on Routers',
 				actions: 'Actions',
 				noPackages: 'No packages found, create one to get started.',
 				noProfiles: 'No profiles found, create one to get started.',
+
+				// Tabs and section headings
 				tabPackages: 'Packages',
 				tabRoutersRateLimits: 'Routers & rate limits',
 				tabRadiusProfiles: 'RADIUS profiles',
 				tabFreeTrial: 'Free trial',
+				portalPackagesTitle: 'Portal packages',
+				noRoutersYet: 'No routers are available yet.',
+
+				// Shared descriptions
 				portalPackagesDescription:
 					'These are the buy buttons customers see on the captive portal. The routers count summarises where each package is offered.',
-				addPackage: 'Add package',
-				editPackage: 'Edit package',
-				deletePackage: 'Delete package',
-				createGlobalProfile: 'Create global profile',
 				radiusProfilesDescription:
 					'Shared profiles are available to every router. Private profiles created by owner packages are listed with their owner.',
 				routersRateLimitsDescription:
 					'Tick a router to offer the package there. Leave Rate limit blank to inherit the plan speed, or enter a speed to override it on that router only.',
+				routersCardHelp:
+					"Tick a router to offer the package there. Leave Rate limit blank to inherit the plan's speed, or enter a speed (for example 5M/5M). Enter 0 for open/unlimited.",
 				freeTrialDescription:
 					'Switch the free trial on per router. When active, Try for Free is the first button on the portal for each device once per 24 hours.',
+
+				// Actions
+				addPackage: 'Add package',
+				editPackage: 'Edit package',
+				deletePackage: 'Delete package',
+				createGlobalProfile: 'Create global profile',
+				createProfileButton: 'Create profile',
+				saveRouterSettings: 'Save router settings',
+
+				// Package and profile fields
 				owner: 'Owner',
 				plan: 'Plan',
+				planSpeed: 'Plan speed',
 				devices: 'Devices',
 				routersCount: 'Routers',
+				duration: 'Duration',
+				durationDaysValue: '{value}d',
+				durationHoursValue: '{value}h',
+				durationMinutesValue: '{value}m',
+				shared: 'Shared',
+				sharedPlan: 'Shared plan',
+				privatePlan: 'Private plan',
 				globalPackage: 'global package',
 				ownerPackage: 'owner package',
-				planSpeed: 'Plan speed',
-				saveRouterSettings: 'Save router settings',
+				platform: 'Platform',
+				you: 'You',
+				open: 'Open',
+				openSpeed: 'Open speed',
+				inactive: 'Inactive',
+
+				// Package form
+				labelOnPortal: 'Label (shown on the portal)',
+				labelPlaceholder: 'e.g. Buy 1,000 for 24 hours',
+				labelLuganda: 'Label (Luganda, optional)',
+				labelLugandaPlaceholder: 'Optional translation for the portal',
+				sharedPlanManaged:
+					'Shared-plan prices and limits are managed from the RADIUS profiles tab.',
+				noSharedProfiles: 'No shared RADIUS profiles are available yet.',
+				profileSummary: '{name} · {price}',
+				profileDetails: '{duration} · {rate} · {devices} device(s)',
+				globalPackageToggle: 'Global package (visible to all accounts)',
+				pricePlaceholder: 'e.g. 1000',
+				durationPlaceholder: 'e.g. 24h or 7d',
+				bandwidthPlaceholder: 'e.g. 5M/5M; 0 = open',
+				devicesPlaceholder: 'e.g. 1',
+
+				// RADIUS profile form
+				createGlobalRadiusProfile: 'Create global RADIUS profile',
+				editRadiusProfile: 'Edit RADIUS profile',
+				groupLabel: 'Group: {group}',
+				profileNameRadiusGroup: 'Profile name (RADIUS group)',
+				displayName: 'Display name',
+				profileNamePlaceholder: 'e.g. DAILY_1000',
+				sessionTimeoutPlaceholder: 'e.g. 24h, 7d or 259200',
+				rateLimitPlaceholder: 'e.g. 5M/5M',
+
+				// Routers and rate limits
+				routersPlanLine: '{group} · Plan speed: {rate} · Owner: {owner}',
+				noPackageRouters: 'No routers are available for this package.',
+				stale: 'Stale',
+				inheritRate: 'Inherit ({rate})',
+				effectiveLine: 'Effective: {source} · {rate}',
+				sourceOverride: 'Override',
+				sourcePlan: 'Plan',
 				reconnectVouchers:
 					'Reconnect online vouchers now (brief drop; MAC cookies log them back in)',
-				effective: 'Effective',
+
+				// Free trial
 				trialStatus: 'Status',
 				trialTime: 'Trial time (minutes)',
-				enabled: 'enabled',
-				disabled: 'disabled',
-				save: 'Save'
+				trialMinutesPlaceholder: 'e.g. 15',
+				loadingTrialSettings: 'Loading trial settings…',
+				enabled: 'Enabled',
+				disabled: 'Disabled',
+
+				// Loading and empty states
+				loadingPackages: 'Loading packages…',
+				loadingProfiles: 'Loading profiles…',
+				amountWithCurrency: '{amount} {currency}',
+				save: 'Save',
+
+				// Errors and confirmations
+				loadPackagesFailed: 'Could not load portal packages.',
+				profilesForbidden: 'RADIUS profiles require admin or staff access.',
+				loadProfilesFailed: 'Could not load RADIUS profiles.',
+				savePackageFailed: 'Could not save the package.',
+				packageSaved: 'Package saved.',
+				saveProfileFailed: 'Could not save the RADIUS profile.',
+				profileSaved: 'RADIUS profile saved.',
+				saveRouterSettingsFailed: 'Could not save router settings.',
+				routerSettingsSaved: 'Router settings saved.',
+				saveTrialFailed: 'Could not save trial settings.',
+				trialSaved: 'Trial settings saved.',
+				deleteFailed: 'Could not delete the selected item.',
+				deleted: 'Deleted.',
+				deletePackageTitle: 'Delete package',
+				deletePackageConfirm: 'Delete "{label}"? This cannot be undone.',
+				deleteProfileTitle: 'Delete RADIUS profile',
+				deleteProfileConfirm:
+					'Delete "{name}"? Packages selling this plan may stop working.'
 			},
 			internetPackage: {
 				createTitle: 'Create Internet Package',
@@ -345,6 +433,7 @@ const translations: Translations = {
 			},
 			dashboard: {
 				title: 'Dashboard',
+				currency: 'UGX',
 				todaysTransactions: "Today's Transactions",
 				weeksTransactions: "This Week's Transactions",
 				monthsTransactions: "This Month's Transactions",

@@ -7,6 +7,9 @@ import { ThemedInput } from '@/components/ThemedInput';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { fontSize, fontWeight } from '@/constants/Font';
+import translations from '@/constants/Trans';
+import { useGeneral } from '@/context/GeneralContext';
+import { translateWithVariables } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { SharedRadiusProfile } from '@/types';
 
@@ -44,6 +47,17 @@ export default function RadiusProfileForm({
 	const buttonBg = useThemeColor({}, 'bim');
 	const buttonText = useThemeColor({}, 'authButtonText');
 	const chipBg = useThemeColor({}, 'listItemBackground');
+	const { language } = useGeneral();
+
+	const packagesCopy = translations[language]?.categories?.packages ?? translations.en.categories.packages;
+	const buttonsCopy =
+		translations[language]?.categories?.buttons ??
+		translations.en.categories.buttons;
+	const currency =
+		translations[language]?.categories?.dashboard?.currency ??
+		translations.en.categories.dashboard.currency;
+	const t = (key: string) =>
+		packagesCopy[key] ?? translations.en.categories.packages[key] ?? '';
 
 	const [name, setName] = useState('');
 	const [price, setPrice] = useState('');
@@ -104,8 +118,8 @@ export default function RadiusProfileForm({
 					darkColor={textColor}
 				>
 					{mode === 'create'
-						? 'Create global RADIUS profile'
-						: 'Edit RADIUS profile'}
+						? t('createGlobalRadiusProfile')
+						: t('editRadiusProfile')}
 				</ThemedText>
 
 				{mode === 'edit' && initial ? (
@@ -114,25 +128,27 @@ export default function RadiusProfileForm({
 						lightColor={mutedText}
 						darkColor={mutedText}
 					>
-						Group: {initial.group}
+						{translateWithVariables(t('groupLabel'), {
+							group: initial.group,
+						})}
 					</ThemedText>
 				) : null}
 
 				<ThemedInput
 					label={
 						mode === 'create'
-							? 'Profile name (RADIUS group)'
-							: 'Display name'
+							? t('profileNameRadiusGroup')
+							: t('displayName')
 					}
-					placeholder='e.g. DAILY_1000'
+					placeholder={t('profileNamePlaceholder')}
 					value={name}
 					setValue={setName}
 					style={{ borderColor: inputBorder }}
 				/>
 
 				<ThemedInput
-					label='Price (UGX)'
-					placeholder='e.g. 1000'
+					label={translateWithVariables(t('Price'), { currency })}
+					placeholder={t('pricePlaceholder')}
 					keyboardType='number-pad'
 					value={price}
 					setValue={setPrice}
@@ -140,24 +156,24 @@ export default function RadiusProfileForm({
 				/>
 
 				<ThemedInput
-					label='Session timeout'
-					placeholder='e.g. 24h, 7d or 259200'
+					label={t('sessionTimeout')}
+					placeholder={t('sessionTimeoutPlaceholder')}
 					value={duration}
 					setValue={setDuration}
 					style={{ borderColor: inputBorder }}
 				/>
 
 				<ThemedInput
-					label='Rate limit'
-					placeholder='e.g. 5M/5M'
+					label={t('rateLimit')}
+					placeholder={t('rateLimitPlaceholder')}
 					value={bandwidth}
 					setValue={setBandwidth}
 					style={{ borderColor: inputBorder }}
 				/>
 
 				<ThemedInput
-					label='Simultaneous devices'
-					placeholder='e.g. 1'
+					label={t('simultaneousDevices')}
+					placeholder={t('devicesPlaceholder')}
 					keyboardType='number-pad'
 					value={devices}
 					setValue={setDevices}
@@ -170,7 +186,7 @@ export default function RadiusProfileForm({
 					darkColor='transparent'
 				>
 					<ThemedButton
-						title='Cancel'
+						title={buttonsCopy.cancel}
 						onPress={() => toggleVisible(false)}
 						style={{ maxWidth: '40%' }}
 						lightColor={chipBg}
@@ -179,7 +195,11 @@ export default function RadiusProfileForm({
 						darkTextColor={textColor}
 					/>
 					<ThemedButton
-						title={mode === 'create' ? 'Create profile' : 'Save changes'}
+						title={
+							mode === 'create'
+								? t('createProfileButton')
+								: buttonsCopy.saveChanges
+						}
 						onPress={submit}
 						loading={saving}
 						disabled={!canSubmit}

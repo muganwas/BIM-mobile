@@ -20,7 +20,11 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { parseApiError } from '@/helpers/api';
-import { formatAmount } from '@/helpers/index';
+import {
+	formatAmount,
+	isTruthy,
+	translateWithVariables,
+} from '@/helpers/index';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import * as PackageService from '@/services/PackageService';
@@ -41,21 +45,22 @@ import TrialSettingsRow from '@/views/TrialSettingsRow';
 
 type TabKey = 'packages' | 'routers' | 'profiles' | 'trial';
 
-function isTruthy(value: unknown) {
-	return value === true || value === 'true' || value === 1 || value === '1';
-}
-
 function visibleRouterCount(pkg: PortalPackage) {
 	return (pkg.routers ?? []).filter((router) => router.visible).length;
 }
 
-function profileDuration(profile: SharedRadiusProfile) {
+function profileDuration(
+	profile: SharedRadiusProfile,
+	format: (key: string, variables: Record<string, string | number>) => string
+) {
 	if (profile.duration) return profile.duration;
 	const seconds = Number(profile.duration_seconds ?? 0);
 	if (!Number.isFinite(seconds) || seconds <= 0) return '—';
-	if (seconds % 86400 === 0) return `${seconds / 86400}d`;
-	if (seconds % 3600 === 0) return `${seconds / 3600}h`;
-	return `${Math.round(seconds / 60)}m`;
+	if (seconds % 86400 === 0)
+		return format('durationDaysValue', { value: seconds / 86400 });
+	if (seconds % 3600 === 0)
+		return format('durationHoursValue', { value: seconds / 3600 });
+	return format('durationMinutesValue', { value: Math.round(seconds / 60) });
 }
 
 export default function PackagesScreen() {
@@ -81,38 +86,45 @@ export default function PackagesScreen() {
 	const isStaff = isTruthy(user?.platform?.is_staff);
 	const canManageProfiles = isAdmin || isStaff;
 
-	const enPackages = translations.en.categories.packages;
 	const packagesCopy = (translations[language]?.categories?.packages ??
-		enPackages) as Record<string, string>;
+		translations.en.categories.packages) as Record<string, string>;
 	const buttonsCopy =
 		translations[language]?.categories?.buttons ??
 		translations.en.categories.buttons;
+	const currency =
+		translations[language]?.categories?.dashboard?.currency ??
+		translations.en.categories.dashboard.currency;
 	const t = useCallback(
-		(key: string, fallback = '') =>
-			packagesCopy[key] ?? enPackages[key] ?? fallback,
-		[packagesCopy, enPackages]
+		(key: string) =>
+			packagesCopy[key] ?? translations.en.categories.packages[key] ?? '',
+		[packagesCopy]
+	);
+	const tv = useCallback(
+		(key: string, variables: Record<string, string | number>) =>
+			translateWithVariables(t(key), variables),
+		[t]
 	);
 
 	const tabs = useMemo<SegmentedTab[]>(
 		() => [
 			{
 				key: 'packages',
-				label: t('tabPackages', 'Packages'),
+				label: t('tabPackages'),
 				icon: 'packages',
 			},
 			{
 				key: 'routers',
-				label: t('tabRoutersRateLimits', 'Routers & rate limits'),
+				label: t('tabRoutersRateLimits'),
 				icon: 'routers.outline',
 			},
 			{
 				key: 'profiles',
-				label: t('tabRadiusProfiles', 'RADIUS profiles'),
+				label: t('tabRadiusProfiles'),
 				icon: 'key',
 			},
 			{
 				key: 'trial',
-				label: t('tabFreeTrial', 'Free trial'),
+				label: t('tabFreeTrial'),
 				icon: 'clock',
 			},
 		],
@@ -189,7 +201,7 @@ export default function PackagesScreen() {
 					scope: isAdmin ? 'all' : 'visible',
 				});
 				if (!response.ok) {
-					await showError(response, 'Could not load portal packages.');
+					await showError(response, t('loadPackagesFailed'));
 					return;
 				}
 				const json = await response.json();
@@ -198,13 +210,13 @@ export default function PackagesScreen() {
 				console.error('[PackagesScreen] loadPackages failed', error);
 				setAppMessage?.({
 					type: 'error',
-					message: 'Could not load portal packages.',
+					message: t('loadPackagesFailed'),
 				});
 			} finally {
 				if (showSpinner) setLoadingPackages(false);
 			}
 		},
-		[authToken, isAdmin, setAppMessage, showError]
+		[authToken, isAdmin, setAppMessage, showError, t]
 	);
 
 	const loadProfiles = useCallback(
@@ -217,9 +229,7 @@ export default function PackagesScreen() {
 				});
 				if (!response.ok) {
 					setProfilesError(
-						response.status === 403
-							? 'RADIUS profiles require admin or staff access.'
-							: 'Could not load RADIUS profiles.'
+						t(response.status === 403 ? 'profilesForbidden' : 'loadProfilesFailed')
 					);
 					return;
 				}
@@ -228,12 +238,12 @@ export default function PackagesScreen() {
 				setProfilesError(null);
 			} catch (error) {
 				console.error('[PackagesScreen] loadProfiles failed', error);
-				setProfilesError('Could not load RADIUS profiles.');
+				setProfilesError(t('loadProfilesFailed'));
 			} finally {
 				if (showSpinner) setLoadingProfiles(false);
 			}
 		},
-		[authToken]
+		[authToken, t]
 	);
 
 	useEffect(() => {
@@ -464,15 +474,15 @@ export default function PackagesScreen() {
 			}
 
 			if (!response.ok) {
-				await showError(response, 'Could not save the package.');
+				await showError(response, t('savePackageFailed'));
 				return;
 			}
 			togglePackageForm(false);
 			await loadPackages(false);
-			setAppMessage?.({ type: 'message', message: 'Package saved.' });
+			setAppMessage?.({ type: 'message', message: t('packageSaved') });
 		} catch (error) {
 			console.error('[PackagesScreen] save package failed', error);
-			setAppMessage?.({ type: 'error', message: 'Could not save the package.' });
+			setAppMessage?.({ type: 'error', message: t('savePackageFailed') });
 		} finally {
 			setSavingKey(null);
 		}
@@ -511,17 +521,17 @@ export default function PackagesScreen() {
 						: null;
 
 			if (!response || !response.ok) {
-				await showError(response, 'Could not save the RADIUS profile.');
+				await showError(response, t('saveProfileFailed'));
 				return;
 			}
 			toggleProfileForm(false);
 			await Promise.all([loadProfiles(false), loadPackages(false)]);
-			setAppMessage?.({ type: 'message', message: 'RADIUS profile saved.' });
+			setAppMessage?.({ type: 'message', message: t('profileSaved') });
 		} catch (error) {
 			console.error('[PackagesScreen] save profile failed', error);
 			setAppMessage?.({
 				type: 'error',
-				message: 'Could not save the RADIUS profile.',
+				message: t('saveProfileFailed'),
 			});
 		} finally {
 			setSavingKey(null);
@@ -545,7 +555,7 @@ export default function PackagesScreen() {
 				authToken
 			);
 			if (!response.ok) {
-				await showError(response, 'Could not save router settings.');
+				await showError(response, t('saveRouterSettingsFailed'));
 				return;
 			}
 			const json = await response.json();
@@ -562,12 +572,12 @@ export default function PackagesScreen() {
 						: item
 				)
 			);
-			setAppMessage?.({ type: 'message', message: 'Router settings saved.' });
+			setAppMessage?.({ type: 'message', message: t('routerSettingsSaved') });
 		} catch (error) {
 			console.error('[PackagesScreen] save routers failed', error);
 			setAppMessage?.({
 				type: 'error',
-				message: 'Could not save router settings.',
+				message: t('saveRouterSettingsFailed'),
 			});
 		} finally {
 			setSavingKey(null);
@@ -588,7 +598,7 @@ export default function PackagesScreen() {
 				authToken
 			);
 			if (!response.ok) {
-				await showError(response, 'Could not save trial settings.');
+				await showError(response, t('saveTrialFailed'));
 				return;
 			}
 			const json = await response.json();
@@ -602,10 +612,10 @@ export default function PackagesScreen() {
 						cooldown_hours: 24,
 					},
 			}));
-			setAppMessage?.({ type: 'message', message: 'Trial settings saved.' });
+			setAppMessage?.({ type: 'message', message: t('trialSaved') });
 		} catch (error) {
 			console.error('[PackagesScreen] save trial failed', error);
-			setAppMessage?.({ type: 'error', message: 'Could not save trial settings.' });
+			setAppMessage?.({ type: 'error', message: t('saveTrialFailed') });
 		} finally {
 			setSavingKey(null);
 		}
@@ -615,8 +625,8 @@ export default function PackagesScreen() {
 		setConfirmTarget({
 			type: 'package',
 			id: pkg.id,
-			title: 'Delete package',
-			message: `Delete "${pkg.label}"? This cannot be undone.`,
+			title: t('deletePackageTitle'),
+			message: tv('deletePackageConfirm', { label: pkg.label }),
 		});
 		toggleConfirm(true);
 	};
@@ -625,8 +635,10 @@ export default function PackagesScreen() {
 		setConfirmTarget({
 			type: 'profile',
 			id: profile.group,
-			title: 'Delete RADIUS profile',
-			message: `Delete "${profile.display_name || profile.group}"? Packages selling this plan may stop working.`,
+			title: t('deleteProfileTitle'),
+			message: tv('deleteProfileConfirm', {
+				name: profile.display_name || profile.group,
+			}),
 		});
 		toggleConfirm(true);
 	};
@@ -641,7 +653,7 @@ export default function PackagesScreen() {
 					? await PackageService.deletePortalPackage(target.id, authToken)
 					: await PackageService.deleteSharedProfile(target.id, authToken);
 			if (!response.ok) {
-				await showError(response, 'Could not delete the selected item.');
+				await showError(response, t('deleteFailed'));
 				return;
 			}
 			toggleConfirm(false);
@@ -650,10 +662,10 @@ export default function PackagesScreen() {
 			} else {
 				await Promise.all([loadProfiles(false), loadPackages(false)]);
 			}
-			setAppMessage?.({ type: 'message', message: 'Deleted.' });
+			setAppMessage?.({ type: 'message', message: t('deleted') });
 		} catch (error) {
 			console.error('[PackagesScreen] delete failed', error);
-			setAppMessage?.({ type: 'error', message: 'Could not delete the selected item.' });
+			setAppMessage?.({ type: 'error', message: t('deleteFailed') });
 		} finally {
 			setSavingKey(null);
 		}
@@ -675,10 +687,10 @@ export default function PackagesScreen() {
 					lightColor={textColor}
 					darkColor={textColor}
 				>
-					Portal packages
+					{t('portalPackagesTitle')}
 				</ThemedText>
 				<ThemedButton
-					title={t('addPackage', 'Add package')}
+					title={t('addPackage')}
 					onPress={openCreatePackage}
 					icon='plus'
 					lightColor={selectedBg}
@@ -692,12 +704,12 @@ export default function PackagesScreen() {
 				lightColor={mutedText}
 				darkColor={mutedText}
 			>
-				{t('portalPackagesDescription', '')}
+				{t('portalPackagesDescription')}
 			</ThemedText>
 
 			{loadingPackages && portalPackages.length === 0 ? (
 				<ThemedText lightColor={mutedText} darkColor={mutedText}>
-					Loading packages…
+					{t('loadingPackages')}
 				</ThemedText>
 			) : portalPackages.length === 0 ? (
 				<ThemedView
@@ -706,7 +718,7 @@ export default function PackagesScreen() {
 					darkColor={chipBg}
 				>
 					<ThemedText lightColor={mutedText} darkColor={mutedText}>
-						{t('noPackages', 'No packages found.')}
+						{t('noPackages')}
 					</ThemedText>
 				</ThemedView>
 			) : (
@@ -741,7 +753,8 @@ export default function PackagesScreen() {
 										lightColor={mutedText}
 										darkColor={mutedText}
 									>
-										{pkg.owner?.name ?? (pkg.is_global ? 'Platform' : 'You')}{' '}
+										{pkg.owner?.name ??
+											(pkg.is_global ? t('platform') : t('you'))}{' '}
 										· {pkg.profile?.group ?? pkg.rad_group}
 									</ThemedText>
 								</ThemedView>
@@ -753,7 +766,7 @@ export default function PackagesScreen() {
 									lightColor={pkg.is_active ? selectedBg : errorColor}
 									darkColor={pkg.is_active ? selectedBg : errorColor}
 								>
-									{pkg.is_active ? 'active' : 'inactive'}
+									{pkg.is_active ? t('active') : t('inactive')}
 								</ThemedText>
 							</ThemedView>
 
@@ -772,7 +785,7 @@ export default function PackagesScreen() {
 										lightColor={mutedText}
 										darkColor={mutedText}
 									>
-										Price (UGX)
+										{translateWithVariables(t('Price'), { currency })}
 									</ThemedText>
 									<ThemedText
 										style={styles.metricValue}
@@ -792,7 +805,7 @@ export default function PackagesScreen() {
 										lightColor={mutedText}
 										darkColor={mutedText}
 									>
-										Devices
+										{t('devices')}
 									</ThemedText>
 									<ThemedText
 										style={styles.metricValue}
@@ -812,7 +825,7 @@ export default function PackagesScreen() {
 										lightColor={mutedText}
 										darkColor={mutedText}
 									>
-										Routers
+										{t('routersCount')}
 									</ThemedText>
 									<ThemedText
 										style={styles.metricValue}
@@ -830,7 +843,7 @@ export default function PackagesScreen() {
 								darkColor='transparent'
 							>
 								<ThemedButton
-									title='Edit'
+									title={t('edit')}
 									onPress={() => openEditPackage(pkg)}
 									icon='edit.outline'
 									disabled={!canManage}
@@ -841,7 +854,7 @@ export default function PackagesScreen() {
 									darkTextColor={textColor}
 								/>
 								<ThemedButton
-									title='Delete'
+									title={t('delete')}
 									onPress={() => requestDeletePackage(pkg)}
 									icon='delete.outline'
 									disabled={!canManage}
@@ -870,20 +883,20 @@ export default function PackagesScreen() {
 				lightColor={textColor}
 				darkColor={textColor}
 			>
-				Routers & rate limits
+				{t('tabRoutersRateLimits')}
 			</ThemedText>
 			<ThemedText
 				style={styles.help}
 				lightColor={mutedText}
 				darkColor={mutedText}
 			>
-				{t('routersRateLimitsDescription', '')}
+				{t('routersRateLimitsDescription')}
 			</ThemedText>
 
 			{portalPackages.length === 0 ? (
 				<ThemedView style={styles.empty} lightColor={chipBg} darkColor={chipBg}>
 					<ThemedText lightColor={mutedText} darkColor={mutedText}>
-						{t('noPackages', 'No packages found.')}
+						{t('noPackages')}
 					</ThemedText>
 				</ThemedView>
 			) : (
@@ -951,11 +964,11 @@ export default function PackagesScreen() {
 					lightColor={textColor}
 					darkColor={textColor}
 				>
-					RADIUS profiles
+					{t('tabRadiusProfiles')}
 				</ThemedText>
 				{canManageProfiles ? (
 					<ThemedButton
-						title={t('createGlobalProfile', 'Create global profile')}
+						title={t('createGlobalProfile')}
 						onPress={openCreateProfile}
 						icon='plus'
 						lightColor={selectedBg}
@@ -970,7 +983,7 @@ export default function PackagesScreen() {
 				lightColor={mutedText}
 				darkColor={mutedText}
 			>
-				{t('radiusProfilesDescription', '')}
+				{t('radiusProfilesDescription')}
 			</ThemedText>
 
 			{profilesError ? (
@@ -981,12 +994,12 @@ export default function PackagesScreen() {
 				</ThemedView>
 			) : loadingProfiles && profiles.length === 0 ? (
 				<ThemedText lightColor={mutedText} darkColor={mutedText}>
-					Loading profiles…
+					{t('loadingProfiles')}
 				</ThemedText>
 			) : profiles.length === 0 ? (
 				<ThemedView style={styles.empty} lightColor={chipBg} darkColor={chipBg}>
 					<ThemedText lightColor={mutedText} darkColor={mutedText}>
-						{t('noProfiles', 'No profiles found.')}
+						{t('noProfiles')}
 					</ThemedText>
 				</ThemedView>
 			) : (
@@ -1019,7 +1032,8 @@ export default function PackagesScreen() {
 									lightColor={mutedText}
 									darkColor={mutedText}
 								>
-									{profile.group} · {profile.shared ? 'Shared' : 'Owner'}
+									{profile.group} ·{' '}
+									{profile.shared ? t('shared') : t('owner')}
 								</ThemedText>
 							</ThemedView>
 							<ThemedText
@@ -1027,7 +1041,10 @@ export default function PackagesScreen() {
 								lightColor={mutedText}
 								darkColor={mutedText}
 							>
-								{formatAmount(profile.price ?? 0, 0)} UGX
+								{tv('amountWithCurrency', {
+									amount: formatAmount(profile.price ?? 0, 0),
+									currency,
+								})}
 							</ThemedText>
 						</ThemedView>
 
@@ -1046,14 +1063,14 @@ export default function PackagesScreen() {
 									lightColor={mutedText}
 									darkColor={mutedText}
 								>
-									Duration
+									{t('duration')}
 								</ThemedText>
 								<ThemedText
 									style={styles.metricValue}
 									lightColor={textColor}
 									darkColor={textColor}
 								>
-									{profileDuration(profile)}
+									{profileDuration(profile, tv)}
 								</ThemedText>
 							</ThemedView>
 							<ThemedView
@@ -1066,14 +1083,14 @@ export default function PackagesScreen() {
 									lightColor={mutedText}
 									darkColor={mutedText}
 								>
-									Rate limit
+									{t('rateLimit')}
 								</ThemedText>
 								<ThemedText
 									style={styles.metricValue}
 									lightColor={textColor}
 									darkColor={textColor}
 								>
-									{profile.rate_limit ?? 'open'}
+									{profile.rate_limit ?? t('open')}
 								</ThemedText>
 							</ThemedView>
 							<ThemedView
@@ -1086,7 +1103,7 @@ export default function PackagesScreen() {
 									lightColor={mutedText}
 									darkColor={mutedText}
 								>
-									Devices
+									{t('devices')}
 								</ThemedText>
 								<ThemedText
 									style={styles.metricValue}
@@ -1105,7 +1122,7 @@ export default function PackagesScreen() {
 								darkColor='transparent'
 							>
 								<ThemedButton
-									title='Edit'
+									title={t('edit')}
 									onPress={() => openEditProfile(profile)}
 									icon='edit.outline'
 									style={styles.actionButton}
@@ -1115,7 +1132,7 @@ export default function PackagesScreen() {
 									darkTextColor={textColor}
 								/>
 								<ThemedButton
-									title='Delete'
+									title={t('delete')}
 									onPress={() => requestDeleteProfile(profile)}
 									icon='delete.outline'
 									style={styles.actionButton}
@@ -1143,20 +1160,20 @@ export default function PackagesScreen() {
 				lightColor={textColor}
 				darkColor={textColor}
 			>
-				Free trial
+				{t('tabFreeTrial')}
 			</ThemedText>
 			<ThemedText
 				style={styles.help}
 				lightColor={mutedText}
 				darkColor={mutedText}
 			>
-				{t('freeTrialDescription', '')}
+				{t('freeTrialDescription')}
 			</ThemedText>
 
 			{!routers?.length ? (
 				<ThemedView style={styles.empty} lightColor={chipBg} darkColor={chipBg}>
 					<ThemedText lightColor={mutedText} darkColor={mutedText}>
-						No routers are available yet.
+						{t('noRoutersYet')}
 					</ThemedText>
 				</ThemedView>
 			) : (
@@ -1203,7 +1220,7 @@ export default function PackagesScreen() {
 						darkColor={textColor}
 						style={styles.heading}
 					>
-						{t('title', 'Packages / Profiles')}
+						{t('title')}
 					</ThemedText>
 					<ThemedView
 						style={styles.headerActions}
@@ -1212,7 +1229,7 @@ export default function PackagesScreen() {
 					>
 						{canManageProfiles ? (
 							<ThemedButton
-								title={t('createGlobalProfile', 'Create global profile')}
+								title={t('createGlobalProfile')}
 								onPress={openCreateProfile}
 								style={styles.headerButton}
 								icon='plus'
@@ -1244,7 +1261,7 @@ export default function PackagesScreen() {
 					lightColor={mutedText}
 					darkColor={mutedText}
 				>
-					{t('subtitle', '')}
+					{t('subtitle')}
 				</ThemedText>
 
 				<ThemedView style={{ marginVertical: 8 }} lightColor={bg} darkColor={bg}>
@@ -1289,18 +1306,18 @@ export default function PackagesScreen() {
 			<Prompt
 				visible={showConfirm}
 				fadeAnim={confirmAnim}
-				title={confirmTarget?.title ?? 'Delete'}
+				title={confirmTarget?.title ?? t('delete')}
 				message={confirmTarget?.message ?? ''}
 				onClose={() => toggleConfirm(false)}
 				buttons={[
 					{
-						title: 'Cancel',
+						title: buttonsCopy.cancel,
 						color: chipBg,
 						textColor,
 						action: () => toggleConfirm(false),
 					},
 					{
-						title: 'Delete',
+						title: t('delete'),
 						color: errorColor,
 						textColor: '#fff',
 						action: () => {

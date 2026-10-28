@@ -7,6 +7,8 @@ import { ThemedSwitch } from '@/components/ThemedSwitch';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { fontSize, fontWeight } from '@/constants/Font';
+import translations from '@/constants/Trans';
+import { useGeneral } from '@/context/GeneralContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { ApiRouter, TrialSettings } from '@/types';
 
@@ -30,6 +32,11 @@ export default function TrialSettingsRow({
 	const border = useThemeColor({}, 'borderDark');
 	const buttonBg = useThemeColor({}, 'bim');
 	const buttonText = useThemeColor({}, 'authButtonText');
+	const { language } = useGeneral();
+
+	const packagesCopy = translations[language]?.categories?.packages ?? translations.en.categories.packages;
+	const t = (key: string) =>
+		packagesCopy[key] ?? translations.en.categories.packages[key] ?? '';
 
 	const [enabled, setEnabled] = useState(false);
 	const [minutes, setMinutes] = useState('15');
@@ -74,7 +81,7 @@ export default function TrialSettingsRow({
 						lightColor={mutedText}
 						darkColor={mutedText}
 					>
-						{enabled ? 'enabled' : 'disabled'}
+						{enabled ? t('enabled') : t('disabled')}
 					</ThemedText>
 					<ThemedSwitch value={enabled} onValueChange={setEnabled} />
 				</ThemedView>
@@ -86,7 +93,7 @@ export default function TrialSettingsRow({
 					lightColor={mutedText}
 					darkColor={mutedText}
 				>
-					Loading trial settings…
+					{t('loadingTrialSettings')}
 				</ThemedText>
 			) : (
 				<ThemedView
@@ -95,8 +102,8 @@ export default function TrialSettingsRow({
 					darkColor='transparent'
 				>
 					<ThemedInput
-						label='Trial time (minutes)'
-						placeholder='e.g. 15'
+						label={t('trialTime')}
+						placeholder={t('trialMinutesPlaceholder')}
 						keyboardType='number-pad'
 						value={minutes}
 						setValue={setMinutes}
@@ -104,7 +111,7 @@ export default function TrialSettingsRow({
 						style={{ borderColor: border }}
 					/>
 					<ThemedButton
-						title='Save'
+						title={t('save')}
 						onPress={() => {
 							if (!canSave) return;
 							void onSave(enabled, Math.round(parsedMinutes));

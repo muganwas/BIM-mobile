@@ -8,6 +8,9 @@ import { ThemedSwitch } from '@/components/ThemedSwitch';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { fontSize, fontWeight } from '@/constants/Font';
+import translations from '@/constants/Trans';
+import { useGeneral } from '@/context/GeneralContext';
+import { translateWithVariables } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { PortalPackage, SharedRadiusProfile } from '@/types';
 
@@ -54,6 +57,19 @@ export default function PackageForm({
 	const selectedBg = useThemeColor({}, 'bim');
 	const selectedText = useThemeColor({}, 'authButtonText');
 	const chipBg = useThemeColor({}, 'listItemBackground');
+	const { language } = useGeneral();
+
+	const packagesCopy = translations[language]?.categories?.packages ?? translations.en.categories.packages;
+	const buttonsCopy =
+		translations[language]?.categories?.buttons ??
+		translations.en.categories.buttons;
+	const currency =
+		translations[language]?.categories?.dashboard?.currency ??
+		translations.en.categories.dashboard.currency;
+	const t = (key: string) =>
+		packagesCopy[key] ?? translations.en.categories.packages[key] ?? '';
+	const tv = (key: string, variables: Record<string, string | number>) =>
+		translateWithVariables(t(key), variables);
 
 	const [label, setLabel] = useState('');
 	const [translation, setTranslation] = useState('');
@@ -139,20 +155,20 @@ export default function PackageForm({
 					lightColor={textColor}
 					darkColor={textColor}
 				>
-					{mode === 'create' ? 'Add package' : 'Edit package'}
+					{mode === 'create' ? t('addPackage') : t('editPackage')}
 				</ThemedText>
 
 				<ThemedInput
-					label='Label (shown on the portal)'
-					placeholder='e.g. Buy 1,000 for 24 hours'
+					label={t('labelOnPortal')}
+					placeholder={t('labelPlaceholder')}
 					value={label}
 					setValue={setLabel}
 					style={{ borderColor: inputBorder }}
 				/>
 
 				<ThemedInput
-					label='Label (Luganda, optional)'
-					placeholder='Optional translation for the portal'
+					label={t('labelLuganda')}
+					placeholder={t('labelLugandaPlaceholder')}
 					value={translation}
 					setValue={setTranslation}
 					style={{ borderColor: inputBorder }}
@@ -165,8 +181,8 @@ export default function PackageForm({
 						darkColor='transparent'
 					>
 						{[
-							{ key: 'shared' as const, label: 'Shared plan' },
-							{ key: 'private' as const, label: 'Private plan' },
+							{ key: 'shared' as const, label: t('sharedPlan') },
+							{ key: 'private' as const, label: t('privatePlan') },
 						].map((option) => {
 							const selected = planMode === option.key;
 							return (
@@ -208,7 +224,7 @@ export default function PackageForm({
 							lightColor={textColor}
 							darkColor={textColor}
 						>
-							Shared plan
+							{t('sharedPlan')}
 						</ThemedText>
 						{mode === 'edit' ? (
 							<ThemedText
@@ -216,8 +232,7 @@ export default function PackageForm({
 								lightColor={mutedText}
 								darkColor={mutedText}
 							>
-								Shared-plan prices and limits are managed from the RADIUS
-								profiles tab.
+								{t('sharedPlanManaged')}
 							</ThemedText>
 						) : profiles.length === 0 ? (
 							<ThemedText
@@ -225,7 +240,7 @@ export default function PackageForm({
 								lightColor={mutedText}
 								darkColor={mutedText}
 							>
-								No shared RADIUS profiles are available yet.
+								{t('noSharedProfiles')}
 							</ThemedText>
 						) : (
 							<ScrollView
@@ -257,7 +272,10 @@ export default function PackageForm({
 												lightColor={selected ? selectedText : textColor}
 												darkColor={selected ? selectedText : textColor}
 											>
-												{profile.display_name} · {profile.price ?? 0}
+												{tv('profileSummary', {
+													name: profile.display_name,
+													price: profile.price ?? 0,
+												})}
 											</ThemedText>
 										</TouchableOpacity>
 									);
@@ -270,9 +288,11 @@ export default function PackageForm({
 								lightColor={mutedText}
 								darkColor={mutedText}
 							>
-								{selectedProfile.duration ?? '—'} ·{' '}
-								{selectedProfile.rate_limit ?? 'Open speed'} ·{' '}
-								{selectedProfile.devices} device(s)
+								{tv('profileDetails', {
+									duration: selectedProfile.duration ?? '—',
+									rate: selectedProfile.rate_limit ?? t('openSpeed'),
+									devices: selectedProfile.devices,
+								})}
 							</ThemedText>
 						) : null}
 						{mode === 'create' && isAdmin ? (
@@ -286,7 +306,7 @@ export default function PackageForm({
 									darkColor={textColor}
 									style={{ flex: 1 }}
 								>
-									Global package (visible to all accounts)
+									{t('globalPackageToggle')}
 								</ThemedText>
 								<ThemedSwitch value={isGlobal} onValueChange={setIsGlobal} />
 							</ThemedView>
@@ -299,30 +319,30 @@ export default function PackageForm({
 						darkColor='transparent'
 					>
 						<ThemedInput
-							label='Price (UGX)'
-							placeholder='e.g. 1000'
+							label={translateWithVariables(t('Price'), { currency })}
+							placeholder={t('pricePlaceholder')}
 							keyboardType='number-pad'
 							value={price}
 							setValue={setPrice}
 							style={{ borderColor: inputBorder }}
 						/>
 						<ThemedInput
-							label='Duration'
-							placeholder='e.g. 24h or 7d'
+							label={t('duration')}
+							placeholder={t('durationPlaceholder')}
 							value={duration}
 							setValue={setDuration}
 							style={{ borderColor: inputBorder }}
 						/>
 						<ThemedInput
-							label='Bandwidth'
-							placeholder='e.g. 5M/5M; 0 = open'
+							label={t('bandwidth')}
+							placeholder={t('bandwidthPlaceholder')}
 							value={bandwidth}
 							setValue={setBandwidth}
 							style={{ borderColor: inputBorder }}
 						/>
 						<ThemedInput
-							label='Simultaneous devices'
-							placeholder='e.g. 1'
+							label={t('simultaneousDevices')}
+							placeholder={t('devicesPlaceholder')}
 							keyboardType='number-pad'
 							value={devices}
 							setValue={setDevices}
@@ -339,7 +359,7 @@ export default function PackageForm({
 									darkColor={textColor}
 									style={{ flex: 1 }}
 								>
-									Active
+									{t('active')}
 								</ThemedText>
 								<ThemedSwitch value={isActive} onValueChange={setIsActive} />
 							</ThemedView>
@@ -353,7 +373,7 @@ export default function PackageForm({
 					darkColor='transparent'
 				>
 					<ThemedButton
-						title='Cancel'
+						title={buttonsCopy.cancel}
 						onPress={() => toggleVisible(false)}
 						style={{ maxWidth: '40%' }}
 						lightColor={chipBg}
@@ -362,7 +382,11 @@ export default function PackageForm({
 						darkTextColor={textColor}
 					/>
 					<ThemedButton
-						title={mode === 'create' ? 'Create package' : 'Save changes'}
+						title={
+							mode === 'create'
+								? buttonsCopy.createPackage
+								: buttonsCopy.saveChanges
+						}
 						onPress={submit}
 						loading={saving}
 						disabled={!canSubmit}

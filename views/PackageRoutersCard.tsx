@@ -8,6 +8,9 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import TileContainer from '@/components/TileContainer';
 import { fontSize, fontWeight } from '@/constants/Font';
+import translations from '@/constants/Trans';
+import { useGeneral } from '@/context/GeneralContext';
+import { translateWithVariables } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { PortalPackage } from '@/types';
 
@@ -29,6 +32,11 @@ export default function PackageRoutersCard({ pkg, saving, onSave }: Props) {
 	const staleColor = useThemeColor({}, 'yellow');
 	const buttonBg = useThemeColor({}, 'bim');
 	const buttonText = useThemeColor({}, 'authButtonText');
+	const { language } = useGeneral();
+
+	const packagesCopy = translations[language]?.categories?.packages ?? translations.en.categories.packages;
+	const t = (key: string) =>
+		packagesCopy[key] ?? translations.en.categories.packages[key] ?? '';
 
 	const [visible, setVisible] = useState<Record<string, boolean>>({});
 	const [limits, setLimits] = useState<Record<string, string>>({});
@@ -90,9 +98,13 @@ export default function PackageRoutersCard({ pkg, saving, onSave }: Props) {
 						lightColor={mutedText}
 						darkColor={mutedText}
 					>
-						{pkg.profile?.group ?? pkg.rad_group} · Plan speed:{' '}
-						{pkg.profile?.rate_limit ?? 'open'} · Owner:{' '}
-						{pkg.owner?.name ?? (pkg.is_global ? 'Platform' : 'You')}
+						{translateWithVariables(t('routersPlanLine'), {
+							group: pkg.profile?.group ?? pkg.rad_group,
+							rate: pkg.profile?.rate_limit ?? t('open'),
+							owner:
+								pkg.owner?.name ??
+								(pkg.is_global ? t('platform') : t('you')),
+						})}
 					</ThemedText>
 				</ThemedView>
 				<ThemedText
@@ -100,7 +112,7 @@ export default function PackageRoutersCard({ pkg, saving, onSave }: Props) {
 					lightColor={mutedText}
 					darkColor={mutedText}
 				>
-					{pkg.is_global ? 'global package' : 'owner package'}
+					{pkg.is_global ? t('globalPackage') : t('ownerPackage')}
 				</ThemedText>
 			</ThemedView>
 
@@ -109,9 +121,7 @@ export default function PackageRoutersCard({ pkg, saving, onSave }: Props) {
 				lightColor={mutedText}
 				darkColor={mutedText}
 			>
-				Tick a router to offer the package there. Leave Rate limit blank to
-				inherit the plan&apos;s speed, or enter a speed (for example 5M/5M).
-				Enter 0 for open/unlimited.
+				{t('routersCardHelp')}
 			</ThemedText>
 
 			{(pkg.routers ?? []).length === 0 ? (
@@ -120,7 +130,7 @@ export default function PackageRoutersCard({ pkg, saving, onSave }: Props) {
 					darkColor={mutedText}
 					style={{ paddingVertical: 12 }}
 				>
-					No routers are available for this package.
+					{t('noPackageRouters')}
 				</ThemedText>
 			) : (
 				(pkg.routers ?? []).map((router, index) => (
@@ -165,12 +175,14 @@ export default function PackageRoutersCard({ pkg, saving, onSave }: Props) {
 								lightColor={staleColor}
 								darkColor={staleColor}
 							>
-								stale
+								{t('stale')}
 							</ThemedText>
 						) : null}
 						<ThemedInput
-							label='Rate limit'
-							placeholder={`Inherit (${pkg.profile?.rate_limit ?? 'open'})`}
+							label={t('rateLimit')}
+							placeholder={translateWithVariables(t('inheritRate'), {
+								rate: pkg.profile?.rate_limit ?? t('open'),
+							})}
 							value={limits[router.id] ?? ''}
 							setValue={(value) =>
 								setLimits((prev) => ({ ...prev, [router.id]: value }))
@@ -183,8 +195,13 @@ export default function PackageRoutersCard({ pkg, saving, onSave }: Props) {
 							lightColor={mutedText}
 							darkColor={mutedText}
 						>
-							Effective: {router.rate_limit_source === 'override' ? 'override' : 'plan'}{' '}
-							· {router.effective_rate_limit ?? 'open'}
+							{translateWithVariables(t('effectiveLine'), {
+								source:
+									router.rate_limit_source === 'override'
+										? t('sourceOverride')
+										: t('sourcePlan'),
+								rate: router.effective_rate_limit ?? t('open'),
+							})}
 						</ThemedText>
 					</ThemedView>
 				))
@@ -200,14 +217,13 @@ export default function PackageRoutersCard({ pkg, saving, onSave }: Props) {
 					lightColor={textColor}
 					darkColor={textColor}
 				>
-					Reconnect online vouchers now (brief drop; MAC cookies log them back
-					in)
+					{t('reconnectVouchers')}
 				</ThemedText>
 				<ThemedSwitch value={reconnect} onValueChange={setReconnect} />
 			</ThemedView>
 
 			<ThemedButton
-				title='Save router settings'
+				title={t('saveRouterSettings')}
 				onPress={save}
 				loading={saving}
 				icon='package'
