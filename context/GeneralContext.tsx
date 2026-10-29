@@ -166,6 +166,26 @@ const GeneralContext = createContext<GeneralContextType | undefined>(undefined);
 const HISTORY_KEY = 'BIM_history_v1';
 const MAX_HISTORY = 5;
 
+// AsyncStorage calls are fire-and-forget here: storage failures must never break
+// navigation, and some environments only expose partially mocked storage.
+const writeHistoryStorage = (value: string) => {
+	try {
+		const pending = AsyncStorage.setItem(HISTORY_KEY, value) as unknown as
+			| Promise<void>
+			| undefined;
+		pending?.catch?.(() => { });
+	} catch { }
+};
+
+const clearHistoryStorage = () => {
+	try {
+		const pending = AsyncStorage.removeItem(HISTORY_KEY) as unknown as
+			| Promise<void>
+			| undefined;
+		pending?.catch?.(() => { });
+	} catch { }
+};
+
 // Cross-platform runtime global for React Native (no browser `window` fallback)
 // Use `globalThis` when available, otherwise `global` (Node-like runtimes).
 const runtime: any =
@@ -292,19 +312,10 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		(!_ttlMs || Date.now() - (_enabledAt || 0) < _ttlMs)
 	);
 
-	// Load persisted history from AsyncStorage on mount (React Native compatible)
+	// View history is session scoped: never restore entries persisted by an older
+	// run, they can point at screens (and detail ids) that no longer exist.
 	useEffect(() => {
-		(async () => {
-			try {
-				const raw = await AsyncStorage.getItem(HISTORY_KEY);
-				if (raw) {
-					const parsed = JSON.parse(raw);
-					if (Array.isArray(parsed)) setHistory(parsed as string[]);
-				}
-			} catch {
-				// ignore
-			}
-		})();
+		clearHistoryStorage();
 	}, []);
 
 	// Keep an up-to-date ref of history so we can read it synchronously
@@ -313,6 +324,18 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	useEffect(() => {
 		historyRef.current = history;
 	}, [history]);
+
+	// Start each authenticated session with a clean history so back navigation can
+	// never lead into auth screens or routes from a previous session.
+	const wasAuthenticatedRef = React.useRef(false);
+	useEffect(() => {
+		const isAuthenticated = Boolean(authToken);
+		if (isAuthenticated && !wasAuthenticatedRef.current) {
+			setHistory([]);
+			writeHistoryStorage('[]');
+		}
+		wasAuthenticatedRef.current = isAuthenticated;
+	}, [authToken]);
 
 	useEffect(() => {
 		const show = Keyboard.addListener('keyboardDidShow', () =>
@@ -371,6 +394,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				// Reset state
 				setUser(null);
 				setNotifications([]);
+				// Drop the view history so the next session starts clean
+				setHistory([]);
+				writeHistoryStorage('[]');
 				setPendingRegistration?.(null);
 				setPending2FASetup?.(null);
 				setPendingPhone?.(null);
@@ -697,12 +723,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 	const persist = (arr: string[]) => {
 		try {
-			const payload = JSON.stringify(arr);
-			// AsyncStorage is used for React Native and web compatibility
-			AsyncStorage.setItem(HISTORY_KEY, payload).catch((e) => {
-				if (runtime?.__BIM_HISTORY_DEBUG__)
-					console.debug('[GeneralContext] persist failed', e);
-			});
+			writeHistoryStorage(JSON.stringify(arr));
 		} catch (e) {
 			if (runtime?.__BIM_HISTORY_DEBUG__)
 				console.debug('[GeneralContext] persist failed', e);
@@ -814,9 +835,14 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			// until router methods are available before giving up.
 			const tryNavigate = (attempt = 0) => {
 				const maxAttempts = 12; // ~1.2s
-				if ((router as any)?.replace) {
+				const anyRouter = router as any;
+				// NB: the authenticated area is a Drawer navigator, so every screen
+				// (including nested router routes) is a drawer screen. A POP_TO
+				// (`dismissTo`) action is not handled there and silently does nothing,
+				// while REPLACE maps to JUMP_TO and works. Keep replace-first.
+				if (anyRouter?.replace) {
 					try {
-						(router.replace as any)(path);
+						anyRouter.replace(path);
 						return;
 					} catch { }
 				}
@@ -851,9 +877,12 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			// No previous path recorded, use a fallback navigation
 			let currentPath = '';
 			try {
-				const anyRouter = router as any;
-				currentPath =
-					anyRouter?.pathname || anyRouter?.asPath || anyRouter?.route || '';
+				currentPath = pathNameRef.current || '';
+				if (!currentPath) {
+					const anyRouter = router as any;
+					currentPath =
+						anyRouter?.pathname || anyRouter?.asPath || anyRouter?.route || '';
+				}
 			} catch { }
 			if (currentPath && /\/routers\/hotspots\//.test(currentPath)) {
 				action = () => navigateToPath('/(authenticated)/packages');
@@ -864,6 +893,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			// Pop current and navigate to the immediate previous entry
 			const targetPath = prev[prev.length - 2];
 			const newHistory = prev.slice(0, -1);
+			// Keep the ref in sync immediately so rapid consecutive back presses
+			// don't read a stale stack and pop twice.
+			historyRef.current = newHistory;
 			setHistory(newHistory);
 			persist(newHistory);
 			action = () => {

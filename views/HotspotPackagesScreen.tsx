@@ -21,7 +21,7 @@ import { Animated, useColorScheme } from 'react-native';
 export default function HotspotPackagesScreen() {
 	const navigation = useNavigation<any>();
 	const { hotspotId, hotspotName } = useLocalSearchParams() as { hotspotId?: string, hotspotName?: string };
-	const { handleUpdateHistory, user, language } = useGeneral();
+	const { user, language } = useGeneral();
 	const { packages, setPackages, fetchPackages } = useTransaction();
 	useColorScheme();
 	// Theme helpers
@@ -78,12 +78,6 @@ export default function HotspotPackagesScreen() {
 			: '/(authenticated)/routers/packages';
 	}, [hotspotId]);
 	useTrackHistory(trackPath);
-
-	// Seed parent entry for history
-	useEffect(() => {
-		handleUpdateHistory('/(authenticated)/packages');
-		handleUpdateHistory(trackPath);
-	}, [handleUpdateHistory, trackPath]);
 
 	useEffect(() => {
 		navigation.setOptions({

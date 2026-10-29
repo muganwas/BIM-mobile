@@ -34,9 +34,9 @@ export default function PackageRouterHotspotsScreen() {
 	const expoRouter = useRouter();
 	const { rId } = useLocalSearchParams() as { rId?: string };
 	const fadeAnim = useAnimatedValue(0);
-	// memoize the path so useTrackHistory doesn't receive a new string each render
+		// memoize the path so useTrackHistory doesn't receive a new string each render
 	const trackPath = useMemo(() => {
-		return rId ? '/(authenticated)/routers/hotspots/' + rId : undefined;
+		return rId ? '/(authenticated)/routers/hotspots/packages/' + rId : undefined;
 	}, [rId]);
 	useTrackHistory(trackPath);
 	const { packages, fetchPackages, routers } = useTransaction();

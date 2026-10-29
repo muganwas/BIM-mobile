@@ -68,7 +68,7 @@ export default function HotspotVouchersScreen() {
 	// Seed parent immediately on mount to guarantee ordering before current route push
 	useEffect(() => {
 		if (!vRId) return;
-		handleUpdateHistory(`/(authenticated)/routers/preview/${vRId}`);
+		handleUpdateHistory(`/(authenticated)/routers/vouchers/${vRId}`);
 	}, [handleUpdateHistory, vRId]);
 
 	// Track current route after parent seeding is registered

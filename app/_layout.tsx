@@ -15,7 +15,6 @@ import { Colors } from '@/constants/Colors';
 import { GeneralProvider, useGeneral } from '@/context/GeneralContext';
 import { isAppReady, onAppReady } from '@/helpers/appReady';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import useTrackHistory from '@/hooks/useTrackHistory';
 import {
 	ActivityIndicator,
 	Animated,
@@ -38,7 +37,7 @@ function RootLayoutContent() {
 	});
 
 	// record navigation history across the app
-	useTrackHistory();
+	// (individual screens register their own concrete path in useTrackHistory)
 
 	useEffect(() => {
 		try {
