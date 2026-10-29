@@ -18,8 +18,7 @@ import { TransactionProvider } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useRouter } from 'expo-router';
 // use a runtime require to access DrawerContentScrollView to avoid missing type exports
-import Loader from '@/components/Loader';
-import { Animated, Platform, TouchableOpacity, View } from 'react-native';
+import { Platform, TouchableOpacity, View } from 'react-native';
 
 function CustomDrawerContent(props: any) {
 	const drawerBackground = useThemeColor({}, 'drawerBackground');
@@ -211,9 +210,6 @@ export default function DrawerLayout() {
 	const drawerItem = useThemeColor({}, 'drawerItem');
 	const drawerInactiveItem = useThemeColor({}, 'drawerInactiveItem');
 
-	// Fade animation value used by the shared Loader component while redirecting
-	const fadeAnimRef = React.useRef(new Animated.Value(1));
-
 	const router = useRouter();
 
 	// Redirect to login only after auth verification is complete and no token is present.
@@ -225,14 +221,9 @@ export default function DrawerLayout() {
 		}
 	}, [authToken, verifyingAuth, router]);
 
+	// The global auth overlay in the root layout covers the no-token state.
 	if (!authToken) {
-		return (
-			<Loader
-				showOverlay={true}
-				fadeAnim={fadeAnimRef.current}
-				toggleShowOverlay={() => {}}
-			/>
-		);
+		return null;
 	}
 
 	return (

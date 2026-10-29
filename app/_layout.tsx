@@ -32,7 +32,7 @@ import {
 function RootLayoutContent() {
 	const colorScheme = useColorScheme();
 	const Anim = useAnimatedValue(0); // Example of using an animated value
-	const { online, verifyingAuth } = useGeneral(); // Get online and auth verifying status from context
+	const { online, verifyingAuth, authToken } = useGeneral(); // Get online and auth verifying status from context
 	const [loaded] = useFonts({
 		SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
 	});
@@ -235,9 +235,10 @@ function RootLayoutContent() {
 				<Stack.Screen name='(authenticated)' options={{ headerShown: false }} />
 				<Stack.Screen name='+not-found' />
 			</Stack>
-			{/* Auth-verification loader: blocks UI until token is verified. Simple
-			    absolute overlay — no Portal/Modal needed, guaranteed to appear. */}
-			{verifyingAuth && (
+			{/* Single global auth loader: only blocks the UI during the initial boot
+			    check, before a token is available. Once a token exists the screens
+			    render their own loading indicators. */}
+			{verifyingAuth && !authToken && (
 				<View
 					style={{
 						...StyleSheet.absoluteFillObject,

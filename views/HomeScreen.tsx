@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
 	Dimensions,
 	GestureResponderEvent,
+	ActivityIndicator,
 	StyleSheet,
 	useColorScheme,
 } from 'react-native';
@@ -32,8 +33,16 @@ export default function HomeScreen() {
 		language,
 		user,
 		refreshDashboard,
+		dashboardLoading,
 		lastDashboardUpdated,
 	} = useGeneral();
+	const dashboard = user?.dashboard;
+	const hasDashboardData =
+		!!dashboard &&
+		(Array.isArray(dashboard.recentTransactions) ||
+			dashboard.todayTransactions !== undefined ||
+			Array.isArray(dashboard.routerBalances) ||
+			Array.isArray(dashboard.chartData));
 
 	// Keep a label that updates every 60s while a last-updated timestamp exists.
 	const [lastUpdatedLabel, setLastUpdatedLabel] = useState('');
@@ -142,6 +151,18 @@ export default function HomeScreen() {
 			});
 		});
 	}, []);
+
+	if (dashboardLoading && !hasDashboardData) {
+		return (
+			<ThemedView
+				style={styles.loadingContainer}
+				lightColor={background}
+				darkColor={background}
+			>
+				<ActivityIndicator size='large' color={bim} />
+			</ThemedView>
+		);
+	}
 
 	return (
 		<ParallaxScrollView
@@ -649,6 +670,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+	loadingContainer: {
+		flex: 1,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
 	titleContainer: {
 		flexDirection: 'row',
 		alignItems: 'center',

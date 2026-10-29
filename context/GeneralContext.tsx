@@ -1,4 +1,3 @@
-import Loader from '@/components/Loader';
 import Toast from '@/components/Toast';
 // apiBaseUrl removed — use service layer for endpoints
 import translations from '@/constants/Trans';
@@ -39,7 +38,7 @@ import React, {
 	useMemo,
 	useState,
 } from 'react';
-import { Animated, Keyboard, Platform } from 'react-native';
+import { Keyboard, Platform } from 'react-native';
 
 import { env } from '@/helpers/env';
 const DEV_OTP = env('DEV_OTP');
@@ -157,6 +156,7 @@ export interface GeneralContextType {
 
 	retryRefresh?: () => Promise<boolean>;
 	refreshDashboard?: (force?: boolean) => Promise<boolean>;
+	dashboardLoading: boolean;
 	lastDashboardUpdated?: number | null;
 	verifyingAuth?: boolean;
 }
@@ -180,6 +180,12 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
 	const router = useRouter();
 	const pathName = usePathname();
+	// Latest path kept in a ref so the auth-verification effect can read it
+	// without re-running (and re-showing the global loader) on every navigation.
+	const pathNameRef = React.useRef(pathName);
+	useEffect(() => {
+		pathNameRef.current = pathName;
+	}, [pathName]);
 	const netInfo = useNetInfo();
 	const totalMemory = (DeviceInfo as any)?.totalMemory;
 
@@ -245,32 +251,15 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [lastDashboardUpdated, setLastDashboardUpdated] = useState<
 		number | null
 	>(null);
+	const [dashboardLoading, setDashboardLoading] = useState(false);
 	// Flag to indicate we've finished the initial token load from SecureStore
 	const [initialTokenChecked, setInitialTokenChecked] =
 		useState<boolean>(false);
-	const loaderFadeAnimRef = React.useRef(new Animated.Value(0));
 	const [isAnimatable, setIsAnimatable] = useState<boolean>(false);
 	const [isHighEndDevice, setIsHighEndDevice] = useState<boolean>(false);
 	const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
 
 	const [history, setHistory] = useState<string[]>([]);
-
-	// Show loader instantly on auth check, animate only the fade-out
-	useEffect(() => {
-		try {
-			if (verifyingAuth) {
-				// Appear immediately — no animation delay
-				loaderFadeAnimRef.current.setValue(1);
-			} else {
-				// Smooth fade-out when auth resolves
-				Animated.timing(loaderFadeAnimRef.current, {
-					toValue: 0,
-					duration: 250,
-					useNativeDriver: true,
-				}).start();
-			}
-		} catch { }
-	}, [verifyingAuth]);
 
 	// Determine whether to enable detailed auth lifecycle debug. Sources:
 	// - build-time env: `process.env.BIM_AUTH_DEBUG` === 'true'
@@ -480,7 +469,10 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			}
 			if (authDebug)
 				console.debug('verifyAndSchedule: starting; authToken=', authToken);
-			setVerifyingAuth(true);
+			// No setVerifyingAuth(true) here: the blocking auth overlay is only for
+			// the initial boot check (its initial state). Re-arming it on every
+			// re-verification made the white overlay flash on top of the screen's
+			// own loading indicator during navigation.
 			try {
 				if (!authToken) {
 					if (expiryTimer) {
@@ -516,12 +508,12 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				// Merge returned user object into state when present
 				if (json.user) {
 					setUser((prev) => ({ ...prev ?? {}, ...json.user, platform: json.platform, account: json.active_account }));
-					console.log("[GeneralContext] path name", pathName)
+					const currentPath = pathNameRef.current;
 					const anyRouter = router;
 					if (
-						!pathName ||
-						pathName === '/' ||
-						pathName.startsWith('/(auth)')
+						!currentPath ||
+						currentPath === '/' ||
+						currentPath.startsWith('/(auth)')
 					) {
 						try {
 							anyRouter.replace('/(authenticated)/home');
@@ -626,7 +618,6 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 		authDebug,
 		attemptRefresh,
 		tr,
-		pathName,
 		router,
 		initialTokenChecked,
 	]);
@@ -978,26 +969,27 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			console.log({ force, authToken });
 			if (!user || !authToken) return false;
 
-			// If not forced, skip fetching when dashboard-like data already exists
-			if (!force) {
-				try {
-					const existing = user.dashboard;
-					if (
-						existing &&
-						typeof existing === 'object' &&
-						(Array.isArray((existing as any).recentTransactions) ||
-							(existing as any).todayTransactions !== undefined ||
-							Array.isArray((existing as any).routerBalances) ||
-							Array.isArray((existing as any).chartData))
-					) {
-						return false;
-					}
-				} catch (err: any) {
-					console.log("[GeneralContext] current dashboard err ", err);
-				}
-			}
-
+			setDashboardLoading(true);
 			try {
+				// If not forced, skip fetching when dashboard-like data already exists
+				if (!force) {
+					try {
+						const existing = user.dashboard;
+						if (
+							existing &&
+							typeof existing === 'object' &&
+							(Array.isArray((existing as any).recentTransactions) ||
+								(existing as any).todayTransactions !== undefined ||
+								Array.isArray((existing as any).routerBalances) ||
+								Array.isArray((existing as any).chartData))
+						) {
+							return false;
+						}
+					} catch (err: any) {
+						console.log("[GeneralContext] current dashboard err ", err);
+					}
+				}
+
 				const resp = await fetchDashboard(String(authToken));
 				try {
 					const body: GetDashboardResponse = await resp.json();
@@ -1021,6 +1013,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 							}
 							return { ...user, dashboard };
 						});
+						return true;
 					}
 				} catch (e) {
 					console.debug('[GeneralContext] refreshDashboard parse failed:', e);
@@ -1030,6 +1023,8 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			} catch (e) {
 				console.warn('[GeneralContext] refreshDashboard failed:', e);
 				return false;
+			} finally {
+				setDashboardLoading(false);
 			}
 		},
 		[authToken, user]
@@ -1452,16 +1447,11 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				setAuthToken,
 				retryRefresh: retryRefreshWrapper,
 				verifyingAuth,
+				dashboardLoading,
 				lastDashboardUpdated,
 			}}
 		>
 			{children}
-			{/* Global loader shown while auth token is being verified — non-dismissible */}
-			<Loader
-				showOverlay={verifyingAuth}
-				fadeAnim={loaderFadeAnimRef.current}
-				toggleShowOverlay={() => { }}
-			/>
 			{/* Global toast for app messages/errors */}
 			<Toast
 				visible={!!appMessage}
