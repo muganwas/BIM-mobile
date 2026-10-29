@@ -367,16 +367,16 @@ const styles = StyleSheet.create({
 	},
 	actions: {
 		flexDirection: 'row',
-		flexWrap: 'wrap',
 		gap: 8,
 	},
 	actionButton: {
 		flexGrow: 1,
-		flexBasis: '30%',
-		minWidth: 100,
+		flexShrink: 1,
+		flexBasis: 0,
+		minWidth: 0,
 		borderRadius: 6,
 		paddingVertical: 8,
-		paddingHorizontal: 10,
+		paddingHorizontal: 6,
 	},
 	actionText: {
 		fontSize: fontSize['button.small'],

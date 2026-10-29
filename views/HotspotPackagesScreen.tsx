@@ -1,10 +1,9 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Prompt from '@/components/Prompt';
 import { RecordCard, RecordList } from '@/components/RecordList';
+import TileContainer from '@/components/TileContainer';
 import { ThemedButton } from '@/components/ThemedButton';
-import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
@@ -27,9 +26,8 @@ export default function HotspotPackagesScreen() {
 	useColorScheme();
 	// Theme helpers
 	const backgroundLight = useThemeColor({}, 'background', 'light');
+	const background = useThemeColor({}, 'background');
 	const backgroundDark = useThemeColor({}, 'background', 'dark');
-	const textLight = useThemeColor({}, 'text', 'light');
-	const textDark = useThemeColor({}, 'text', 'dark');
 	const cancelButton = useThemeColor({}, 'cancelButton');
 	const dangerButton = useThemeColor({}, 'dangerButton');
 	const white = useThemeColor({}, 'white');
@@ -200,21 +198,6 @@ export default function HotspotPackagesScreen() {
 					lightColor={backgroundLight}
 					darkColor={backgroundDark}
 				>
-					<ThemedText
-						lightColor={textLight}
-						darkColor={textDark}
-						style={{
-							width: '100%',
-							textTransform: 'capitalize',
-							fontSize: fontSize['heading.one'],
-							fontWeight: fontWeight['heading.one'],
-						}}
-					>
-						{t.packages.packagesOnHotspot.replace(
-							'{hotspotName}',
-							hotspotName || ''
-						)}
-					</ThemedText>
 					<ThemedView
 						style={{ width: '100%', alignItems: 'flex-end' }}
 						lightColor={backgroundLight}
@@ -233,54 +216,65 @@ export default function HotspotPackagesScreen() {
 					</ThemedView>
 				</ThemedView>
 
-				<RecordList
-					id={hotspotId || 'hotspot-packages'}
-					isEmpty={packages.length === 0}
-					emptyMessage={t.packages.noPackages}
+				<TileContainer
+					id='hotspot-packages-list-tile'
+					flat
+					backgroundColor={background}
+					style={{ flexDirection: 'column' }}
 				>
-					{packages.map((p) => (
-						<RecordCard
-							key={p['.id'] ?? p.name}
-							id={`hotspot-package-${p['.id'] ?? p.name}`}
-							title={p.name}
-							subtitle={p.display_name}
-							fields={[
-								{
-									label: t.packages.usersPerDevice,
-									value: p['simultaneous-use'] ?? '—',
-								},
-								{
-									label: t.packages.bandwidth,
-									value: p['rate-limit'] ?? '—',
-								},
-								{
-									label: t.packages.durationHours,
-									value: p['session-timeout'] ?? '—',
-								},
-							]}
-							actions={[
-								{
-									label: t.packages.view,
-									icon: 'eye.outline',
-									tone: 'success',
-									onPress: () => handleView(p),
-								},
-								{
-									label: t.packages.edit,
-									icon: 'edit.outline',
-									tone: 'warning',
-									onPress: () => handleEdit(p),
-								},
-								{
-									label: t.packages.delete,
-									icon: 'delete.outline',
-									tone: 'danger',
-									onPress: () => handleDelete(p),
-								},
-							]}
-						/>
-					))}
-				</RecordList>
+					<RecordList
+						id={hotspotId || 'hotspot-packages'}
+						title={t.packages.packagesOnHotspot.replace(
+							'{hotspotName}',
+							hotspotName || ''
+						)}
+						isEmpty={packages.length === 0}
+						emptyMessage={t.packages.noPackages}
+					>
+						{packages.map((p) => (
+							<RecordCard
+								key={p['.id'] ?? p.name}
+								id={`hotspot-package-${p['.id'] ?? p.name}`}
+								title={p.name}
+								subtitle={p.display_name}
+								fields={[
+									{
+										label: t.packages.usersPerDevice,
+										value: p['simultaneous-use'] ?? '—',
+									},
+									{
+										label: t.packages.bandwidth,
+										value: p['rate-limit'] ?? '—',
+									},
+									{
+										label: t.packages.durationHours,
+										value: p['session-timeout'] ?? '—',
+									},
+								]}
+								actions={[
+									{
+										label: t.packages.view,
+										icon: 'eye.outline',
+										tone: 'success',
+										onPress: () => handleView(p),
+									},
+									{
+										label: t.packages.edit,
+										icon: 'edit.outline',
+										tone: 'warning',
+										onPress: () => handleEdit(p),
+									},
+									{
+										label: t.packages.delete,
+										icon: 'delete.outline',
+										tone: 'danger',
+										onPress: () => handleDelete(p),
+									},
+								]}
+							/>
+						))}
+					</RecordList>
+				</TileContainer>
 			</ParallaxScrollView>
 
 			<InternetPackageOverlay

@@ -1,5 +1,6 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { RecordCard, RecordList } from '@/components/RecordList';
+import TileContainer from '@/components/TileContainer';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -148,7 +149,7 @@ export default function DocumentsScreen() {
 				dark: bg,
 			}}
 			containerStyle={{ flex: 1 }}
-			contentStyle={{ padding: 16 }}
+			contentStyle={{ paddingHorizontal: 10 }}
 			onRefresh={handleRefresh}
 			refreshing={refreshing}
 		>
@@ -196,74 +197,81 @@ export default function DocumentsScreen() {
 			</ThemedView>
 
 			{/* Documents table */}
-			<RecordList
-				id='documents-list'
-				isEmpty={paged.length === 0}
-				emptyMessage={copy.noDocuments}
+			<TileContainer
+				id='documents-list-tile'
+				flat
+				backgroundColor={bg}
+				style={{ flexDirection: 'column' }}
 			>
-				{paged.map((d) => (
-					<RecordCard
-						key={d.documentId}
-						id={`document-${d.documentId}`}
-						title={d.type.replace('-', ' ')}
-						subtitle={d.documentId}
-						badge={{
-							label: d.status,
-							tone:
-								d.status === 'approved'
-									? 'success'
-									: d.status === 'pending'
-										? 'warning'
-										: 'danger',
-						}}
-						fields={[
-							{ label: copy.number, value: d.documentId },
-							{
-								label: copy.attachment,
-								value: (
-									<TouchableOpacity
-										onPress={async () => {
-											try {
-												await openBrowserAsync(d.url);
-											} catch (e) {
-												console.warn('Failed to open document', e);
-											}
-										}}
-									>
-										<ThemedText
-											lightColor={bimColor}
-											darkColor={bimColor}
-											style={{ textDecorationLine: 'underline' }}
+				<RecordList
+					id='documents-list'
+					isEmpty={paged.length === 0}
+					emptyMessage={copy.noDocuments}
+				>
+					{paged.map((d) => (
+						<RecordCard
+							key={d.documentId}
+							id={`document-${d.documentId}`}
+							title={d.type.replace('-', ' ')}
+							subtitle={d.documentId}
+							badge={{
+								label: d.status,
+								tone:
+									d.status === 'approved'
+										? 'success'
+										: d.status === 'pending'
+											? 'warning'
+											: 'danger',
+							}}
+							fields={[
+								{ label: copy.number, value: d.documentId },
+								{
+									label: copy.attachment,
+									value: (
+										<TouchableOpacity
+											onPress={async () => {
+												try {
+													await openBrowserAsync(d.url);
+												} catch (e) {
+													console.warn('Failed to open document', e);
+												}
+											}}
 										>
-											{copy.open}
-										</ThemedText>
-									</TouchableOpacity>
-								),
-							},
-						]}
-						actions={[
-							{
-								label: translations[language].categories.packages.view,
-								icon: 'eye.outline',
-								tone: 'success',
-								onPress: () => handlePreview(d),
-							},
-							{
-								label: translations[language].categories.packages.edit,
-								icon: 'edit.outline',
-								tone: 'warning',
-								onPress: () => handleEdit(d),
-							},
-							{
-								label: translations[language].categories.packages.delete,
-								icon: 'delete.outline',
-								tone: 'danger',
-								onPress: () => handleDelete(d),
-							},
-						]}
-					/>
-				))}
-			</RecordList>
+											<ThemedText
+												lightColor={bimColor}
+												darkColor={bimColor}
+												style={{ textDecorationLine: 'underline' }}
+											>
+												{copy.open}
+											</ThemedText>
+										</TouchableOpacity>
+									),
+								},
+							]}
+							actions={[
+								{
+									label: translations[language].categories.packages.view,
+									icon: 'eye.outline',
+									tone: 'success',
+									onPress: () => handlePreview(d),
+								},
+								{
+									label: translations[language].categories.packages.edit,
+									icon: 'edit.outline',
+									tone: 'warning',
+									onPress: () => handleEdit(d),
+								},
+								{
+									label: translations[language].categories.packages.delete,
+									icon: 'delete.outline',
+									tone: 'danger',
+									onPress: () => handleDelete(d),
+								},
+							]}
+						/>
+					))}
+				</RecordList>
+			</TileContainer>
 
 			{/* Document overlay */}
 			<DocumentOverlay

@@ -1,8 +1,7 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { RecordCard, RecordList } from '@/components/RecordList';
-import { ThemedText } from '@/components/ThemedText';
+import TileContainer from '@/components/TileContainer';
 import { ThemedView } from '@/components/ThemedView';
-import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
@@ -27,8 +26,6 @@ export default function RouterVouchersScreen() {
 	const background = useThemeColor({}, 'background');
 	const backgroundLight = useThemeColor({}, 'background', 'light');
 	const backgroundDark = useThemeColor({}, 'background', 'dark');
-	const textLight = useThemeColor({}, 'text', 'light');
-	const textDark = useThemeColor({}, 'text', 'dark');
 	const bim = useThemeColor({}, 'bim');
 	const navigation = useNavigation();
 	const router = useRouter();
@@ -141,91 +138,71 @@ export default function RouterVouchersScreen() {
 	return (
 		<ParallaxScrollView
 			containerStyle={styles.container}
-			contentStyle={{ padding: 16 }}
+			contentStyle={{ paddingHorizontal: 10 }}
 			headerBackgroundColor={{ dark: backgroundDark, light: backgroundLight }}
 			onRefresh={handleRefresh}
 			refreshing={refreshing}
 		>
-			<ThemedView
-				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
-				lightColor={backgroundLight}
-				darkColor={backgroundDark}
+			<TileContainer
+				id='router-vouchers-list-tile'
+				flat
+				backgroundColor={background}
+				style={{ flexDirection: 'column' }}
 			>
-				<ThemedText
-					lightColor={textLight}
-					darkColor={textDark}
-					style={{
-						width: '100%',
-						textTransform: 'capitalize',
-						fontSize: fontSize['heading.one'],
-						fontWeight: fontWeight['heading.three'],
-					}}
+				<RecordList
+					id={packageRouterHotspotsListId.current}
+					title={translations[language].categories.hotspots.title}
+					description={currentRouter?.name}
+					isEmpty={hotspots.length === 0}
+					emptyMessage={translations[language].categories.hotspots.noHotspots}
 				>
-					{translations[language].categories.hotspots.title}
-					<ThemedText
-						lightColor={textLight}
-						darkColor={textDark}
-						style={{
-							fontSize: fontSize['heading.one'],
-							fontWeight: fontWeight['heading.one'],
-						}}
-					>
-						{currentRouter ? ` ${currentRouter.name}` : ''}
-					</ThemedText>
-				</ThemedText>
-			</ThemedView>
-
-			<RecordList
-				id={packageRouterHotspotsListId.current}
-				isEmpty={hotspots.length === 0}
-				emptyMessage={translations[language].categories.hotspots.noHotspots}
-			>
-				{hotspots.map((hotspot) => {
-					const disabled =
-						hotspot.disabled === true || hotspot.disabled === 'true';
-					return (
-						<RecordCard
-							key={hotspot['.id'] ?? hotspot.name}
-							id={`voucher-hotspot-${hotspot['.id'] ?? hotspot.name}`}
-							title={hotspot.name}
-							badge={{
-								label: disabled
-									? translations[language].categories.hotspots.disabled
-									: translations[language].categories.hotspots.enabled,
-								tone: disabled ? 'danger' : 'success',
-							}}
-							fields={[
-								{
-									label: translations[language].categories.hotspots.interface,
-									value: hotspot.interface,
-								},
-								{
-									label: translations[language].categories.hotspots.profile,
-									value: hotspot.profile,
-								},
-							]}
-							actions={[
-								{
-									label:
-										translations[language].categories.buttons.viewVouchers,
-									icon: 'vouchers',
-									tone: 'primary',
-									onPress: () =>
-										router.push({
-											pathname:
-												'/(authenticated)/routers/vouchers/[vRId]/[hotspotId]',
-											params: {
-												vRId: vRId ?? '',
-												hotspotId: hotspot['.id'],
-												name: hotspot.name,
-											},
-										}),
-								},
-							]}
-						/>
-					);
-				})}
-			</RecordList>
+					{hotspots.map((hotspot) => {
+						const disabled =
+							hotspot.disabled === true || hotspot.disabled === 'true';
+						return (
+							<RecordCard
+								key={hotspot['.id'] ?? hotspot.name}
+								id={`voucher-hotspot-${hotspot['.id'] ?? hotspot.name}`}
+								title={hotspot.name}
+								badge={{
+									label: disabled
+										? translations[language].categories.hotspots.disabled
+										: translations[language].categories.hotspots.enabled,
+									tone: disabled ? 'danger' : 'success',
+								}}
+								fields={[
+									{
+										label: translations[language].categories.hotspots.interface,
+										value: hotspot.interface,
+									},
+									{
+										label: translations[language].categories.hotspots.profile,
+										value: hotspot.profile,
+									},
+								]}
+								actions={[
+									{
+										label:
+											translations[language].categories.buttons.viewVouchers,
+										icon: 'vouchers',
+										tone: 'primary',
+										onPress: () =>
+											router.push({
+												pathname:
+													'/(authenticated)/routers/vouchers/[vRId]/[hotspotId]',
+												params: {
+													vRId: vRId ?? '',
+													hotspotId: hotspot['.id'],
+													name: hotspot.name,
+												},
+											}),
+									},
+								]}
+							/>
+						);
+					})}
+				</RecordList>
+			</TileContainer>
 		</ParallaxScrollView>
 	);
 }

@@ -117,7 +117,6 @@ export default function EditVoucherScreen() {
 					padding: 0,
 					paddingBottom: 10,
 					marginBottom: 20,
-					marginHorizontal: 20,
 				}}
 			>
 				<ThemedView

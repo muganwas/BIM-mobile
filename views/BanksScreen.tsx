@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { RecordCard, RecordList } from '@/components/RecordList';
+import TileContainer from '@/components/TileContainer';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -117,7 +118,7 @@ export default function BanksScreen() {
 		<ParallaxScrollView
 			headerBackgroundColor={{ light: bg, dark: bg }}
 			containerStyle={{ flex: 1 }}
-			contentStyle={{ padding: 16 }}
+			contentStyle={{ paddingHorizontal: 10 }}
 		>
 			<ThemedView
 				lightColor={bg}
@@ -160,44 +161,51 @@ export default function BanksScreen() {
 				/>
 			</ThemedView>
 
-			<RecordList
-				id='banks-list'
-				isEmpty={banks.length === 0}
-				emptyMessage={copy.noBanks}
+			<TileContainer
+				id='banks-list-tile'
+				flat
+				backgroundColor={bg}
+				style={{ flexDirection: 'column' }}
 			>
-				{paged.map((b) => (
-					<RecordCard
-						key={b.id}
-						id={`bank-${b.id}`}
-						title={b.name}
-						subtitle={b.accountHolderName}
-						fields={[
-							{ label: copy.accountNumber, value: b.accountNumber },
-							{ label: copy.swiftCode, value: b.SWIFTCode },
-						]}
-						actions={[
-							{
-								label: translations[language].categories.packages.view,
-								icon: 'eye.outline',
-								tone: 'success',
-								onPress: () => handleView(b.id),
-							},
-							{
-								label: translations[language].categories.packages.edit,
-								icon: 'edit.outline',
-								tone: 'warning',
-								onPress: () => handleEdit(b.id),
-							},
-							{
-								label: translations[language].categories.packages.delete,
-								icon: 'delete.outline',
-								tone: 'danger',
-								onPress: () => handleDelete(b.id),
-							},
-						]}
-					/>
-				))}
-			</RecordList>
+				<RecordList
+					id='banks-list'
+					isEmpty={banks.length === 0}
+					emptyMessage={copy.noBanks}
+				>
+					{paged.map((b) => (
+						<RecordCard
+							key={b.id}
+							id={`bank-${b.id}`}
+							title={b.name}
+							subtitle={b.accountHolderName}
+							fields={[
+								{ label: copy.accountNumber, value: b.accountNumber },
+								{ label: copy.swiftCode, value: b.SWIFTCode },
+							]}
+							actions={[
+								{
+									label: translations[language].categories.packages.view,
+									icon: 'eye.outline',
+									tone: 'success',
+									onPress: () => handleView(b.id),
+								},
+								{
+									label: translations[language].categories.packages.edit,
+									icon: 'edit.outline',
+									tone: 'warning',
+									onPress: () => handleEdit(b.id),
+								},
+								{
+									label: translations[language].categories.packages.delete,
+									icon: 'delete.outline',
+									tone: 'danger',
+									onPress: () => handleDelete(b.id),
+								},
+							]}
+						/>
+					))}
+				</RecordList>
+			</TileContainer>
 
 			<BankAccount
 				visible={showAdd}

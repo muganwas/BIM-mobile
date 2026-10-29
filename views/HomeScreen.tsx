@@ -264,6 +264,7 @@ export default function HomeScreen() {
 			/>
 			<TileContainer
 				id='last-five-transactions'
+				flat
 				backgroundColor={background}
 				style={{
 					flexDirection: 'column',
@@ -414,6 +415,7 @@ export default function HomeScreen() {
 			</TileContainer>
 			<TileContainer
 				id='router-balances'
+				flat
 				backgroundColor={background}
 				style={{ flexDirection: 'column', overflow: 'hidden' }}
 			>

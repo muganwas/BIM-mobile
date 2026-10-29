@@ -4,7 +4,7 @@ import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { RecordCard, RecordList } from '@/components/RecordList';
-import { fontSize, fontWeight } from '@/constants/Font';
+import TileContainer from '@/components/TileContainer';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
@@ -251,83 +251,56 @@ export default function HotspotVouchersScreen() {
 	return (
 		<>
 			<ParallaxScrollView
+				contentStyle={{ paddingHorizontal: 10 }}
 				headerBackgroundColor={{ light: backgroundLight, dark: backgroundDark }}
 				containerStyle={{ flex: 1 }}
 				onRefresh={handleRefresh}
 				refreshing={refreshing}
 			>
 			<ThemedView
-				style={{ padding: 16, backgroundColor: background }}
+				style={{ paddingVertical: 16, backgroundColor: background }}
 				lightColor={backgroundLight}
 				darkColor={backgroundDark}
 			>
 				<ThemedView
 					style={{
-						flexDirection: 'column',
-						gap: 20,
+						flexDirection: 'row',
+						gap: 10,
 						marginBottom: 10,
-						paddingHorizontal: 10,
 					}}
 					lightColor={backgroundLight}
 					darkColor={backgroundDark}
 				>
-					<ThemedText
-						lightColor={textLight}
-						darkColor={textDark}
-						style={{
-							width: '100%',
-							textTransform: 'capitalize',
-							fontSize: fontSize['heading.one'],
-							fontWeight: fontWeight['heading.one'],
+					<ThemedButton
+						style={{ flex: 1 }}
+						lightColor={bim}
+						darkColor={bim}
+						numberOfLines={1}
+						lightTextColor={white}
+						darkTextColor={white}
+						title={translations[
+							language
+						].categories.buttons.createSingleVoucher.toUpperCase()}
+						onPress={() => {
+							setMultipleVouchers(false);
+							toggleShowCreateVouchers(true);
 						}}
-					>
-						{translateWithVariables(
-							translations[language].categories.vouchers.vouchersSubtitle,
-							{
-								hotspotName: hotSpotName ?? '',
-								routerName: netRouter?.name ?? '',
-							}
-						)}
-					</ThemedText>
-					<ThemedView
-						style={{
-							flexDirection: 'row',
-							gap: 10,
+					/>
+					<ThemedButton
+						style={{ flex: 1 }}
+						lightColor={lime}
+						darkColor={lime}
+						numberOfLines={1}
+						lightTextColor={white}
+						darkTextColor={white}
+						title={translations[
+							language
+						].categories.buttons.createBulkVouchers.toUpperCase()}
+						onPress={() => {
+							setMultipleVouchers(true);
+							toggleShowCreateVouchers(true);
 						}}
-						lightColor={backgroundLight}
-						darkColor={backgroundDark}
-					>
-						<ThemedButton
-							style={{ flex: 1 }}
-							lightColor={bim}
-							darkColor={bim}
-							numberOfLines={1}
-							lightTextColor={white}
-							darkTextColor={white}
-							title={translations[
-								language
-							].categories.buttons.createSingleVoucher.toUpperCase()}
-							onPress={() => {
-								setMultipleVouchers(false);
-								toggleShowCreateVouchers(true);
-							}}
-						/>
-						<ThemedButton
-							style={{ flex: 1 }}
-							lightColor={lime}
-							darkColor={lime}
-							numberOfLines={1}
-							lightTextColor={white}
-							darkTextColor={white}
-							title={translations[
-								language
-							].categories.buttons.createBulkVouchers.toUpperCase()}
-							onPress={() => {
-								setMultipleVouchers(true);
-								toggleShowCreateVouchers(true);
-							}}
-						/>
-					</ThemedView>
+					/>
 				</ThemedView>
 				{loading ? (
 					<ThemedView
@@ -361,77 +334,91 @@ export default function HotspotVouchersScreen() {
 						/>
 					</ThemedView>
 				) : (
-					<RecordList
-						id={vRId || 'hotspot-vouchers'}
-						isEmpty={(usersResponse?.users?.length ?? 0) === 0}
-						emptyMessage={translations[language].categories.vouchers.noVouchers}
-						headerAction={
-							<ThemedButton
-								title={translations[language].categories.buttons.retry}
-								onPress={() => void handleRefresh()}
-								lightColor='transparent'
-								darkColor='transparent'
-								lightTextColor={textLight}
-								darkTextColor={textDark}
-							/>
-						}
+					<TileContainer
+						id='hotspot-vouchers-list-tile'
+						flat
+						backgroundColor={background}
+						style={{ flexDirection: 'column' }}
 					>
-						{(usersResponse?.users ?? []).map((user) => {
-							const online = user.online === 'true';
-							return (
-								<RecordCard
-									key={user['.id'] ?? user.name}
-									id={`hotspot-user-${user['.id'] ?? user.name}`}
-									title={user.name}
-									subtitle={user.profile_display || user.profile}
-									badge={{
-										label: online
-											? translations[language].categories.routers.online
-											: translations[language].categories.routers.offline,
-										tone: online ? 'success' : 'danger',
-									}}
-									fields={[
-										{
-											label: translations[language].categories.vouchers.macAddress,
-											value: user['mac-address'] || '—',
-										},
-										{
-											label: translations[language].categories.vouchers.uptime,
-											value: user.uptime || '—',
-										},
-										{
-											label: translations[language].categories.vouchers.bytesIn,
-											value: user['bytes-in'] || '0',
-										},
-										{
-											label: translations[language].categories.vouchers.bytesOut,
-											value: user['bytes-out'] || '0',
-										},
-									]}
-									actions={[
-										{
-											label: translations[language].categories.packages.edit,
-											icon: 'edit.outline',
-											tone: 'warning',
-											onPress: () => handleEditUserDetails(user.name),
-										},
-										{
-											label: translations[language].categories.buttons.block,
-											icon: 'block',
-											tone: 'danger',
-											onPress: () => handleBlockUser(user.name),
-										},
-										{
-											label: translations[language].categories.packages.delete,
-											icon: 'delete.outline',
-											tone: 'danger',
-											onPress: () => handleDeleteUser(user.name),
-										},
-									]}
+						<RecordList
+							id={vRId || 'hotspot-vouchers'}
+							title={translateWithVariables(
+								translations[language].categories.vouchers.vouchersSubtitle,
+								{
+									hotspotName: hotSpotName ?? '',
+									routerName: netRouter?.name ?? '',
+								}
+							)}
+							isEmpty={(usersResponse?.users?.length ?? 0) === 0}
+							emptyMessage={translations[language].categories.vouchers.noVouchers}
+							headerAction={
+								<ThemedButton
+									title={translations[language].categories.buttons.retry}
+									onPress={() => void handleRefresh()}
+									lightColor='transparent'
+									darkColor='transparent'
+									lightTextColor={textLight}
+									darkTextColor={textDark}
 								/>
-							);
-						})}
-					</RecordList>
+							}
+						>
+							{(usersResponse?.users ?? []).map((user) => {
+								const online = user.online === 'true';
+								return (
+									<RecordCard
+										key={user['.id'] ?? user.name}
+										id={`hotspot-user-${user['.id'] ?? user.name}`}
+										title={user.name}
+										subtitle={user.profile_display || user.profile}
+										badge={{
+											label: online
+												? translations[language].categories.routers.online
+												: translations[language].categories.routers.offline,
+											tone: online ? 'success' : 'danger',
+										}}
+										fields={[
+											{
+												label: translations[language].categories.vouchers.macAddress,
+												value: user['mac-address'] || '—',
+											},
+											{
+												label: translations[language].categories.vouchers.uptime,
+												value: user.uptime || '—',
+											},
+											{
+												label: translations[language].categories.vouchers.bytesIn,
+												value: user['bytes-in'] || '0',
+											},
+											{
+												label: translations[language].categories.vouchers.bytesOut,
+												value: user['bytes-out'] || '0',
+											},
+										]}
+										actions={[
+											{
+												label: translations[language].categories.packages.edit,
+												icon: 'edit.outline',
+												tone: 'warning',
+												onPress: () => handleEditUserDetails(user.name),
+											},
+											{
+												label: translations[language].categories.buttons.block,
+												icon: 'block',
+												tone: 'danger',
+												onPress: () => handleBlockUser(user.name),
+											},
+											{
+												label: translations[language].categories.packages.delete,
+												icon: 'delete.outline',
+												tone: 'danger',
+												onPress: () => handleDeleteUser(user.name),
+											},
+										]}
+									/>
+								);
+							})}
+						</RecordList>
+					</TileContainer>
 				)}
 			</ThemedView>
 			</ParallaxScrollView>

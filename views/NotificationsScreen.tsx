@@ -1,5 +1,6 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
+import TileContainer from '@/components/TileContainer';
 import { ThemedView } from '@/components/ThemedView';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
@@ -26,12 +27,17 @@ export default function NotificationsScreen() {
 				dark: bg,
 			}}
 			containerStyle={{ flex: 1 }}
-			contentStyle={{ padding: 16 }}
+			contentStyle={{ paddingHorizontal: 10 }}
 		>
 			<ThemedText style={styles.title} lightColor={headers} darkColor={headers}>
 				{translations[language].categories.notifications['title']}
 			</ThemedText>
-			<ThemedView style={styles.notificationsList}>
+			<TileContainer
+				id='notifications-list'
+				flat
+				backgroundColor={bg}
+				style={[styles.notificationsList, { alignItems: 'stretch' }]}
+			>
 				{notifications.length > 0 ? (
 					notifications.map((notification, index) => (
 						<ThemedView
@@ -65,7 +71,7 @@ export default function NotificationsScreen() {
 						{translations[language].categories.notifications['noNotifications']}
 					</ThemedText>
 				)}
-			</ThemedView>
+			</TileContainer>
 		</ParallaxScrollView>
 	);
 }

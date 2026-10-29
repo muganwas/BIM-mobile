@@ -17,8 +17,20 @@ rows never scroll horizontally on a phone.
     needs a horizontal scroll). Action `tone` keeps the app's colour coding:
     `success` (lime) for view, `warning` (yellow) for edit, `danger` (red) for
     delete/block, `primary`/`info`/`neutral` for everything else.
-- Each item is already a `TileContainer` card, so do not wrap `RecordCard` in
-  another `TileContainer`.
+- Every list sits on one elevated container: wrap `RecordList` in a
+  `TileContainer`, unless the list already lives inside one (e.g. the dashboard
+  transactions and the router-details tab panels).
+- `TileContainer` is flat: white background plus a 1px border, no shadow. Tiles
+  span the content area, whose `paddingHorizontal` is 10 — never add an extra
+  `marginHorizontal` to a tile or its wrapper.
+- Parent/container tiles (list wrappers, tab panels) pass `flat`; the child tiles
+  they hold (record cards, package cards) stay raised with the default soft shadow.
+- Lists on tabs share a single elevated container for the tab panel — do not give
+  each list inside a tab its own tile (see `packages-tab-panel` and the
+  router-details tile).
+- A list's title and description belong inside the tile with the list (pass
+  `title`/`description` to `RecordList` instead of rendering text above it) so the
+  header and rows read as one group.
 - Screens that render a list must scroll: use `ParallaxScrollView` and pass
   `onRefresh`/`refreshing` for pull-to-refresh.
 - All copy goes through `constants/Trans.ts` (`translateWithVariables` for

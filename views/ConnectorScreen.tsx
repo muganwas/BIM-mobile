@@ -1,5 +1,6 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { RecordCard, RecordList } from '@/components/RecordList';
+import TileContainer from '@/components/TileContainer';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -144,63 +145,70 @@ export default function ConnectorScreen() {
 						icon={'plus' as SFSymbols6_0}
 					/>
 				</ThemedView>
-				<RecordList
-					id={wireguardKeyListId.current}
-					isEmpty={wireguardKeys.length === 0}
-					emptyMessage={translations[language].categories.connector.noKeys}
+				<TileContainer
+					id='connector-list-tile'
+					flat
+					backgroundColor={bg}
+					style={{ flexDirection: 'column' }}
 				>
-					{wireguardKeys.map((key) => (
-						<RecordCard
-							key={key.id}
-							id={`wireguard-key-${key.id}`}
-							title={key.key_name}
-							subtitle={key.ip_address}
-							badge={
-								key.status
-									? {
-										label: key.status,
-										tone:
-											key.status === 'active'
-												? 'success'
-												: key.status === 'pending'
-													? 'warning'
-													: 'danger',
-									}
-									: undefined
-							}
-							fields={[
-								{
-									label: translations[language].categories.connector.endpointPort,
-									value: key.endpoint_port,
-								},
-								{
-									label: translations[language].categories.connector.routerPublicKey,
-									value: key.router_public_key,
-									fullWidth: true,
-								},
-								{
-									label: translations[language].categories.connector.serverPublicKey,
-									value: key.server_public_key,
-									fullWidth: true,
-								},
-							]}
-							actions={[
-								{
-									label: translations[language].categories.connector.view,
-									icon: 'eye.outline',
-									tone: 'primary',
-									onPress: () => {},
-								},
-								{
-									label: translations[language].categories.connector.delete,
-									icon: 'delete.outline',
-									tone: 'danger',
-									onPress: () => onDeleteKey(key.id),
-								},
-							]}
-						/>
-					))}
-				</RecordList>
+					<RecordList
+						id={wireguardKeyListId.current}
+						isEmpty={wireguardKeys.length === 0}
+						emptyMessage={translations[language].categories.connector.noKeys}
+					>
+						{wireguardKeys.map((key) => (
+							<RecordCard
+								key={key.id}
+								id={`wireguard-key-${key.id}`}
+								title={key.key_name}
+								subtitle={key.ip_address}
+								badge={
+									key.status
+										? {
+											label: key.status,
+											tone:
+												key.status === 'active'
+													? 'success'
+													: key.status === 'pending'
+														? 'warning'
+														: 'danger',
+										}
+										: undefined
+								}
+								fields={[
+									{
+										label: translations[language].categories.connector.endpointPort,
+										value: key.endpoint_port,
+									},
+									{
+										label: translations[language].categories.connector.routerPublicKey,
+										value: key.router_public_key,
+										fullWidth: true,
+									},
+									{
+										label: translations[language].categories.connector.serverPublicKey,
+										value: key.server_public_key,
+										fullWidth: true,
+									},
+								]}
+								actions={[
+									{
+										label: translations[language].categories.connector.view,
+										icon: 'eye.outline',
+										tone: 'primary',
+										onPress: () => {},
+									},
+									{
+										label: translations[language].categories.connector.delete,
+										icon: 'delete.outline',
+										tone: 'danger',
+										onPress: () => onDeleteKey(key.id),
+									},
+								]}
+							/>
+						))}
+					</RecordList>
+				</TileContainer>
 			</ParallaxScrollView>
 			<GenerateWireguardKey
 				fadeAnim={fadeAnim}
@@ -215,7 +223,6 @@ export default function ConnectorScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		padding: 16,
 	},
 	routerItem: {
 		padding: 12,

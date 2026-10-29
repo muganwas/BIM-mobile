@@ -1233,10 +1233,11 @@ export default function PackagesScreen() {
 					</ThemedText>
 				</ThemedView>
 			) : (
-				<TileContainer
+				<ThemedView
 					id='trial-settings'
-					backgroundColor={bg}
 					style={styles.card}
+					lightColor='transparent'
+					darkColor='transparent'
 				>
 					{routers.map((routerItem) => (
 						<TrialSettingsRow
@@ -1252,7 +1253,7 @@ export default function PackagesScreen() {
 							}
 						/>
 					))}
-				</TileContainer>
+				</ThemedView>
 			)}
 		</ThemedView>
 	);
@@ -1262,7 +1263,7 @@ export default function PackagesScreen() {
 			<ParallaxScrollView
 				headerBackgroundColor={{ light: bg, dark: bg }}
 				containerStyle={{ flex: 1 }}
-				contentStyle={{ padding: 16 }}
+				contentStyle={{ paddingHorizontal: 10 }}
 				onRefresh={handleRefresh}
 				refreshing={refreshing}
 			>
@@ -1328,13 +1329,20 @@ export default function PackagesScreen() {
 					/>
 				</ThemedView>
 
-				{activeTab === 'packages'
-					? renderPackagesTab()
-					: activeTab === 'routers'
-						? renderRoutersTab()
-						: activeTab === 'profiles'
-							? renderProfilesTab()
-							: renderTrialTab()}
+				<TileContainer
+					id='packages-tab-panel'
+					flat
+					backgroundColor={bg}
+					style={{ flexDirection: 'column' }}
+				>
+					{activeTab === 'packages'
+						? renderPackagesTab()
+						: activeTab === 'routers'
+							? renderRoutersTab()
+							: activeTab === 'profiles'
+								? renderProfilesTab()
+								: renderTrialTab()}
+				</TileContainer>
 			</ParallaxScrollView>
 
 			<PackageForm

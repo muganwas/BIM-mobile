@@ -94,7 +94,7 @@ export default function ProfileScreen() {
 				dark: bg,
 			}}
 			containerStyle={{ flex: 1 }}
-			contentStyle={{ padding: 16 }}
+			contentStyle={{ paddingHorizontal: 10 }}
 		>
 			{/* Tile 1: Profile Details */}
 			<TileContainer

@@ -1,8 +1,7 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { RecordCard, RecordList } from '@/components/RecordList';
-import { ThemedText } from '@/components/ThemedText';
+import TileContainer from '@/components/TileContainer';
 import { ThemedView } from '@/components/ThemedView';
-import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { formatAmount } from '@/helpers';
 import { useGeneral } from '@/context/GeneralContext';
@@ -15,8 +14,6 @@ import { StyleSheet } from 'react-native';
 
 export default function WithdrawScreen() {
 	const bg = useThemeColor({}, 'background');
-	const textColor = useThemeColor({}, 'text');
-	const screenTitleText = useThemeColor({}, 'screenTitleText');
 	const { routers, fetchRouters } = useTransaction();
 	const { user, language } = useGeneral();
 
@@ -81,73 +78,54 @@ export default function WithdrawScreen() {
 		<ParallaxScrollView
 			headerBackgroundColor={{ light: bg, dark: bg }}
 			containerStyle={{ flex: 1 }}
-			contentStyle={{ padding: 16 }}
+			contentStyle={{ paddingHorizontal: 10 }}
 			onRefresh={handleRefresh}
 			refreshing={refreshing}
 		>
 		<ThemedView lightColor={bg} darkColor={bg} style={styles.container}>
-			<ThemedView
-				style={{ flexDirection: 'column', gap: 5, marginBottom: 10 }}
-				lightColor={bg}
-				darkColor={bg}
+			<TileContainer
+				id='withdraw-list-tile'
+				flat
+				backgroundColor={bg}
+				style={{ flexDirection: 'column' }}
 			>
-				<ThemedText
-					lightColor={textColor}
-					darkColor={textColor}
-					style={{
-						width: '100%',
-						textTransform: 'capitalize',
-						fontSize: fontSize['heading.one'],
-						fontWeight: fontWeight['heading.one'],
-					}}
+				<RecordList
+					id='withdraw-router-list'
+					title={translations[language].categories.withdraw.title}
+					description={
+						translations[language].categories.withdraw.subtitle
+					}
+					isEmpty={routers?.length === 0}
+					emptyMessage={translations[language].categories.withdraw.noRouters}
 				>
-					{translations[language].categories.withdraw.title}
-				</ThemedText>
-				<ThemedText
-					lightColor={screenTitleText}
-					darkColor={screenTitleText}
-					style={{
-						width: '100%',
-						textTransform: 'capitalize',
-						fontSize: fontSize['heading.text'],
-						fontWeight: fontWeight['heading.text'],
-					}}
-				>
-					{translations[language].categories.withdraw.subtitle}
-				</ThemedText>
-			</ThemedView>
-			<RecordList
-				id='withdraw-router-list'
-				isEmpty={routers?.length === 0}
-				emptyMessage={translations[language].categories.withdraw.noRouters}
-			>
-				{routers?.map((r) => (
-					<RecordCard
-						key={r.id}
-						id={`withdraw-router-${r.id}`}
-						title={r.name}
-						subtitle={r.location}
-						fields={[
-							{
-								label: translations[language].categories.dashboard.ipAddress,
-								value: r.ip_address || 'N/A',
-							},
-							{
-								label: translations[language].categories.dashboard.balance,
-								value: `${formatAmount(r.balance)} ${currency}`,
-							},
-						]}
-						actions={[
-							{
-								label: translations[language].categories.buttons.withdraw,
-								icon: 'withdrawal',
-								tone: 'success',
-								onPress: () => handleWithdrawRouter(r.id),
-							},
-						]}
-					/>
-				))}
-			</RecordList>
+					{routers?.map((r) => (
+						<RecordCard
+							key={r.id}
+							id={`withdraw-router-${r.id}`}
+							title={r.name}
+							subtitle={r.location}
+							fields={[
+								{
+									label: translations[language].categories.dashboard.ipAddress,
+									value: r.ip_address || 'N/A',
+								},
+								{
+									label: translations[language].categories.dashboard.balance,
+									value: `${formatAmount(r.balance)} ${currency}`,
+								},
+							]}
+							actions={[
+								{
+									label: translations[language].categories.buttons.withdraw,
+									icon: 'withdrawal',
+									tone: 'success',
+									onPress: () => handleWithdrawRouter(r.id),
+								},
+							]}
+						/>
+					))}
+				</RecordList>
+			</TileContainer>
 			{selectedRouter && (
 				<WithdrawFunds
 					visible={showWithdraw}
@@ -165,6 +143,5 @@ export default function WithdrawScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		padding: 16,
 	},
 });

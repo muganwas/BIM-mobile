@@ -7,19 +7,29 @@ export default function DashboardTile({
 	backgroundColor,
 	style,
 	children,
+	flat,
 }: {
 	id: string;
 	backgroundColor?: string;
 	style?: StyleProp<ViewStyle>;
 	children: React.ReactNode;
+	/** Parent/container tiles are flat (border only); child tiles stay raised. */
+	flat?: boolean;
 }) {
-	const dayTransactionsBackground = useThemeColor({}, 'dayTransactionsBackground');
+	const white = useThemeColor({}, 'white');
+	const borderColor = useThemeColor({}, 'inputBorder');
+	const bg = backgroundColor || white;
 	return (
 		<ThemedView
 			id={id}
-			style={[styles.container, style]}
-			lightColor={backgroundColor || dayTransactionsBackground}
-			darkColor={backgroundColor || dayTransactionsBackground}
+			style={[
+				styles.container,
+				{ borderColor },
+				!flat && styles.raised,
+				style,
+			]}
+			lightColor={bg}
+			darkColor={bg}
 		>
 			{children}
 		</ThemedView>
@@ -35,12 +45,13 @@ const styles = StyleSheet.create({
 		padding: 12,
 		gap: 15,
 		borderRadius: 8,
+		borderWidth: 1,
+	},
+	raised: {
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 10,
-		elevation: 6,
-		borderWidth: 1,
-		borderColor: '#ddd',
+		shadowOpacity: 0.16,
+		shadowRadius: 6,
+		elevation: 3,
 	},
 });

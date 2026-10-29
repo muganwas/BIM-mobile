@@ -1,6 +1,7 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Prompt from '@/components/Prompt';
 import { RecordCard, RecordList } from '@/components/RecordList';
+import TileContainer from '@/components/TileContainer';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -143,6 +144,7 @@ export default function RoutersScreen() {
 	return (
 		<>
 			<ParallaxScrollView
+				contentStyle={{ paddingHorizontal: 10 }}
 				headerBackgroundColor={{
 					light: bg,
 					dark: bg,
@@ -189,76 +191,83 @@ export default function RoutersScreen() {
 						lightTextColor={authButtonText}
 					/>
 				</ThemedView>
-				<RecordList
-					id={routerListId.current}
-					loading={!routers}
-					loadingMessage={translations[language].categories.dashboard.loading}
-					isEmpty={routers?.length === 0}
-					emptyMessage={translations[language].categories.routers.noRouters}
+				<TileContainer
+					id='routers-list-tile'
+					flat
+					backgroundColor={bg}
+					style={{ flexDirection: 'column' }}
 				>
-					{routers?.map((router) => {
-						const status = onlineStatus[router.id];
-						return (
-							<RecordCard
-								key={router.id}
-								id={`router-${router.id}`}
-								title={router.name}
-								subtitle={router.location}
-								badge={
-									status === undefined
-										? undefined
-										: {
-											label: status
-												? translations[language].categories.routers.online
-												: translations[language].categories.routers.offline,
-											tone: status ? 'success' : 'danger',
-										}
-								}
-								fields={[
-									{
-										label: translations[language].categories.dashboard.type,
-										value: router.type,
-									},
-									{
-										label: translations[language].categories.dashboard.ipAddress,
-										value: router.ip_address,
-									},
-									{
-										label: translations[language].categories.dashboard.balance,
-										value: formatAmount(router.balance),
-									},
-									{
-										label: translations[language].categories.dashboard.routerUsername,
-										value: router.router_user,
-									},
-								]}
-								actions={[
-									{
-										label: translations[language].categories.packages.view,
-										icon: 'eye.outline',
-										tone: 'success',
-										onPress: () => handleViewRouter(router),
-									},
-									{
-										label: translations[language].categories.packages.edit,
-										icon: 'edit.outline',
-										tone: 'warning',
-										onPress: () => handleEditRouter(router.id),
-									},
-									{
-										label: translations[language].categories.packages.delete,
-										icon: 'delete.outline',
-										tone: 'danger',
-										onPress: () => {
-											setActiveRouter(router.id);
-											toggleShowPrompt(true);
+					<RecordList
+						id={routerListId.current}
+						loading={!routers}
+						loadingMessage={translations[language].categories.dashboard.loading}
+						isEmpty={routers?.length === 0}
+						emptyMessage={translations[language].categories.routers.noRouters}
+					>
+						{routers?.map((router) => {
+							const status = onlineStatus[router.id];
+							return (
+								<RecordCard
+									key={router.id}
+									id={`router-${router.id}`}
+									title={router.name}
+									subtitle={router.location}
+									badge={
+										status === undefined
+											? undefined
+											: {
+												label: status
+													? translations[language].categories.routers.online
+													: translations[language].categories.routers.offline,
+												tone: status ? 'success' : 'danger',
+											}
+									}
+									fields={[
+										{
+											label: translations[language].categories.dashboard.type,
+											value: router.type,
 										},
-									},
-								]}
-							/>
-						);
-					})}
-				</RecordList>
+										{
+											label: translations[language].categories.dashboard.ipAddress,
+											value: router.ip_address,
+										},
+										{
+											label: translations[language].categories.dashboard.balance,
+											value: formatAmount(router.balance),
+										},
+										{
+											label: translations[language].categories.dashboard.routerUsername,
+											value: router.router_user,
+										},
+									]}
+									actions={[
+										{
+											label: translations[language].categories.packages.view,
+											icon: 'eye.outline',
+											tone: 'success',
+											onPress: () => handleViewRouter(router),
+										},
+										{
+											label: translations[language].categories.packages.edit,
+											icon: 'edit.outline',
+											tone: 'warning',
+											onPress: () => handleEditRouter(router.id),
+										},
+										{
+											label: translations[language].categories.packages.delete,
+											icon: 'delete.outline',
+											tone: 'danger',
+											onPress: () => {
+												setActiveRouter(router.id);
+												toggleShowPrompt(true);
+											},
+										},
+									]}
+								/>
+							);
+						})}
+					</RecordList>
+				</TileContainer>
 			</ParallaxScrollView>
 			{/* Add Router Modal */}
 			<RouterOverlay

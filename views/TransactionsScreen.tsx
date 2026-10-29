@@ -272,7 +272,7 @@ export default function TransactionsScreen() {
 			}}
 			refreshing={refreshing}
 			onRefresh={handleRefresh}
-			contentStyle={{ padding: 16 }}
+			contentStyle={{ paddingHorizontal: 10 }}
 			containerStyle={{ flex: 1 }}
 		>
 			{/* Title */}
@@ -474,46 +474,53 @@ export default function TransactionsScreen() {
 					darkTextColor={whiteDark}
 				/>
 			</ThemedView>
-			<RecordList
-				id='transactions-list'
-				isEmpty={paged.length === 0}
-				emptyMessage={t.noTransactions}
+			<TileContainer
+				id='transactions-list-tile'
+				flat
+				backgroundColor={background}
+				style={{ flexDirection: 'column' }}
 			>
-				{paged.map((trans, index) => {
-					const status = String(trans.status).toLowerCase();
-					return (
-						<RecordCard
-							key={`${trans.id}-${index}`}
-							id={`transaction-${trans.id}-${index}`}
-							title={trans.reason || trans.type}
-							subtitle={trans.router?.name}
-							badge={{
-								label: trans.status,
-								tone:
-									status === 'successful' || status === 'approved'
-										? 'success'
-										: status === 'pending'
-											? 'warning'
-											: status === 'failed'
-												? 'danger'
-												: 'info',
-							}}
-							fields={[
-								{
-									label: t.colAmount,
-									value: formatAmount(trans.amount, 2),
-									tone: 'default',
-								},
-								{ label: t.colType, value: trans.type },
-								{
-									label: t.colTransactionDate,
-									value: new Date(trans.created_at).toLocaleDateString(),
-								},
-							]}
-						/>
-					);
-				})}
-			</RecordList>
+				<RecordList
+					id='transactions-list'
+					isEmpty={paged.length === 0}
+					emptyMessage={t.noTransactions}
+				>
+					{paged.map((trans, index) => {
+						const status = String(trans.status).toLowerCase();
+						return (
+							<RecordCard
+								key={`${trans.id}-${index}`}
+								id={`transaction-${trans.id}-${index}`}
+								title={trans.reason || trans.type}
+								subtitle={trans.router?.name}
+								badge={{
+									label: trans.status,
+									tone:
+										status === 'successful' || status === 'approved'
+											? 'success'
+											: status === 'pending'
+												? 'warning'
+												: status === 'failed'
+													? 'danger'
+													: 'info',
+								}}
+								fields={[
+									{
+										label: t.colAmount,
+										value: formatAmount(trans.amount, 2),
+										tone: 'default',
+									},
+									{ label: t.colType, value: trans.type },
+									{
+										label: t.colTransactionDate,
+										value: new Date(trans.created_at).toLocaleDateString(),
+									},
+								]}
+							/>
+						);
+					})}
+				</RecordList>
+			</TileContainer>
 
 			<ThemedView
 				style={{

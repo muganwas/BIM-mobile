@@ -490,10 +490,10 @@ export default function RouterDetailsScreen() {
                 onRefresh={handleRefresh}
                 refreshing={loading}
             >
-                <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }} lightColor={background} darkColor={background}>
+                <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start' }} lightColor={background} darkColor={background}>
                     <ThemedText style={{ fontSize: 20, fontWeight: 'bold', color: titleText }}>{translations[language].categories.routers.routerDetails}</ThemedText>
                 </ThemedView>
-                <ThemedView style={{ marginHorizontal: 10, marginVertical: 10 }} lightColor={background} darkColor={background}>
+                <ThemedView style={{ marginVertical: 10 }} lightColor={background} darkColor={background}>
                     <SegmentedTabs
                         activeKey={activeTab}
                         onChange={(key) => {
@@ -536,9 +536,9 @@ export default function RouterDetailsScreen() {
                         ]}
                     />
                 </ThemedView>
-                <TileContainer id={routerId || 'new-router' + generateRandomInt(1000, 9999)} backgroundColor={background} style={{ marginHorizontal: 10, padding: 10 }}>
+                <TileContainer id={routerId || 'new-router' + generateRandomInt(1000, 9999)} backgroundColor={background} flat style={{ padding: 10 }}>
                     <ThemedView
-                        style={{ display: activeTab === 'active' ? 'flex' : 'none', flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }}
+                        style={{ display: activeTab === 'active' ? 'flex' : 'none', flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start' }}
                         lightColor={background}
                         darkColor={background}
                     >
@@ -594,8 +594,9 @@ export default function RouterDetailsScreen() {
                                     />
                                 ))}
                             </RecordList>
-                            <ThemedView style={{ height: 50, flexDirection: 'row', gap: 10, display: (activeMeta?.total ?? 0 > 1) && (activeMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }} lightColor={background} darkColor={background}>
+                            <ThemedView style={{ width: '100%', marginTop: 12, height: 50, flexDirection: 'row', gap: 10, display: (activeMeta?.total ?? 0 > 1) && (activeMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }} lightColor={background} darkColor={background}>
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.first}
                                     onPress={() => {
                                         if (activeMeta && activeMeta.current_page > 1) {
@@ -608,6 +609,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: activeMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.previous}
                                     onPress={() => {
                                         if (activeMeta && activeMeta.current_page > 1) {
@@ -620,6 +622,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: activeMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.next}
                                     onPress={() => {
                                         if (activeMeta && activeMeta.current_page < activeMeta.last_page) {
@@ -633,6 +636,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: activeMeta?.current_page === activeMeta?.last_page ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.last}
                                     onPress={() => {
                                         if (activeMeta && activeMeta.current_page < activeMeta.last_page) {
@@ -648,7 +652,7 @@ export default function RouterDetailsScreen() {
                         </ThemedView>
                     </ThemedView>
                     <ThemedView
-                        style={{ display: activeTab === 'users' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignSelf: 'stretch', alignItems: 'flex-start', marginHorizontal: 20 }}
+                        style={{ display: activeTab === 'users' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignSelf: 'stretch', alignItems: 'flex-start' }}
                         lightColor={background}
                         darkColor={background}
                     >
@@ -693,10 +697,11 @@ export default function RouterDetailsScreen() {
                                 ))}
                             </RecordList>
                             <ThemedView
-                                style={{ height: 50, flexDirection: 'row', gap: 10, display: (usersMeta?.total ?? 0 > 1) && (usersMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
+                                style={{ width: '100%', marginTop: 12, height: 50, flexDirection: 'row', gap: 10, display: (usersMeta?.total ?? 0 > 1) && (usersMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
                                 lightColor={background}
                                 darkColor={background}>
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.first}
                                     onPress={() => {
                                         if (usersMeta && usersMeta.current_page > 1) {
@@ -709,6 +714,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: usersMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.previous}
                                     onPress={() => {
                                         if (usersMeta && usersMeta.current_page > 1) {
@@ -721,6 +727,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: usersMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.next}
                                     onPress={() => {
                                         if (usersMeta && usersMeta.current_page < usersMeta.last_page) {
@@ -733,6 +740,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: usersMeta?.current_page === usersMeta?.last_page ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.last}
                                     onPress={() => {
                                         if (usersMeta && usersMeta.current_page < usersMeta.last_page) {
@@ -748,7 +756,7 @@ export default function RouterDetailsScreen() {
                         </ThemedView>
                     </ThemedView>
                     <ThemedView
-                        style={{ display: activeTab === 'cookies' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignSelf: 'stretch', alignItems: 'flex-start', marginHorizontal: 20 }}
+                        style={{ display: activeTab === 'cookies' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignSelf: 'stretch', alignItems: 'flex-start' }}
                         lightColor={background}
                         darkColor={background}
                     >
@@ -792,10 +800,11 @@ export default function RouterDetailsScreen() {
                                 ))}
                             </RecordList>
                             <ThemedView
-                                style={{ height: 50, flexDirection: 'row', gap: 10, display: (cookiesMeta?.total ?? 0 > 1) && (cookiesMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
+                                style={{ width: '100%', marginTop: 12, height: 50, flexDirection: 'row', gap: 10, display: (cookiesMeta?.total ?? 0 > 1) && (cookiesMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
                                 lightColor={background}
                                 darkColor={background}>
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.first}
                                     onPress={() => {
                                         if (cookiesMeta && cookiesMeta.current_page > 1) {
@@ -808,6 +817,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: cookiesMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.previous}
                                     onPress={() => {
                                         if (cookiesMeta && cookiesMeta.current_page > 1) {
@@ -820,6 +830,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: cookiesMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.next}
                                     onPress={() => {
                                         if (cookiesMeta && cookiesMeta.current_page < cookiesMeta.last_page) {
@@ -832,6 +843,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: cookiesMeta?.current_page === cookiesMeta?.last_page ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.last}
                                     onPress={() => {
                                         if (cookiesMeta && cookiesMeta.current_page < cookiesMeta.last_page) {
@@ -847,7 +859,7 @@ export default function RouterDetailsScreen() {
                         </ThemedView>
                     </ThemedView>
                     <ThemedView
-                        style={{ display: activeTab === 'hosts' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignSelf: 'stretch', alignItems: 'flex-start', marginHorizontal: 20 }}
+                        style={{ display: activeTab === 'hosts' ? 'flex' : 'none', flex: 1, justifyContent: 'center', alignSelf: 'stretch', alignItems: 'flex-start' }}
                         lightColor={background}
                         darkColor={background}
                     >
@@ -884,10 +896,11 @@ export default function RouterDetailsScreen() {
                                 ))}
                             </RecordList>
                             <ThemedView
-                                style={{ height: 50, flexDirection: 'row', gap: 10, display: (hostsMeta?.total ?? 0 > 1) && (hostsMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
+                                style={{ width: '100%', marginTop: 12, height: 50, flexDirection: 'row', gap: 10, display: (hostsMeta?.total ?? 0 > 1) && (hostsMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
                                 lightColor={background}
                                 darkColor={background}>
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.first}
                                     onPress={() => {
                                         if (hostsMeta && hostsMeta.current_page > 1) {
@@ -900,6 +913,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: hostsMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.previous}
                                     onPress={() => {
                                         if (hostsMeta && hostsMeta.current_page > 1) {
@@ -912,6 +926,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: hostsMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.next}
                                     onPress={() => {
                                         if (hostsMeta && hostsMeta.current_page < hostsMeta.last_page) {
@@ -924,6 +939,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: hostsMeta?.current_page === hostsMeta?.last_page ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.last}
                                     onPress={() => {
                                         if (hostsMeta && hostsMeta.current_page < hostsMeta.last_page) {
@@ -939,7 +955,7 @@ export default function RouterDetailsScreen() {
                         </ThemedView>
                     </ThemedView>
                     <ThemedView
-                        style={{ display: activeTab === 'dhcp_leases' ? 'flex' : 'none', flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }}
+                        style={{ display: activeTab === 'dhcp_leases' ? 'flex' : 'none', flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start' }}
                         lightColor={background}
                         darkColor={background}
                     >
@@ -976,11 +992,12 @@ export default function RouterDetailsScreen() {
                                 ))}
                             </RecordList>
                             <ThemedView
-                                style={{ height: 50, flexDirection: 'row', gap: 10, display: (DHCPLeasesMeta?.total ?? 0 > 1) && (DHCPLeasesMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
+                                style={{ width: '100%', marginTop: 12, height: 50, flexDirection: 'row', gap: 10, display: (DHCPLeasesMeta?.total ?? 0 > 1) && (DHCPLeasesMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
                                 lightColor={background}
                                 darkColor={background}
                             >
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.first}
                                     onPress={() => {
                                         if (DHCPLeasesMeta && DHCPLeasesMeta.current_page > 1) {
@@ -993,6 +1010,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: DHCPLeasesMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.previous}
                                     onPress={() => {
                                         if (DHCPLeasesMeta && DHCPLeasesMeta.current_page > 1) {
@@ -1005,6 +1023,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: DHCPLeasesMeta?.current_page === 1 ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.next}
                                     onPress={() => {
                                         if (DHCPLeasesMeta && DHCPLeasesMeta.current_page < DHCPLeasesMeta.last_page) {
@@ -1018,6 +1037,7 @@ export default function RouterDetailsScreen() {
                                     textStyle={{ color: DHCPLeasesMeta?.current_page === DHCPLeasesMeta?.last_page ? tabText : bim, fontSize: 14 }}
                                 />
                                 <ThemedButton
+                                    style={{ flex: 1 }}
                                     title={translations[language].categories.buttons.last}
                                     onPress={() => {
                                         if (DHCPLeasesMeta && DHCPLeasesMeta.current_page < DHCPLeasesMeta.last_page) {

@@ -199,7 +199,6 @@ export default function RouterPreviewScreen() {
 					boxSizing: 'border-box',
 					overflow: 'hidden',
 					padding: 0,
-					marginHorizontal: 20,
 				}}
 			>
 				<ThemedView
@@ -380,7 +379,6 @@ export default function RouterPreviewScreen() {
 					boxSizing: 'border-box',
 					overflow: 'hidden',
 					padding: 0,
-					marginHorizontal: 20,
 				}}
 			>
 				<ThemedView
@@ -422,49 +420,56 @@ export default function RouterPreviewScreen() {
 					</ThemedView>
 				</ThemedView>
 			</TileContainer>
-			<RecordList
-				id={`hotspot-list-${routerId}`}
-				title={`${translations[language].categories.routers.hotspotsTitle}: ${apiRouter?.name ?? ''}`}
-				isEmpty={hotspots.length === 0}
-				emptyMessage={translations[language].categories.hotspots.noHotspots}
+			<TileContainer
+				id='router-preview-hotspots-tile'
+				flat
+				backgroundColor={background}
+				style={{ flexDirection: 'column', padding: 10 }}
 			>
-				{hotspots.map((hotspot) => {
-					const disabled =
-						hotspot.disabled === 'true' || hotspot.disabled === true;
-					return (
-						<RecordCard
-							key={hotspot['.id'] ?? hotspot.name}
-							id={`preview-hotspot-${hotspot['.id'] ?? hotspot.name}`}
-							title={hotspot.name}
-							badge={{
-								label: disabled
-									? translations[language].categories.hotspots.disabled
-									: translations[language].categories.hotspots.enabled,
-								tone: disabled ? 'danger' : 'success',
-							}}
-							fields={[
-								{
-									label: translations[language].categories.hotspots.interface,
-									value: hotspot.interface,
-								},
-								{
-									label: translations[language].categories.hotspots.profile,
-									value: hotspot.profile,
-								},
-							]}
-							actions={[
-								{
-									label:
-										translations[language].categories.buttons.viewDetails,
-									icon: 'routers.outline',
-									tone: 'primary',
-									onPress: () => handleViewRouterDetails(routerId),
-								},
-							]}
-						/>
-					);
-				})}
-			</RecordList>
+				<RecordList
+					id={`hotspot-list-${routerId}`}
+					title={`${translations[language].categories.routers.hotspotsTitle}: ${apiRouter?.name ?? ''}`}
+					isEmpty={hotspots.length === 0}
+					emptyMessage={translations[language].categories.hotspots.noHotspots}
+				>
+					{hotspots.map((hotspot) => {
+						const disabled =
+							hotspot.disabled === 'true' || hotspot.disabled === true;
+						return (
+							<RecordCard
+								key={hotspot['.id'] ?? hotspot.name}
+								id={`preview-hotspot-${hotspot['.id'] ?? hotspot.name}`}
+								title={hotspot.name}
+								badge={{
+									label: disabled
+										? translations[language].categories.hotspots.disabled
+										: translations[language].categories.hotspots.enabled,
+									tone: disabled ? 'danger' : 'success',
+								}}
+								fields={[
+									{
+										label: translations[language].categories.hotspots.interface,
+										value: hotspot.interface,
+									},
+									{
+										label: translations[language].categories.hotspots.profile,
+										value: hotspot.profile,
+									},
+								]}
+								actions={[
+									{
+										label:
+											translations[language].categories.buttons.viewDetails,
+										icon: 'routers.outline',
+										tone: 'primary',
+										onPress: () => handleViewRouterDetails(routerId),
+									},
+								]}
+							/>
+						);
+					})}
+				</RecordList>
+			</TileContainer>
 		</ParallaxScrollView>
 	);
 }
