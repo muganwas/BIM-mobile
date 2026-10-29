@@ -4,20 +4,23 @@ export interface ChartDataEntry {
 }
 
 export interface RouterBalance {
-	id: string;
+	id: number | string;
 	name: string;
 	balance: number;
 }
 
+/** A row of `data.recentTransactions` from `GET /dashboard`. */
 export interface RecentTransaction {
 	id: string;
 	amount: number;
-	created_at: string; // original server timestamp string
+	created_at?: string; // original server timestamp string
 	updated_at?: string | null;
 	deleted_at?: string | null;
 	reason?: string | null;
-	router_id?: string | null;
-	router?: any;
+	router_id?: string | number | null;
+	router?: { id?: number | string; name?: string } | null;
+	router_name?: string | null;
+	transaction_date?: string | null;
 	status?: string;
 	type?: 'credit' | 'debit' | string;
 }

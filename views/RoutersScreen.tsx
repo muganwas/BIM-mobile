@@ -12,8 +12,9 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
+import { getApiData } from '@/helpers/apiResponse';
 import { pingRouter } from '@/services/RouterService';
-import { ApiRouter } from '@/types';
+import { ApiRouter, PingRouterResponse } from '@/types';
 import RouterOverlay from '@/views/Router';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -89,8 +90,10 @@ export default function RoutersScreen() {
 				try {
 					const resp = await pingRouter(r.id, authToken);
 					if (resp.ok) {
-						const json = await resp.json();
-						setOnlineStatus((prev) => ({ ...prev, [r.id!]: json.online === true }));
+						const body: PingRouterResponse = await resp.json();
+						// API 2.0: `{ data: { online } }`
+						const ping = getApiData<NonNullable<PingRouterResponse['data']>>(body);
+						setOnlineStatus((prev) => ({ ...prev, [r.id!]: ping?.online === true }));
 					} else {
 						setOnlineStatus((prev) => ({ ...prev, [r.id!]: false }));
 					}

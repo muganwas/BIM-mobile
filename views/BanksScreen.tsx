@@ -54,7 +54,7 @@ export default function BanksScreen() {
 
 	useEffect(() => {
 		if (user && banks.length === 0) {
-			fetchBanks(user).catch(() => {});
+			fetchBanks().catch(() => {});
 		}
 	}, [user, banks.length, fetchBanks]);
 

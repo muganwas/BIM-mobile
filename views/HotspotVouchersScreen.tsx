@@ -10,7 +10,7 @@ import { useTransaction } from '@/context/TransactionContext';
 import { generateRandomInt, translateWithVariables } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
-import { ApiRouter, GetRouterUsersResponse, Hotspot } from '@/types';
+import { ApiRouter, GetRouterUsersResponse, Hotspot, HotspotActiveUser } from '@/types';
 import CreateVouchers from '@/views/CreateVouchers';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -22,6 +22,14 @@ import {
 	useColorScheme
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
+
+/**
+ * `data` payload of `GET /routers/{router}/hotspots/users`.
+ * `active` is optionally inlined by some deployments.
+ */
+type RouterUsersData = NonNullable<GetRouterUsersResponse['data']> & {
+	active?: HotspotActiveUser[];
+};
 
 export default function HotspotVouchersScreen() {
 	const promptFadeAnim = useAnimatedValue(0);
@@ -55,7 +63,7 @@ export default function HotspotVouchersScreen() {
 	const white = useThemeColor({}, 'white');
 	const [netRouter, setNetRouter] = useState<ApiRouter | undefined>();
 	const [hotSpot, setHotSpot] = useState<Hotspot | undefined>();
-	const [usersResponse, setUsersResponse] = useState<GetRouterUsersResponse | null>(null);
+	const [usersResponse, setUsersResponse] = useState<RouterUsersData | null>(null);
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [promptTitle, setPromptTitle] = useState('');
 	const [promptMessage, setPromptMessage] = useState('');
@@ -123,7 +131,7 @@ export default function HotspotVouchersScreen() {
 	// Update local router reference whenever routers collection changes
 	useEffect(() => {
 		if (vRId && routers) {
-			const router = routers.data.find((r) => r.id === vRId);
+			const router = routers.find((r) => r.id === vRId);
 			setNetRouter(router);
 		}
 	}, [vRId, routers]);
@@ -232,7 +240,7 @@ export default function HotspotVouchersScreen() {
 		if (!usersResponse) return;
 		if (editVoucherCode) {
 			// Edit existing voucher (update package only for now)
-			const targetVoucher = usersResponse.users.find(
+			const targetVoucher = usersResponse.users?.find(
 				(u) => u.name === editVoucherCode
 			);
 			// Note: This mutation is local and might need a setUsersResponse to trigger re-render if deep clone wasn't done, 
@@ -689,7 +697,7 @@ export default function HotspotVouchersScreen() {
 					mode={editVoucherCode ? 'edit' : 'create'}
 					initialPkg={
 						editVoucherCode
-							? usersResponse?.users.find((u) => u.name === editVoucherCode)
+							? usersResponse?.users?.find((u) => u.name === editVoucherCode)
 								?.profile || ''
 							: undefined
 					}

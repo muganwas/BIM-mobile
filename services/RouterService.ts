@@ -1,5 +1,6 @@
 import { apiBaseUrl } from '@/constants/API';
-import { apiFetch } from '@/helpers/api';
+import { apiFetch, pollQueuedOperation } from '@/helpers/api';
+import { getOperationCacheKey } from '@/helpers/apiResponse';
 import EventSource from 'react-native-sse';
 
 function buildHeaders(token?: string) {
@@ -8,6 +9,41 @@ function buildHeaders(token?: string) {
 	};
 	if (token) headers.Authorization = `Bearer ${token}`;
 	return headers;
+}
+
+function jsonResponse(payload: unknown, status = 200) {
+	return new Response(JSON.stringify(payload ?? {}), {
+		status,
+		headers: { 'Content-Type': 'application/json' },
+	});
+}
+
+/**
+ * Router reads may be queued (202) when the cached value is stale.
+ * API 2.0 reports the cache key on `operation.cache_key` (and `data.cache_key`);
+ * poll until the operation completes and surface the finished payload as a 200.
+ */
+async function resolveQueuedResponse(
+	resp: Response,
+	token: string | undefined,
+	label: string
+): Promise<Response> {
+	if (resp.status !== 202) return resp;
+
+	let cacheKey: string | undefined;
+	try {
+		const body = await resp.json().catch(() => null);
+		cacheKey = getOperationCacheKey(body);
+		if (!cacheKey) {
+			console.error(`[${label}] queued response did not include a cache key`);
+			return jsonResponse(body, 502);
+		}
+		const polled = await pollQueuedOperation(cacheKey, token);
+		return jsonResponse(polled);
+	} catch (error) {
+		console.error(`[${label}] queued request failed`, error);
+		return jsonResponse({ error: String(error) }, 500);
+	}
 }
 
 export async function fetchRouters(token?: string) {
@@ -30,25 +66,7 @@ export async function getRouterStatus(routerId: string, token?: string) {
 		headers: buildHeaders(token),
 	});
 
-	// If the server accepted the request for background processing, poll for result
-	if (resp.status === 202) {
-		try {
-			const body = await resp.json().catch(() => ({}));
-			const cacheKey = body?.cache_key || body?.cacheKey || null;
-			if (cacheKey) {
-				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey, token);
-				return new Response(JSON.stringify(polled ?? {}), {
-					status: 200,
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
-		} catch (e) {
-			console.error('[getRouterStatus] polling failed', e);
-			return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-		}
-	}
-
-	return resp;
+	return resolveQueuedResponse(resp, token, 'getRouterStatus');
 }
 
 export async function getRouterHotspots(routerId: string, token?: string) {
@@ -58,25 +76,7 @@ export async function getRouterHotspots(routerId: string, token?: string) {
 		headers: buildHeaders(token),
 	});
 
-	// If the server accepted the request for background processing, poll for result
-	if (resp.status === 202) {
-		try {
-			const body = await resp.json().catch(() => ({}));
-			const cacheKey = body?.cache_key || body?.cacheKey || null;
-			if (cacheKey) {
-				const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey, token);
-				return new Response(JSON.stringify(polled ?? {}), {
-					status: 200,
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
-		} catch (e) {
-			console.error('[getRouterHotspots] polling failed', e);
-			return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-		}
-	}
-
-	return resp;
+	return resolveQueuedResponse(resp, token, 'getRouterHotspots');
 }
 
 export async function getRouterInterfaces(routerId: string, token?: string) {
@@ -85,31 +85,7 @@ export async function getRouterInterfaces(routerId: string, token?: string) {
 		headers: buildHeaders(token),
 	});
 
-	if (resp.status !== 202) return resp;
-
-	try {
-		const body = await resp.json();
-		const cacheKey = body?.cache_key || body?.cacheKey;
-		if (!cacheKey) {
-			console.error('[getRouterInterfaces] queued response did not include a cache key');
-			return new Response(JSON.stringify(body), {
-				status: 502,
-				headers: { 'Content-Type': 'application/json' },
-			});
-		}
-
-		const polled = await (await import('@/helpers/api')).pollQueuedOperation(cacheKey, token);
-		return new Response(JSON.stringify(polled), {
-			status: 200,
-			headers: { 'Content-Type': 'application/json' },
-		});
-	} catch (error) {
-		console.error('[getRouterInterfaces] queued request failed', error);
-		return new Response(JSON.stringify({ error: String(error) }), {
-			status: 500,
-			headers: { 'Content-Type': 'application/json' },
-		});
-	}
+	return resolveQueuedResponse(resp, token, 'getRouterInterfaces');
 }
 
 export function createRouterTrafficEventSource({

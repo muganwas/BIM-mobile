@@ -1,5 +1,5 @@
 import { ChartDataEntry, RecentTransaction, RouterBalance } from './dashboard';
-import { ServerUser, VoucherUser } from './security';
+import { ServerUser, UserProfile, VoucherUser } from './security';
 export * from './dashboard';
 export * from './security';
 
@@ -10,6 +10,80 @@ export type headerOptions =
 	| 'search'
 	| undefined;
 export type stringifiedBool = "true" | "false";
+
+/* ------------------------------------------------------------------------- *
+ * API 2.0 response envelope.
+ * Every JSON response from the backend is wrapped as:
+ *   { success, message, data, meta, operation, errors }
+ * Response interfaces below extend `ApiEnvelope<...>` and describe `data`.
+ * ------------------------------------------------------------------------- */
+
+/** Field level validation errors returned by the API (`errors` key of the envelope). */
+export type ApiErrors = Record<string, string | string[] | Record<string, unknown>> | null;
+
+/** Pagination block found under `meta.pagination`. */
+export interface PaginationMeta {
+	current_page?: number;
+	per_page?: number;
+	total?: number;
+	last_page?: number;
+	first_item?: number | null;
+	last_item?: number | null;
+}
+
+export interface ApiMeta {
+	pagination?: PaginationMeta;
+}
+
+export type ApiOperationState =
+	| 'queued'
+	| 'processing'
+	| 'done'
+	| 'error'
+	| 'cancelled';
+
+/** Lifecycle information for queued (202) router operations. */
+export interface ApiOperation {
+	state?: ApiOperationState;
+	cache_key?: string;
+	poll_url?: string;
+	retry_after?: number;
+	progress?: {
+		pages_total?: number;
+		pages_ready?: number;
+		[key: string]: unknown;
+	};
+	page_number?: number;
+	page_metadata?: Record<string, unknown>;
+	started_at?: string;
+	updated_at?: string;
+	finished_at?: string;
+	timestamps?: {
+		started_at?: string;
+		updated_at?: string;
+		finished_at?: string;
+	};
+	cached?: {
+		has_status?: boolean;
+		has_meta?: boolean;
+		has_result?: boolean;
+	};
+	duration?: { seconds?: number; human?: string; in_progress?: boolean };
+	pages?: { total?: number; ready?: number; available?: number[] };
+	meta?: Record<string, unknown>;
+	error?: string;
+}
+
+/** Envelope shared by every API 2.0 JSON response. */
+export interface ApiEnvelope<TData = unknown> {
+	success: boolean | stringifiedBool;
+	message?: string;
+	data?: TData | null;
+	meta?: ApiMeta;
+	operation?: ApiOperation;
+	errors?: ApiErrors;
+}
+
 export interface Transaction {
 	id: string;
 	amount: number;
@@ -72,47 +146,44 @@ export interface NetRouter {
 	updatedAt?: Date;
 }
 
+/** Router as returned by API 2.0 (`Router` / `RouterWithWireguardKey`). */
 export interface ApiRouter {
 	"id": string;
-	"wireguard_public_key": string;
 	"name": string;
 	"location": string;
 	"type": string;
 	"ip_address": string;
 	"router_user": string;
-	"router_password": string;
-	"balance": string;
-	"isp_id?": string;
-	"device_id"?: string;
-	"auth_key"?: string;
-	"last_heartbeat_at"?: string;
-	"last_system_info"?: RouterSystemInfo;
+	/** Router credit balance in the account currency. */
+	"balance": number;
 	"user_id": number;
+	"notify_existing_voucher"?: boolean;
 	"created_at": string;
 	"updated_at": string;
+	/** Only sent by the list/detail endpoints (`RouterWithWireguardKey`). */
+	"wireguard_public_key"?: string;
+	/** Not returned by API 2.0 — kept optional for the router edit form. */
+	"router_password"?: string;
+	"last_system_info"?: RouterSystemInfo;
+	"last_heartbeat_at"?: string;
+	"isp_id"?: string;
+	"device_id"?: string;
+	"auth_key"?: string;
 	"hotspot_dns"?: string;
 }
 
-export interface GetRoutersResponse {
-	routers: ApiRouter[];
-	success: boolean | stringifiedBool;
-	message: string;
-}
+/** `GET /routers` */
+export type GetRoutersResponse = ApiEnvelope<{ routers: ApiRouter[] }>;
 
 export type InternetPackageName = 'short' | 'daily' | 'weekly' | 'monthly';
 
-/** RADIUS hotspot user profile returned by the /packages endpoint */
-export interface RadiusProfile {
-	".id": string;
-	name: string; // Profile name
-	display_name: string;
-	"address-list"?: string;
-	"rate-limit"?: string;
-	"shared-users"?: number;
-	"session-timeout"?: string;
-	"router-name"?: string;
-	"simultaneous-use"?: number;
-}
+/**
+ * MikroTik hotspot profile shape used by the voucher screens.
+ * This is an app level model — API 2.0 exposes RADIUS plans through
+ * `GET /profiles` (see `SharedRadiusProfile`).
+ * @deprecated prefer `InternetPackage`
+ */
+export type RadiusProfile = InternetPackage;
 
 export interface InternetPackage {
 	".id": string;
@@ -124,9 +195,12 @@ export interface InternetPackage {
 	"session-timeout"?: string;
 	"router-name"?: string;
 	"simultaneous-use"?: number;
+	/** Populated when the profile was mapped from `GET /profiles`. */
+	price?: number | null;
+	shared?: boolean;
 }
 
-/** Shared RADIUS plan returned by GET /profiles. */
+/** Shared RADIUS plan returned by `GET /profiles` (API 2.0 `RadiusProfile` schema). */
 export interface SharedRadiusProfile {
 	group: string;
 	name: string;
@@ -212,35 +286,25 @@ export interface TrialSettings {
 	cooldown_hours: number;
 }
 
-export interface GetPortalPackagesResponse {
-	success: boolean | stringifiedBool;
-	message: string;
+/** `GET /packages` */
+export type GetPortalPackagesResponse = ApiEnvelope<{
 	scope: 'visible' | 'global' | 'owner' | 'all';
 	packages: PortalPackage[];
-	packages_metadata: PaginatedResourcesMeta;
-}
+	}>;
 
-export interface GetPackageRoutersResponse {
-	success: boolean | stringifiedBool;
-	message: string;
+/** `GET /packages/{package}/routers` */
+export type GetPackageRoutersResponse = ApiEnvelope<{
 	package_id: string;
 	routers: PackageRouter[];
 	rate_limits: Record<string, PackageRateLimit>;
-}
+	visibility?: Record<string, unknown>[];
+	}>;
 
-export interface GetSharedRadiusProfilesResponse {
-	success: boolean | stringifiedBool;
-	message: string;
-	scope: 'shared';
-	profiles: SharedRadiusProfile[];
-	profiles_metadata: PaginatedResourcesMeta;
-}
+/** `GET /profiles` */
+export type GetSharedRadiusProfilesResponse = ApiEnvelope<{ scope: 'shared'; profiles: SharedRadiusProfile[] }>;
 
-export interface GetTrialSettingsResponse {
-	success: boolean | stringifiedBool;
-	message: string;
-	trial_settings: TrialSettings;
-}
+/** `GET|POST /packages/trial/{router}` */
+export type GetTrialSettingsResponse = ApiEnvelope<{ trial_settings: TrialSettings }>;
 
 export type identityDocumentType = 'passport' | 'id-card' | 'driver-license';
 export type companyDocumentType =
@@ -322,13 +386,13 @@ export interface dayPurchase {
 
 export type Translations = {
 	[key in langCode]: {
-		name: lang;
-		active: boolean; // Indicates if the language is fully translated and active
-		categories: {
-			[categoryKey: string]: {
-				[translationKey: string]: string;
-			};
+	name: lang;
+	active: boolean; // Indicates if the language is fully translated and active
+	categories: {
+		[categoryKey: string]: {
+			[translationKey: string]: string;
 		};
+	};
 	};
 };
 
@@ -470,22 +534,22 @@ export type DHCPLease = {
 	"disabled": stringifiedBool;
 }
 
-export type PaginatedResourcesMeta = { total: number, per_page: number, current_page: number, last_page: number, first_Item: number, last_Item: number };
 export type PurchaseGuardData = {
-	"router_id": string;
-	"notify_existing_voucher": boolean | stringifiedBool;
+	"router_id"?: string;
+	"notify_existing_voucher": boolean;
 }
 
+/** Platform role block (`PlatformRole` schema) returned by the identity endpoints. */
 export interface Platform {
+	/** `admin`, `staff`, `owner`, … — kept open because account roles reuse this block. */
 	"role": string;
 	"role_label": string;
 	"is_admin": boolean | stringifiedBool;
 	"is_staff": boolean | stringifiedBool;
 	"is_blog_editor": boolean | stringifiedBool;
-	"blog_editor_scope": string;
+	"blog_editor_scope"?: string;
 	"can_write_blog_content": boolean | stringifiedBool;
 }
-
 
 export interface OnboardingState {
 	completed?: string[];
@@ -493,148 +557,326 @@ export interface OnboardingState {
 }
 
 export interface TokenMeta {
-	"id": number,
-	"name": string,
-	"abilities": string[],
-	"last_used_at": string,
-	"created_at": string,
-	"expires_at"?: string
-}
-
-export interface Account {
 	"id": string;
 	"name": string;
-	"type": string;
+	"abilities": string[];
+	"last_used_at"?: string;
+	"created_at"?: string;
+	"expires_at"?: string;
+}
+
+/** Account (organisation) block returned inside the identity payload. */
+export interface Account {
+	"id": number;
+	"name": string;
+	"type": 'admin' | 'business';
 	"type_label": string;
-	"is_admin_account": boolean | stringifiedBool;
+	"is_admin_account": boolean;
 	"role": string;
 	"role_label": string;
-	"is_cosignatory": boolean | stringifiedBool;
-	"is_active": boolean | stringifiedBool;
+	"is_cosignatory": boolean;
+	"is_active": boolean;
 	"joined_at": string;
 }
 
-
-export interface GetDashboardResponse {
-	"success": boolean | stringifiedBool,
-	"message": string,
-	"recentTransactions_metadata": PaginatedResourcesMeta,
-	"recentTransactions": RecentTransaction[],
-	"todayTransactions": number,
-	"weekTransactions": number,
-	"monthTransactions": number,
-	"todayUsers": number,
-	"weekUsers": number,
-	"monthUsers": number,
-	"routerBalances_metadata": PaginatedResourcesMeta,
-	"routerBalances": RouterBalance[],
-	"chartData_metadata": PaginatedResourcesMeta,
-	"chartData": ChartDataEntry[]
+/** `data` of `GET /dashboard` */
+export interface DashboardData {
+	recentTransactions?: RecentTransaction[];
+	todayTransactions?: number;
+	weekTransactions?: number;
+	monthTransactions?: number;
+	todayUsers?: number;
+	weekUsers?: number;
+	monthUsers?: number;
+	routerBalances?: RouterBalance[];
+	chartData?: ChartDataEntry[];
 }
 
-export interface GetRouterCookiesResponse {
-	"router": ApiRouter;
-	"cookies": Cookie[];
-	"cookies_meta": PaginatedResourcesMeta;
-	"message": string;
+/** `GET /dashboard` and `GET /dashboard/refresh` */
+export type GetDashboardResponse = ApiEnvelope<DashboardData>;
+
+/** Router resource record returned by `GET /routers/{router}/status`. */
+export interface RouterStatusRecord {
+	uptime?: string;
+	version?: string;
+	'cpu-load'?: string;
+	'free-memory'?: string;
+	'total-memory'?: string;
+	'free-hdd-space'?: string;
+	'total-hdd-space'?: string;
+	'architecture-name'?: string;
+	'board-name'?: string;
+	platform?: string;
 }
 
-export interface GetRouterActiveUsersResponse {
-	"router": ApiRouter;
-	"active": HotspotActiveUser[];
-	"active_meta": PaginatedResourcesMeta;
-	"message": string;
+/** `GET /routers/{router}/status` (200 — cached read) */
+export type GetRouterStatusResponse = ApiEnvelope<{
+	router?: ApiRouter;
+	status?: RouterStatusRecord | null;
+	}>;
+
+/** `GET /routers/{router}/status` (202 — a read was queued, poll with `cache_key`). */
+export type GetRouterStatusQueuedResponse = ApiEnvelope<{
+	status?: string;
+	cache_key?: string;
+	retry_after?: number;
+	}>;
+
+/** `GET /routers/{router}/hotspots` */
+export type GetRouterHotspotsResponse = ApiEnvelope<{
+	router?: ApiRouter;
+	hotspots?: Hotspot[];
+	status?: RouterStatusRecord | null;
+	pending?: boolean;
+	retry_after?: number | null;
+	}>;
+
+/** `GET /routers/{router}/hotspot-cookies` */
+export type GetRouterCookiesResponse = ApiEnvelope<{
+	router?: ApiRouter;
+	cookies?: Cookie[];
+	cookies_links?: string;
+	}>;
+
+/** `GET /routers/{router}/hotspots/active` */
+export type GetRouterActiveUsersResponse = ApiEnvelope<{
+	router?: ApiRouter;
+	active?: HotspotActiveUser[];
+	active_links?: string;
+	}>;
+
+/** `GET /routers/{router}/hotspots/users` */
+export type GetRouterUsersResponse = ApiEnvelope<{
+	router?: ApiRouter;
+	users?: HotspotUser[];
+	users_links?: string;
+	}>;
+
+/** `GET /routers/{router}/hosts` */
+export type GetRouterHostsResponse = ApiEnvelope<{
+	router?: ApiRouter;
+	hosts?: Host[];
+	hosts_links?: string;
+	}>;
+
+/** `GET /routers/{router}/dhcp/leases` */
+export type GetRouterDHCPLeasesResponse = ApiEnvelope<{
+	router?: ApiRouter;
+	leases?: DHCPLease[];
+	leases_links?: string;
+	}>;
+
+/** A network interface as returned by `GET /routers/{router}/interfaces`. */
+export interface RouterInterface {
+	name?: string;
+	'default-name'?: string;
+	type?: string;
+	'interface'?: string;
+	running?: boolean | stringifiedBool;
+	disabled?: boolean | stringifiedBool;
+	'rx-byte'?: number | string;
+	'tx-byte'?: number | string;
 }
 
-export interface GetRouterUsersResponse {
-	"router": ApiRouter;
-	"users": HotspotUser[];
-	"users_meta": PaginatedResourcesMeta;
-	"message": string;
+/** `GET /routers/{router}/interfaces` */
+export type GetRouterInterfacesResponse = ApiEnvelope<{
+	router?: ApiRouter;
+	interfaces?: RouterInterface[];
+	}>;
+
+/** `GET /routers/{router}` */
+export type GetRouterResponse = ApiEnvelope<{ router?: ApiRouter }>;
+
+/** `GET|POST /routers/{router}/purchase-guard` */
+export type GetPurchaseGuardResponse = ApiEnvelope<{ purchase_guard: PurchaseGuardData }>;
+
+/** `POST /routers/{router}/purchase-guard` */
+export type PostPurchaseGuardResponse = ApiEnvelope<{ purchase_guard: PurchaseGuardData }>;
+
+/** `GET|POST /profiles/{profile}` — RADIUS plans. */
+export type GetRadiusProfileResponse = ApiEnvelope<{ profiles: SharedRadiusProfile[] }>;
+
+/** `GET /routers/{router}/ping` */
+export type PingRouterResponse = ApiEnvelope<{
+	online?: boolean;
+	router?: { id?: string; name?: string; ip?: string };
+	}>;
+
+/** Identity payload (`IdentityContextResponse` schema). */
+export interface IdentityContext {
+	user?: ServerUser;
+	platform?: Platform;
+	accounts?: Account[];
+	active_account?: Account;
+	home_url?: string;
 }
 
-export interface GetRouterHostsResponse {
-	"router": ApiRouter;
-	"hosts": Host[];
-	"hosts_meta": PaginatedResourcesMeta;
-	"message": string;
+/** `GET /me` and `GET /user` */
+export type GetMeResponse = ApiEnvelope<IdentityContext>;
+
+/** `GET /profile` */
+export type GetProfileResponse = ApiEnvelope<{ user: UserProfile; accounts: Account[] }>;
+
+/** Session payload (`AuthTokenResponse` schema). */
+export interface AuthSession {
+	user: ServerUser;
+	platform?: Platform;
+	active_account?: Account;
+	accounts?: Account[];
+	token: string;
+	token_meta?: TokenMeta;
+	redirect?: string;
 }
 
-export interface GetRouterDHCPLeasesResponse {
-	"router": ApiRouter;
-	"leases": DHCPLease[];
-	"leases_meta": PaginatedResourcesMeta;
-	"message": string;
-
+/** 2FA challenge payload returned by `POST /login` when TOTP is required. */
+export interface TOTPRequiredData {
+	redirect?: string;
+	phone?: string;
 }
 
-export interface GetRouterResponse {
-	"router": ApiRouter;
-	"message": string;
+/** Setup payload returned by `POST /login`, `POST /verify-otp` and `GET /2fa-setup`. */
+export interface TotpSetupData {
+	user?: ServerUser;
+	platform?: Platform;
+	active_account?: Account;
+	accounts?: Account[];
+	phone?: string;
+	setup_token?: string;
+	secret?: string;
+	qr?: string;
+	qr_base64?: string;
+	message?: string;
 }
 
-export interface GetPurchaseGuardResponse {
-	"success": boolean | stringifiedBool;
-	"data": PurchaseGuardData;
+/** `POST /login` (200 — TOTP required or TOTP setup required) */
+export type LoginResponse = ApiEnvelope<TOTPRequiredData | TotpSetupData>;
+
+/** `POST /register` */
+export type RegisterResponse = ApiEnvelope<{ phone?: string }>;
+
+/** `POST /verify-otp` (200 — TOTP setup required) */
+export type VerifyOtpResponse = ApiEnvelope<TotpSetupData>;
+
+/** `GET /2fa-setup` (provisioning data for API clients) */
+export type GetTwoFASetupResponse = ApiEnvelope<{ qr?: string; qr_base64?: string; secret?: string }>;
+
+/** `GET /token/verify` */
+export type VerifyTokenResponse = ApiEnvelope<AuthSession>;
+
+/** `POST /token/refresh` */
+export type RefreshTokenResponse = ApiEnvelope<AuthSession>;
+
+/** `POST /2fa-verify` */
+export type TwoFAVerifyResponse = ApiEnvelope<AuthSession>;
+
+/** `POST /2fa-setup` */
+export type TwoFASetupResponse = ApiEnvelope<AuthSession>;
+
+/** `POST /logout` */
+export type LogoutResponse = ApiEnvelope<null>;
+
+/** `POST /2fa-setup` or `POST /2fa-verify` failure payload. */
+export type AuthFailureResponse = ApiEnvelope<null>;
+
+/* ----------------------------- records ----------------------------- */
+
+/** `Bank` schema — `GET /banks` */
+export interface ApiBank {
+	id: number;
+	user_id: number;
+	bank_name: string;
+	account_number: string;
+	phone?: string;
+	swift_code?: string;
+	bank_branch?: string;
+	created_at?: string;
+	updated_at?: string;
 }
 
-export interface GetRadiusProfileResponse {
-	"success": boolean | stringifiedBool;
-	"profiles": RadiusProfile[];
+/** `GET /banks` */
+export type GetBanksResponse = ApiEnvelope<{ banks: ApiBank[] }>;
+
+/** `Document` schema — `GET /documents` */
+export interface ApiDocument {
+	id: number;
+	user_id: number;
+	type: string;
+	number?: string;
+	attachment?: string;
+	status: 'pending' | 'approved' | 'rejected';
+	created_at?: string;
+	updated_at?: string;
 }
 
-export interface PostPurchaseGuardResponse {
-	"success": boolean | stringifiedBool;
-	"message": string;
-	"data": PurchaseGuardData;
+/** `GET /documents` */
+export type GetDocumentsResponse = ApiEnvelope<{ documents: ApiDocument[] }>;
+
+/** `Transaction` schema — rows of `GET /transactions`. */
+export interface ApiTransaction {
+	id: string;
+	router_id?: string;
+	type: 'credit' | 'debit';
+	amount: number;
+	reason?: string;
+	status?: string;
+	created_at?: string;
+	router_name?: string;
+	transaction_date?: string;
 }
 
-export interface GetMeResponse {
-	"success": boolean | stringifiedBool;
-	"message": string;
-	"user": ServerUser;
-	"platform": Platform;
-	"accounts": Account[];
-	"accounts_metadata": PaginatedResourcesMeta;
-	"active_account": Account;
+/** Paginated transaction collection (Laravel paginator shape). */
+export interface PaginatedCollection<T> {
+	current_page?: number;
+	data?: T[];
+	first_page_url?: string | null;
+	from?: number | null;
+	last_page?: number;
+	last_page_url?: string | null;
+	next_page_url?: string | null;
+	path?: string;
+	per_page?: number;
+	prev_page_url?: string | null;
+	to?: number | null;
+	total?: number;
 }
 
-export interface VerifyTokenResponse {
-	"success": boolean | stringifiedBool;
-	"user": ServerUser,
-	"message": string;
-	"platform": Platform;
-	"active_account": Account;
-	"token": string;
-	"token_meta": TokenMeta
-}
+/** `GET /transactions` */
+export type GetTransactionsResponse = ApiEnvelope<{
+	transactions: PaginatedCollection<ApiTransaction>;
+	total_amount: number;
+}>;
 
-export interface TwoFAVerifyResponse {
-	"success": boolean | stringifiedBool;
-	"message": string,
-	"user": ServerUser,
-	"platform": Platform;
-	"active_account": Account;
-	"token": string,
-	"token_meta": TokenMeta
-}
+/** `GET /connector` */
+export type GetConnectorKeysResponse = ApiEnvelope<{ keys: WireguardKey[] }>;
 
-export interface TwoFASetupResponse {
-	"success": boolean | stringifiedBool;
-	"message": string,
-	"user": ServerUser,
-	"platform": Platform;
-	"active_account": Account;
-	"token": string,
-	"token_meta": TokenMeta
-}
+/** `POST|GET|PUT /connector/{id}` */
+export type GetConnectorKeyResponse = ApiEnvelope<{ key: WireguardKey }>;
 
-export interface RefreshTokenResponse {
-	"success": boolean | stringifiedBool;
-	"message": string,
-	"user": ServerUser,
-	"platform": Platform;
-	"active_account": Account;
-	"token": string,
-	"token_meta": TokenMeta
+/** WireGuard key record (`WireguardKey` schema) returned by `/connector`. */
+export interface WireguardKey {
+	id: string;
+	user_id?: number;
+	key_name: string;
+	router_private_key?: string;
+	router_public_key?: string;
+	server_public_key?: string;
+	host_address?: string;
+	host_port?: number;
+	host_port_observed?: number;
+	observed_endpoint_address?: string;
+	observed_endpoint_port?: number;
+	endpoint_address?: string;
+	endpoint_port?: number;
+	ip_address?: string;
+	my_address?: string;
+	status?: 'active' | 'inactive' | 'pending' | string;
+	radius_secret?: string;
+	radius_nas_shortname?: string;
+	radius_nas_type?: string;
+	radius_ports?: string;
+	radius_description?: string | null;
+	last_handshake_at?: string | null;
+	router_id?: string;
+	created_at?: string;
+	updated_at?: string;
 }

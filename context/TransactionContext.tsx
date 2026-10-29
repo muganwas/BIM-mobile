@@ -1,6 +1,14 @@
 import { ShowAlert } from '@/helpers';
+import { getApiData } from '@/helpers/apiResponse';
+import {
+	mapApiBankToBank,
+	mapApiDocumentToDocumentProps,
+	mapApiTransactionToMicroTransaction,
+	mapRecentTransactionToMicroTransaction,
+	mapSharedRadiusProfileToInternetPackage,
+} from '@/helpers/mappers';
 import { fetchBanks as serviceFetchBanks } from '@/services/BankService';
-import { fetchPackages as serviceFetchPackages } from '@/services/PackageService';
+import { fetchSharedProfiles as serviceFetchProfiles } from '@/services/PackageService';
 import { fetchRouters as serviceFetchRouters } from '@/services/RouterService';
 import type { TransactionFilters } from '@/services/UserService';
 import * as UserService from '@/services/UserService';
@@ -8,9 +16,13 @@ import {
 	ApiRouter,
 	Bank,
 	DocumentProps,
+	GetBanksResponse,
+	GetDocumentsResponse,
 	GetRoutersResponse,
+	GetSharedRadiusProfilesResponse,
+	GetTransactionsResponse,
+	InternetPackage,
 	MicroTransaction,
-	RadiusProfile,
 	Transaction,
 	VoucherUser
 } from '@/types';
@@ -33,8 +45,8 @@ export interface TransactionContextType {
 	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 	voucherUsers: VoucherUser[];
 	setVoucherUsers: React.Dispatch<React.SetStateAction<VoucherUser[]>>;
-	packages: RadiusProfile[];
-	setPackages: React.Dispatch<React.SetStateAction<RadiusProfile[]>>;
+	packages: InternetPackage[];
+	setPackages: React.Dispatch<React.SetStateAction<InternetPackage[]>>;
 	routers: ApiRouter[] | null;
 	setRouters: React.Dispatch<React.SetStateAction<ApiRouter[] | null>>;
 	routersResponse: GetRoutersResponse | null;
@@ -84,7 +96,7 @@ export const TransactionProvider = ({
 	const [purchases, setPurchases] = useState<MicroTransaction[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [voucherUsers, setVoucherUsers] = useState<VoucherUser[]>([]);
-	const [packages, setPackages] = useState<RadiusProfile[]>([]);
+	const [packages, setPackages] = useState<InternetPackage[]>([]);
 	const [routersResponse, setRoutersResponse] = useState<GetRoutersResponse | null>(null);
 	const [routers, setRouters] = useState<ApiRouter[] | null>(null);
 	const [banks, setBanks] = useState<Bank[]>([]);
@@ -135,9 +147,11 @@ export const TransactionProvider = ({
 			try {
 				const res = await UserService.fetchDocuments(authToken ?? undefined);
 				if (res && res.ok) {
-					const json = await res.json();
-					if (Array.isArray(json)) {
-						setDocuments(json as DocumentProps[]);
+					const body: GetDocumentsResponse = await res.json();
+					// API 2.0: `{ data: { documents: [...] } }`
+					const documents = getApiData<NonNullable<GetDocumentsResponse['data']>>(body)?.documents;
+					if (Array.isArray(documents)) {
+						setDocuments(documents.map(mapApiDocumentToDocumentProps));
 						return;
 					}
 				}
@@ -154,9 +168,11 @@ export const TransactionProvider = ({
 			try {
 				const res = await serviceFetchBanks(authToken ?? undefined);
 				if (res && res.ok) {
-					const json = await res.json();
-					if (Array.isArray(json)) {
-						setBanks(json as Bank[]);
+					const body: GetBanksResponse = await res.json();
+					// API 2.0: `{ data: { banks: [...] } }`
+					const banks = getApiData<NonNullable<GetBanksResponse['data']>>(body)?.banks;
+					if (Array.isArray(banks)) {
+						setBanks(banks.map(mapApiBankToBank));
 						return;
 					}
 				}
@@ -174,11 +190,13 @@ export const TransactionProvider = ({
 			try {
 				const res = await serviceFetchRouters(authToken ?? undefined);
 				if (res && res.ok) {
-					const json: GetRoutersResponse = await res.json();
-					if (json && json.routers) {
-						setRoutersResponse(json);
-						setRouters(json.routers);
-						return json as GetRoutersResponse;
+					const body: GetRoutersResponse = await res.json();
+					// API 2.0: `{ data: { routers: [...] } }`
+					const routers = getApiData<NonNullable<GetRoutersResponse['data']>>(body)?.routers;
+					if (Array.isArray(routers)) {
+						setRoutersResponse(body);
+						setRouters(routers);
+						return body;
 					}
 				}
 			} catch (e) {
@@ -194,20 +212,15 @@ export const TransactionProvider = ({
 		async () => {
 			if ((packages && packages.length > 0) && packagesLastFetched && (Date.now() - new Date(packagesLastFetched).getTime() < 60000)) return;
 			try {
-				console.log('[TransactionContext] fetching packages from API');
-				const res = await serviceFetchPackages(authToken ?? undefined);
+				console.log('[TransactionContext] fetching radius profiles from API');
+				// API 2.0 exposes RADIUS plans through GET /profiles (not /packages).
+				const res = await serviceFetchProfiles(authToken ?? undefined, { per_page: 100 });
 				if (res && res.ok) {
-					const json = await res.json();
-					// New RADIUS profiles response: { success: true, profiles: [...] }
-					if (json?.profiles && Array.isArray(json.profiles)) {
-						console.log('[TransactionContext] fetched packages from API', json.profiles);
-						setPackages(json.profiles as RadiusProfile[]);
-						setPackagesLastFetched(new Date().toISOString())
-						return;
-					}
-					// Legacy: direct array response
-					if (Array.isArray(json)) {
-						setPackages(json as RadiusProfile[]);
+					const body: GetSharedRadiusProfilesResponse = await res.json();
+					const profiles = getApiData<NonNullable<GetSharedRadiusProfilesResponse['data']>>(body)?.profiles;
+					if (Array.isArray(profiles)) {
+						setPackages(profiles.map(mapSharedRadiusProfileToInternetPackage));
+						setPackagesLastFetched(new Date().toISOString());
 						return;
 					}
 				}
@@ -226,19 +239,15 @@ export const TransactionProvider = ({
 				}
 				const res = await UserService.fetchPurchases(authToken, filters);
 				if (res && res.ok) {
-					const json = await res.json();
-					// API v1 returns paginated response: { transactions: { data: [...], links: [...] } }
-					const txData = json.transactions?.data;
+					const body: GetTransactionsResponse = await res.json();
+					// API 2.0: `{ data: { transactions: { data: [...] }, total_amount } }`
+					const data = getApiData<NonNullable<GetTransactionsResponse['data']>>(body);
+					const txData = data?.transactions?.data;
 					if (Array.isArray(txData))
-						setPurchases(txData as MicroTransaction[]);
+						setPurchases(txData.map(mapApiTransactionToMicroTransaction));
 					// Capture server-computed total_amount (respects active filters)
-					if (typeof json.total_amount === 'number') {
-						setTotalAmount(json.total_amount);
-					} else if (typeof json.total_amount === 'string') {
-						setTotalAmount(parseFloat(json.total_amount));
-					}
-					if (Array.isArray(json.voucherUsers))
-						setVoucherUsers(json.voucherUsers as VoucherUser[]);
+					const total = parseFloat(String(data?.total_amount ?? ''));
+					if (Number.isFinite(total)) setTotalAmount(total);
 					return;
 				}
 			} catch (e) {
@@ -286,16 +295,9 @@ export const TransactionProvider = ({
 				}
 				if (Array.isArray(sd.recentTransactions)) {
 					setLastFiveTransactions(
-						sd.recentTransactions.slice(0, 5).map((rt: any) => ({
-							id: rt.id ?? String(rt.created_at || Math.random()),
-							amount: Number(rt.amount) || 0,
-							status: rt.status || 'successful',
-							routerName: rt.router_name || rt.router_id || '',
-							date: rt.created_at ? new Date(rt.created_at) : new Date(),
-							reason: rt.reason || 'other',
-							description: undefined,
-							method: { type: rt.type || 'mobile-money' },
-						}))
+						sd.recentTransactions
+							.slice(0, 5)
+							.map(mapRecentTransactionToMicroTransaction)
 					);
 				}
 				if (Array.isArray(sd.routerBalances)) {

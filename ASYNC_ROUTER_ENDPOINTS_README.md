@@ -19,75 +19,79 @@ POST /routers/{id}/hotspots/active
 Response: 202 Accepted
 ```
 
+API 2.0 wraps every JSON response in a common envelope and reports queue
+lifecycle in `operation`:
+
 ```json
 {
-  "status": "queued",
-  "cache_key": "router_123_active_sessions_abc123",
-  "message": "Operation queued, use cache_key to poll for results",
-  "router": { "id": 123, "name": "Main Router" }
+  "success": true,
+  "message": "Operation queued, use the cache key to poll for results",
+  "data": {
+    "status": "queued",
+    "cache_key": "router_123_active_sessions_abc123",
+    "retry_after": 2,
+    "router": { "id": 123, "name": "Main Router" }
+  },
+  "operation": {
+    "state": "queued",
+    "cache_key": "router_123_active_sessions_abc123",
+    "retry_after": 2
+  }
 }
 ```
+
+Read the cache key from `operation.cache_key` (fall back to `data.cache_key`
+for older builds) — see `getOperationCacheKey()` in `helpers/apiResponse.ts`.
 
 ### 2. Poll for Results
 
 Use the `cache_key` to poll the results endpoint:
 
 ```http
-GET /api/router-operations/poll?cache_key=router_123_active_sessions_abc123
+POST /api/router-operations/poll
+{ "cache_key": "router_123_active_sessions_abc123" }
 ```
 
-**While processing:**
+**While processing (202):**
 ```json
 {
-  "status": "processing",
-  "progress": {
-    "pages_total": 5,
-    "pages_ready": 2
-  },
-  "meta": {
+  "success": true,
+  "message": "Operation still processing",
+  "data": [
+    { "user": "john@example.com", "address": "10.0.0.5", "uptime": "01:23:45" }
+  ],
+  "operation": {
+    "state": "processing",
+    "progress": { "pages_total": 5, "pages_ready": 2 },
+    "page_number": 1,
     "started_at": "2025-12-21T10:30:00Z",
     "updated_at": "2025-12-21T10:30:05Z"
   }
 }
 ```
 
-**Request specific page:**
-```http
-GET /api/router-operations/poll?cache_key=router_123_active_sessions_abc123&page=1
-```
-
-```json
-{
-  "status": "processing",
-  "progress": {
-    "pages_total": 5,
-    "pages_ready": 2
-  },
-  "page": [
-    { "user": "john@example.com", "address": "10.0.0.5", "uptime": "01:23:45", ... },
-    { "user": "jane@example.com", "address": "10.0.0.6", "uptime": "00:45:12", ... }
-    // ... up to 50 rows per page
-  ]
-}
-```
-
 ### 3. Complete Results
 
-When complete, the status changes to `"done"` and full data is available:
+When `operation.state` becomes `"done"` the full payload is in `data`:
 
 ```json
 {
-  "status": "done",
-  "progress": {
-    "pages_total": 5,
-    "pages_ready": 5
-  },
+  "success": true,
+  "message": "Operation finished",
   "data": {
     "active": [ /* all 250 rows */ ],
     "total": 250
+  },
+  "operation": {
+    "state": "done",
+    "duration": { "seconds": 12, "human": "12s", "in_progress": false }
   }
 }
 ```
+
+`operation.state` of `error` or `cancelled` is terminal; surface
+`errors.error`/`message` to the user. The mobile client implements this in
+`pollQueuedOperation()` (`helpers/api.ts`).
 
 ---
 
@@ -103,7 +107,7 @@ The `RouterOperationPoller` class handles all polling logic, adaptive backoff, a
 
 // Initialize with callbacks
 const poller = new RouterOperationPoller({
-  cacheKey: response.cache_key,
+  cacheKey: response.operation.cache_key, // or response.data.cache_key
   pollInterval: 1500,        // Start polling every 1.5s
   maxAttempts: 90,           // Poll for up to 3 minutes
   

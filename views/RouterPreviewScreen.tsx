@@ -7,10 +7,11 @@ import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { generateRandomInt, msToHms, ShowAlert, toBoolean } from '@/helpers';
+import { getApiData } from '@/helpers/apiResponse';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { getRouterById, getRouterHotspots, getRouterPurchaseGuard, getRouterStatus, updateRouterPurchaseGuard } from '@/services/RouterService';
-import { ApiRouter, GetPurchaseGuardResponse, GetRouterResponse, Hotspot, PostPurchaseGuardResponse } from '@/types';
+import { ApiRouter, GetPurchaseGuardResponse, GetRouterHotspotsResponse, GetRouterResponse, Hotspot, PostPurchaseGuardResponse } from '@/types';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
@@ -90,38 +91,34 @@ export default function RouterPreviewScreen() {
 				setApiRouter({ name, id: routerId });
 			const routerResponse = await getRouterById(routerId, authToken);
 			if (routerResponse && routerResponse.ok) {
-				const routerData: GetRouterResponse = await routerResponse.json();
-				if (routerData.router) setApiRouter({ ...routerData.router });
+				const routerBody: GetRouterResponse = await routerResponse.json();
+				const routerData = getApiData<NonNullable<GetRouterResponse['data']>>(routerBody);
+				if (routerData?.router) setApiRouter({ ...routerData.router });
 			}
 
 			const statusResponse = await getRouterStatus(routerId, authToken);
 			if (statusResponse && statusResponse.ok) {
-				const statusData = await statusResponse.json();
-				// statusData.status can be a string (e.g., "queued") or an array of status objects
-				const statusVal = statusData.status;
-				if (statusVal) {
-					if (Array.isArray(statusVal) && statusVal.length > 0) {
-						setRouterStatus(statusVal[0]);
-					} else if (typeof statusVal === 'object' && !Array.isArray(statusVal)) {
-						setRouterStatus(statusVal);
-					} else {
-						// For string statuses like "queued", check for data payload
-						if (statusData.data && Array.isArray(statusData.data) && statusData.data.length > 0) {
-							setRouterStatus(statusData.data[0]);
-						}
-					}
+				const statusBody = await statusResponse.json();
+				// API 2.0: `data.status` is a single cached resource record for the router.
+				const statusData = getApiData<{ status?: RouterStatus | null }>(statusBody);
+				const statusVal = statusData?.status;
+				if (statusVal && typeof statusVal === 'object' && !Array.isArray(statusVal)) {
+					setRouterStatus(statusVal);
 				}
 			}
 
 			const hotspotsResponse = await getRouterHotspots(routerId, authToken);
 			if (hotspotsResponse && hotspotsResponse.ok) {
-				const hotspotsData = await hotspotsResponse.json();
-				if (hotspotsData.hotspots) setHotspots(hotspotsData.hotspots);
+				const hotspotsBody: GetRouterHotspotsResponse = await hotspotsResponse.json();
+				const hotspotsData = getApiData<NonNullable<GetRouterHotspotsResponse['data']>>(hotspotsBody);
+				if (Array.isArray(hotspotsData?.hotspots)) setHotspots(hotspotsData.hotspots);
 			}
 			const routerPurchaseGuard = await getRouterPurchaseGuard({ routerId, token: authToken });
 			if (routerPurchaseGuard && routerPurchaseGuard.ok) {
-				const routerPurchaseGuardData: GetPurchaseGuardResponse = await routerPurchaseGuard.json();
-				if (routerPurchaseGuardData.success) setRouterPurchaseGuard(toBoolean(routerPurchaseGuardData.data.notify_existing_voucher));
+				const guardBody: GetPurchaseGuardResponse = await routerPurchaseGuard.json();
+				const guardData = getApiData<NonNullable<GetPurchaseGuardResponse['data']>>(guardBody);
+				if (guardData?.purchase_guard)
+					setRouterPurchaseGuard(toBoolean(guardData.purchase_guard.notify_existing_voucher));
 			}
 
 			setRoutersLastFetched && setRoutersLastFetched((prev) => ({ ...prev, [routerId]: new Date().toISOString() }));
@@ -143,9 +140,10 @@ export default function RouterPreviewScreen() {
 		try {
 			const routerUpdateResult = await updateRouterPurchaseGuard({ routerId, token: authToken, value: v });
 			if (routerUpdateResult.ok) {
-				const routerPurchaseGuardData: PostPurchaseGuardResponse = await routerUpdateResult.json();
-				if (routerPurchaseGuardData.success)
-					setRouterPurchaseGuard(toBoolean(routerPurchaseGuardData.data.notify_existing_voucher));
+				const guardBody: PostPurchaseGuardResponse = await routerUpdateResult.json();
+				const guardData = getApiData<NonNullable<PostPurchaseGuardResponse['data']>>(guardBody);
+				if (guardData?.purchase_guard)
+					setRouterPurchaseGuard(toBoolean(guardData.purchase_guard.notify_existing_voucher));
 
 			}
 		} catch (error) {

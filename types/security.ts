@@ -9,7 +9,8 @@ export interface Bank {
     accountNumber: string; // Account number of the bank
     accountHolderName: string; // Name of the account holder
     SWIFTCode: string;
-    currency: string;
+    /** Not returned by API 2.0 — optional on records coming from `/banks`. */
+    currency?: string;
     branch?: string; // Optional branch name
     createdAt?: Date;
     updatedAt?: Date;
@@ -28,52 +29,33 @@ export interface VoucherUser {
     createdAt: string;
 }
 
-export interface WireguardKey {
-    id: string;
-    user_id: number;
-    key_name: string;
-    router_private_key: string;
-    router_public_key: string;
-    server_public_key: string;
-    host_address: string;
-    host_port: number;
-    endpoint_address: string;
-    endpoint_port: number;
-    ip_address: string;
-    my_address: string;
-    status: 'active' | 'inactive' | 'pending';
-    radius_secret: string;
-    radius_nas_shortname: string;
-    radius_nas_type: string;
-    radius_ports: string;
-    radius_description?: string | null;
-    last_handshake_at?: string | null; // ISO date string or null
-    router_id: string;
-    created_at: string; // ISO date string
-    updated_at: string; // ISO date string
-}
-/** User object from Auth verification /token/verify */
-export interface ServerUser {
+/** User record returned by every identity endpoint in API 2.0 (`UserProfile` schema). */
+export interface UserProfile {
     "id": number;
-    "role_id": number;
     "name": string;
-    "phone": string;
-    "phone_verified_at"?: string;
     "email": string;
+    "phone": string;
     "notification_email"?: string;
-    "avatar": string;
-    "avatar_url": string;
-    "email_verified_at"?: string;
+    "avatar"?: string | null;
+    "avatar_id"?: string | null;
+    "avatar_url"?: string | null;
+    "gender"?: Gender;
+    "email_verified_at"?: string | null;
+    "created_at"?: string;
+    "updated_at"?: string;
+}
+
+/**
+ * User object from Auth verification /token/verify.
+ * Legacy fields are kept optional because API 2.0 no longer returns them.
+ */
+export interface ServerUser extends UserProfile {
+    "totp_secret"?: string;
+    "onboarding_state"?: OnboardingState;
+    "settings"?: string[];
+    "role_id"?: number;
+    "phone_verified_at"?: string;
     "last_activity_at"?: string;
-    "totp_secret": string;
-    "totp_setup_at"?: string;
-    "onboarding_state": OnboardingState;
-    "pre_2fa_token"?: string;
-    "pre_2fa_token_expires_at"?: string;
-    "settings": string[];
-    "created_at": string;
-    "updated_at": string;
-    "gender": Gender
 }
 /** Local app user interface */
 export interface User extends ServerUser {
@@ -81,19 +63,4 @@ export interface User extends ServerUser {
     platform?: Platform;
     // Optional typed dashboard data returned by some login/refresh endpoints
     dashboard?: DashboardSummary;
-}
-/** From /profile endpoint & /me user object */
-export interface UserProfile {
-    "id": number;
-    "name": string;
-    "email": string;
-    "phone": string;
-    "notification_email": string;
-    "avatar": string;
-    "avatar_id": string;
-    "avatar_url": string;
-    "gender": Gender;
-    "email_verified_at": string;
-    "created_at": string;
-    "updated_at": string;
 }

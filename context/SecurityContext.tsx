@@ -1,5 +1,6 @@
+import { getApiData } from '@/helpers/apiResponse';
 import * as ConnectorService from '@/services/ConnectorService';
-import type { WireguardKey } from '@/types/security';
+import type { GetConnectorKeyResponse, GetConnectorKeysResponse, WireguardKey } from '@/types';
 import {
 	createContext,
 	useCallback,
@@ -51,12 +52,11 @@ export const SecurityProvider = ({
 		try {
 			const res = await ConnectorService.fetchWireguardKeys(authToken);
 			if (res && res.ok) {
-				const json = await res.json();
-				if (Array.isArray(json.keys)) {
-					setWireguardKeys(json.keys as WireguardKey[]);
-				} else if (Array.isArray(json)) {
-					// Belt-and-suspenders: some APIs return a bare array
-					setWireguardKeys(json as WireguardKey[]);
+				const body: GetConnectorKeysResponse = await res.json();
+				// API 2.0: `{ data: { keys: [...] } }`
+				const keys = getApiData<NonNullable<GetConnectorKeysResponse['data']>>(body)?.keys;
+				if (Array.isArray(keys)) {
+					setWireguardKeys(keys);
 				}
 			}
 		} catch (e) {
@@ -78,8 +78,8 @@ export const SecurityProvider = ({
 			try {
 				const res = await ConnectorService.createWireguardKey(keyName, address, port, authToken);
 				if (res && res.ok) {
-					const json = await res.json();
-					const newKey = json.key as WireguardKey;
+					const body: GetConnectorKeyResponse = await res.json();
+					const newKey = getApiData<NonNullable<GetConnectorKeyResponse['data']>>(body)?.key;
 					if (newKey) {
 						setWireguardKeys((prev) => [...prev, newKey]);
 						return newKey;
@@ -107,8 +107,8 @@ export const SecurityProvider = ({
 			try {
 				const res = await ConnectorService.updateWireguardKey(id, keyName, authToken);
 				if (res && res.ok) {
-					const json = await res.json();
-					const updated = json.key as WireguardKey;
+					const body: GetConnectorKeyResponse = await res.json();
+					const updated = getApiData<NonNullable<GetConnectorKeyResponse['data']>>(body)?.key;
 					if (updated) {
 						setWireguardKeys((prev) =>
 							prev.map((k) => (k.id === id ? updated : k)),

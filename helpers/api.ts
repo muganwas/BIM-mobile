@@ -1,5 +1,10 @@
 import { apiBaseUrl } from '@/constants/API';
 import { ShowAlert } from '@/helpers';
+import {
+	getApiData,
+	getApiMessage,
+	getOperationState,
+} from '@/helpers/apiResponse';
 
 /**
  * Lightweight fetch wrapper that injects the X-Client-Type header for backend API calls.
@@ -292,9 +297,14 @@ export async function parseApiError(res: Response): Promise<string> {
 }
 
 /**
- * Poll a queued operation by cache key until it completes or times out.
- * Returns the parsed JSON of the successful operation (typically an object with the resource data),
- * or throws on failure/timeout.
+ * Poll a queued (202) router operation by cache key until it completes or times out.
+ *
+ * API 2.0 contract for `POST /router-operations/poll`:
+ *  - 202 while the operation is `queued` / `processing` (partial `data` may be present)
+ *  - 200 when `operation.state === 'done'`, with the payload in `data`
+ *  - `operation.state` of `error` / `cancelled` is terminal
+ *
+ * Returns the `data` payload of the finished operation.
  */
 export async function pollQueuedOperation(
 	cacheKey: string,
@@ -310,6 +320,7 @@ export async function pollQueuedOperation(
 	if (token) headers['Authorization'] = `Bearer ${token}`;
 
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
+		let terminalError: Error | null = null;
 		try {
 			const resp = await apiFetch(pollUrl, {
 				method: 'POST',
@@ -317,44 +328,42 @@ export async function pollQueuedOperation(
 				body: JSON.stringify({ cache_key: cacheKey }),
 			});
 
-			// If non-json or error status, treat as retryable unless final
-			let json: any = null;
+			let body: unknown = null;
 			try {
-				json = await resp.json();
-			} catch (_e) {
-				console.log('[pollQueuedOperation] attempt', attempt + 1, 'HTTP', resp.status, '— not JSON');
-				console.log('[pollQueuedOperation] error:', _e);
-				json = null;
+				body = await resp.json();
+			} catch {
+				body = null;
 			}
 
-			if (json && typeof json === 'object') {
-				console.log(
-					'[pollQueuedOperation] attempt',
-					attempt + 1,
-					'HTTP',
-					resp.status,
-					'body:',
-					JSON.stringify(json)//.slice(0, 300)
+			const state = (getOperationState(body) ?? '').toLowerCase();
+			console.log(
+				'[pollQueuedOperation] attempt',
+				attempt + 1,
+				'HTTP',
+				resp.status,
+				'state',
+				state || '(none)'
+			);
+
+			if (state === 'error' || state === 'cancelled') {
+				terminalError = new Error(
+					getApiMessage(body) ?? `Queued operation ${state}`
 				);
-
-				const status = (json.status || '').toString().toLowerCase();
-				if (status === 'success' || status === 'done') {
-					// Prefer returning the data payload if present
-					return json.data ?? json;
-				}
-				if (status === 'error' || status === 'failed') {
-					throw new Error(json.error || json.message || 'Queued operation failed');
-				}
-			} else {
-				console.log('[pollQueuedOperation] attempt', attempt + 1, 'HTTP', resp.status, '— empty or non-object response');
+			} else if (resp.status === 200) {
+				return getApiData(body) ?? body;
+			} else if (resp.status >= 400) {
+				terminalError = new Error(
+					getApiMessage(body) ?? `Queued operation failed (${resp.status})`
+				);
 			}
-		} catch (e) {
-			// Log and continue to retry until attempts exhausted
-			console.warn('[pollQueuedOperation] attempt', attempt + 1, 'failed:', e);
+		} catch (error) {
+			// Network/transport problems are retryable.
+			console.warn('[pollQueuedOperation] attempt', attempt + 1, 'failed:', error);
 		}
 
-		// wait before next attempt
-		await new Promise((r) => setTimeout(r, intervalMs));
+		if (terminalError) throw terminalError;
+
+		await new Promise((resolve) => setTimeout(resolve, intervalMs));
 	}
 
 	throw new Error('Queued operation timed out');

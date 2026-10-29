@@ -77,8 +77,8 @@ export default function EditVoucherScreen() {
 
 	useEffect(() => {
 		if (vRId && hotspotId && routers) {
-			const router = routers['data'].find((r) => r.id === vRId);
-			console.log({ data: routers.data });
+			const router = routers.find((r) => r.id === vRId);
+			console.log({ data: routers });
 			// const hotspot = router?.networkInfo.hotspots.find(
 			// 	(h) => h.id === hotspotId
 			// );

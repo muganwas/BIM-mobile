@@ -36,12 +36,15 @@ const basePackage: PortalPackage = {
 	rate_limits: {},
 };
 
-function userWithPlatform(isAdmin: boolean | string): User {
+function userWithPlatform(isAdmin: boolean | 'true' | 'false'): User {
 	return {
 		id: 1,
+		name: 'Test User',
+		email: 'test@example.com',
+		phone: '256700000000',
 		platform: {
-			role: isAdmin ? 'admin' : 'owner',
-			role_label: isAdmin ? 'Admin' : 'Owner',
+			role: isAdmin === true || isAdmin === 'true' ? 'admin' : 'owner',
+			role_label: isAdmin === true || isAdmin === 'true' ? 'Admin' : 'Owner',
 			is_admin: isAdmin,
 			is_staff: false,
 			is_blog_editor: false,

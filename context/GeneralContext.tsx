@@ -4,19 +4,26 @@ import Toast from '@/components/Toast';
 import translations from '@/constants/Trans';
 import { delay, normalizePhoneForApi, ShowAlert } from '@/helpers';
 import { parseApiError, registerAuthCallbacks } from '@/helpers/api';
+import { getApiData } from '@/helpers/apiResponse';
 import * as AuthService from '@/services/AuthService';
 import { fetchDashboard, fetchUser } from '@/services/UserService';
 import {
+	AuthSession,
 	DashboardSummary,
 	GetDashboardResponse,
 	GetMeResponse,
 	headerOptions,
 	langCode,
+	LoginResponse,
 	notifications,
 	RefreshTokenResponse,
+	RegisterResponse,
+	TOTPRequiredData,
+	TotpSetupData,
 	TwoFASetupResponse,
 	TwoFAVerifyResponse,
 	User as UserProps,
+	VerifyOtpResponse,
 	VerifyTokenResponse
 } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -425,7 +432,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					refreshRes && refreshRes.ok
 				);
 			if (!refreshRes || !refreshRes.ok) return null;
-			const refJson: RefreshTokenResponse = await refreshRes.json();
+			const refBody: RefreshTokenResponse = await refreshRes.json();
+			// API 2.0 wraps the session payload in `data`.
+			const refJson: AuthSession | null = getApiData<AuthSession>(refBody);
 			if (refJson && refJson.token) {
 				const newToken = refJson.token;
 				try {
@@ -436,7 +445,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				} catch { }
 				setAuthToken(newToken);
 
-				if (refJson && refJson.user) {
+				if (refJson.user) {
 					setUser(prev => ({ ...prev ?? {}, ...refJson.user, platform: refJson.platform, account: refJson.active_account }));
 				}
 				return newToken;
@@ -498,13 +507,15 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 					return;
 				}
 
-				const json: VerifyTokenResponse = await res.json();
+				const body: VerifyTokenResponse = await res.json();
+				// API 2.0 wraps the identity payload in `data`.
+				const json: AuthSession | null = getApiData<AuthSession>(body);
 				if (authDebug) console.debug('[GeneralContext] verifyAndSchedule: verify json', json);
 				if (!json) return;
 
 				// Merge returned user object into state when present
 				if (json.user) {
-					setUser((prev) => ({ ...prev ?? {}, ...json.user, platform: json.platform }));
+					setUser((prev) => ({ ...prev ?? {}, ...json.user, platform: json.platform, account: json.active_account }));
 					console.log("[GeneralContext] path name", pathName)
 					const anyRouter = router;
 					if (
@@ -520,7 +531,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 
 				//Support token expiry from token_meta.expires_at
 				const expiresAt =
-					json.token_meta.expires_at
+					json.token_meta?.expires_at
 				if (expiresAt) {
 					if (authDebug)
 						console.debug('[GeneralContext] verifyAndSchedule: token expiresAt=', expiresAt);
@@ -913,21 +924,25 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				});
 				return;
 			}
-			const data = await res.json();
-			console.log("[GeneralContext] Authentication response", { data });
+			const loginBody: LoginResponse = await res.json();
+			console.log("[GeneralContext] Authentication response", { loginBody });
+			// API 2.0 wraps the challenge payload in `data`; the envelope carries `message`.
+			const data = getApiData<TOTPRequiredData | TotpSetupData>(loginBody);
+			const envelopeMessage = loginBody?.message;
 
 			// Determine which 2FA method the backend expects when redirecting to verify
 			try {
-				const msg = String(data?.message || '').toLowerCase();
+				const msg = String(envelopeMessage || '').toLowerCase();
 				if (msg.includes('totp setup required')) {
-					if (data && (data.qr || data.setup_token || data.qr_base64)) {
+					const setup = data as TotpSetupData | null;
+					if (setup && (setup.qr || setup.setup_token || setup.qr_base64)) {
 						setPending2FASetup({
-							qr: data.qr ?? null,
-							qr_base64: data.qr_base64 ?? null,
-							secret: data.secret ?? null,
-							setup_token: data.setup_token ?? null,
-							phone: normalizePhoneForApi(data.phone ?? number),
-							user: data.user ?? null,
+							qr: setup.qr ?? null,
+							qr_base64: setup.qr_base64 ?? null,
+							secret: setup.secret ?? null,
+							setup_token: setup.setup_token ?? null,
+							phone: normalizePhoneForApi(setup.phone ?? number),
+							user: setup.user ?? null,
 						});
 						// navigate to the authenticator setup screen
 						return navigateToPath('/(auth)/setup-2fa');
@@ -985,22 +1000,24 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			try {
 				const resp = await fetchDashboard(String(authToken));
 				try {
-					const json: GetDashboardResponse = await resp.json();
-					if (json !== undefined) {
+					const body: GetDashboardResponse = await resp.json();
+					// API 2.0 nests the dashboard metrics under `data`.
+					const data = getApiData<NonNullable<GetDashboardResponse['data']>>(body);
+					if (data) {
 						setUser(() => {
 							try {
 								setLastDashboardUpdated(Date.now());
 							} catch (err: any) { console.error("[GeneralContext] set last updated error ", err) }
 							const dashboard: DashboardSummary = {
-								chartData: json.chartData,
-								monthTransactions: json.monthTransactions,
-								monthUsers: json.monthUsers,
-								recentTransactions: json.recentTransactions,
-								routerBalances: json.routerBalances,
-								todayTransactions: json.todayTransactions,
-								todayUsers: json.todayUsers,
-								weekTransactions: json.weekTransactions,
-								weekUsers: json.weekUsers
+								chartData: data.chartData ?? [],
+								monthTransactions: data.monthTransactions,
+								monthUsers: data.monthUsers ?? 0,
+								recentTransactions: data.recentTransactions,
+								routerBalances: data.routerBalances ?? [],
+								todayTransactions: data.todayTransactions ?? 0,
+								todayUsers: data.todayUsers ?? 0,
+								weekTransactions: data.weekTransactions ?? 0,
+								weekUsers: data.weekUsers ?? 0
 							}
 							return { ...user, dashboard };
 						});
@@ -1024,9 +1041,12 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 			try {
 				const userData = await fetchUser(authToken);
 				if (userData && userData.ok) {
-					const meResponse: GetMeResponse = await userData.json();
-					if (meResponse && meResponse.user)
-						setUser(prev => ({ ...prev ?? {}, ...meResponse.user, platform: meResponse.platform, account: meResponse.active_account }))
+					const body: GetMeResponse = await userData.json();
+					// API 2.0 wraps the identity context in `data`.
+					const meResponse = getApiData<NonNullable<GetMeResponse['data']>>(body);
+					const meUser = meResponse?.user;
+					if (meUser)
+						setUser(prev => ({ ...prev ?? {}, ...meUser, platform: meResponse?.platform, account: meResponse?.active_account }))
 				}
 			} catch (e) {
 				console.log("[GeneralContext fetchUserProfile] ", e);
@@ -1083,7 +1103,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				});
 				return;
 			}
-			const data = await res.json();
+			const body: RegisterResponse = await res.json();
+			// API 2.0 returns `{ data: { phone } }`; older builds returned `{ phone }`.
+			const data = getApiData<{ phone?: string }>(body);
 			console.info('[GeneralContext] Registration response data:', data);
 			setPendingPhone(data?.phone || phone);
 			setPendingRegistration({ phone, password, fullName: name, email });
@@ -1132,7 +1154,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				});
 				return;
 			}
-			const resJson = await res.json();
+			const resBody: VerifyOtpResponse = await res.json();
+			// API 2.0 wraps the setup payload in `data`.
+			const resJson = getApiData<TotpSetupData>(resBody);
 			// If backend requests TOTP setup, store the setup payload and navigate to the setup screen
 			if (resJson && (resJson.qr || resJson.setup_token || resJson.qr_base64)) {
 				setPending2FASetup({
@@ -1202,7 +1226,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				});
 				return false;
 			}
-			const resJson: TwoFAVerifyResponse = await res.json();
+			const verifyBody: TwoFAVerifyResponse = await res.json();
+			// API 2.0 wraps the session payload in `data`.
+			const resJson: AuthSession | null = getApiData<AuthSession>(verifyBody);
 			console.info('[GeneralContext] 2FA verification response ', { resJson });
 			// If server returned token/user/dashboard, persist and merge into app state
 			try {
@@ -1233,7 +1259,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				// Show success toast if backend provided a message
 				try {
 					const successMessage =
-						(resJson && resJson.message) ||
+						verifyBody?.message ||
 						tr.categories.auth['setupAuthenticator.loginSuccess'] ||
 						'Login successful';
 					setAppMessage?.({ type: 'message', message: successMessage });
@@ -1312,7 +1338,9 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				});
 				return null;
 			}
-			const json: TwoFASetupResponse = await res.json();
+			const setupBody: TwoFASetupResponse = await res.json();
+			// API 2.0 wraps the session payload in `data`.
+			const json: AuthSession | null = getApiData<AuthSession>(setupBody);
 
 			try {
 				// Persist token and selected user fields to AsyncStorage if present
@@ -1344,7 +1372,7 @@ export const GeneralProvider: React.FC<{ children: React.ReactNode }> = ({
 				// Show success toast if backend provided a message, then navigate
 				try {
 					const successMessage =
-						(json && (json as any).message) ||
+						setupBody?.message ||
 						tr.categories.auth['setupAuthenticator.setupSuccess'] ||
 						'Two-factor authentication enabled.';
 					setAppMessage?.({ type: 'message', message: String(successMessage) });

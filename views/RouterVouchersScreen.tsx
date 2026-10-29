@@ -10,6 +10,7 @@ import { useTransaction } from '@/context/TransactionContext';
 import { ShowAlert } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
+import { getApiData } from '@/helpers/apiResponse';
 import { getRouterHotspots } from '@/services/RouterService';
 import { ApiRouter, Hotspot } from '@/types';
 import {
@@ -100,8 +101,10 @@ export default function RouterVouchersScreen() {
 		try {
 			const hotspotsResponse = await getRouterHotspots(vRId, authToken);
 			if (hotspotsResponse && hotspotsResponse.ok) {
-				const hotspotsData = await hotspotsResponse.json();
-				if (hotspotsData.hotspots) {
+				const hotspotsBody = await hotspotsResponse.json();
+				// API 2.0: `{ data: { hotspots: [...] } }`
+				const hotspotsData = getApiData<{ hotspots?: Hotspot[] }>(hotspotsBody);
+				if (Array.isArray(hotspotsData?.hotspots)) {
 					setHotspots(hotspotsData.hotspots);
 				}
 			} else {
@@ -140,7 +143,7 @@ export default function RouterVouchersScreen() {
 
 	useEffect(() => {
 		if (vRId && routers) {
-			const found = routers.data.find((r) => r.id === vRId);
+			const found = routers.find((r) => r.id === vRId);
 			setCurrentRouter(found);
 		}
 	}, [vRId, routers]);

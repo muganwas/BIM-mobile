@@ -20,6 +20,7 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { parseApiError } from '@/helpers/api';
+import { getApiData } from '@/helpers/apiResponse';
 import {
 	formatAmount,
 	isTruthy,
@@ -34,6 +35,10 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import * as PackageService from '@/services/PackageService';
 import {
 	ApiRouter,
+	GetPackageRoutersResponse,
+	GetPortalPackagesResponse,
+	GetSharedRadiusProfilesResponse,
+	GetTrialSettingsResponse,
 	PortalPackage,
 	SharedRadiusProfile,
 	TrialSettings,
@@ -216,8 +221,10 @@ export default function PackagesScreen() {
 					await showError(response, t('loadPackagesFailed'));
 					return;
 				}
-				const json = await response.json();
-				setPortalPackages(Array.isArray(json?.packages) ? json.packages : []);
+				const body: GetPortalPackagesResponse = await response.json();
+				// API 2.0: `{ data: { scope, packages }, meta: { pagination } }`
+				const data = getApiData<NonNullable<GetPortalPackagesResponse['data']>>(body);
+				setPortalPackages(Array.isArray(data?.packages) ? data.packages : []);
 			} catch (error) {
 				console.error('[PackagesScreen] loadPackages failed', error);
 				setAppMessage?.({
@@ -245,8 +252,9 @@ export default function PackagesScreen() {
 					);
 					return;
 				}
-				const json = await response.json();
-				setProfiles(Array.isArray(json?.profiles) ? json.profiles : []);
+				const body: GetSharedRadiusProfilesResponse = await response.json();
+				const data = getApiData<NonNullable<GetSharedRadiusProfilesResponse['data']>>(body);
+				setProfiles(Array.isArray(data?.profiles) ? data.profiles : []);
 				setProfilesError(null);
 			} catch (error) {
 				console.error('[PackagesScreen] loadProfiles failed', error);
@@ -304,11 +312,12 @@ export default function PackagesScreen() {
 							authToken
 						);
 						if (!response.ok) throw new Error('trial settings unavailable');
-						const json = await response.json();
+						const body: GetTrialSettingsResponse = await response.json();
+						const trialData = getApiData<NonNullable<GetTrialSettingsResponse['data']>>(body);
 						if (!cancelled) {
 							setTrialSettings((prev) => ({
 								...prev,
-								[router.id]: json?.trial_settings ?? null,
+								[router.id]: trialData?.trial_settings ?? null,
 							}));
 						}
 					} catch {
@@ -570,16 +579,17 @@ export default function PackagesScreen() {
 				await showError(response, t('saveRouterSettingsFailed'));
 				return;
 			}
-			const json = await response.json();
+			const body: GetPackageRoutersResponse = await response.json();
+			const data = getApiData<NonNullable<GetPackageRoutersResponse['data']>>(body);
 			setPortalPackages((prev) =>
 				prev.map((item) =>
 					item.id === pkg.id
 						? {
 							...item,
-							routers: Array.isArray(json?.routers)
-								? json.routers
+							routers: Array.isArray(data?.routers)
+								? data.routers
 								: item.routers,
-							rate_limits: json?.rate_limits ?? item.rate_limits,
+							rate_limits: data?.rate_limits ?? item.rate_limits,
 						}
 						: item
 				)
@@ -613,11 +623,12 @@ export default function PackagesScreen() {
 				await showError(response, t('saveTrialFailed'));
 				return;
 			}
-			const json = await response.json();
+			const body: GetTrialSettingsResponse = await response.json();
+			const trialData = getApiData<NonNullable<GetTrialSettingsResponse['data']>>(body);
 			setTrialSettings((prev) => ({
 				...prev,
 				[routerItem.id]:
-					json?.trial_settings ?? {
+					trialData?.trial_settings ?? {
 						router_id: routerItem.id,
 						enabled,
 						duration_minutes: minutes,

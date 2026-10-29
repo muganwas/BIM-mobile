@@ -9,6 +9,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
+import { getApiData } from '@/helpers/apiResponse';
 import { getRouterHotspots } from '@/services/RouterService';
 import { ApiRouter, Hotspot } from '@/types';
 import {
@@ -105,7 +106,7 @@ export default function PackageRouterHotspotsScreen() {
 
 	useEffect(() => {
 		if (rId && routers) {
-			const found = routers?.data.find((r) => r.id === rId);
+			const found = routers.find((r) => r.id === rId);
 			setCurrentRouter(found);
 		}
 	}, [rId, routers]);
@@ -137,8 +138,10 @@ export default function PackageRouterHotspotsScreen() {
 		try {
 			const hotspotsResponse = await getRouterHotspots(rId, authToken);
 			if (hotspotsResponse && hotspotsResponse.ok) {
-				const hotspotsData = await hotspotsResponse.json();
-				if (hotspotsData.hotspots) {
+				const hotspotsBody = await hotspotsResponse.json();
+				// API 2.0: `{ data: { hotspots: [...] } }`
+				const hotspotsData = getApiData<{ hotspots?: Hotspot[] }>(hotspotsBody);
+				if (Array.isArray(hotspotsData?.hotspots)) {
 					setHotspots(hotspotsData.hotspots);
 				}
 			}

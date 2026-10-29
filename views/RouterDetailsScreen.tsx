@@ -10,6 +10,7 @@ import { useGeneral } from "@/context/GeneralContext";
 import { generateRandomInt } from "@/helpers";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import useTrackHistory from "@/hooks/useTrackHistory";
+import { getApiData, getPageInfo, PageInfo } from "@/helpers/apiResponse";
 import {
     deleteRouterCookie,
     getRouterActiveUsers,
@@ -31,7 +32,6 @@ import {
     Host,
     HotspotActiveUser,
     HotspotUser,
-    PaginatedResourcesMeta,
     RouterTrafficHello,
     RouterTrafficSample
 } from "@/types";
@@ -113,11 +113,11 @@ export default function RouterDetailsScreen() {
     const [hosts, setHosts] = useState<Host[]>([]);
     const [DHCPLeases, setDHCPLeases] = useState<DHCPLease[]>([]);
     const [activeCookie, setActiveCookie] = useState<string>();
-    const [usersMeta, setUsersMeta] = useState<PaginatedResourcesMeta | undefined>();
-    const [hostsMeta, setHostsMeta] = useState<PaginatedResourcesMeta | undefined>();
-    const [DHCPLeasesMeta, setDHCPLeasesMeta] = useState<PaginatedResourcesMeta | undefined>();
-    const [cookiesMeta, setCookiesMeta] = useState<PaginatedResourcesMeta | undefined>();
-    const [activeMeta, setActiveMeta] = useState<PaginatedResourcesMeta | undefined>();
+    const [usersMeta, setUsersMeta] = useState<PageInfo | undefined>();
+    const [hostsMeta, setHostsMeta] = useState<PageInfo | undefined>();
+    const [DHCPLeasesMeta, setDHCPLeasesMeta] = useState<PageInfo | undefined>();
+    const [cookiesMeta, setCookiesMeta] = useState<PageInfo | undefined>();
+    const [activeMeta, setActiveMeta] = useState<PageInfo | undefined>();
     const [trafficInterfaces, setTrafficInterfaces] = useState<string[]>([]);
     const [selectedTrafficInterface, setSelectedTrafficInterface] = useState('');
     const [showTrafficInterfaceDropdown, setShowTrafficInterfaceDropdown] = useState(false);
@@ -201,9 +201,11 @@ export default function RouterDetailsScreen() {
         try {
             const resp = await getRouterActiveUsers({ routerId, token: authToken, page: params?.page, limit: 10 });
             if (resp.ok) {
-                const data: GetRouterActiveUsersResponse = await resp.json();
+                const body: GetRouterActiveUsersResponse = await resp.json();
+                // API 2.0: payload lives in `data`, pagination in `meta.pagination`.
+                const data = getApiData<NonNullable<GetRouterActiveUsersResponse['data']>>(body);
                 setActiveUsers(data?.active || []);
-                setActiveMeta(data?.active_meta);
+                setActiveMeta(getPageInfo(body));
                 setLastFetched((prev) => ({ ...prev, activeUsers: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchActiveUsers failed', resp.status, resp.statusText);
@@ -222,9 +224,10 @@ export default function RouterDetailsScreen() {
         try {
             const resp = await getRouterUsers({ routerId, token: authToken, page: params?.page, limit: 10 });
             if (resp.ok) {
-                const data: GetRouterUsersResponse = await resp.json();
+                const body: GetRouterUsersResponse = await resp.json();
+                const data = getApiData<NonNullable<GetRouterUsersResponse['data']>>(body);
                 setUsers(data?.users || []);
-                setUsersMeta(data?.users_meta || undefined);
+                setUsersMeta(getPageInfo(body));
                 setLastFetched((prev) => ({ ...prev, users: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchUsers failed', resp.status, resp.statusText);
@@ -243,9 +246,10 @@ export default function RouterDetailsScreen() {
         try {
             const resp = await getRouterCookies({ routerId, token: authToken, page: params?.page, limit: 10 });
             if (resp.ok) {
-                const data: GetRouterCookiesResponse = await resp.json();
+                const body: GetRouterCookiesResponse = await resp.json();
+                const data = getApiData<NonNullable<GetRouterCookiesResponse['data']>>(body);
                 setCookies(data?.cookies || []);
-                setCookiesMeta(data?.cookies_meta || undefined);
+                setCookiesMeta(getPageInfo(body));
                 setLastFetched((prev) => ({ ...prev, cookies: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchCookies failed', resp.status, resp.statusText);
@@ -264,9 +268,10 @@ export default function RouterDetailsScreen() {
         try {
             const resp = await getRouterHosts({ routerId, token: authToken, page: params?.page, limit: 10 });
             if (resp.ok) {
-                const data: GetRouterHostsResponse = await resp.json();
+                const body: GetRouterHostsResponse = await resp.json();
+                const data = getApiData<NonNullable<GetRouterHostsResponse['data']>>(body);
                 setHosts(data?.hosts || []);
-                setHostsMeta(data?.hosts_meta || undefined);
+                setHostsMeta(getPageInfo(body));
                 setLastFetched((prev) => ({ ...prev, hosts: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchHosts failed', resp.status, resp.statusText);
@@ -285,9 +290,10 @@ export default function RouterDetailsScreen() {
         try {
             const resp = await getRouterDHCPLeases({ routerId, token: authToken, page: params?.page, limit: 10 });
             if (resp.ok) {
-                const data: GetRouterDHCPLeasesResponse = await resp.json();
+                const body: GetRouterDHCPLeasesResponse = await resp.json();
+                const data = getApiData<NonNullable<GetRouterDHCPLeasesResponse['data']>>(body);
                 setDHCPLeases(data?.leases || []);
-                setDHCPLeasesMeta(data?.leases_meta || undefined);
+                setDHCPLeasesMeta(getPageInfo(body));
                 setLastFetched((prev) => ({ ...prev, dhcp_leases: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchDHCPLeases failed', resp.status, resp.statusText);
@@ -309,7 +315,7 @@ export default function RouterDetailsScreen() {
             if (!response.ok) {
                 throw new Error(`Interface request failed (${response.status})`);
             }
-            const names = getInterfaceNames(await response.json());
+            const names = getInterfaceNames(getApiData(await response.json()));
             if (!names.length) {
                 setTrafficInterfaceError(
                     translations[language].categories.routers.trafficNoInterfaces ||
