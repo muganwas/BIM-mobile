@@ -1,4 +1,5 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { RecordCard, RecordList } from '@/components/RecordList';
 import { ThemedSwitch } from '@/components/ThemedSwitch';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -14,8 +15,7 @@ import { getRouterById, getRouterHotspots, getRouterPurchaseGuard, getRouterStat
 import { ApiRouter, GetPurchaseGuardResponse, GetRouterHotspotsResponse, GetRouterResponse, Hotspot, PostPurchaseGuardResponse } from '@/types';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 
 export interface RouterStatus {
 	uptime?: string;
@@ -47,11 +47,7 @@ export default function RouterPreviewScreen() {
 	const textDark = useThemeColor({}, 'text', 'dark');
 	const titleBgLight = useThemeColor({}, 'titleBg', 'light');
 	const titleBgDark = useThemeColor({}, 'titleBg', 'dark');
-	const borderDark = useThemeColor({}, 'borderDark');
-	const listItemBackground = useThemeColor({}, 'listItemBackground');
 	const bim = useThemeColor({}, 'bim');
-	const whiteLight = useThemeColor({}, 'white', 'light');
-	const whiteDark = useThemeColor({}, 'white', 'dark');
 
 	// State
 	const [apiRouter, setApiRouter] = useState<Partial<ApiRouter>>();
@@ -426,229 +422,49 @@ export default function RouterPreviewScreen() {
 					</ThemedView>
 				</ThemedView>
 			</TileContainer>
-			<TileContainer
-				id={routerId || 'new-router-' + generateRandomInt(1000, 9999)}
-				backgroundColor={background}
-				style={{
-					flexDirection: 'column',
-					boxSizing: 'border-box',
-					overflow: 'hidden',
-					padding: 0,
-					marginHorizontal: 20,
-				}}
+			<RecordList
+				id={`hotspot-list-${routerId}`}
+				title={`${translations[language].categories.routers.hotspotsTitle}: ${apiRouter?.name ?? ''}`}
+				isEmpty={hotspots.length === 0}
+				emptyMessage={translations[language].categories.hotspots.noHotspots}
 			>
-				<ThemedView
-					lightColor={backgroundLight}
-					darkColor={backgroundDark}
-					style={{
-						flexDirection: 'row',
-						paddingHorizontal: 10,
-						paddingTop: 10,
-					}}
-				>
-					<ThemedText
-						lightColor={textLight}
-						darkColor={textDark}
-						numberOfLines={1}
-					>
-						<ThemedText
-							lightColor={textLight}
-							darkColor={textDark}
-							style={{
-								fontWeight: fontWeight['heading.three'],
-								fontSize: fontSize['heading.two'],
+				{hotspots.map((hotspot) => {
+					const disabled =
+						hotspot.disabled === 'true' || hotspot.disabled === true;
+					return (
+						<RecordCard
+							key={hotspot['.id'] ?? hotspot.name}
+							id={`preview-hotspot-${hotspot['.id'] ?? hotspot.name}`}
+							title={hotspot.name}
+							badge={{
+								label: disabled
+									? translations[language].categories.hotspots.disabled
+									: translations[language].categories.hotspots.enabled,
+								tone: disabled ? 'danger' : 'success',
 							}}
-						>
-							{`${translations[language].categories.routers.hotspotsTitle}: `}
-						</ThemedText>
-						<ThemedText
-							lightColor={textLight}
-							darkColor={textDark}
-							style={{
-								fontWeight: fontWeight['heading.two'],
-								fontSize: fontSize['heading.two'],
-							}}
-						>
-							{apiRouter?.name}
-						</ThemedText>
-					</ThemedText>
-				</ThemedView>
-				<ScrollView
-					style={{ width: '100%' }}
-					horizontal
-					showsHorizontalScrollIndicator={true}
-				>
-					<ThemedView
-						style={{ flexDirection: 'column' }}
-						lightColor={backgroundLight}
-						darkColor={backgroundDark}
-					>
-						<ThemedView
-							id={`hotspot-list-header-${routerId}`}
-							style={{
-								flexDirection: 'row',
-								justifyContent: 'space-between',
-								gap: 10,
-								paddingHorizontal: 10,
-								paddingVertical: 10,
-								borderBottomWidth: 1,
-								borderBottomColor: borderDark,
-							}}
-							lightColor={titleBgLight}
-							darkColor={titleBgDark}
-						>
-							<ThemedText
-								style={{ width: 30 }}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.routers.id}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={styles.colTitle}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.routers.hotspotName}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={styles.colTitle}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.routers.interface}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={styles.colTitle}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.routers.profile}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={styles.colTitle}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.routers.status}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={[styles.colTitle, { textAlign: 'center' }]}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.routers.actions}
-							</ThemedText>
-						</ThemedView>
-						<ScrollView
-							nativeID={`hotspot-list-details-${routerId}`}
-							style={{
-								flexDirection: 'column',
-								backgroundColor: background,
-							}}
-						>
-							{hotspots.map((hotspot, index: number) => (
-								<ThemedView
-									key={index}
-									style={{
-										flexDirection: 'row',
-										width: '100%',
-										paddingVertical: 12,
-										gap: 10,
-										paddingHorizontal: 10,
-										justifyContent: 'space-between',
-										backgroundColor:
-											index % 2 === 0 ? listItemBackground : background,
-										borderBottomWidth: index < hotspots.length - 1 ? 1 : 0,
-										borderBottomColor: borderDark,
-									}}
-									lightColor={backgroundLight}
-									darkColor={backgroundDark}
-								>
-									<ThemedText
-										numberOfLines={1}
-										style={{
-											width: 30,
-											overflow: 'hidden',
-											paddingRight: 8,
-										}}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{index + 1}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={styles.colInfo}
-										lightColor={bim}
-										darkColor={bim}
-									>
-										{hotspot.name}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={styles.colInfo}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{hotspot.interface}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={styles.colInfo}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{hotspot.profile}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={styles.colInfo}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{hotspot.disabled === "true" || hotspot.disabled === true ? translations[language].categories.hotspots.disabled : translations[language].categories.hotspots.enabled}
-									</ThemedText>
-									<ThemedView
-										style={{
-											flexDirection: 'row',
-											justifyContent: 'space-between',
-											gap: 5,
-											width: 120,
-										}}
-										lightColor={backgroundLight}
-										darkColor={backgroundDark}
-									>
-										<TouchableOpacity
-											style={{
-												backgroundColor: bim,
-												paddingVertical: 6,
-												paddingHorizontal: 12,
-												borderRadius: 8,
-											}}
-											onPress={() => handleViewRouterDetails(routerId)}
-										>
-											<ThemedText lightColor={whiteLight} darkColor={whiteDark}>
-												{translations[language].categories.buttons.viewDetails}
-											</ThemedText>
-										</TouchableOpacity>
-									</ThemedView>
-								</ThemedView>
-							))}
-						</ScrollView>
-					</ThemedView>
-				</ScrollView>
-			</TileContainer>
+							fields={[
+								{
+									label: translations[language].categories.hotspots.interface,
+									value: hotspot.interface,
+								},
+								{
+									label: translations[language].categories.hotspots.profile,
+									value: hotspot.profile,
+								},
+							]}
+							actions={[
+								{
+									label:
+										translations[language].categories.buttons.viewDetails,
+									icon: 'routers.outline',
+									tone: 'primary',
+									onPress: () => handleViewRouterDetails(routerId),
+								},
+							]}
+						/>
+					);
+				})}
+			</RecordList>
 		</ParallaxScrollView>
 	);
 }

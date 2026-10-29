@@ -1,10 +1,10 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedButton } from '@/components/ThemedButton';
+import { RecordCard, RecordList } from '@/components/RecordList';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import TileContainer from '@/components/TileContainer';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
+import { formatAmount } from '@/helpers';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -12,16 +12,10 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import WithdrawFunds from '@/views/WithdrawFunds';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 
 export default function WithdrawScreen() {
 	const bg = useThemeColor({}, 'background');
 	const textColor = useThemeColor({}, 'text');
-	const listItemBackground = useThemeColor({}, 'listItemBackground');
-	const borderDark = useThemeColor({}, 'borderDark');
-	const lime = useThemeColor({}, 'lime');
-	const white = useThemeColor({}, 'white');
-	const titleBg = useThemeColor({}, 'titleBg');
 	const screenTitleText = useThemeColor({}, 'screenTitleText');
 	const { routers, fetchRouters } = useTransaction();
 	const { user, language } = useGeneral();
@@ -58,39 +52,6 @@ export default function WithdrawScreen() {
 		[language]
 	);
 
-	// Predefine header columns for the withdraw routers table
-	const withdrawHeaders = useMemo(
-		() => [
-			{ key: 'row', label: '#', width: 30 },
-			{
-				key: 'name',
-				label: translations[language].categories.dashboard.name,
-				width: 120,
-			},
-			{
-				key: 'location',
-				label: translations[language].categories.dashboard.location,
-				width: 120,
-			},
-			{
-				key: 'ip',
-				label: translations[language].categories.dashboard.ipAddress,
-				width: 120,
-			},
-			{
-				key: 'balance',
-				label: translations[language].categories.dashboard.balance,
-				width: 120,
-			},
-			{
-				key: 'actions',
-				label: translations[language].categories.dashboard.actions,
-				width: 120,
-				textAlign: 'center' as const,
-			},
-		],
-		[language]
-	);
 	const selectedRouter = useMemo(
 		() => routers?.find((r) => r.id === selectedRouterId) || null,
 		[routers, selectedRouterId]
@@ -155,146 +116,38 @@ export default function WithdrawScreen() {
 					{translations[language].categories.withdraw.subtitle}
 				</ThemedText>
 			</ThemedView>
-			<TileContainer
-				id={'withdraw-router-list'}
-				backgroundColor={bg}
-				style={{
-					flexDirection: 'column',
-					overflow: 'hidden',
-					boxSizing: 'border-box',
-					marginTop: 12,
-					padding: 0,
-				}}
+			<RecordList
+				id='withdraw-router-list'
+				isEmpty={routers?.length === 0}
+				emptyMessage={translations[language].categories.withdraw.noRouters}
 			>
-				<ScrollView
-					style={{ width: '100%' }}
-					horizontal
-					showsHorizontalScrollIndicator
-				>
-					<ThemedView
-						style={{ flexDirection: 'column' }}
-						lightColor={bg}
-						darkColor={bg}
-					>
-						<ThemedView
-							style={{
-								flexDirection: 'row',
-								justifyContent: 'space-between',
-								gap: 10,
-								paddingHorizontal: 5,
-								paddingVertical: 10,
-								borderBottomWidth: 1,
-								borderBottomColor: borderDark,
-							}}
-							lightColor={titleBg}
-							darkColor={titleBg}
-						>
-							{withdrawHeaders.map((col) => (
-								<ThemedText
-									key={`hdr-${col.key}`}
-									numberOfLines={1}
-									ellipsizeMode='tail'
-									style={{
-										fontSize: fontSize['text.medium'],
-										width: col.width,
-										textTransform: 'uppercase',
-										paddingRight: 8,
-										...(col.textAlign ? { textAlign: col.textAlign } : {}),
-									}}
-									lightColor={textColor}
-									darkColor={textColor}
-								>
-									{col.label}
-								</ThemedText>
-							))}
-						</ThemedView>
-
-						<ScrollView
-							style={{
-								flexDirection: 'column',
-								backgroundColor: bg,
-							}}
-						>
-							{routers?.map((r, index) => (
-								<ThemedView
-									key={r.id}
-									style={{
-										flexDirection: 'row',
-										width: '100%',
-										alignItems: 'center',
-										paddingVertical: 5,
-										paddingHorizontal: 5,
-										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
-										justifyContent: 'space-between',
-										borderBottomWidth: index < (routers?.length ?? 0) - 1 ? 1 : 0,
-										borderBottomColor: borderDark,
-									}}
-									lightColor={bg}
-									darkColor={bg}
-								>
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 30, overflow: 'hidden', paddingRight: 8 }}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{index + 1}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 120, paddingRight: 8, overflow: 'hidden' }}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{r.name}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{ paddingRight: 8, width: 120 }}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{r.location}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{ paddingRight: 8, width: 120 }}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{r?.ip_address || 'N/A'}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										style={{ paddingRight: 8, width: 120 }}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{r.balance}
-									</ThemedText>
-									<ThemedView
-										style={{ width: 120, alignItems: 'center' }}
-										lightColor='transparent'
-										darkColor='transparent'
-									>
-										<ThemedButton
-											title={translations[language].categories.buttons.withdraw}
-											onPress={() => handleWithdrawRouter(r.id)}
-											style={{
-												backgroundColor: lime,
-												borderRadius: 6,
-												minWidth: 120,
-											}}
-											lightTextColor={white}
-											darkTextColor={white}
-										/>
-									</ThemedView>
-								</ThemedView>
-							))}
-						</ScrollView>
-					</ThemedView>
-				</ScrollView>
-			</TileContainer>
+				{routers?.map((r) => (
+					<RecordCard
+						key={r.id}
+						id={`withdraw-router-${r.id}`}
+						title={r.name}
+						subtitle={r.location}
+						fields={[
+							{
+								label: translations[language].categories.dashboard.ipAddress,
+								value: r.ip_address || 'N/A',
+							},
+							{
+								label: translations[language].categories.dashboard.balance,
+								value: `${formatAmount(r.balance)} ${currency}`,
+							},
+						]}
+						actions={[
+							{
+								label: translations[language].categories.buttons.withdraw,
+								icon: 'withdrawal',
+								tone: 'success',
+								onPress: () => handleWithdrawRouter(r.id),
+							},
+						]}
+					/>
+				))}
+			</RecordList>
 			{selectedRouter && (
 				<WithdrawFunds
 					visible={showWithdraw}

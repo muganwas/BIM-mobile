@@ -1,27 +1,21 @@
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Prompt from '@/components/Prompt';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import TileContainer from '@/components/TileContainer';
+import { RecordCard, RecordList } from '@/components/RecordList';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
-import { generateRandomInt, translateWithVariables } from '@/helpers';
+import { translateWithVariables } from '@/helpers';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { ApiRouter, GetRouterUsersResponse, Hotspot, HotspotActiveUser } from '@/types';
 import CreateVouchers from '@/views/CreateVouchers';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-	ActivityIndicator,
-	Animated,
-	StyleSheet,
-	useAnimatedValue,
-	useColorScheme
-} from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { ActivityIndicator, Animated, useAnimatedValue, useColorScheme } from 'react-native';
 
 /**
  * `data` payload of `GET /routers/{router}/hotspots/users`.
@@ -50,14 +44,8 @@ export default function HotspotVouchersScreen() {
 	const backgroundDark = useThemeColor({}, 'background', 'dark');
 	const textLight = useThemeColor({}, 'text', 'light');
 	const textDark = useThemeColor({}, 'text', 'dark');
-	const titleBgLight = useThemeColor({}, 'titleBg', 'light');
-	const titleBgDark = useThemeColor({}, 'titleBg', 'dark');
-	const borderDark = useThemeColor({}, 'borderDark');
-	const listItemBackground = useThemeColor({}, 'listItemBackground');
 	const bim = useThemeColor({}, 'bim');
 	const lime = useThemeColor({}, 'lime');
-	const yellow = useThemeColor({}, 'yellow');
-	const errorColor = useThemeColor({}, 'error');
 	const cancelButton = useThemeColor({}, 'cancelButton');
 	const dangerButton = useThemeColor({}, 'dangerButton');
 	const white = useThemeColor({}, 'white');
@@ -72,9 +60,9 @@ export default function HotspotVouchersScreen() {
 	const [multipleVouchers, setMultipleVouchers] = useState(false);
 	const [editVoucherCode, setEditVoucherCode] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 	const [error, setError] = useState(false);
 	const [retrying, setRetrying] = useState(false);
-	const [refreshing, setRefreshing] = useState(false);
 	const retryCount = useRef(0);
 
 	// Seed parent immediately on mount to guarantee ordering before current route push
@@ -262,7 +250,17 @@ export default function HotspotVouchersScreen() {
 
 	return (
 		<>
-			<ThemedView style={{ flex: 1, padding: 16, backgroundColor: background }}>
+			<ParallaxScrollView
+				headerBackgroundColor={{ light: backgroundLight, dark: backgroundDark }}
+				containerStyle={{ flex: 1 }}
+				onRefresh={handleRefresh}
+				refreshing={refreshing}
+			>
+			<ThemedView
+				style={{ padding: 16, backgroundColor: background }}
+				lightColor={backgroundLight}
+				darkColor={backgroundDark}
+			>
 				<ThemedView
 					style={{
 						flexDirection: 'column',
@@ -333,7 +331,7 @@ export default function HotspotVouchersScreen() {
 				</ThemedView>
 				{loading ? (
 					<ThemedView
-						style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}
+						style={{ minHeight: 240, justifyContent: 'center', alignItems: 'center', padding: 20 }}
 						lightColor={background}
 						darkColor={background}
 					>
@@ -346,7 +344,7 @@ export default function HotspotVouchersScreen() {
 					</ThemedView>
 				) : error ? (
 					<ThemedView
-						style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}
+						style={{ minHeight: 240, justifyContent: 'center', alignItems: 'center', padding: 20 }}
 						lightColor={background}
 						darkColor={background}
 					>
@@ -363,304 +361,80 @@ export default function HotspotVouchersScreen() {
 						/>
 					</ThemedView>
 				) : (
-					<TileContainer
-						id={vRId || 'new-router-' + generateRandomInt(1000, 9999)}
-						backgroundColor={background}
-						style={{
-							flexDirection: 'column',
-							boxSizing: 'border-box',
-							overflow: 'hidden',
-							padding: 0,
-						}}
+					<RecordList
+						id={vRId || 'hotspot-vouchers'}
+						isEmpty={(usersResponse?.users?.length ?? 0) === 0}
+						emptyMessage={translations[language].categories.vouchers.noVouchers}
+						headerAction={
+							<ThemedButton
+								title={translations[language].categories.buttons.retry}
+								onPress={() => void handleRefresh()}
+								lightColor='transparent'
+								darkColor='transparent'
+								lightTextColor={textLight}
+								darkTextColor={textDark}
+							/>
+						}
 					>
-						<ScrollView
-							style={{ width: '100%' }}
-							horizontal
-							showsHorizontalScrollIndicator={true}
-						>
-							<ThemedView
-								style={{ flexDirection: 'column' }}
-								lightColor={backgroundLight}
-								darkColor={backgroundDark}
-							>
-								<ThemedView
-									id='hotspot-list-header'
-									style={{
-										flexDirection: 'row',
-										justifyContent: 'space-between',
-										gap: 10,
-										paddingHorizontal: 10,
-										paddingVertical: 10,
-										borderBottomWidth: 1,
-										borderBottomColor: borderDark,
+						{(usersResponse?.users ?? []).map((user) => {
+							const online = user.online === 'true';
+							return (
+								<RecordCard
+									key={user['.id'] ?? user.name}
+									id={`hotspot-user-${user['.id'] ?? user.name}`}
+									title={user.name}
+									subtitle={user.profile_display || user.profile}
+									badge={{
+										label: online
+											? translations[language].categories.routers.online
+											: translations[language].categories.routers.offline,
+										tone: online ? 'success' : 'danger',
 									}}
-									lightColor={titleBgLight}
-									darkColor={titleBgDark}
-								>
-									<ThemedText
-										style={{ width: 30 }}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										#
-									</ThemedText>
-									<ThemedText
-										style={styles.colTitle}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{translations[language].categories.vouchers.vouchers}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										ellipsizeMode='tail'
-										style={styles.colTitle}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{translations[language].categories.vouchers.package}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										ellipsizeMode='tail'
-										style={styles.colTitle}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{translations[language].categories.vouchers.status}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										ellipsizeMode='tail'
-										style={styles.colTitle}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{translations[language].categories.vouchers.macAddress}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										ellipsizeMode='tail'
-										style={styles.colTitle}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{translations[language].categories.vouchers.uptime}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										ellipsizeMode='tail'
-										style={styles.colTitle}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{translations[language].categories.vouchers.bytesIn}
-									</ThemedText>
-									<ThemedText
-										numberOfLines={1}
-										ellipsizeMode='tail'
-										style={styles.colTitle}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{translations[language].categories.vouchers.bytesOut}
-									</ThemedText>
-
-									<ThemedText
-										numberOfLines={1}
-										ellipsizeMode='tail'
-										style={[styles.colTitle, { width: 120, textAlign: 'center' }]}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{translations[language].categories.vouchers.actions}
-									</ThemedText>
-								</ThemedView>
-								{/* <ScrollView
-									nativeID={`hotspot-list-details-${hotspotId}`}
-									style={{
-										flexDirection: 'column',
-										backgroundColor: background,
-									}}
-									refreshControl={
-										<RefreshControl
-											refreshing={refreshing}
-											onRefresh={handleRefresh}
-										/>
-									}
-								>
-									{usersResponse?.active?.map((user, index) => (
-										<ThemedView
-											key={index}
-											style={{
-												flexDirection: 'row',
-												width: '100%',
-												paddingVertical: 12,
-												gap: 10,
-												paddingHorizontal: 10,
-												justifyContent: 'space-between',
-												borderBottomWidth: routers?.data?.length && index < routers?.data?.length - 1 ? 1 : 0,
-												borderBottomColor: borderDark,
-												backgroundColor:
-													index % 2 === 0 ? listItemBackground : background,
-											}}
-											lightColor={backgroundLight}
-											darkColor={backgroundDark}
-										>
-											<ThemedText
-												numberOfLines={1}
-												style={{ width: 30 }}
-												lightColor={textLight}
-												darkColor={textDark}
-											>
-												{index + 1}
-											</ThemedText>
-											<ThemedText
-												numberOfLines={1}
-												style={styles.colInfo}
-												lightColor={textLight}
-												darkColor={textDark}
-											>
-												{user.user}
-											</ThemedText>
-											<ThemedText
-												numberOfLines={1}
-												style={styles.colInfo}
-												lightColor={textLight}
-												darkColor={textDark}
-											>
-												{usersResponse?.users?.find(u => u.name === user.user)?.profile || user.server}
-											</ThemedText>
-											<ThemedText
-												numberOfLines={1}
-												style={styles.colInfo}
-												lightColor={textLight}
-												darkColor={textDark}
-											>
-												/** Status is not explicitly in the new user object, maybe infer or use new field? Using 'comment' as proxy for now or just N/A if not found. 
-                                                Actually log shows 'uptime' 'time-left'. 
-                                                Old code used 'user.status'. 
-                                                New object doesn't have status. 
-                                                Maybe check time-left?
-                                            
-												{user['session-time-left'] === 'Unlimited' ? 'Active' : (user['session-time-left'] || 'N/A')}
-											</ThemedText>
-											<ThemedText
-												numberOfLines={1}
-												style={styles.colInfo}
-												lightColor={textLight}
-												darkColor={textDark}
-											>
-												{user['mac-address']}
-											</ThemedText>
-											<ThemedText
-												numberOfLines={1}
-												style={styles.colInfo}
-												lightColor={textLight}
-												darkColor={textDark}
-											>
-												{user.uptime}
-											</ThemedText>
-											<ThemedText
-												numberOfLines={1}
-												style={styles.colInfo}
-												lightColor={textLight}
-												darkColor={textDark}
-											>
-												{user['bytes-in']}
-											</ThemedText>
-											<ThemedText
-												numberOfLines={1}
-												style={styles.colInfo}
-												lightColor={textLight}
-												darkColor={textDark}
-											>
-												{user['bytes-out']}
-											</ThemedText>
-											<ThemedView
-												style={[
-													styles.colInfo,
-													{
-														flexDirection: 'row',
-														justifyContent: 'space-between',
-														gap: 5,
-														width: 120,
-													},
-												]}
-												lightColor='transparent'
-												darkColor='transparent'
-											>
-												<TouchableOpacity
-													style={{
-														paddingVertical: 6,
-													}}
-													onPress={() => handleEditUserDetails(user.user)}
-												>
-													<IconSymbol
-														name='edit.outline'
-														size={20}
-														color={yellow}
-													/>
-												</TouchableOpacity>
-												<TouchableOpacity
-													style={{
-														paddingVertical: 6,
-													}}
-													onPress={() => {
-														affirmAction.current = () =>
-															handleBlockUser(user.user);
-														setPromptTitle(
-															translations[language].categories.vouchers
-																.confirmBlockTitle
-														);
-														setPromptMessage(
-															translations[language].categories.vouchers
-																.blockMessage
-														);
-														setPromptConfirmText(
-															translations[language].categories.buttons.block
-														);
-														toggleShowPrompt(true);
-													}}
-												>
-													<IconSymbol name='block' size={20} color={errorColor} />
-												</TouchableOpacity>
-												<TouchableOpacity
-													style={{
-														paddingVertical: 6,
-													}}
-													onPress={() => {
-														affirmAction.current = () =>
-															handleDeleteUser(user.user);
-														setPromptTitle(
-															translations[language].categories.vouchers
-																.confirmDeleteTitle
-														);
-														setPromptMessage(
-															translations[language].categories.vouchers
-																.deleteMessage
-														);
-														setPromptConfirmText(
-															translations[language].categories.buttons.delete
-														);
-														toggleShowPrompt(true);
-													}}
-												>
-													<IconSymbol
-														name='delete.outline'
-														size={20}
-														color={errorColor}
-													/>
-												</TouchableOpacity>
-											</ThemedView>
-										</ThemedView>
-									))}
-								</ScrollView> */}
-							</ThemedView>
-						</ScrollView>
-					</TileContainer>
+									fields={[
+										{
+											label: translations[language].categories.vouchers.macAddress,
+											value: user['mac-address'] || '—',
+										},
+										{
+											label: translations[language].categories.vouchers.uptime,
+											value: user.uptime || '—',
+										},
+										{
+											label: translations[language].categories.vouchers.bytesIn,
+											value: user['bytes-in'] || '0',
+										},
+										{
+											label: translations[language].categories.vouchers.bytesOut,
+											value: user['bytes-out'] || '0',
+										},
+									]}
+									actions={[
+										{
+											label: translations[language].categories.packages.edit,
+											icon: 'edit.outline',
+											tone: 'warning',
+											onPress: () => handleEditUserDetails(user.name),
+										},
+										{
+											label: translations[language].categories.buttons.block,
+											icon: 'block',
+											tone: 'danger',
+											onPress: () => handleBlockUser(user.name),
+										},
+										{
+											label: translations[language].categories.packages.delete,
+											icon: 'delete.outline',
+											tone: 'danger',
+											onPress: () => handleDeleteUser(user.name),
+										},
+									]}
+								/>
+							);
+						})}
+					</RecordList>
 				)}
 			</ThemedView>
+			</ParallaxScrollView>
 			<Prompt
 				id='confirm-block-delete-voucher'
 				fadeAnim={promptFadeAnim}
@@ -719,20 +493,3 @@ export default function HotspotVouchersScreen() {
 	);
 }
 
-const styles = StyleSheet.create({
-	statusLabel: {
-		fontSize: fontSize['heading.two'],
-		fontWeight: fontWeight['heading.two'],
-	},
-	colTitle: {
-		fontSize: fontSize['text.small'],
-		width: 100,
-		textTransform: 'uppercase',
-		paddingRight: 8,
-	},
-	colInfo: {
-		width: 100,
-		paddingRight: 8,
-		overflow: 'hidden',
-	},
-});

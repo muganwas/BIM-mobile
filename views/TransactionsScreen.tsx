@@ -1,4 +1,5 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { RecordCard, RecordList } from '@/components/RecordList';
 import { ThemedButton } from '@/components/ThemedButton';
 import ThemedDatePicker from '@/components/ThemedDatePicker';
 import { ThemedDropdown } from '@/components/ThemedDropdown';
@@ -16,7 +17,6 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import type { TransactionFilters } from '@/services/UserService';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 
 export default function TransactionsScreen() {
 	useTrackHistory('/(authenticated)/transactions');
@@ -31,11 +31,6 @@ export default function TransactionsScreen() {
 	const textDark = useThemeColor({}, 'text', 'dark');
 	const whiteLight = useThemeColor({}, 'white', 'light');
 	const whiteDark = useThemeColor({}, 'white', 'dark');
-	const titleBgLight = useThemeColor({}, 'titleBg', 'light');
-	const titleBgDark = useThemeColor({}, 'titleBg', 'dark');
-	const borderDark = useThemeColor({}, 'borderDark');
-	const listItemBackground = useThemeColor({}, 'listItemBackground');
-	const actionButton = useThemeColor({}, 'actionButton');
 	const lime = useThemeColor({}, 'lime');
 	const dangerButton = useThemeColor({}, 'dangerButton');
 	const mutedTextLight = useThemeColor({}, 'mutedText', 'light');
@@ -124,20 +119,6 @@ export default function TransactionsScreen() {
 		const start = (page - 1) * pageSize;
 		return purchases.slice(start, start + pageSize);
 	}, [purchases, page]);
-
-	// Predefine table headers (so metadata like length is known before render)
-	const txHeaders = useMemo(
-		() => [
-			{ key: 'hash', label: t.colHash, width: 30 },
-			{ key: 'amount', label: t.colAmount, width: 120 },
-			{ key: 'type', label: t.colType, width: 120 },
-			{ key: 'reason', label: t.colReason, width: 120 },
-			{ key: 'status', label: t.colStatus, width: 120 },
-			{ key: 'router', label: t.colRouterName, width: 120 },
-			{ key: 'date', label: t.colTransactionDate, width: 120 },
-		],
-		[t]
-	);
 
 	// Button handlers
 	const handleApplyFilters = useCallback(async () => {
@@ -493,196 +474,81 @@ export default function TransactionsScreen() {
 					darkTextColor={whiteDark}
 				/>
 			</ThemedView>
-			<TileContainer
-				id='router-balances'
-				backgroundColor={background}
-				style={{ flexDirection: 'column', boxSizing: 'border-box', padding: 0 }}
+			<RecordList
+				id='transactions-list'
+				isEmpty={paged.length === 0}
+				emptyMessage={t.noTransactions}
 			>
-				{/* Table with horizontal scroll */}
-				<ScrollView
-					horizontal
-					showsHorizontalScrollIndicator
-					nestedScrollEnabled
-				>
-					<ThemedView lightColor={backgroundLight} darkColor={backgroundDark}>
-						{/* Header Row */}
-						<ThemedView
-							id='transactions-header'
-							style={{
-								flexDirection: 'row',
-								width: '100%',
-								gap: 10,
-								paddingVertical: 10,
-								paddingHorizontal: 5,
-								borderBottomWidth: 1,
-								borderBottomColor: borderDark,
+				{paged.map((trans, index) => {
+					const status = String(trans.status).toLowerCase();
+					return (
+						<RecordCard
+							key={`${trans.id}-${index}`}
+							id={`transaction-${trans.id}-${index}`}
+							title={trans.reason || trans.type}
+							subtitle={trans.router?.name}
+							badge={{
+								label: trans.status,
+								tone:
+									status === 'successful' || status === 'approved'
+										? 'success'
+										: status === 'pending'
+											? 'warning'
+											: status === 'failed'
+												? 'danger'
+												: 'info',
 							}}
-							lightColor={titleBgLight}
-							darkColor={titleBgDark}
-						>
-							{txHeaders.map((col) => (
-								<ThemedText
-									key={`hdr-${col.key}`}
-									numberOfLines={1}
-									ellipsizeMode='tail'
-									style={{
-										fontSize: fontSize['text.medium'],
-										width: col.width,
-										flexShrink: 0,
-										textTransform: 'uppercase',
-										paddingRight: 8,
-									}}
-									lightColor={textLight}
-									darkColor={textDark}
-								>
-									{col.label}
-								</ThemedText>
-							))}
-						</ThemedView>
-						<ScrollView
-							style={{
-								flexDirection: 'column',
-								backgroundColor: background,
-							}}
-							nestedScrollEnabled
-						>
-							{paged.map((trans, index) => (
-								<ThemedView
-									key={`${trans.id}-${index}`}
-									style={{
-										flexDirection: 'row',
-										width: '100%',
-										paddingVertical: 12,
-										paddingHorizontal: 5,
-										gap: 10,
-										alignItems: 'center',
-										backgroundColor:
-											index % 2 === 0 ? listItemBackground : background,
-										borderBottomWidth: index < paged.length - 1 ? 1 : 0,
-										borderBottomColor: borderDark,
-									}}
-									lightColor={backgroundLight}
-									darkColor={backgroundDark}
-								>
-									{/* # */}
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 30, flexShrink: 0 }}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{(page - 1) * pageSize + index + 1}
-									</ThemedText>
-									{/* Amount */}
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 120, flexShrink: 0 }}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{formatAmount(trans.amount, 2)}
-									</ThemedText>
-									{/* Type */}
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 120, flexShrink: 0 }}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{trans.type}
-									</ThemedText>
-									{/* Reason */}
-									<ThemedText
-										style={{ width: 120, flexShrink: 0 }}
-										numberOfLines={1}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{trans.reason}
-									</ThemedText>
-									{/* Status */}
-									<ThemedView
-										style={{
-											width: 120,
-											flexShrink: 0,
-											backgroundColor: actionButton,
-											borderRadius: 2,
-											margin: 0,
-											padding: 0,
-											alignItems: 'center',
-											justifyContent: 'center',
-										}}
-										lightColor={backgroundLight}
-										darkColor={backgroundDark}
-									>
-										<ThemedText
-											numberOfLines={1}
-											style={{ textAlign: 'center' }}
-											lightColor={whiteLight}
-											darkColor={whiteDark}
-										>
-											{trans.status}
-										</ThemedText>
-									</ThemedView>
-									{/* Router Name */}
-									<ThemedText
-										style={{ width: 120, flexShrink: 0 }}
-										numberOfLines={1}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{trans.router.name}
-									</ThemedText>
-									{/* Transaction Date */}
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 120, flexShrink: 0 }}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{new Date(trans.created_at).toLocaleDateString()}
-									</ThemedText>
-								</ThemedView>
-							))}
-						</ScrollView>
-					</ThemedView>
-				</ScrollView>
-				{/* Pagination Controls */}
-				<ThemedView
-					style={{
-						flexDirection: 'row',
-						gap: 12,
-						marginTop: 8,
-						alignItems: 'center',
-					}}
-					lightColor={backgroundLight}
+							fields={[
+								{
+									label: t.colAmount,
+									value: formatAmount(trans.amount, 2),
+									tone: 'default',
+								},
+								{ label: t.colType, value: trans.type },
+								{
+									label: t.colTransactionDate,
+									value: new Date(trans.created_at).toLocaleDateString(),
+								},
+							]}
+						/>
+					);
+				})}
+			</RecordList>
+
+			<ThemedView
+				style={{
+					flexDirection: 'row',
+					gap: 12,
+					marginTop: 8,
+					alignItems: 'center',
+				}}
+				lightColor={backgroundLight}
+				darkColor={backgroundDark}
+			>
+				<ThemedButton
+					title={translations[language].categories.buttons.previous}
+					onPress={handlePrevPage}
+					disabled={page <= 1}
 					darkColor={backgroundDark}
-				>
-					<ThemedButton
-						title={'Previous'}
-						onPress={handlePrevPage}
-						disabled={page <= 1}
-						darkColor={backgroundDark}
-						lightColor={backgroundLight}
-						lightTextColor={page <= 1 ? mutedTextLight : undefined}
-						darkTextColor={page <= 1 ? mutedTextDark : undefined}
-						textStyle={{ fontSize: 14 }}
-					/>
-					<ThemedText lightColor={textLight} darkColor={textDark}>
-						{page} / {totalPages}
-					</ThemedText>
-					<ThemedButton
-						title={'Next'}
-						onPress={handleNextPage}
-						disabled={page >= totalPages}
-						darkColor={backgroundDark}
-						lightColor={backgroundLight}
-						lightTextColor={page >= totalPages ? mutedTextLight : undefined}
-						darkTextColor={page >= totalPages ? mutedTextDark : undefined}
-						textStyle={{ fontSize: 14 }}
-					/>
-				</ThemedView>
-			</TileContainer>
+					lightColor={backgroundLight}
+					lightTextColor={page <= 1 ? mutedTextLight : undefined}
+					darkTextColor={page <= 1 ? mutedTextDark : undefined}
+					textStyle={{ fontSize: 14 }}
+				/>
+				<ThemedText lightColor={textLight} darkColor={textDark}>
+					{page} / {totalPages}
+				</ThemedText>
+				<ThemedButton
+					title={translations[language].categories.buttons.next}
+					onPress={handleNextPage}
+					disabled={page >= totalPages}
+					darkColor={backgroundDark}
+					lightColor={backgroundLight}
+					lightTextColor={page >= totalPages ? mutedTextLight : undefined}
+					darkTextColor={page >= totalPages ? mutedTextDark : undefined}
+					textStyle={{ fontSize: 14 }}
+				/>
+			</ThemedView>
 		</ParallaxScrollView>
 	);
 }

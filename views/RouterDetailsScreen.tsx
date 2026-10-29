@@ -1,10 +1,12 @@
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import Prompt from "@/components/Prompt";
+import { RecordCard, RecordList } from "@/components/RecordList";
+import TileContainer from "@/components/TileContainer";
+import { SegmentedTabs } from "@/components/SegmentedTabs";
 import { ThemedButton } from "@/components/ThemedButton";
 import { ThemedDropdown } from "@/components/ThemedDropdown";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import TileContainer from "@/components/TileContainer";
 import translations from "@/constants/Trans";
 import { useGeneral } from "@/context/GeneralContext";
 import { generateRandomInt } from "@/helpers";
@@ -40,7 +42,6 @@ import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Dimensions, useAnimatedValue, View } from "react-native";
 import { LineChart } from "react-native-chart-kit";
-import { ScrollView } from "react-native-gesture-handler";
 
 type routerTab = 'active' | 'users' | 'cookies' | 'hosts' | 'dhcp_leases' | 'traffic';
 const cooloffTime = 1000 * 60; // 1 minute
@@ -128,51 +129,6 @@ export default function RouterDetailsScreen() {
     const [trafficInterfaceError, setTrafficInterfaceError] = useState('');
     const [trafficStatus, setTrafficStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
     const [trafficError, setTrafficError] = useState('');
-    const tabTitleKeys: Record<routerTab, { width: number, key: string }[]> = {
-        active: [
-            { width: 50, key: 'server' },
-            { width: 80, key: 'user' },
-            { width: 100, key: 'address' },
-            { width: 120, key: 'mac' },
-            { width: 80, key: 'uptime' },
-            { width: 80, key: 'bytesIn' },
-            { width: 80, key: 'bytesOut' },
-            { width: 100, key: 'timeLeft' },
-            { width: 80, key: 'loginBy' },
-            { width: 120, key: 'startDate' }
-        ],
-        users: [
-            { width: 80, key: 'user' },
-            { width: 120, key: 'profile' },
-            { width: 120, key: 'mac' },
-            { width: 80, key: 'uptime' },
-            { width: 80, key: 'bytesIn' },
-            { width: 80, key: 'bytesOut' },
-            { width: 140, key: 'comment' }
-        ],
-        cookies: [
-            { width: 80, key: 'user' },
-            { width: 120, key: 'mac' },
-            { width: 120, key: 'macCookie' },
-            { width: 140, key: 'expiresIn' },
-            { width: 120, key: 'actions' }
-        ],
-        hosts: [
-            { width: 140, key: 'mac' },
-            { width: 120, key: 'address' },
-            { width: 120, key: 'toAddress' },
-            { width: 80, key: 'server' },
-            { width: 80, key: 'uptime' }
-        ],
-        dhcp_leases: [
-            { width: 140, key: 'address' },
-            { width: 140, key: 'mac' },
-            { width: 80, key: 'server' },
-            { width: 150, key: 'hostName' },
-            { width: 100, key: 'expiresAfter' }
-        ],
-        traffic: [{ width: 100, key: 'traffic' }],
-    };
 
     // Seed parent immediately on mount to guarantee ordering before current route push
     useEffect(() => {
@@ -537,75 +493,48 @@ export default function RouterDetailsScreen() {
                 <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }} lightColor={background} darkColor={background}>
                     <ThemedText style={{ fontSize: 20, fontWeight: 'bold', color: titleText }}>{translations[language].categories.routers.routerDetails}</ThemedText>
                 </ThemedView>
-                <ThemedView style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-start', marginHorizontal: 20 }} lightColor={background} darkColor={background}>
-                    <ScrollView
-                        style={{ width: '100%' }}
-                        horizontal
-                        showsHorizontalScrollIndicator={true}
-                    >
-                        <ThemedView style={{ flexDirection: 'row', marginVertical: 10 }} lightColor={background} darkColor={background}>
-                            <ThemedButton
-                                title={translations[language].categories.routers.activeSessions + ` (${activeMeta?.total ?? ''})`}
-                                onPress={() => setActiveTab('active')}
-                                darkTextColor={activeTab === 'active' ? bim : tabText}
-                                lightTextColor={activeTab === 'active' ? bim : tabText}
-                                lightColor={background}
-                                darkColor={background}
-                                style={{ marginRight: 10, borderBottomWidth: activeTab === 'active' ? 2 : 0, borderBottomColor: activeTab === 'active' ? bim : 'transparent' }}
-
-                            />
-                            <ThemedButton
-                                title={translations[language].categories.routers.users + `${usersMeta?.total && usersMeta?.total > 0 ? ` (${usersMeta?.total ?? ''})` : ''}`}
-                                onPress={() => setActiveTab('users')}
-                                darkTextColor={activeTab === 'users' ? bim : tabText}
-                                lightTextColor={activeTab === 'users' ? bim : tabText}
-                                lightColor={background}
-                                darkColor={background}
-                                style={{ marginRight: 10, borderBottomWidth: activeTab === 'users' ? 2 : 0, borderBottomColor: activeTab === 'users' ? bim : 'transparent' }}
-
-                            />
-                            <ThemedButton
-                                title={translations[language].categories.routers.cookies + `${cookiesMeta?.total && cookiesMeta?.total > 0 ? ` (${cookiesMeta?.total ?? ''})` : ''}`}
-                                onPress={() => setActiveTab('cookies')}
-                                darkTextColor={activeTab === 'cookies' ? bim : tabText}
-                                lightTextColor={activeTab === 'cookies' ? bim : tabText}
-                                lightColor={background}
-                                darkColor={background}
-                                style={{ marginRight: 10, borderBottomWidth: activeTab === 'cookies' ? 2 : 0, borderBottomColor: activeTab === 'cookies' ? bim : 'transparent' }}
-
-                            />
-                            <ThemedButton
-                                title={translations[language].categories.routers.hosts + `${hostsMeta?.total && hostsMeta?.total > 0 ? ` (${hostsMeta?.total ?? ''})` : ''}`}
-                                onPress={() => setActiveTab('hosts')}
-                                darkTextColor={activeTab === 'hosts' ? bim : tabText}
-                                lightTextColor={activeTab === 'hosts' ? bim : tabText}
-                                lightColor={background}
-                                darkColor={background}
-                                style={{ marginRight: 10, borderBottomWidth: activeTab === 'hosts' ? 2 : 0, borderBottomColor: activeTab === 'hosts' ? bim : 'transparent' }}
-
-                            />
-                            <ThemedButton
-                                title={translations[language].categories.routers.dhcpLeases + `${DHCPLeasesMeta?.total && DHCPLeasesMeta?.total > 0 ? ` (${DHCPLeasesMeta?.total ?? ''})` : ''}`}
-                                onPress={() => setActiveTab('dhcp_leases')}
-                                darkTextColor={activeTab === 'dhcp_leases' ? bim : tabText}
-                                lightTextColor={activeTab === 'dhcp_leases' ? bim : tabText}
-                                lightColor={background}
-                                darkColor={background}
-                                style={{ marginRight: 10, borderBottomWidth: activeTab === 'dhcp_leases' ? 2 : 0, borderBottomColor: activeTab === 'dhcp_leases' ? bim : 'transparent' }}
-
-                            />
-                            <ThemedButton
-                                title={translations[language].categories.routers.traffic}
-                                onPress={handleOpenTrafficTab}
-                                darkTextColor={activeTab === 'traffic' ? bim : tabText}
-                                lightTextColor={activeTab === 'traffic' ? bim : tabText}
-                                lightColor={background}
-                                darkColor={background}
-                                style={{ marginRight: 10, borderBottomWidth: activeTab === 'traffic' ? 2 : 0, borderBottomColor: activeTab === 'traffic' ? bim : 'transparent' }}
-
-                            />
-                        </ThemedView>
-                    </ScrollView>
+                <ThemedView style={{ marginHorizontal: 10, marginVertical: 10 }} lightColor={background} darkColor={background}>
+                    <SegmentedTabs
+                        activeKey={activeTab}
+                        onChange={(key) => {
+                            if (key === 'traffic') {
+                                handleOpenTrafficTab();
+                                return;
+                            }
+                            setActiveTab(key as routerTab);
+                        }}
+                        tabs={[
+                            {
+                                key: 'active',
+                                label: translations[language].categories.routers.activeSessions,
+                                count: activeMeta?.total,
+                            },
+                            {
+                                key: 'users',
+                                label: translations[language].categories.routers.users,
+                                count: usersMeta?.total,
+                            },
+                            {
+                                key: 'cookies',
+                                label: translations[language].categories.routers.cookies,
+                                count: cookiesMeta?.total,
+                            },
+                            {
+                                key: 'hosts',
+                                label: translations[language].categories.routers.hosts,
+                                count: hostsMeta?.total,
+                            },
+                            {
+                                key: 'dhcp_leases',
+                                label: translations[language].categories.routers.dhcpLeases,
+                                count: DHCPLeasesMeta?.total,
+                            },
+                            {
+                                key: 'traffic',
+                                label: translations[language].categories.routers.traffic,
+                            },
+                        ]}
+                    />
                 </ThemedView>
                 <TileContainer id={routerId || 'new-router' + generateRandomInt(1000, 9999)} backgroundColor={background} style={{ marginHorizontal: 10, padding: 10 }}>
                     <ThemedView
@@ -617,38 +546,54 @@ export default function RouterDetailsScreen() {
                             <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.activeSessions}</ThemedText>
                         </ThemedView>
                         <ThemedView style={{ flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', flexDirection: "column" }} lightColor={background} darkColor={background}>
-                            <ScrollView style={{ width: '100%' }} horizontal nestedScrollEnabled showsHorizontalScrollIndicator={true}>
-                                <ThemedView style={{ flexDirection: 'row' }} lightColor={background} darkColor={background}>
-                                    <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                        <ThemedView style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
-                                            {tabTitleKeys.active.map((a) => (
-                                                <ThemedText key={a.key} style={{ fontSize: 16, fontWeight: 'bold', color: titleText, width: a.width }}>
-                                                    {translations[language].categories.routers[a.key]}
-                                                </ThemedText>
-                                            ))}
-                                        </ThemedView>
-                                        <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                            <ThemedView>
-                                                {activeUsers.map((user, index) => (
-                                                    <ThemedView key={index} style={{ flexDirection: 'row', gap: 10, padding: 5 }} lightColor={background} darkColor={background}>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[0].width }}>{user.server}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[1].width }}>{user.user}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[2].width }}>{user.address}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[3].width }}>{user['mac-address']}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[4].width }}>{user.uptime}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[5].width }}>{user['bytes-in']}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[6].width }}>{user['bytes-out']}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[7].width }}>{user['session-time-left'] || '-'}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[8].width }}>{user['login-by'] || '-'}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.active[9].width }}>{user['start-date'] || '-'}</ThemedText>
-                                                    </ThemedView>
-                                                ))}
-                                            </ThemedView>
-
-                                        </ThemedView>
-                                    </ThemedView>
-                                </ThemedView>
-                            </ScrollView>
+                            <RecordList
+                                id='router-active-sessions'
+                                isEmpty={activeUsers.length === 0}
+                                emptyMessage={translations[language].categories.routers.noActiveSessions}
+                            >
+                                {activeUsers.map((user, index) => (
+                                    <RecordCard
+                                        key={`${user.user}-${index}`}
+                                        id={`router-active-${index}`}
+                                        title={user.user}
+                                        subtitle={user.server}
+                                        fields={[
+                                            {
+                                                label: translations[language].categories.routers.address,
+                                                value: user.address,
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.mac,
+                                                value: user['mac-address'],
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.uptime,
+                                                value: user.uptime,
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.bytesIn,
+                                                value: user['bytes-in'],
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.bytesOut,
+                                                value: user['bytes-out'],
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.timeLeft,
+                                                value: user['session-time-left'] || '-',
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.loginBy,
+                                                value: user['login-by'] || '-',
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.startDate,
+                                                value: user['start-date'] || '-',
+                                            },
+                                        ]}
+                                    />
+                                ))}
+                            </RecordList>
                             <ThemedView style={{ height: 50, flexDirection: 'row', gap: 10, display: (activeMeta?.total ?? 0 > 1) && (activeMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }} lightColor={background} darkColor={background}>
                                 <ThemedButton
                                     title={translations[language].categories.buttons.first}
@@ -711,35 +656,42 @@ export default function RouterDetailsScreen() {
                             <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.users}</ThemedText>
                         </ThemedView>
                         <ThemedView style={{ flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', flexDirection: "column" }} lightColor={background} darkColor={background}>
-                            <ScrollView style={{ width: '100%' }} horizontal nestedScrollEnabled showsHorizontalScrollIndicator={true}>
-                                <ThemedView style={{ flexDirection: 'row' }} lightColor={background} darkColor={background}>
-                                    <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                        <ThemedView style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
-                                            {tabTitleKeys.users.map((a) => (
-                                                <ThemedText key={a.key} style={{ fontSize: 16, fontWeight: 'bold', color: titleText, width: a.width }}>
-                                                    {translations[language].categories.routers[a.key]}
-                                                </ThemedText>
-                                            ))}
-                                        </ThemedView>
-                                        <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                            <ThemedView style={{ flexDirection: 'column' }} lightColor={background} darkColor={background}>
-                                                {users.map((user, index) => (
-                                                    <ThemedView key={index} style={{ flexDirection: 'row', gap: 10, padding: 5 }} lightColor={background} darkColor={background}>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.users[0].width }}>{user.name}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.users[1].width }}>{user.profile}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.users[2].width }}>{user["mac-address"]}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.users[3].width }}>{user.uptime}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.users[4].width }}>{user['bytes-in']}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.users[5].width }}>{user['bytes-out']}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.users[6].width }}>{user['comment'] || '-'}</ThemedText>
-                                                    </ThemedView>
-                                                ))}
-                                            </ThemedView>
-
-                                        </ThemedView>
-                                    </ThemedView>
-                                </ThemedView>
-                            </ScrollView>
+                            <RecordList
+                                id='router-users'
+                                isEmpty={users.length === 0}
+                                emptyMessage={translations[language].categories.routers.noUsers}
+                            >
+                                {users.map((user, index) => (
+                                    <RecordCard
+                                        key={`${user.name}-${index}`}
+                                        id={`router-user-${index}`}
+                                        title={user.name}
+                                        subtitle={user.profile}
+                                        fields={[
+                                            {
+                                                label: translations[language].categories.routers.mac,
+                                                value: user['mac-address'],
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.uptime,
+                                                value: user.uptime,
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.bytesIn,
+                                                value: user['bytes-in'],
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.bytesOut,
+                                                value: user['bytes-out'],
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.comment,
+                                                value: user['comment'] || '-',
+                                            },
+                                        ]}
+                                    />
+                                ))}
+                            </RecordList>
                             <ThemedView
                                 style={{ height: 50, flexDirection: 'row', gap: 10, display: (usersMeta?.total ?? 0 > 1) && (usersMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
                                 lightColor={background}
@@ -804,45 +756,41 @@ export default function RouterDetailsScreen() {
                             <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.cookies}</ThemedText>
                         </ThemedView>
                         <ThemedView style={{ flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', flexDirection: "column" }} lightColor={background} darkColor={background}>
-                            <ScrollView style={{ width: '100%' }} horizontal nestedScrollEnabled showsHorizontalScrollIndicator={true}>
-                                <ThemedView style={{ flexDirection: 'row' }} lightColor={background} darkColor={background}>
-                                    <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                        <ThemedView style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
-                                            {tabTitleKeys.cookies.map((a) => (
-                                                <ThemedText key={a.key} style={{ fontSize: 16, fontWeight: 'bold', color: titleText, width: a.width }}>
-                                                    {translations[language].categories.routers[a.key]}
-                                                </ThemedText>
-                                            ))}
-                                        </ThemedView>
-                                        <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                            <ThemedView style={{ flexDirection: 'column' }} lightColor={background} darkColor={background}>
-                                                {cookies.map((cookie, index) => (
-                                                    <ThemedView key={index} style={{ flexDirection: 'row', gap: 10, padding: 5 }} lightColor={background} darkColor={background}>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[0].width }}>{cookie.user}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[1].width }}>{cookie["mac-address"]}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[2].width, paddingLeft: 5 }}>{cookie['mac-cookie']}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[3].width }}>{cookie['expires-in']}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.cookies[4].width }}>
-                                                            <ThemedButton
-                                                                title={translations[language].categories.buttons.remove}
-                                                                onPress={() => {
-                                                                    setActiveCookie(cookie['.id']);
-                                                                    toggleShowPrompt(true);
-                                                                }}
-                                                                lightColor={red}
-                                                                darkColor={red}
-                                                                lightTextColor={white}
-                                                                darkTextColor={white}
-                                                            />
-                                                        </ThemedText>
-                                                    </ThemedView>
-                                                ))}
-                                            </ThemedView>
-
-                                        </ThemedView>
-                                    </ThemedView>
-                                </ThemedView>
-                            </ScrollView>
+                            <RecordList
+                                id='router-cookies'
+                                isEmpty={cookies.length === 0}
+                                emptyMessage={translations[language].categories.routers.noCookies}
+                            >
+                                {cookies.map((cookie, index) => (
+                                    <RecordCard
+                                        key={cookie['.id'] ?? index}
+                                        id={`router-cookie-${cookie['.id'] ?? index}`}
+                                        title={cookie.user}
+                                        subtitle={cookie['mac-address']}
+                                        fields={[
+                                            {
+                                                label: translations[language].categories.routers.macCookie,
+                                                value: cookie['mac-cookie'],
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.expiresIn,
+                                                value: cookie['expires-in'],
+                                            },
+                                        ]}
+                                        actions={[
+                                            {
+                                                label: translations[language].categories.buttons.remove,
+                                                icon: 'delete.outline',
+                                                tone: 'danger',
+                                                onPress: () => {
+                                                    setActiveCookie(cookie['.id']);
+                                                    toggleShowPrompt(true);
+                                                },
+                                            },
+                                        ]}
+                                    />
+                                ))}
+                            </RecordList>
                             <ThemedView
                                 style={{ height: 50, flexDirection: 'row', gap: 10, display: (cookiesMeta?.total ?? 0 > 1) && (cookiesMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
                                 lightColor={background}
@@ -907,33 +855,34 @@ export default function RouterDetailsScreen() {
                             <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.hosts}</ThemedText>
                         </ThemedView>
                         <ThemedView style={{ flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', flexDirection: "column" }} lightColor={background} darkColor={background}>
-                            <ScrollView style={{ width: '100%' }} horizontal nestedScrollEnabled showsHorizontalScrollIndicator={true}>
-                                <ThemedView style={{ flexDirection: 'row' }} lightColor={background} darkColor={background}>
-                                    <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                        <ThemedView style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
-                                            {tabTitleKeys.hosts.map((a) => (
-                                                <ThemedText key={a.key} style={{ fontSize: 16, fontWeight: 'bold', color: titleText, width: a.width }}>
-                                                    {translations[language].categories.routers[a.key]}
-                                                </ThemedText>
-                                            ))}
-                                        </ThemedView>
-                                        <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                            <ThemedView style={{ flexDirection: 'column' }} lightColor={background} darkColor={background}>
-                                                {hosts.map((host, index) => (
-                                                    <ThemedView key={index} style={{ flexDirection: 'row', gap: 10, padding: 5 }} lightColor={background} darkColor={background}>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.hosts[0].width }}>{host["mac-address"]}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.hosts[1].width }}>{host.address}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.hosts[2].width }}>{host["to-address"]}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.hosts[3].width }}>{host.server}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.hosts[4].width }}>{host.uptime}</ThemedText>
-                                                    </ThemedView>
-                                                ))}
-                                            </ThemedView>
-
-                                        </ThemedView>
-                                    </ThemedView>
-                                </ThemedView>
-                            </ScrollView>
+                            <RecordList
+                                id='router-hosts'
+                                isEmpty={hosts.length === 0}
+                                emptyMessage={translations[language].categories.routers.noHosts}
+                            >
+                                {hosts.map((host, index) => (
+                                    <RecordCard
+                                        key={`${host['mac-address']}-${index}`}
+                                        id={`router-host-${index}`}
+                                        title={host['mac-address']}
+                                        subtitle={host.address}
+                                        fields={[
+                                            {
+                                                label: translations[language].categories.routers.toAddress,
+                                                value: host['to-address'],
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.server,
+                                                value: host.server,
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.uptime,
+                                                value: host.uptime,
+                                            },
+                                        ]}
+                                    />
+                                ))}
+                            </RecordList>
                             <ThemedView
                                 style={{ height: 50, flexDirection: 'row', gap: 10, display: (hostsMeta?.total ?? 0 > 1) && (hostsMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
                                 lightColor={background}
@@ -998,32 +947,34 @@ export default function RouterDetailsScreen() {
                             <ThemedText style={{ fontSize: 18, fontWeight: 'bold', color: titleText, marginVertical: 10 }}>{translations[language].categories.routers.activeSessions}</ThemedText>
                         </ThemedView>
                         <ThemedView style={{ flex: 1, alignSelf: 'stretch', justifyContent: 'center', alignItems: 'flex-start', flexDirection: "column" }} lightColor={background} darkColor={background}>
-                            <ScrollView style={{ width: '100%' }} horizontal nestedScrollEnabled showsHorizontalScrollIndicator={true}>
-                                <ThemedView style={{ flexDirection: 'row' }} lightColor={background} darkColor={background}>
-                                    <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                        <ThemedView style={{ flexDirection: 'row', gap: 10 }} lightColor={background} darkColor={background}>
-                                            {tabTitleKeys.dhcp_leases.map((a) => (
-                                                <ThemedText key={a.key} style={{ fontSize: 16, fontWeight: 'bold', color: titleText, width: a.width }}>
-                                                    {translations[language].categories.routers[a.key]}
-                                                </ThemedText>
-                                            ))}
-                                        </ThemedView>
-                                        <ThemedView style={{ flexDirection: 'column', gap: 10 }} lightColor={background} darkColor={background}>
-                                            <ThemedView>
-                                                {DHCPLeases.map((lease, index) => (
-                                                    <ThemedView key={index} style={{ flexDirection: 'row', gap: 10, padding: 5 }} lightColor={background} darkColor={background}>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[0].width }}>{lease.address}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[1].width }}>{lease['mac-address']}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[2].width }}>{lease.server}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[3].width }} numberOfLines={1}>{lease["host-name"]}</ThemedText>
-                                                        <ThemedText style={{ fontSize: 14, color: tabText, width: tabTitleKeys.dhcp_leases[4].width }}>{lease['expires-after']}</ThemedText>
-                                                    </ThemedView>
-                                                ))}
-                                            </ThemedView>
-                                        </ThemedView>
-                                    </ThemedView>
-                                </ThemedView>
-                            </ScrollView>
+                            <RecordList
+                                id='router-dhcp-leases'
+                                isEmpty={DHCPLeases.length === 0}
+                                emptyMessage={translations[language].categories.routers.noDhcpLeases}
+                            >
+                                {DHCPLeases.map((lease, index) => (
+                                    <RecordCard
+                                        key={`${lease.address}-${index}`}
+                                        id={`router-dhcp-lease-${index}`}
+                                        title={lease.address}
+                                        subtitle={lease['mac-address']}
+                                        fields={[
+                                            {
+                                                label: translations[language].categories.routers.server,
+                                                value: lease.server,
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.hostName,
+                                                value: lease['host-name'] || '-',
+                                            },
+                                            {
+                                                label: translations[language].categories.routers.expiresAfter,
+                                                value: lease['expires-after'],
+                                            },
+                                        ]}
+                                    />
+                                ))}
+                            </RecordList>
                             <ThemedView
                                 style={{ height: 50, flexDirection: 'row', gap: 10, display: (DHCPLeasesMeta?.total ?? 0 > 1) && (DHCPLeasesMeta?.last_page ?? 0 > 1) ? 'flex' : 'none' }}
                                 lightColor={background}

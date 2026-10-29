@@ -10,6 +10,7 @@ import {
 
 import DashboardTile from '@/components/DashboardTile';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { RecordCard, RecordList } from '@/components/RecordList';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -25,7 +26,6 @@ import useTrackHistory from '@/hooks/useTrackHistory';
 import { MicroTransaction } from '@/types';
 import { useRouter } from 'expo-router';
 import { BarChart } from 'react-native-chart-kit';
-import { ScrollView } from 'react-native-gesture-handler';
 
 export default function HomeScreen() {
 	const {
@@ -114,8 +114,6 @@ export default function HomeScreen() {
 	);
 	const borderDark = useThemeColor({}, 'borderDark');
 	const bim = useThemeColor({}, 'bim');
-	const darkBackgroundColor = useThemeColor({}, 'background', 'dark');
-	const lightBackgroundColor = useThemeColor({}, 'background', 'light');
 	const whiteLight = useThemeColor({}, 'white', 'light');
 	const whiteDark = useThemeColor({}, 'white', 'dark');
 	const bimLight = useThemeColor({}, 'bim', 'light');
@@ -292,207 +290,34 @@ export default function HomeScreen() {
 						)}
 					</ThemedText>
 				</ThemedView>
-				<ScrollView
-					style={{ width: '100%' }}
-					horizontal
-					showsHorizontalScrollIndicator={true}
+				<RecordList
+					id='dashboard-last-transactions'
+					isEmpty={renderTransactions.length === 0}
+					emptyMessage={translations[language].categories.transactions.noTransactions}
 				>
-					<ThemedView
-						style={{ flexDirection: 'column', flex: 1 }}
-						lightColor={backgroundLight}
-						darkColor={backgroundDark}
-					>
-						<ThemedView
-							id='last-five-transactions-header'
-							style={{
-								flexDirection: 'row',
-								justifyContent: 'space-between',
-								gap: 10,
-								paddingHorizontal: 5,
-								paddingVertical: 10,
-								borderBottomWidth: 1,
-								borderBottomColor: borderDark,
-							}}
-							lightColor={backgroundLight}
-							darkColor={backgroundDark}
-						>
-							<ThemedText
-								style={{ width: 30 }}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								#
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 80,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.dashboard.amount}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 80,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.dashboard.type}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 80,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.dashboard.reason}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 80,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.dashboard.routerName}
-							</ThemedText>
-							<ThemedText
-								numberOfLines={1}
-								ellipsizeMode='tail'
-								style={{
-									fontSize: fontSize['text.medium'],
-									width: 80,
-									textTransform: 'uppercase',
-									paddingRight: 8,
-								}}
-								lightColor={textLight}
-								darkColor={textDark}
-							>
-								{translations[language].categories.dashboard.date}
-							</ThemedText>
-						</ThemedView>
-						<ScrollView
-							style={{ width: '100%' }}
-							showsVerticalScrollIndicator={true}
-						>
-							<ThemedView
-								id='last-five-transactions-body'
-								style={{
-									flexDirection: 'column',
-								}}
-								lightColor={lightBackgroundColor}
-								darkColor={darkBackgroundColor}
-							>
-								{renderTransactions.map((transaction, index) => (
-									<ThemedView
-										key={index}
-										style={{
-											flexDirection: 'row',
-											justifyContent: 'space-between',
-											gap: 10,
-											paddingHorizontal: 5,
-											paddingVertical: 10,
-											borderBottomWidth: 1,
-											borderBottomColor: borderDark,
-										}}
-										lightColor={lightBackgroundColor}
-										darkColor={darkBackgroundColor}
-									>
-										<ThemedText
-											numberOfLines={1}
-											ellipsizeMode='tail'
-											style={{
-												fontSize: fontSize['text.medium'],
-												width: 30,
-												paddingRight: 8,
-											}}
-										>
-											{index + 1}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											ellipsizeMode='tail'
-											style={{
-												fontSize: fontSize['text.medium'],
-												width: 80,
-												paddingRight: 8,
-											}}
-										>
-											{transaction.amount}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											ellipsizeMode='tail'
-											style={{
-												fontSize: fontSize['text.medium'],
-												width: 80,
-												paddingRight: 8,
-											}}
-										>
-											{transaction.method.type}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											ellipsizeMode='tail'
-											style={{
-												fontSize: fontSize['text.medium'],
-												width: 80,
-												paddingRight: 8,
-											}}
-										>
-											{transaction.reason}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											ellipsizeMode='tail'
-											style={{
-												fontSize: fontSize['text.medium'],
-												width: 80,
-												paddingRight: 8,
-											}}
-										>
-											{transaction.routerName}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											ellipsizeMode='tail'
-											style={{
-												fontSize: fontSize['text.medium'],
-												width: 80,
-												paddingRight: 8,
-											}}
-										>
-											{transaction.date.toLocaleDateString()}
-										</ThemedText>
-									</ThemedView>
-								))}
-							</ThemedView>
-						</ScrollView>
-					</ThemedView>
-				</ScrollView>
+					{renderTransactions.map((transaction, index) => (
+						<RecordCard
+							key={index}
+							id={`dashboard-transaction-${index}`}
+							title={transaction.routerName}
+							subtitle={transaction.date.toLocaleDateString()}
+							fields={[
+								{
+									label: translations[language].categories.dashboard.amount,
+									value: transaction.amount,
+								},
+								{
+									label: translations[language].categories.dashboard.type,
+									value: transaction.method.type,
+								},
+								{
+									label: translations[language].categories.dashboard.reason,
+									value: transaction.reason,
+								},
+							]}
+						/>
+					))}
+				</RecordList>
 				<ThemedView
 					style={{
 						width: '100%',

@@ -1,0 +1,411 @@
+import { ReactNode } from 'react';
+import { StyleSheet, View, ViewStyle } from 'react-native';
+
+import { ThemedButton } from '@/components/ThemedButton';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import TileContainer from '@/components/TileContainer';
+import { IconSymbolName } from '@/components/ui/IconSymbol';
+import { fontSize, fontWeight } from '@/constants/Font';
+import { useThemeColor } from '@/hooks/useThemeColor';
+
+/**
+ * Universal record card/list design language.
+ *
+ * Use these instead of horizontally scrolling tables: fields wrap into a
+ * two-column grid, so a row never needs more than the screen width, and
+ * actions wrap into a full-width row beneath the fields.
+ */
+
+export type RecordTone =
+	| 'default'
+	| 'muted'
+	| 'success'
+	| 'warning'
+	| 'danger'
+	| 'info';
+
+export type RecordField = {
+	label: string;
+	value: ReactNode;
+	tone?: RecordTone;
+	/** Render the field across the full card width. */
+	fullWidth?: boolean;
+};
+
+export type RecordAction = {
+	label: string;
+	onPress: () => void;
+	icon?: IconSymbolName;
+	tone?: 'primary' | 'neutral' | 'success' | 'info' | 'warning' | 'danger';
+	disabled?: boolean;
+	loading?: boolean;
+};
+
+export type RecordBadge = {
+	label: string;
+	tone?: RecordTone;
+};
+
+function useToneColors() {
+	return {
+		default: useThemeColor({}, 'text'),
+		muted: useThemeColor({}, 'mutedText'),
+		success: useThemeColor({}, 'lime'),
+		warning: useThemeColor({}, 'yellow'),
+		danger: useThemeColor({}, 'error'),
+		info: useThemeColor({}, 'lightBlue'),
+	} satisfies Record<RecordTone, string>;
+}
+
+export function RecordCard({
+	id,
+	title,
+	subtitle,
+	badge,
+	fields,
+	actions,
+	footer,
+	onPress,
+}: {
+	id?: string;
+	title: ReactNode;
+	subtitle?: ReactNode;
+	badge?: RecordBadge;
+	fields?: RecordField[];
+	actions?: RecordAction[];
+	footer?: ReactNode;
+	onPress?: () => void;
+}) {
+	const bg = useThemeColor({}, 'background');
+	const textColor = useThemeColor({}, 'text');
+	const mutedText = useThemeColor({}, 'mutedText');
+	const border = useThemeColor({}, 'borderDark');
+	const chipBg = useThemeColor({}, 'listItemBackground');
+	const primary = useThemeColor({}, 'bim');
+	const primaryText = useThemeColor({}, 'authButtonText');
+	const tones = useToneColors();
+
+	const actionColors = {
+		primary: { background: primary, text: primaryText },
+		neutral: { background: chipBg, text: textColor },
+		success: { background: tones.success, text: primaryText },
+		info: { background: tones.info, text: primaryText },
+		warning: { background: tones.warning, text: primaryText },
+		danger: { background: tones.danger, text: primaryText },
+	};
+
+	return (
+		<TileContainer
+			id={id ?? 'record-card'}
+			backgroundColor={bg}
+			style={styles.card}
+		>
+			<ThemedView
+				style={styles.header}
+				lightColor='transparent'
+				darkColor='transparent'
+				onTouchEnd={onPress}
+			>
+				<ThemedView
+					style={styles.headerText}
+					lightColor='transparent'
+					darkColor='transparent'
+				>
+					<ThemedText
+						style={[styles.title, { color: textColor }]}
+						lightColor={textColor}
+						darkColor={textColor}
+						numberOfLines={2}
+					>
+						{title}
+					</ThemedText>
+					{subtitle ? (
+						<ThemedText
+							style={[styles.subtitle, { color: mutedText }]}
+							lightColor={mutedText}
+							darkColor={mutedText}
+							numberOfLines={2}
+						>
+							{subtitle}
+						</ThemedText>
+					) : null}
+				</ThemedView>
+				{badge ? (
+					<ThemedView
+						style={[
+							styles.badge,
+							{
+								backgroundColor: `${tones[badge.tone ?? 'default']}1A`,
+								borderColor: tones[badge.tone ?? 'default'],
+							},
+						]}
+						lightColor='transparent'
+						darkColor='transparent'
+					>
+						<ThemedText
+							style={[
+								styles.badgeText,
+								{ color: tones[badge.tone ?? 'default'] },
+							]}
+							lightColor={tones[badge.tone ?? 'default']}
+							darkColor={tones[badge.tone ?? 'default']}
+						>
+							{badge.label}
+						</ThemedText>
+					</ThemedView>
+				) : null}
+			</ThemedView>
+
+			{fields && fields.length > 0 ? (
+				<View style={[styles.fields, { borderTopColor: border }]}>
+					{fields.map((field, index) => {
+						const color = tones[field.tone ?? 'default'];
+						return (
+							<View
+								key={`${field.label}-${index}`}
+								style={[
+									styles.field,
+									field.fullWidth && styles.fieldFullWidth,
+								]}
+							>
+								<ThemedText
+									style={[styles.fieldLabel, { color: mutedText }]}
+									lightColor={mutedText}
+									darkColor={mutedText}
+									numberOfLines={1}
+								>
+									{field.label}
+								</ThemedText>
+								<ThemedText
+									style={[styles.fieldValue, { color }]}
+									lightColor={color}
+									darkColor={color}
+									numberOfLines={2}
+								>
+									{field.value}
+								</ThemedText>
+							</View>
+						);
+					})}
+				</View>
+			) : null}
+
+			{actions && actions.length > 0 ? (
+				<View style={styles.actions}>
+					{actions.map((action, index) => {
+						const colors = actionColors[action.tone ?? 'primary'];
+						return (
+							<ThemedButton
+								key={`${action.label}-${index}`}
+								title={action.label}
+								onPress={action.onPress}
+								icon={action.icon}
+								disabled={action.disabled}
+								loading={action.loading}
+								numberOfLines={1}
+								style={styles.actionButton}
+								textStyle={styles.actionText}
+								lightColor={colors.background}
+								darkColor={colors.background}
+								lightTextColor={colors.text}
+								darkTextColor={colors.text}
+								iconColor={colors.text}
+							/>
+						);
+					})}
+				</View>
+			) : null}
+
+			{footer}
+		</TileContainer>
+	);
+}
+
+export function RecordList({
+	id,
+	title,
+	description,
+	headerAction,
+	children,
+	loading,
+	loadingMessage,
+	emptyMessage,
+	isEmpty,
+	style,
+}: {
+	id?: string;
+	title?: ReactNode;
+	description?: ReactNode;
+	headerAction?: ReactNode;
+	children?: ReactNode;
+	loading?: boolean;
+	loadingMessage?: string;
+	emptyMessage?: string;
+	isEmpty?: boolean;
+	style?: ViewStyle;
+}) {
+	const textColor = useThemeColor({}, 'text');
+	const mutedText = useThemeColor({}, 'mutedText');
+	const chipBg = useThemeColor({}, 'listItemBackground');
+
+	const showState = loading || isEmpty;
+
+	return (
+		<ThemedView
+			id={id}
+			style={[styles.list, style]}
+			lightColor='transparent'
+			darkColor='transparent'
+		>
+			{title || headerAction ? (
+				<ThemedView
+					style={styles.listHeader}
+					lightColor='transparent'
+					darkColor='transparent'
+				>
+					{title ? (
+						<ThemedText
+							style={[styles.listTitle, { color: textColor }]}
+							lightColor={textColor}
+							darkColor={textColor}
+						>
+							{title}
+						</ThemedText>
+					) : null}
+					{headerAction}
+				</ThemedView>
+			) : null}
+			{description ? (
+				<ThemedText
+					style={[styles.listDescription, { color: mutedText }]}
+					lightColor={mutedText}
+					darkColor={mutedText}
+				>
+					{description}
+				</ThemedText>
+			) : null}
+			{showState ? (
+				<ThemedView
+					style={styles.state}
+					lightColor={chipBg}
+					darkColor={chipBg}
+				>
+					<ThemedText
+						lightColor={mutedText}
+						darkColor={mutedText}
+						style={styles.stateText}
+					>
+						{loading ? loadingMessage ?? '' : emptyMessage ?? ''}
+					</ThemedText>
+				</ThemedView>
+			) : (
+				children
+			)}
+		</ThemedView>
+	);
+}
+
+const styles = StyleSheet.create({
+	card: {
+		width: '100%',
+		gap: 10,
+	},
+	header: {
+		flexDirection: 'row',
+		alignItems: 'flex-start',
+		gap: 8,
+	},
+	headerText: {
+		flex: 1,
+		gap: 2,
+	},
+	title: {
+		fontSize: fontSize['heading.two'],
+		fontWeight: fontWeight['heading.two'],
+	},
+	subtitle: {
+		fontSize: fontSize['text.small'],
+	},
+	badge: {
+		paddingHorizontal: 8,
+		paddingVertical: 3,
+		borderRadius: 999,
+		borderWidth: 1,
+	},
+	badgeText: {
+		fontSize: fontSize['text.xsmall'],
+		fontWeight: fontWeight['text.xsmall'],
+		textTransform: 'uppercase',
+		letterSpacing: 0.4,
+	},
+	fields: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		gap: 12,
+		paddingTop: 10,
+		borderTopWidth: 1,
+	},
+	field: {
+		flexBasis: '45%',
+		flexGrow: 1,
+		gap: 2,
+		minWidth: 110,
+	},
+	fieldFullWidth: {
+		flexBasis: '100%',
+		minWidth: '100%',
+	},
+	fieldLabel: {
+		fontSize: fontSize['text.xsmall'],
+		textTransform: 'uppercase',
+		letterSpacing: 0.4,
+	},
+	fieldValue: {
+		fontSize: fontSize['text.medium'],
+		fontWeight: fontWeight['heading.three'],
+	},
+	actions: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		gap: 8,
+	},
+	actionButton: {
+		flexGrow: 1,
+		flexBasis: '30%',
+		minWidth: 100,
+		borderRadius: 6,
+		paddingVertical: 8,
+		paddingHorizontal: 10,
+	},
+	actionText: {
+		fontSize: fontSize['button.small'],
+	},
+	list: {
+		width: '100%',
+		gap: 10,
+	},
+	listHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		gap: 10,
+		flexWrap: 'wrap',
+	},
+	listTitle: {
+		fontSize: fontSize['heading.two'],
+		fontWeight: fontWeight['heading.two'],
+	},
+	listDescription: {
+		fontSize: fontSize['text.medium'],
+	},
+	state: {
+		padding: 16,
+		borderRadius: 8,
+		alignItems: 'center',
+	},
+	stateText: {
+		fontSize: fontSize['text.medium'],
+		textAlign: 'center',
+	},
+});

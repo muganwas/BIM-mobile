@@ -1,10 +1,9 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Prompt from '@/components/Prompt';
+import { RecordCard, RecordList } from '@/components/RecordList';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import TileContainer from '@/components/TileContainer';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
@@ -18,13 +17,7 @@ import { ApiRouter, PingRouterResponse } from '@/types';
 import RouterOverlay from '@/views/Router';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-	Animated,
-	TouchableOpacity,
-	useAnimatedValue,
-	useColorScheme,
-} from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { Animated, useAnimatedValue, useColorScheme } from 'react-native';
 import { formatAmount } from '@/helpers/index';
 
 export default function RoutersScreen() {
@@ -32,16 +25,8 @@ export default function RoutersScreen() {
 
 	const bg = useThemeColor({}, 'background');
 	const bimColor = useThemeColor({}, 'bim');
-	const titleBg = useThemeColor({}, 'titleBg');
-	const textColor = useThemeColor({}, 'text');
 	const actionButton = useThemeColor({}, 'actionButton');
 	const authButtonText = useThemeColor({}, 'authButtonText');
-	const lime = useThemeColor({}, 'lime');
-	const yellow = useThemeColor({}, 'yellow');
-	const errorColor = useThemeColor({}, 'error');
-	const borderDark = useThemeColor({}, 'borderDark');
-	const listItemBackground = useThemeColor({}, 'listItemBackground');
-	// borderColor unused; Colors[colorScheme] is used directly where needed
 	const router = useRouter();
 	const { routers, setRouters, fetchRouters } = useTransaction();
 	const { language, authToken } = useGeneral();
@@ -71,15 +56,8 @@ export default function RoutersScreen() {
 	}, [routers, editRouterId]);
 
 	// stable per-mount id to avoid duplicate handler registration during Fast Refresh
-	const routerListDetailsId = useRef(
-		`router-list-details-${Math.random().toString(36).slice(2)}`
-	);
-
 	const routerListId = useRef(
 		`router-list-${Math.random().toString(36).slice(2)}`
-	);
-	const routerListHeaderId = useRef(
-		`router-list-header-${Math.random().toString(36).slice(2)}`
 	);
 
 	useFocusEffect(
@@ -114,47 +92,6 @@ export default function RoutersScreen() {
 			})();
 		}
 	}, [routers, fetchRouters]);
-
-	// Predefine header columns for the routers table
-	const routerHeaders = [
-		{ key: 'row', label: '#', width: 30 },
-		{
-			key: 'name',
-			label: translations[language].categories.dashboard.routerName,
-			width: 120,
-		},
-		{
-			key: 'location',
-			label: translations[language].categories.dashboard.location,
-			width: 120,
-		},
-		{
-			key: 'type',
-			label: translations[language].categories.dashboard.type,
-			width: 120,
-		},
-		{
-			key: 'status',
-			label: translations[language].categories.dashboard.status || 'Status',
-			width: 80,
-		},
-		{
-			key: 'ip',
-			label: translations[language].categories.dashboard.ipAddress,
-			width: 120,
-		},
-		{
-			key: 'balance',
-			label: translations[language].categories.dashboard.balance,
-			width: 120,
-		},
-		{
-			key: 'actions',
-			label: translations[language].categories.dashboard.actions,
-			width: 120,
-			textAlign: 'center' as const,
-		},
-	];
 
 	const toggleShowPrompt = (v?: boolean) => {
 		const value = v ?? !showPrompt;
@@ -252,206 +189,76 @@ export default function RoutersScreen() {
 						lightTextColor={authButtonText}
 					/>
 				</ThemedView>
-				<TileContainer
+				<RecordList
 					id={routerListId.current}
-					backgroundColor={bg}
-					style={{
-						flexDirection: 'column',
-						overflow: 'hidden',
-						boxSizing: 'border-box',
-						padding: 0,
-					}}
+					loading={!routers}
+					loadingMessage={translations[language].categories.dashboard.loading}
+					isEmpty={routers?.length === 0}
+					emptyMessage={translations[language].categories.routers.noRouters}
 				>
-					<ScrollView
-						style={{ width: '100%' }}
-						horizontal
-						showsHorizontalScrollIndicator={true}
-					>
-						<ThemedView
-							style={{ flexDirection: 'column' }}
-							lightColor={bg}
-							darkColor={bg}
-						>
-							<ThemedView
-								id={routerListHeaderId.current}
-								style={{
-									flexDirection: 'row',
-									justifyContent: 'space-between',
-									gap: 10,
-									paddingHorizontal: 10,
-									paddingVertical: 10,
-									borderBottomWidth: 1,
-									borderBottomColor: Colors[colorScheme].borderDark,
-								}}
-								lightColor={titleBg}
-								darkColor={titleBg}
-							>
-								{routerHeaders.map((col) => (
-									<ThemedText
-										key={`hdr-${col.key}`}
-										numberOfLines={1}
-										ellipsizeMode='tail'
-										style={{
-											fontSize: fontSize['text.medium'],
-											width: col.width,
-											textTransform: 'uppercase',
-											paddingRight: 8,
-											...(col.textAlign ? { textAlign: col.textAlign } : {}),
-										}}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{col.label}
-									</ThemedText>
-								))}
-							</ThemedView>
-							<ScrollView
-								id={routerListDetailsId.current}
-								style={{
-									flexDirection: 'column',
-									backgroundColor: bg,
-								}}
-							>
-								{routers?.map((router, index) => (
-									<ThemedView
-										key={index}
-										style={{
-											flexDirection: 'row',
-											width: '100%',
-											paddingVertical: 12,
-											gap: 10,
-											paddingHorizontal: 10,
-											justifyContent: 'space-between',
-											backgroundColor:
-												index % 2 === 0 ? listItemBackground : bg,
-											borderBottomWidth: index < routers.length - 1 ? 1 : 0,
-											borderBottomColor: borderDark,
-										}}
-										lightColor={bg}
-										darkColor={bg}
-									>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												width: 30,
-												overflow: 'hidden',
-												paddingRight: 8,
-											}}
-											lightColor={textColor}
-											darkColor={textColor}
-										>
-											{index + 1}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												width: 120,
-												paddingRight: 8,
-												overflow: 'hidden',
-											}}
-											lightColor={textColor}
-											darkColor={textColor}
-										>
-											{router.name}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												paddingRight: 8,
-												width: 120,
-											}}
-											lightColor={textColor}
-											darkColor={textColor}
-										>
-											{router.location}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												paddingRight: 8,
-												width: 120,
-											}}
-											lightColor={textColor}
-											darkColor={textColor}
-										>
-											{router.type}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												paddingRight: 8,
-												width: 80,
-											}}
-											lightColor={onlineStatus[router.id!] ? lime : errorColor}
-											darkColor={onlineStatus[router.id!] ? lime : errorColor}
-										>
-											{onlineStatus[router.id!] === undefined
-												? '—'
-												: onlineStatus[router.id!]
-													? 'Online'
-													: 'Offline'}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												paddingRight: 8,
-												width: 120,
-											}}
-											lightColor={textColor}
-											darkColor={textColor}
-										>
-											{router.ip_address}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={{
-												paddingRight: 8,
-												width: 120,
-											}}
-											lightColor={textColor}
-											darkColor={textColor}
-										>
-											{formatAmount(router.balance)}
-										</ThemedText>
-										<ThemedView
-											style={{
-												flexDirection: 'row',
-												justifyContent: 'space-between',
-												gap: 5,
-												width: 120,
-											}}
-											lightColor='transparent'
-											darkColor='transparent'
-										>
-											<TouchableOpacity
-												onPress={() => handleViewRouter(router)}
-											>
-												<IconSymbol color={lime} name='eye.outline' />
-											</TouchableOpacity>
-											<TouchableOpacity
-												onPress={() => handleEditRouter(router?.id as string)}
-											>
-												<IconSymbol color={yellow} name='edit.outline' />
-											</TouchableOpacity>
-											<TouchableOpacity
-												onPress={() => {
-													const r = routers?.find(
-														(r) => r.id === router?.id
-													);
-													if (!r) return;
-													setActiveRouter(r.id);
-													toggleShowPrompt(true);
-												}}
-											>
-												<IconSymbol color={errorColor} name='delete.outline' />
-											</TouchableOpacity>
-										</ThemedView>
-									</ThemedView>
-								))}
-							</ScrollView>
-						</ThemedView>
-					</ScrollView>
-				</TileContainer>
+					{routers?.map((router) => {
+						const status = onlineStatus[router.id];
+						return (
+							<RecordCard
+								key={router.id}
+								id={`router-${router.id}`}
+								title={router.name}
+								subtitle={router.location}
+								badge={
+									status === undefined
+										? undefined
+										: {
+											label: status
+												? translations[language].categories.routers.online
+												: translations[language].categories.routers.offline,
+											tone: status ? 'success' : 'danger',
+										}
+								}
+								fields={[
+									{
+										label: translations[language].categories.dashboard.type,
+										value: router.type,
+									},
+									{
+										label: translations[language].categories.dashboard.ipAddress,
+										value: router.ip_address,
+									},
+									{
+										label: translations[language].categories.dashboard.balance,
+										value: formatAmount(router.balance),
+									},
+									{
+										label: translations[language].categories.dashboard.routerUsername,
+										value: router.router_user,
+									},
+								]}
+								actions={[
+									{
+										label: translations[language].categories.packages.view,
+										icon: 'eye.outline',
+										tone: 'success',
+										onPress: () => handleViewRouter(router),
+									},
+									{
+										label: translations[language].categories.packages.edit,
+										icon: 'edit.outline',
+										tone: 'warning',
+										onPress: () => handleEditRouter(router.id),
+									},
+									{
+										label: translations[language].categories.packages.delete,
+										icon: 'delete.outline',
+										tone: 'danger',
+										onPress: () => {
+											setActiveRouter(router.id);
+											toggleShowPrompt(true);
+										},
+									},
+								]}
+							/>
+						);
+					})}
+				</RecordList>
 			</ParallaxScrollView>
 			{/* Add Router Modal */}
 			<RouterOverlay

@@ -1,10 +1,9 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import Prompt from '@/components/Prompt';
+import { RecordCard, RecordList } from '@/components/RecordList';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import TileContainer from '@/components/TileContainer';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { fontSize, fontWeight } from '@/constants/Font';
 import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
@@ -18,13 +17,7 @@ import InternetPackageOverlay, {
 } from '@/views/InternetPackageOverlay';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-	Animated,
-	StyleSheet,
-	TouchableOpacity,
-	useColorScheme,
-} from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { Animated, useColorScheme } from 'react-native';
 
 export default function HotspotPackagesScreen() {
 	const navigation = useNavigation<any>();
@@ -33,18 +26,10 @@ export default function HotspotPackagesScreen() {
 	const { packages, setPackages, fetchPackages } = useTransaction();
 	useColorScheme();
 	// Theme helpers
-	const background = useThemeColor({}, 'background');
 	const backgroundLight = useThemeColor({}, 'background', 'light');
 	const backgroundDark = useThemeColor({}, 'background', 'dark');
 	const textLight = useThemeColor({}, 'text', 'light');
 	const textDark = useThemeColor({}, 'text', 'dark');
-	const titleBgLight = useThemeColor({}, 'titleBg', 'light');
-	const titleBgDark = useThemeColor({}, 'titleBg', 'dark');
-	const borderDark = useThemeColor({}, 'borderDark');
-	const listItemBackground = useThemeColor({}, 'listItemBackground');
-	const lime = useThemeColor({}, 'lime');
-	const yellow = useThemeColor({}, 'yellow');
-	const error = useThemeColor({}, 'error');
 	const cancelButton = useThemeColor({}, 'cancelButton');
 	const dangerButton = useThemeColor({}, 'dangerButton');
 	const white = useThemeColor({}, 'white');
@@ -130,24 +115,6 @@ export default function HotspotPackagesScreen() {
 
 
 	const t = translations[language]?.categories as any;
-
-	const headers: {
-		key: keyof InternetPackage | 'actions';
-		label: string;
-		width?: number;
-		textAlign?: 'left' | 'center' | 'right';
-	}[] = [
-			{ key: 'name', label: t.dashboard.name, width: 120 },
-			{ key: 'simultaneous-use', label: t.packages.usersPerDevice, width: 140 },
-			{ key: 'rate-limit', label: t.packages.bandwidth, width: 140 },
-			{ key: 'session-timeout', label: t.packages.durationHours, width: 140 },
-			{
-				key: 'actions',
-				label: t.dashboard.actions,
-				width: 120,
-				textAlign: 'center',
-			},
-		];
 
 	const handleCreateNew = () => {
 		setOverlayMode('create');
@@ -266,166 +233,54 @@ export default function HotspotPackagesScreen() {
 					</ThemedView>
 				</ThemedView>
 
-				<TileContainer
+				<RecordList
 					id={hotspotId || 'hotspot-packages'}
-					backgroundColor={background}
-					style={{
-						flexDirection: 'column',
-						boxSizing: 'border-box',
-						overflow: 'hidden',
-						padding: 0,
-					}}
+					isEmpty={packages.length === 0}
+					emptyMessage={t.packages.noPackages}
 				>
-					<ScrollView
-						style={{ width: '100%' }}
-						horizontal
-						showsHorizontalScrollIndicator
-					>
-						<ThemedView
-							style={{ flexDirection: 'column' }}
-							lightColor={backgroundLight}
-							darkColor={backgroundDark}
-						>
-							<ThemedView
-								id={`hotspot-packages-header-${hotspotId}`}
-								style={{
-									flexDirection: 'row',
-									justifyContent: 'space-between',
-									gap: 10,
-									paddingHorizontal: 10,
-									paddingVertical: 10,
-									borderBottomWidth: 1,
-									borderBottomColor: borderDark,
-								}}
-								lightColor={titleBgLight}
-								darkColor={titleBgDark}
-							>
-								{headers.map((col) => (
-									<ThemedText
-										key={`hdr-${col.key}`}
-										numberOfLines={1}
-										ellipsizeMode='tail'
-										style={{
-											fontSize: fontSize['text.medium'],
-											width: col.width ?? 120,
-											textTransform: 'uppercase',
-											paddingRight: 8,
-											...(col.textAlign ? { textAlign: col.textAlign } : {}),
-										}}
-										lightColor={textLight}
-										darkColor={textDark}
-									>
-										{col.label}
-									</ThemedText>
-								))}
-							</ThemedView>
-							<ScrollView
-								nativeID={`hotspot-packages-details-${hotspotId}`}
-								style={{
-									flexDirection: 'column',
-									backgroundColor: background,
-								}}
-							>
-								{packages.map((p, index) => (
-									<ThemedView
-										key={p[".id"] ?? `${p.name}-${index}`}
-										style={{
-											flexDirection: 'row',
-											width: '100%',
-											alignItems: 'center',
-											paddingVertical: 5,
-											gap: 10,
-											paddingHorizontal: 10,
-											justifyContent: 'space-between',
-											backgroundColor:
-												index % 2 === 0
-													? listItemBackground
-													: background,
-											borderBottomWidth: index < packages.length - 1 ? 1 : 0,
-											borderBottomColor: borderDark,
-										}}
-										lightColor={backgroundLight}
-										darkColor={backgroundDark}
-									>
-										<ThemedText
-											numberOfLines={1}
-											style={styles.colInfo}
-											lightColor={textLight}
-											darkColor={textDark}
-										>
-											{p.name}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={styles.colInfo}
-											lightColor={textLight}
-											darkColor={textDark}
-										>
-											{p["simultaneous-use"]}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={styles.colInfo}
-											lightColor={textLight}
-											darkColor={textDark}
-										>
-											{p["rate-limit"]}
-										</ThemedText>
-										<ThemedText
-											numberOfLines={1}
-											style={styles.colInfo}
-											lightColor={textLight}
-											darkColor={textDark}
-										>
-											{p["session-timeout"]}
-										</ThemedText>
-										<ThemedView
-											style={{
-												flexDirection: 'row',
-												justifyContent: 'space-between',
-												gap: 5,
-												width: 120,
-											}}
-											lightColor='transparent'
-											darkColor='transparent'
-										>
-											<TouchableOpacity
-												style={{ paddingVertical: 6 }}
-												onPress={() => handleView(p)}
-											>
-												<IconSymbol
-													name='eye.outline'
-													size={20}
-													color={lime}
-												/>
-											</TouchableOpacity>
-											<TouchableOpacity
-												style={{ paddingVertical: 6 }}
-												onPress={() => handleEdit(p)}
-											>
-												<IconSymbol
-													name='edit.outline'
-													size={20}
-													color={yellow}
-												/>
-											</TouchableOpacity>
-											<TouchableOpacity
-												style={{ paddingVertical: 6 }}
-												onPress={() => handleDelete(p)}
-											>
-												<IconSymbol
-													name='delete.outline'
-													size={20}
-													color={error}
-												/>
-											</TouchableOpacity>
-										</ThemedView>
-									</ThemedView>
-								))}
-							</ScrollView>
-						</ThemedView>
-					</ScrollView>
-				</TileContainer>
+					{packages.map((p) => (
+						<RecordCard
+							key={p['.id'] ?? p.name}
+							id={`hotspot-package-${p['.id'] ?? p.name}`}
+							title={p.name}
+							subtitle={p.display_name}
+							fields={[
+								{
+									label: t.packages.usersPerDevice,
+									value: p['simultaneous-use'] ?? '—',
+								},
+								{
+									label: t.packages.bandwidth,
+									value: p['rate-limit'] ?? '—',
+								},
+								{
+									label: t.packages.durationHours,
+									value: p['session-timeout'] ?? '—',
+								},
+							]}
+							actions={[
+								{
+									label: t.packages.view,
+									icon: 'eye.outline',
+									tone: 'success',
+									onPress: () => handleView(p),
+								},
+								{
+									label: t.packages.edit,
+									icon: 'edit.outline',
+									tone: 'warning',
+									onPress: () => handleEdit(p),
+								},
+								{
+									label: t.packages.delete,
+									icon: 'delete.outline',
+									tone: 'danger',
+									onPress: () => handleDelete(p),
+								},
+							]}
+						/>
+					))}
+				</RecordList>
 			</ParallaxScrollView>
 
 			<InternetPackageOverlay
@@ -465,10 +320,3 @@ export default function HotspotPackagesScreen() {
 	);
 }
 
-const styles = StyleSheet.create({
-	colInfo: {
-		width: 120,
-		paddingRight: 8,
-		overflow: 'hidden',
-	},
-});

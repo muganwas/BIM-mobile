@@ -14,7 +14,6 @@ import {
 	TouchableOpacity,
 	useColorScheme,
 	ViewStyle,
-	type TextInputProps
 } from 'react-native';
 
 export type ThemedDatePickerProps = {
@@ -28,7 +27,7 @@ export type ThemedDatePickerProps = {
 	disabled?: boolean;
 	containerStyle?: StyleProp<ViewStyle>;
 	labelStyle?: StyleProp<TextStyle>;
-	inputStyle?: StyleProp<TextInputProps>;
+	inputStyle?: StyleProp<TextStyle>;
 	displayFormat?: (d: Date) => string;
 	showClearButton?: boolean;
 };

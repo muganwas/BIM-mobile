@@ -1,10 +1,10 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { RecordCard, RecordList } from '@/components/RecordList';
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import TileContainer from '@/components/TileContainer';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { fontSize, fontWeight } from '@/constants/Font';
+import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import * as factories from '@/helpers/factories';
@@ -15,22 +15,17 @@ import DocumentOverlay from '@/views/Document';
 import { openBrowserAsync } from 'expo-web-browser';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TouchableOpacity } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
 
 export default function DocumentsScreen() {
 	// explicitly track documents page
 	useTrackHistory('/(authenticated)/documents');
 	const bg = useThemeColor({}, 'background');
 	const bimColor = useThemeColor({}, 'bim');
-	const titleBg = useThemeColor({}, 'titleBg');
-	const textColor = useThemeColor({}, 'text');
-	const listItemBackground = useThemeColor({}, 'listItemBackground');
-	const borderDark = useThemeColor({}, 'borderDark');
-	const lime = useThemeColor({}, 'lime');
-	const yellow = useThemeColor({}, 'yellow');
-	const errorColor = useThemeColor({}, 'error');
 	const { documents, fetchDocuments, setDocuments } = useTransaction();
-	const { user } = useGeneral();
+	const { user, language } = useGeneral();
+	const copy =
+		translations[language]?.categories?.documents ??
+		translations.en.categories.documents;
 
 	const [refreshing, setRefreshing] = useState(false);
 
@@ -57,19 +52,6 @@ export default function DocumentsScreen() {
 		return documents.slice(start, start + pageSize);
 	}, [documents, page]);
 
-	// Define headers once
-	const headers = useMemo(
-		() => [
-			{ key: 'row', label: '#', width: 30 },
-			{ key: 'type', label: 'type', width: 120 },
-			{ key: 'number', label: 'number', width: 140 },
-			{ key: 'attachment', label: 'attachment', width: 120 },
-			{ key: 'status', label: 'status', width: 120 },
-			{ key: 'actions', label: 'actions', width: 140 },
-		],
-		[]
-	);
-
 	useEffect(() => {
 		if (user && documents.length === 0) {
 			(async () => {
@@ -77,13 +59,6 @@ export default function DocumentsScreen() {
 			})();
 		}
 	}, [user, documents, fetchDocuments]);
-
-	// Derive a simple status without changing types
-	const getStatusColor = (status: DocumentProps['status']) => {
-		if (status === 'approved') return { light: lime, dark: lime };
-		if (status === 'pending') return { light: yellow, dark: yellow };
-		return { light: errorColor, dark: errorColor };
-	};
 
 	const handleAddDocument = () => {
 		setActiveDoc(null);
@@ -198,7 +173,7 @@ export default function DocumentsScreen() {
 						fontWeight: fontWeight['heading.one'],
 					}}
 				>
-					My documents
+					{copy.title}
 				</ThemedText>
 			</ThemedView>
 
@@ -209,7 +184,7 @@ export default function DocumentsScreen() {
 				darkColor={bg}
 			>
 				<ThemedButton
-					title={'Add document'.toUpperCase()}
+					title={copy.addDocument}
 					numberOfLines={1}
 					onPress={handleAddDocument}
 					style={{ borderRadius: 8, width: 200 }}
@@ -221,100 +196,31 @@ export default function DocumentsScreen() {
 			</ThemedView>
 
 			{/* Documents table */}
-			<TileContainer
-				id='documents-table'
-				backgroundColor={bg}
-				style={{
-					flexDirection: 'column',
-					overflow: 'hidden',
-					boxSizing: 'border-box',
-					padding: 0,
-				}}
+			<RecordList
+				id='documents-list'
+				isEmpty={paged.length === 0}
+				emptyMessage={copy.noDocuments}
 			>
-				<ScrollView horizontal showsHorizontalScrollIndicator>
-					<ThemedView lightColor={bg} darkColor={bg}>
-						{/* Header */}
-						<ThemedView
-							style={{
-								flexDirection: 'row',
-								width: '100%',
-								gap: 10,
-								paddingVertical: 10,
-								paddingHorizontal: 10,
-								borderBottomWidth: 1,
-								borderBottomColor: borderDark,
-							}}
-							lightColor={titleBg}
-							darkColor={titleBg}
-						>
-							{headers.map((col) => (
-								<ThemedText
-									key={`hdr-${col.key}`}
-									numberOfLines={1}
-									ellipsizeMode='tail'
-									style={{
-										fontSize: fontSize['text.medium'],
-										width: col.width,
-										flexShrink: 0,
-										textTransform: 'uppercase',
-										textAlign: col.key === 'actions' ? 'center' : 'left',
-										paddingRight: 8,
-									}}
-									lightColor={textColor}
-									darkColor={textColor}
-								>
-									{col.label}
-								</ThemedText>
-							))}
-						</ThemedView>
-
-						{/* Rows */}
-						<ScrollView nestedScrollEnabled>
-							{paged.map((d, index) => (
-								<ThemedView
-									key={d.documentId}
-									style={{
-										flexDirection: 'row',
-										width: '100%',
-										paddingVertical: 12,
-										paddingHorizontal: 10,
-										gap: 10,
-										alignItems: 'center',
-										backgroundColor: index % 2 === 0 ? listItemBackground : bg,
-										borderBottomWidth: index < paged.length - 1 ? 1 : 0,
-										borderBottomColor: borderDark,
-									}}
-									lightColor={bg}
-									darkColor={bg}
-								>
-									{/* # */}
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 30, overflow: 'hidden', paddingRight: 8 }}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{index + 1}
-									</ThemedText>
-									{/* type */}
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 120, paddingRight: 8, overflow: 'hidden' }}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{d.type.replace('-', ' ')}
-									</ThemedText>
-									{/* number */}
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 140, paddingRight: 8 }}
-										lightColor={textColor}
-										darkColor={textColor}
-									>
-										{d.documentId}
-									</ThemedText>
-									{/* attachment */}
+				{paged.map((d) => (
+					<RecordCard
+						key={d.documentId}
+						id={`document-${d.documentId}`}
+						title={d.type.replace('-', ' ')}
+						subtitle={d.documentId}
+						badge={{
+							label: d.status,
+							tone:
+								d.status === 'approved'
+									? 'success'
+									: d.status === 'pending'
+										? 'warning'
+										: 'danger',
+						}}
+						fields={[
+							{ label: copy.number, value: d.documentId },
+							{
+								label: copy.attachment,
+								value: (
 									<TouchableOpacity
 										onPress={async () => {
 											try {
@@ -323,53 +229,41 @@ export default function DocumentsScreen() {
 												console.warn('Failed to open document', e);
 											}
 										}}
-										style={{ width: 120 }}
 									>
 										<ThemedText
-											numberOfLines={1}
 											lightColor={bimColor}
 											darkColor={bimColor}
 											style={{ textDecorationLine: 'underline' }}
 										>
-											Open
+											{copy.open}
 										</ThemedText>
 									</TouchableOpacity>
-									{/* status */}
-									<ThemedText
-										numberOfLines={1}
-										style={{ width: 120, paddingRight: 8 }}
-										lightColor={getStatusColor(d.status).light}
-										darkColor={getStatusColor(d.status).dark}
-									>
-										{d.status}
-									</ThemedText>
-									{/* actions */}
-									<ThemedView
-										style={{
-											flexDirection: 'row',
-											justifyContent: 'space-between',
-											gap: 8,
-											width: 140,
-										}}
-										lightColor='transparent'
-										darkColor='transparent'
-									>
-										<TouchableOpacity onPress={() => handlePreview(d)}>
-											<IconSymbol color={lime} name='eye.outline' />
-										</TouchableOpacity>
-										<TouchableOpacity onPress={() => handleEdit(d)}>
-											<IconSymbol color={yellow} name='edit.outline' />
-										</TouchableOpacity>
-										<TouchableOpacity onPress={() => handleDelete(d)}>
-											<IconSymbol color={errorColor} name='delete.outline' />
-										</TouchableOpacity>
-									</ThemedView>
-								</ThemedView>
-							))}
-						</ScrollView>
-					</ThemedView>
-				</ScrollView>
-			</TileContainer>
+								),
+							},
+						]}
+						actions={[
+							{
+								label: translations[language].categories.packages.view,
+								icon: 'eye.outline',
+								tone: 'success',
+								onPress: () => handlePreview(d),
+							},
+							{
+								label: translations[language].categories.packages.edit,
+								icon: 'edit.outline',
+								tone: 'warning',
+								onPress: () => handleEdit(d),
+							},
+							{
+								label: translations[language].categories.packages.delete,
+								icon: 'delete.outline',
+								tone: 'danger',
+								onPress: () => handleDelete(d),
+							},
+						]}
+					/>
+				))}
+			</RecordList>
 
 			{/* Document overlay */}
 			<DocumentOverlay
