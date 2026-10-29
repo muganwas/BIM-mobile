@@ -728,7 +728,7 @@ export default function PackagesScreen() {
 
 	const renderPackagesTab = () => (
 		<ThemedView
-			style={{ gap: 10 }}
+			style={{ gap: 10, width: '100%' }}
 			lightColor='transparent'
 			darkColor='transparent'
 		>
@@ -930,7 +930,7 @@ export default function PackagesScreen() {
 
 	const renderRoutersTab = () => (
 		<ThemedView
-			style={{ gap: 10 }}
+			style={{ gap: 10, width: '100%' }}
 			lightColor='transparent'
 			darkColor='transparent'
 		>
@@ -960,6 +960,7 @@ export default function PackagesScreen() {
 					<ScrollView
 						horizontal
 						showsHorizontalScrollIndicator={false}
+						style={{ width: '100%' }}
 						contentContainerStyle={styles.selectorRow}
 					>
 						{portalPackages.map((pkg) => {
@@ -977,6 +978,7 @@ export default function PackagesScreen() {
 									]}
 								>
 									<ThemedText
+										numberOfLines={1}
 										style={[
 											styles.selectorText,
 											{ color: selected ? selectedText : textColor },
@@ -1006,7 +1008,7 @@ export default function PackagesScreen() {
 
 	const renderProfilesTab = () => (
 		<ThemedView
-			style={{ gap: 10 }}
+			style={{ gap: 10, width: '100%' }}
 			lightColor='transparent'
 			darkColor='transparent'
 		>
@@ -1207,7 +1209,7 @@ export default function PackagesScreen() {
 
 	const renderTrialTab = () => (
 		<ThemedView
-			style={{ gap: 10 }}
+			style={{ gap: 10, width: '100%' }}
 			lightColor='transparent'
 			darkColor='transparent'
 		>
@@ -1482,10 +1484,13 @@ const styles = StyleSheet.create({
 	},
 	selectorRow: {
 		flexDirection: 'row',
+		flexWrap: 'nowrap',
+		alignItems: 'center',
 		gap: 8,
 		paddingVertical: 2,
 	},
 	selectorChip: {
+		flexShrink: 0,
 		paddingHorizontal: 12,
 		paddingVertical: 8,
 		borderRadius: 999,
