@@ -45,22 +45,68 @@ export function getApiData<TData = unknown>(body: unknown): TData | null {
 	return Object.keys(payload).length ? (payload as TData) : null;
 }
 
-/** Pagination block carried by `meta.pagination` (with legacy `*_meta` fallback). */
-export function getApiPagination(body: unknown): PaginationMeta | undefined {
+/** Keys that identify a pagination block (as opposed to a map of blocks). */
+const PAGINATION_KEYS = [
+	'current_page',
+	'per_page',
+	'total',
+	'last_page',
+	'first_item',
+	'last_item',
+] as const;
+
+function isPaginationBlock(
+	value: Record<string, unknown> | null
+): value is Record<string, unknown> & PaginationMeta {
+	if (!value) return false;
+	return PAGINATION_KEYS.some((key) => typeof value[key] === 'number');
+}
+
+/**
+ * Pagination block for a collection.
+ *
+ * `meta.pagination` is keyed by collection name, e.g.
+ *   `{ pagination: { active: { total: 18, per_page: 10, current_page: 1, ... } } }`
+ * Pass the collection name (`key`) to read a specific block; without a key the
+ * first block that carries paging numbers is returned. Flat
+ * `{ pagination: { current_page, ... } }` responses and legacy `*_meta`
+ * siblings inside `data` are still supported.
+ */
+export function getApiPagination(
+	body: unknown,
+	key?: string
+): PaginationMeta | undefined {
 	const record = asRecord(body);
 	const meta = asRecord(record?.meta) ?? asRecord(asRecord(record?.data)?.meta);
 	const pagination = asRecord(meta?.pagination);
-	if (pagination) return pagination as PaginationMeta;
+
+	// Flat shape: `meta.pagination` holds the numbers directly.
+	if (isPaginationBlock(pagination)) return pagination;
+
+	if (pagination) {
+		// Keyed shape: pick the requested collection, else the first block.
+		if (key) {
+			const named = asRecord(pagination[key]);
+			if (isPaginationBlock(named)) return named;
+		}
+		for (const value of Object.values(pagination)) {
+			const block = asRecord(value);
+			if (isPaginationBlock(block)) return block;
+		}
+	}
 
 	// Older router payloads carried `cookies_meta` / `users_meta` / `hosts_meta`
 	// / `leases_meta` / `active_meta` next to the collection.
 	const data = asRecord(record?.data);
-	for (const [key, value] of Object.entries(data ?? {})) {
-		if (!key.endsWith('_meta')) continue;
+	if (!data) return undefined;
+	if (key) {
+		const named = asRecord(data[`${key}_meta`]);
+		if (isPaginationBlock(named)) return named;
+	}
+	for (const [entryKey, value] of Object.entries(data)) {
+		if (!entryKey.endsWith('_meta')) continue;
 		const legacyMeta = asRecord(value);
-		if (legacyMeta && 'current_page' in legacyMeta) {
-			return legacyMeta as PaginationMeta;
-		}
+		if (isPaginationBlock(legacyMeta)) return legacyMeta;
 	}
 	return undefined;
 }
@@ -73,8 +119,11 @@ export interface PageInfo {
 	per_page?: number;
 }
 
-export function getPageInfo(body: unknown): PageInfo | undefined {
-	const pagination = getApiPagination(body);
+/**
+ * Paging numbers for the given collection (`key`), e.g. `getPageInfo(body, 'active')`.
+ */
+export function getPageInfo(body: unknown, key?: string): PageInfo | undefined {
+	const pagination = getApiPagination(body, key);
 	if (!pagination) return undefined;
 	return {
 		current_page: pagination.current_page ?? 1,

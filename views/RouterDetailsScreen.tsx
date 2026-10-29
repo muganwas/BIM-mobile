@@ -8,17 +8,17 @@ import TileContainer from "@/components/TileContainer";
 import translations from "@/constants/Trans";
 import { useGeneral } from "@/context/GeneralContext";
 import { generateRandomInt } from "@/helpers";
+import { getApiData, getPageInfo, PageInfo } from "@/helpers/apiResponse";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import useTrackHistory from "@/hooks/useTrackHistory";
-import { getApiData, getPageInfo, PageInfo } from "@/helpers/apiResponse";
 import {
+    createRouterTrafficEventSource,
     deleteRouterCookie,
     getRouterActiveUsers,
     getRouterCookies,
     getRouterDHCPLeases,
     getRouterHosts,
     getRouterInterfaces,
-    createRouterTrafficEventSource,
     getRouterUsers
 } from "@/services/RouterService";
 import {
@@ -38,7 +38,7 @@ import {
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Dimensions, View, useAnimatedValue } from "react-native";
+import { ActivityIndicator, Animated, Dimensions, useAnimatedValue, View } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -205,7 +205,7 @@ export default function RouterDetailsScreen() {
                 // API 2.0: payload lives in `data`, pagination in `meta.pagination`.
                 const data = getApiData<NonNullable<GetRouterActiveUsersResponse['data']>>(body);
                 setActiveUsers(data?.active || []);
-                setActiveMeta(getPageInfo(body));
+                setActiveMeta(getPageInfo(body, 'active'));
                 setLastFetched((prev) => ({ ...prev, activeUsers: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchActiveUsers failed', resp.status, resp.statusText);
@@ -227,7 +227,7 @@ export default function RouterDetailsScreen() {
                 const body: GetRouterUsersResponse = await resp.json();
                 const data = getApiData<NonNullable<GetRouterUsersResponse['data']>>(body);
                 setUsers(data?.users || []);
-                setUsersMeta(getPageInfo(body));
+                setUsersMeta(getPageInfo(body, 'users'));
                 setLastFetched((prev) => ({ ...prev, users: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchUsers failed', resp.status, resp.statusText);
@@ -249,7 +249,7 @@ export default function RouterDetailsScreen() {
                 const body: GetRouterCookiesResponse = await resp.json();
                 const data = getApiData<NonNullable<GetRouterCookiesResponse['data']>>(body);
                 setCookies(data?.cookies || []);
-                setCookiesMeta(getPageInfo(body));
+                setCookiesMeta(getPageInfo(body, 'cookies'));
                 setLastFetched((prev) => ({ ...prev, cookies: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchCookies failed', resp.status, resp.statusText);
@@ -271,7 +271,7 @@ export default function RouterDetailsScreen() {
                 const body: GetRouterHostsResponse = await resp.json();
                 const data = getApiData<NonNullable<GetRouterHostsResponse['data']>>(body);
                 setHosts(data?.hosts || []);
-                setHostsMeta(getPageInfo(body));
+                setHostsMeta(getPageInfo(body, 'hosts'));
                 setLastFetched((prev) => ({ ...prev, hosts: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchHosts failed', resp.status, resp.statusText);
@@ -293,7 +293,7 @@ export default function RouterDetailsScreen() {
                 const body: GetRouterDHCPLeasesResponse = await resp.json();
                 const data = getApiData<NonNullable<GetRouterDHCPLeasesResponse['data']>>(body);
                 setDHCPLeases(data?.leases || []);
-                setDHCPLeasesMeta(getPageInfo(body));
+                setDHCPLeasesMeta(getPageInfo(body, 'leases'));
                 setLastFetched((prev) => ({ ...prev, dhcp_leases: new Date().toISOString() }));
             } else {
                 console.error('[RouterDetails] fetchDHCPLeases failed', resp.status, resp.statusText);

@@ -21,7 +21,7 @@ export type stringifiedBool = "true" | "false";
 /** Field level validation errors returned by the API (`errors` key of the envelope). */
 export type ApiErrors = Record<string, string | string[] | Record<string, unknown>> | null;
 
-/** Pagination block found under `meta.pagination`. */
+/** Pagination numbers for a single paginated collection. */
 export interface PaginationMeta {
 	current_page?: number;
 	per_page?: number;
@@ -31,8 +31,15 @@ export interface PaginationMeta {
 	last_item?: number | null;
 }
 
+/**
+ * `meta.pagination` is keyed by collection name — e.g.
+ * `{ pagination: { active: { total, per_page, current_page, last_page } } }`.
+ */
+export type PaginationGroups = Record<string, PaginationMeta>;
+
 export interface ApiMeta {
-	pagination?: PaginationMeta;
+	/** Keyed collection blocks, or a single block for older/flat responses. */
+	pagination?: PaginationGroups | PaginationMeta;
 }
 
 export type ApiOperationState =

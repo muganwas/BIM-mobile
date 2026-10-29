@@ -75,6 +75,69 @@ describe('apiResponse helpers', () => {
 		expect(getPageInfo({ success: true })).toBeUndefined();
 	});
 
+	test('reads pagination keyed by collection name under meta.pagination', () => {
+		// Shape returned by e.g. GET /routers/{id}/hotspots/active
+		const body = {
+			success: true,
+			data: { active: [] },
+			meta: {
+				pagination: {
+					active: {
+						total: 18,
+						per_page: 10,
+						current_page: 1,
+						last_page: 2,
+						first_item: 1,
+						last_item: 10,
+					},
+				},
+			},
+			operation: null,
+			errors: null,
+		};
+		expect(getApiPagination(body, 'active')?.total).toBe(18);
+		expect(getPageInfo(body, 'active')).toEqual({
+			current_page: 1,
+			last_page: 2,
+			total: 18,
+			per_page: 10,
+		});
+		// Without a key the first block that carries paging numbers is used.
+		expect(getPageInfo(body)?.total).toBe(18);
+		// Unknown collection names fall back instead of returning nothing.
+		expect(getPageInfo(body, 'cookies')?.total).toBe(18);
+	});
+
+	test('picks the requested collection when several are paginated', () => {
+		const body = {
+			success: true,
+			meta: {
+				pagination: {
+					users: { current_page: 2, last_page: 5, per_page: 10, total: 45 },
+					cookies: { current_page: 3, last_page: 9, per_page: 25, total: 210 },
+				},
+			},
+		};
+		expect(getPageInfo(body, 'cookies')).toMatchObject({
+			current_page: 3,
+			last_page: 9,
+			total: 210,
+		});
+		expect(getPageInfo(body, 'users')).toMatchObject({
+			current_page: 2,
+			last_page: 5,
+			total: 45,
+		});
+	});
+
+	test('ignores empty pagination group objects', () => {
+		const body = {
+			success: true,
+			meta: { pagination: { active: {} } },
+		};
+		expect(getPageInfo(body, 'active')).toBeUndefined();
+	});
+
 	test('reads queued operation cache keys from data', () => {
 		const queued = {
 			success: true,
@@ -94,6 +157,13 @@ describe('apiResponse helpers', () => {
 			success: true,
 			data: {
 				cookies: [],
+				users: [],
+				users_meta: {
+					current_page: 1,
+					last_page: 2,
+					per_page: 10,
+					total: 12,
+				},
 				cookies_meta: {
 					current_page: 3,
 					last_page: 6,
@@ -104,10 +174,21 @@ describe('apiResponse helpers', () => {
 				},
 			},
 		};
-		expect(getPageInfo(legacyRouterPayload)).toMatchObject({
+		// The requested collection wins over other `*_meta` siblings.
+		expect(getPageInfo(legacyRouterPayload, 'cookies')).toMatchObject({
 			current_page: 3,
 			last_page: 6,
 			total: 55,
+		});
+		expect(getPageInfo(legacyRouterPayload, 'users')).toMatchObject({
+			current_page: 1,
+			last_page: 2,
+			total: 12,
+		});
+		expect(getPageInfo(legacyRouterPayload)).toMatchObject({
+			current_page: 1,
+			last_page: 2,
+			total: 12,
 		});
 	});
 });
