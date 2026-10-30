@@ -350,6 +350,8 @@ export interface MicroTransaction {
 	type: TransactionType; // Type of the micro transaction
 	router: ApiRouter
 	method: TransactionMethod; // Reference to the transaction method used
+	/** Payment gateway that processed the transaction (`YO`, `Relworx`, …). */
+	gateway?: string | null;
 }
 
 export interface TransactionMethod {
@@ -823,12 +825,15 @@ export interface ApiTransaction {
 	id: string;
 	router_id?: string;
 	type: 'credit' | 'debit';
-	amount: number;
+	/** The API serialises money as a decimal string (`"1000.00"`). */
+	amount: number | string;
 	reason?: string;
 	status?: string;
 	created_at?: string;
 	router_name?: string;
 	transaction_date?: string;
+	/** Payment gateway that processed the transaction (`YO`, `Relworx`, …). */
+	gateway?: string | null;
 }
 
 /** Paginated transaction collection (Laravel paginator shape). */

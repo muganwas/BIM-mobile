@@ -11,10 +11,13 @@ rows never scroll horizontally on a phone.
 - **Lists**: `components/RecordList.tsx`
   - `RecordList` renders the list shell with loading/empty states and an optional
     header action (`title`, `description`, `headerAction`, `loading`, `isEmpty`).
-  - `RecordCard` renders one record: `title`, `subtitle`, `badge` (status pill),
-    `fields` (two-column grid that wraps; set `fullWidth` for long values) and
-    `actions` (buttons wrap under the fields, so a row with an action button never
-    needs a horizontal scroll). Action `tone` keeps the app's colour coding:
+  - `RecordCard` renders one record: optional `title`/`subtitle`, `badge` (status
+    pill), `fields` (compact two-column grid of inline label/value pairs that
+    wraps; set `fullWidth` for long values) and `actions` (buttons wrap under the
+    fields, so a row with an action button never needs a horizontal scroll).
+    Cards that are pure data — e.g. transactions — omit `title`/`subtitle` and
+    carry every value (including the site/router name) as a `field`. Action `tone`
+    keeps the app's colour coding:
     `success` (lime) for view, `warning` (yellow) for edit, `danger` (red) for
     delete/block, `primary`/`info`/`neutral` for everything else.
 - Every list sits on one elevated container: wrap `RecordList` in a

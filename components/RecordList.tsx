@@ -69,7 +69,7 @@ export function RecordCard({
 	onPress,
 }: {
 	id?: string;
-	title: ReactNode;
+	title?: ReactNode;
 	subtitle?: ReactNode;
 	badge?: RecordBadge;
 	fields?: RecordField[];
@@ -101,64 +101,77 @@ export function RecordCard({
 			backgroundColor={bg}
 			style={styles.card}
 		>
-			<ThemedView
-				style={styles.header}
-				lightColor='transparent'
-				darkColor='transparent'
-				onTouchEnd={onPress}
-			>
+			{title || subtitle || badge ? (
 				<ThemedView
-					style={styles.headerText}
+					style={[styles.header, !title && !subtitle && styles.headerEnd]}
 					lightColor='transparent'
 					darkColor='transparent'
+					onTouchEnd={onPress}
 				>
-					<ThemedText
-						style={[styles.title, { color: textColor }]}
-						lightColor={textColor}
-						darkColor={textColor}
-						numberOfLines={2}
-					>
-						{title}
-					</ThemedText>
-					{subtitle ? (
-						<ThemedText
-							style={[styles.subtitle, { color: mutedText }]}
-							lightColor={mutedText}
-							darkColor={mutedText}
-							numberOfLines={2}
+					{title || subtitle ? (
+						<ThemedView
+							style={styles.headerText}
+							lightColor='transparent'
+							darkColor='transparent'
 						>
-							{subtitle}
-						</ThemedText>
+							{title ? (
+								<ThemedText
+									style={[styles.title, { color: textColor }]}
+									lightColor={textColor}
+									darkColor={textColor}
+									numberOfLines={2}
+								>
+									{title}
+								</ThemedText>
+							) : null}
+							{subtitle ? (
+								<ThemedText
+									style={[styles.subtitle, { color: mutedText }]}
+									lightColor={mutedText}
+									darkColor={mutedText}
+									numberOfLines={2}
+								>
+									{subtitle}
+								</ThemedText>
+							) : null}
+						</ThemedView>
+					) : null}
+					{badge ? (
+						<ThemedView
+							style={[
+								styles.badge,
+								{
+									backgroundColor: `${tones[badge.tone ?? 'default']}1A`,
+									borderColor: tones[badge.tone ?? 'default'],
+								},
+							]}
+							lightColor='transparent'
+							darkColor='transparent'
+						>
+							<ThemedText
+								style={[
+									styles.badgeText,
+									{ color: tones[badge.tone ?? 'default'] },
+								]}
+								lightColor={tones[badge.tone ?? 'default']}
+								darkColor={tones[badge.tone ?? 'default']}
+							>
+								{badge.label}
+							</ThemedText>
+						</ThemedView>
 					) : null}
 				</ThemedView>
-				{badge ? (
-					<ThemedView
-						style={[
-							styles.badge,
-							{
-								backgroundColor: `${tones[badge.tone ?? 'default']}1A`,
-								borderColor: tones[badge.tone ?? 'default'],
-							},
-						]}
-						lightColor='transparent'
-						darkColor='transparent'
-					>
-						<ThemedText
-							style={[
-								styles.badgeText,
-								{ color: tones[badge.tone ?? 'default'] },
-							]}
-							lightColor={tones[badge.tone ?? 'default']}
-							darkColor={tones[badge.tone ?? 'default']}
-						>
-							{badge.label}
-						</ThemedText>
-					</ThemedView>
-				) : null}
-			</ThemedView>
+			) : null}
 
 			{fields && fields.length > 0 ? (
-				<View style={[styles.fields, { borderTopColor: border }]}>
+				<View
+					style={[
+						styles.fields,
+						title || subtitle || badge
+							? { borderTopColor: border, borderTopWidth: 1 }
+							: styles.fieldsFlush,
+					]}
+				>
 					{fields.map((field, index) => {
 						const color = tones[field.tone ?? 'default'];
 						return (
@@ -309,27 +322,31 @@ export function RecordList({
 const styles = StyleSheet.create({
 	card: {
 		width: '100%',
-		gap: 10,
+		padding: 8,
+		gap: 4,
 	},
 	header: {
 		flexDirection: 'row',
-		alignItems: 'flex-start',
-		gap: 8,
+		alignItems: 'center',
+		gap: 4,
+	},
+	headerEnd: {
+		justifyContent: 'flex-end',
 	},
 	headerText: {
 		flex: 1,
-		gap: 2,
+		gap: 1,
 	},
 	title: {
-		fontSize: fontSize['heading.two'],
+		fontSize: fontSize['heading.three'],
 		fontWeight: fontWeight['heading.two'],
 	},
 	subtitle: {
 		fontSize: fontSize['text.small'],
 	},
 	badge: {
-		paddingHorizontal: 8,
-		paddingVertical: 3,
+		paddingHorizontal: 6,
+		paddingVertical: 2,
 		borderRadius: 999,
 		borderWidth: 1,
 	},
@@ -337,37 +354,44 @@ const styles = StyleSheet.create({
 		fontSize: fontSize['text.xsmall'],
 		fontWeight: fontWeight['text.xsmall'],
 		textTransform: 'uppercase',
-		letterSpacing: 0.4,
+		letterSpacing: 0.3,
 	},
 	fields: {
 		flexDirection: 'row',
 		flexWrap: 'wrap',
-		gap: 12,
-		paddingTop: 10,
-		borderTopWidth: 1,
+		columnGap: 10,
+		rowGap: 4,
+		paddingTop: 6,
+	},
+	fieldsFlush: {
+		paddingTop: 0,
 	},
 	field: {
 		flexBasis: '45%',
 		flexGrow: 1,
-		gap: 2,
-		minWidth: 110,
+		flexDirection: 'row',
+		alignItems: 'baseline',
+		gap: 4,
+		minWidth: 100,
 	},
 	fieldFullWidth: {
 		flexBasis: '100%',
 		minWidth: '100%',
 	},
 	fieldLabel: {
+		flexShrink: 0,
 		fontSize: fontSize['text.xsmall'],
 		textTransform: 'uppercase',
-		letterSpacing: 0.4,
+		letterSpacing: 0.3,
 	},
 	fieldValue: {
-		fontSize: fontSize['text.medium'],
-		fontWeight: fontWeight['heading.three'],
+		flexShrink: 1,
+		fontSize: fontSize['text.small'],
+		fontWeight: fontWeight['button.small'],
 	},
 	actions: {
 		flexDirection: 'row',
-		gap: 8,
+		gap: 6,
 	},
 	actionButton: {
 		flexGrow: 1,
@@ -375,7 +399,7 @@ const styles = StyleSheet.create({
 		flexBasis: 0,
 		minWidth: 0,
 		borderRadius: 6,
-		paddingVertical: 8,
+		paddingVertical: 6,
 		paddingHorizontal: 6,
 	},
 	actionText: {
@@ -383,7 +407,7 @@ const styles = StyleSheet.create({
 	},
 	list: {
 		width: '100%',
-		gap: 10,
+		gap: 6,
 	},
 	listHeader: {
 		flexDirection: 'row',

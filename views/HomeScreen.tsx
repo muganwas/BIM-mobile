@@ -21,6 +21,7 @@ import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { formatAmount, formatMMDD, timeAgo, translateWithVariables } from '@/helpers';
 import { signalAppReady } from '@/helpers/appReady';
+import { isPlatformAdmin } from '@/helpers/permissions';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import { MicroTransaction } from '@/types';
@@ -37,6 +38,7 @@ export default function HomeScreen() {
 		lastDashboardUpdated,
 	} = useGeneral();
 	const dashboard = user?.dashboard;
+	const isAdmin = isPlatformAdmin(user);
 	const hasDashboardData =
 		!!dashboard &&
 		(Array.isArray(dashboard.recentTransactions) ||
@@ -299,9 +301,11 @@ export default function HomeScreen() {
 						<RecordCard
 							key={index}
 							id={`dashboard-transaction-${index}`}
-							title={transaction.routerName}
-							subtitle={transaction.date.toLocaleDateString()}
 							fields={[
+								{
+									label: translations[language].categories.dashboard.routerName,
+									value: transaction.routerName || '—',
+								},
 								{
 									label: translations[language].categories.dashboard.amount,
 									value: transaction.amount,
@@ -311,9 +315,17 @@ export default function HomeScreen() {
 									value: transaction.method.type,
 								},
 								{
-									label: translations[language].categories.dashboard.reason,
-									value: transaction.reason,
+									label: translations[language].categories.dashboard.date,
+									value: transaction.date.toLocaleDateString(),
 								},
+								...(isAdmin && transaction.gateway
+									? [
+										{
+											label: translations[language].categories.transactions.gateway,
+											value: transaction.gateway,
+										},
+									]
+									: []),
 							]}
 						/>
 					))}

@@ -239,11 +239,12 @@ describe('api mappers', () => {
 			id: 'tx-1',
 			router_id: 'r-1',
 			type: 'credit',
-			amount: 1500,
+			amount: '1500.00',
 			reason: 'wifi',
 			status: 'successful',
 			created_at: '2026-10-28T10:00:00Z',
 			router_name: 'Main',
+			gateway: 'YO',
 		});
 		expect(mapped).toMatchObject({
 			id: 'tx-1',
@@ -252,6 +253,7 @@ describe('api mappers', () => {
 			routerName: 'Main',
 			reason: 'wifi',
 			type: 'credit',
+			gateway: 'YO',
 		});
 		expect(mapped.router).toMatchObject({ id: 'r-1', name: 'Main' });
 		expect(mapped.date.toISOString()).toBe('2026-10-28T10:00:00.000Z');
@@ -266,12 +268,14 @@ describe('api mappers', () => {
 			status: 'pending',
 			router: { id: 4, name: 'Kampala' },
 			created_at: '2026-10-27T08:30:00Z',
+			gateway: 'Relworx',
 		});
 		expect(mapped).toMatchObject({
 			id: 'rt-1',
 			reason: 'subscription',
 			status: 'pending',
 			routerName: 'Kampala',
+			gateway: 'Relworx',
 		});
 		expect(mapped.router).toMatchObject({ id: '4', name: 'Kampala' });
 	});

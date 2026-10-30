@@ -113,6 +113,7 @@ export function mapApiTransactionToMicroTransaction(
 		reason: toTransactionReason(transaction.reason),
 		description: transaction.reason,
 		type: toTransactionType(transaction.type),
+		gateway: transaction.gateway ?? null,
 		router: {
 			id: transaction.router_id ?? '',
 			name: transaction.router_name ?? '',
@@ -138,6 +139,7 @@ export function mapRecentTransactionToMicroTransaction(
 		reason: toTransactionReason(transaction.reason),
 		description: transaction.reason ?? undefined,
 		type: toTransactionType(transaction.type),
+		gateway: transaction.gateway ?? null,
 		router: {
 			id: routerId,
 			name: routerName,

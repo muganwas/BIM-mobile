@@ -269,7 +269,7 @@ export const TransactionProvider = ({
 	// Process it in a separate effect that re-runs whenever user changes.
 	useEffect(() => {
 		if (!user) return;
-		const sd = ((user as any)?.dashboard ?? (user as any)) || null;
+		const sd = user?.dashboard || null;
 		if (
 			sd &&
 			(sd.recentTransactions ||
@@ -312,11 +312,6 @@ export const TransactionProvider = ({
 				setDailyVoucherUsersTotal(Number(sd.todayUsers) || 0);
 				setWeeklyVoucherUsersTotal(Number(sd.weekUsers) || 0);
 				setMonthlyVoucherUsersTotal(Number(sd.monthUsers) || 0);
-				if (Array.isArray(sd.voucherUsers)) {
-					setLastSevenVoucherUsers(
-						sd.voucherUsers.slice(0, 7) as VoucherUser[]
-					);
-				}
 			} catch (e) {
 				console.error(
 					'TransactionContext: failed to map server dashboard metrics',

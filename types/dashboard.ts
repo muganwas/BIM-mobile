@@ -23,6 +23,8 @@ export interface RecentTransaction {
 	transaction_date?: string | null;
 	status?: string;
 	type?: 'credit' | 'debit' | string;
+	/** Payment gateway that processed the transaction (`YO`, `Relworx`, …). */
+	gateway?: string | null;
 }
 
 export interface DashboardSummary {

@@ -12,6 +12,7 @@ import translations from '@/constants/Trans';
 import { useGeneral } from '@/context/GeneralContext';
 import { useTransaction } from '@/context/TransactionContext';
 import { formatAmount } from '@/helpers';
+import { isPlatformAdmin } from '@/helpers/permissions';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useTrackHistory from '@/hooks/useTrackHistory';
 import type { TransactionFilters } from '@/services/UserService';
@@ -55,6 +56,7 @@ export default function TransactionsScreen() {
 		}
 	}, [fetchPurchases]);
 	const t = translations[language].categories.transactions;
+	const isAdmin = isPlatformAdmin(user);
 	console.log({ router: purchases && purchases[0]?.router });
 
 	// Filters state
@@ -491,20 +493,23 @@ export default function TransactionsScreen() {
 							<RecordCard
 								key={`${trans.id}-${index}`}
 								id={`transaction-${trans.id}-${index}`}
-								title={trans.reason || trans.type}
-								subtitle={trans.router?.name}
-								badge={{
-									label: trans.status,
-									tone:
-										status === 'successful' || status === 'approved'
-											? 'success'
-											: status === 'pending'
-												? 'warning'
-												: status === 'failed'
-													? 'danger'
-													: 'info',
-								}}
 								fields={[
+									{
+										label: t.colStatus,
+										value: trans.status,
+										tone:
+											status === 'successful' || status === 'approved'
+												? 'success'
+												: status === 'pending'
+													? 'warning'
+													: status === 'failed'
+														? 'danger'
+														: 'info',
+									},
+									{
+										label: t.colRouterName,
+										value: trans.router?.name || trans.routerName || '—',
+									},
 									{
 										label: t.colAmount,
 										value: formatAmount(trans.amount, 2),
@@ -515,6 +520,9 @@ export default function TransactionsScreen() {
 										label: t.colTransactionDate,
 										value: new Date(trans.created_at).toLocaleDateString(),
 									},
+									...(isAdmin && trans.gateway
+										? [{ label: t.gateway, value: trans.gateway }]
+										: []),
 								]}
 							/>
 						);

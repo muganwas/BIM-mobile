@@ -510,6 +510,7 @@ const translations: Translations = {
 				colStatus: 'Status',
 				colRouterName: 'Router Name',
 				colTransactionDate: 'Transaction Date',
+				gateway: 'Gateway',
 				noTransactions: 'No transactions found for these filters.',
 			},
 			withdraw: {
