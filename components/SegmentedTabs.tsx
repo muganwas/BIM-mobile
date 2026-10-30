@@ -12,6 +12,8 @@ export type SegmentedTab = {
 	icon?: IconSymbolName;
 	/** Optional count rendered as a pill on the right of the label. */
 	count?: number;
+	/** Optional second pill (e.g. vouchers online right now) after `count`. */
+	secondaryCount?: number;
 };
 
 type Props = {
@@ -27,8 +29,9 @@ export function SegmentedTabs({ tabs, activeKey, onChange, style }: Props) {
 	const activeText = useThemeColor({}, 'authButtonText');
 	const textColor = useThemeColor({}, 'text');
 	const border = useThemeColor({}, 'borderDark');
-	const countBg = useThemeColor({}, 'notificationsCountBackground');
-	const countText = useThemeColor({}, 'notificationsCount');
+	const white = useThemeColor({}, 'white');
+	const onlineBg = useThemeColor({}, 'lime');
+	const onlineText = useThemeColor({}, 'authButtonText');
 
 	return (
 		<ScrollView
@@ -77,7 +80,9 @@ export function SegmentedTabs({ tabs, activeKey, onChange, style }: Props) {
 								style={[
 									styles.count,
 									{
-										backgroundColor: selected ? activeText : countBg,
+										backgroundColor: selected ? activeText : white,
+										borderColor: selected ? activeText : border,
+										borderWidth: 1,
 									},
 								]}
 								lightColor='transparent'
@@ -86,12 +91,32 @@ export function SegmentedTabs({ tabs, activeKey, onChange, style }: Props) {
 								<ThemedText
 									style={[
 										styles.countText,
-										{ color: selected ? activeBg : countText },
+										{ color: selected ? activeBg : textColor },
 									]}
-									lightColor={selected ? activeBg : countText}
-									darkColor={selected ? activeBg : countText}
+									lightColor={selected ? activeBg : textColor}
+									darkColor={selected ? activeBg : textColor}
+									numberOfLines={1}
 								>
 									{tab.count}
+								</ThemedText>
+							</ThemedView>
+						) : null}
+						{typeof tab.secondaryCount === 'number' ? (
+							<ThemedView
+								style={[
+									styles.count,
+									{ backgroundColor: onlineBg, borderColor: onlineBg },
+								]}
+								lightColor='transparent'
+								darkColor='transparent'
+							>
+								<ThemedText
+									style={[styles.countText, { color: onlineText }]}
+									lightColor={onlineText}
+									darkColor={onlineText}
+									numberOfLines={1}
+								>
+									{tab.secondaryCount}
 								</ThemedText>
 							</ThemedView>
 						) : null}
@@ -122,14 +147,15 @@ const styles = StyleSheet.create({
 		fontWeight: fontWeight['text.xsmall'],
 	},
 	count: {
-		minWidth: 20,
-		paddingHorizontal: 6,
-		paddingVertical: 1,
-		borderRadius: 999,
+		minWidth: 26,
+		height: 26,
+		paddingHorizontal: 3,
+		borderRadius: 13,
 		alignItems: 'center',
+		justifyContent: 'center',
 	},
 	countText: {
 		fontSize: fontSize['text.xsmall'],
-		fontWeight: fontWeight['text.xsmall'],
+		fontWeight: fontWeight['button.small'],
 	},
 });

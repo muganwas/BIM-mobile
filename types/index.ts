@@ -661,6 +661,80 @@ export type GetRouterUsersResponse = ApiEnvelope<{
 	users_links?: string;
 	}>;
 
+/** Voucher lifecycle state used by `GET /vouchers` filters and `Voucher.status`. */
+export type VoucherStatus =
+	| 'online'
+	| 'active'
+	| 'unused'
+	| 'expired'
+	| 'disabled';
+
+/** One voucher returned by `GET /vouchers` (`Voucher` schema). */
+export interface Voucher {
+	id?: number | null;
+	/** Voucher code (the RADIUS username). */
+	username: string;
+	router_id?: string | null;
+	router_name?: string | null;
+	profile?: string | null;
+	profile_display?: string | null;
+	status: VoucherStatus;
+	is_online?: boolean;
+	is_disabled?: boolean;
+	is_expired?: boolean;
+	has_been_used?: boolean;
+	is_manual?: boolean;
+	is_trial?: boolean;
+	mac_address?: string | null;
+	/** First login (start date), already formatted by the API. */
+	first_auth?: string | null;
+	last_auth?: string | null;
+	created_at?: string | null;
+	expires_at?: string | null;
+	/** Current session duration, e.g. `4m27s`. */
+	uptime?: string | null;
+	/** Session length left, e.g. `5h55m33s`. */
+	session_time?: string | null;
+}
+
+/** Counts for the caller's whole voucher set, before the status filter runs. */
+export interface VoucherListStats {
+	total?: number;
+	online?: number;
+	active?: number;
+	unused?: number;
+	expired?: number;
+	disabled?: number;
+	manual?: number;
+	auto?: number;
+}
+
+/** Per-router counts for the caller's voucher set. */
+export interface VoucherRouterStats {
+	router_id?: string | null;
+	router_name: string;
+	total?: number;
+	online?: number;
+	/** Live router sessions, which may include non-voucher hotspot users. */
+	live_online?: number;
+}
+
+/** `GET /vouchers` */
+export type GetVouchersResponse = ApiEnvelope<{
+	vouchers?: Voucher[];
+	stats?: VoucherListStats;
+	router_stats?: VoucherRouterStats[];
+}>;
+
+/** `GET /vouchers/routers` */
+export type GetVoucherRoutersResponse = ApiEnvelope<{ routers: ApiRouter[] }>;
+
+/** `GET /vouchers/{routerId}/hotspots` */
+export type GetVoucherHotspotsResponse = ApiEnvelope<{
+	router?: ApiRouter;
+	hotspots?: Hotspot[];
+}>;
+
 /** `GET /routers/{router}/hosts` */
 export type GetRouterHostsResponse = ApiEnvelope<{
 	router?: ApiRouter;

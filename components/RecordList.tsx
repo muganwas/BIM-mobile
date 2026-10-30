@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 
 import { ThemedButton } from '@/components/ThemedButton';
 import { ThemedText } from '@/components/ThemedText';
@@ -101,136 +101,145 @@ export function RecordCard({
 			backgroundColor={bg}
 			style={styles.card}
 		>
-			{title || subtitle || badge ? (
-				<ThemedView
-					style={[styles.header, !title && !subtitle && styles.headerEnd]}
-					lightColor='transparent'
-					darkColor='transparent'
-					onTouchEnd={onPress}
-				>
-					{title || subtitle ? (
+			<Pressable
+				onPress={onPress}
+				disabled={!onPress}
+				accessibilityRole={onPress ? 'button' : undefined}
+				style={({ pressed }) => [
+					styles.cardContent,
+					pressed && onPress ? styles.cardPressed : null,
+				]}
+			>
+					{title || subtitle || badge ? (
 						<ThemedView
-							style={styles.headerText}
+							style={[styles.header, !title && !subtitle && styles.headerEnd]}
 							lightColor='transparent'
 							darkColor='transparent'
 						>
-							{title ? (
-								<ThemedText
-									style={[styles.title, { color: textColor }]}
-									lightColor={textColor}
-									darkColor={textColor}
-									numberOfLines={2}
-								>
-									{title}
-								</ThemedText>
-							) : null}
-							{subtitle ? (
-								<ThemedText
-									style={[styles.subtitle, { color: mutedText }]}
-									lightColor={mutedText}
-									darkColor={mutedText}
-									numberOfLines={2}
-								>
-									{subtitle}
-								</ThemedText>
-							) : null}
-						</ThemedView>
-					) : null}
-					{badge ? (
-						<ThemedView
-							style={[
-								styles.badge,
-								{
-									backgroundColor: `${tones[badge.tone ?? 'default']}1A`,
-									borderColor: tones[badge.tone ?? 'default'],
-								},
-							]}
-							lightColor='transparent'
-							darkColor='transparent'
-						>
-							<ThemedText
-								style={[
-									styles.badgeText,
-									{ color: tones[badge.tone ?? 'default'] },
-								]}
-								lightColor={tones[badge.tone ?? 'default']}
-								darkColor={tones[badge.tone ?? 'default']}
+						{title || subtitle ? (
+							<ThemedView
+								style={styles.headerText}
+								lightColor='transparent'
+								darkColor='transparent'
 							>
-								{badge.label}
-							</ThemedText>
-						</ThemedView>
-					) : null}
-				</ThemedView>
-			) : null}
-
-			{fields && fields.length > 0 ? (
-				<View
-					style={[
-						styles.fields,
-						title || subtitle || badge
-							? { borderTopColor: border, borderTopWidth: 1 }
-							: styles.fieldsFlush,
-					]}
-				>
-					{fields.map((field, index) => {
-						const color = tones[field.tone ?? 'default'];
-						return (
-							<View
-								key={`${field.label}-${index}`}
+								{title ? (
+									<ThemedText
+										style={[styles.title, { color: textColor }]}
+										lightColor={textColor}
+										darkColor={textColor}
+										numberOfLines={2}
+									>
+										{title}
+									</ThemedText>
+								) : null}
+								{subtitle ? (
+									<ThemedText
+										style={[styles.subtitle, { color: mutedText }]}
+										lightColor={mutedText}
+										darkColor={mutedText}
+										numberOfLines={2}
+									>
+										{subtitle}
+									</ThemedText>
+								) : null}
+							</ThemedView>
+						) : null}
+						{badge ? (
+							<ThemedView
 								style={[
-									styles.field,
-									field.fullWidth && styles.fieldFullWidth,
+									styles.badge,
+									{
+										backgroundColor: `${tones[badge.tone ?? 'default']}1A`,
+										borderColor: tones[badge.tone ?? 'default'],
+									},
 								]}
+								lightColor='transparent'
+								darkColor='transparent'
 							>
 								<ThemedText
-									style={[styles.fieldLabel, { color: mutedText }]}
-									lightColor={mutedText}
-									darkColor={mutedText}
-									numberOfLines={1}
+									style={[
+										styles.badgeText,
+										{ color: tones[badge.tone ?? 'default'] },
+									]}
+									lightColor={tones[badge.tone ?? 'default']}
+									darkColor={tones[badge.tone ?? 'default']}
 								>
-									{field.label}
+									{badge.label}
 								</ThemedText>
-								<ThemedText
-									style={[styles.fieldValue, { color }]}
-									lightColor={color}
-									darkColor={color}
-									numberOfLines={1}
+							</ThemedView>
+						) : null}
+					</ThemedView>
+				) : null}
+
+				{fields && fields.length > 0 ? (
+					<View
+						style={[
+							styles.fields,
+							title || subtitle || badge
+								? { borderTopColor: border, borderTopWidth: 1 }
+								: styles.fieldsFlush,
+						]}
+					>
+						{fields.map((field, index) => {
+							const color = tones[field.tone ?? 'default'];
+							return (
+								<View
+									key={`${field.label}-${index}`}
+									style={[
+										styles.field,
+										field.fullWidth && styles.fieldFullWidth,
+									]}
 								>
-									{field.value}
-								</ThemedText>
-							</View>
-						);
-					})}
-				</View>
-			) : null}
+									<ThemedText
+										style={[styles.fieldLabel, { color: mutedText }]}
+										lightColor={mutedText}
+										darkColor={mutedText}
+										numberOfLines={1}
+									>
+										{field.label}
+									</ThemedText>
+									<ThemedText
+										style={[styles.fieldValue, { color }]}
+										lightColor={color}
+										darkColor={color}
+										numberOfLines={1}
+									>
+										{field.value}
+									</ThemedText>
+								</View>
+							);
+						})}
+					</View>
+				) : null}
 
-			{actions && actions.length > 0 ? (
-				<View style={styles.actions}>
-					{actions.map((action, index) => {
-						const colors = actionColors[action.tone ?? 'primary'];
-						return (
-							<ThemedButton
-								key={`${action.label}-${index}`}
-								title={action.label}
-								onPress={action.onPress}
-								icon={action.icon}
-								disabled={action.disabled}
-								loading={action.loading}
-								numberOfLines={1}
-								style={styles.actionButton}
-								textStyle={styles.actionText}
-								lightColor={colors.background}
-								darkColor={colors.background}
-								lightTextColor={colors.text}
-								darkTextColor={colors.text}
-								iconColor={colors.text}
-							/>
-						);
-					})}
-				</View>
-			) : null}
+				{actions && actions.length > 0 ? (
+					<View style={styles.actions}>
+						{actions.map((action, index) => {
+							const colors = actionColors[action.tone ?? 'primary'];
+							return (
+								<ThemedButton
+									key={`${action.label}-${index}`}
+									title={action.label}
+									onPress={action.onPress}
+									icon={action.icon}
+									disabled={action.disabled}
+									loading={action.loading}
+									numberOfLines={1}
+									style={styles.actionButton}
+									textStyle={styles.actionText}
+									lightColor={colors.background}
+									darkColor={colors.background}
+									lightTextColor={colors.text}
+									darkTextColor={colors.text}
+									iconColor={colors.text}
+								/>
+							);
+						})}
+					</View>
+				) : null}
 
-			{footer}
+				{footer}
+			</Pressable>
 		</TileContainer>
 	);
 }
@@ -323,7 +332,13 @@ const styles = StyleSheet.create({
 	card: {
 		width: '100%',
 		padding: 8,
+	},
+	cardContent: {
+		width: '100%',
 		gap: 4,
+	},
+	cardPressed: {
+		opacity: 0.7,
 	},
 	header: {
 		flexDirection: 'row',
