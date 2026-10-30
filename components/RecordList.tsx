@@ -194,7 +194,7 @@ export function RecordCard({
 									style={[styles.fieldValue, { color }]}
 									lightColor={color}
 									darkColor={color}
-									numberOfLines={2}
+									numberOfLines={1}
 								>
 									{field.value}
 								</ThemedText>
