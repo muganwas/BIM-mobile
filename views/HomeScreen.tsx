@@ -1,9 +1,9 @@
 import { useIsFocused } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
 import {
+	ActivityIndicator,
 	Dimensions,
 	GestureResponderEvent,
-	ActivityIndicator,
 	StyleSheet,
 	useColorScheme,
 } from 'react-native';
@@ -58,7 +58,7 @@ export default function HomeScreen() {
 		const id = setInterval(() => {
 			try {
 				setLastUpdatedLabel(timeAgo(lastDashboardUpdated));
-			} catch {}
+			} catch { }
 		}, 60 * 1000);
 		return () => clearInterval(id);
 	}, [lastDashboardUpdated, isFocused]);
@@ -90,6 +90,7 @@ export default function HomeScreen() {
 	const backgroundDark = useThemeColor({}, 'background', 'dark');
 	const screenTitleTextLight = useThemeColor({}, 'screenTitleText', 'light');
 	const screenTitleTextDark = useThemeColor({}, 'screenTitleText', 'dark');
+	const headerText = useThemeColor({}, 'headers');
 	const textLight = useThemeColor({}, 'text', 'light');
 	const textDark = useThemeColor({}, 'text', 'dark');
 	const muted = useThemeColor({}, 'mutedText');
@@ -114,8 +115,6 @@ export default function HomeScreen() {
 	);
 	const borderDark = useThemeColor({}, 'borderDark');
 	const bim = useThemeColor({}, 'bim');
-	const whiteLight = useThemeColor({}, 'white', 'light');
-	const whiteDark = useThemeColor({}, 'white', 'dark');
 	const bimLight = useThemeColor({}, 'bim', 'light');
 	const bimDark = useThemeColor({}, 'bim', 'dark');
 	const authButtonTextLight = useThemeColor({}, 'authButtonText', 'light');
@@ -193,7 +192,7 @@ export default function HomeScreen() {
 						>
 							{translateWithVariables(
 								translations[language].categories.dashboard?.lastUpdated ||
-									'Last updated: {time}',
+								'Last updated: {time}',
 								{ time: lastUpdatedLabel }
 							)}
 						</ThemedText>
@@ -382,11 +381,11 @@ export default function HomeScreen() {
 							labels: [
 								...(user?.dashboard?.chartData
 									? user.dashboard.chartData.map((c) =>
-											formatMMDD(new Date(c.date))
-									  )
+										formatMMDD(new Date(c.date))
+									)
 									: (lastSevenDaysPurchases ?? []).map((p) =>
-											formatMMDD(p.date)
-									  )),
+										formatMMDD(p.date)
+									)),
 							],
 							datasets: [
 								{
@@ -440,19 +439,17 @@ export default function HomeScreen() {
 				<ThemedView
 					style={{
 						flexDirection: 'column',
-						borderWidth: 2,
-						borderColor: borderDark,
-						borderRadius: 5,
+						paddingBottom: 10
 					}}
 					lightColor={backgroundLight}
 					darkColor={backgroundDark}
 				>
 					{(user?.dashboard?.routerBalances
 						? user.dashboard.routerBalances.map((rb) => ({
-								name: rb.name,
-								location: '',
-								amount: rb.balance,
-						  }))
+							name: rb.name,
+							location: '',
+							amount: rb.balance,
+						}))
 						: purchasesPerRouter ?? []
 					).map((router, index) => (
 						<ThemedView
@@ -460,11 +457,14 @@ export default function HomeScreen() {
 							style={{
 								flexDirection: 'row',
 								width: '100%',
-								padding: 12,
+								paddingVertical: 5,
+								paddingHorizontal: 12,
 								justifyContent: 'space-between',
 								borderBottomWidth:
-									index < (purchasesPerRouter ?? []).length - 1 ? 1 : 0,
+									index === (purchasesPerRouter ?? []).length - 1 ? 1 : 0,
 								borderBottomColor: borderDark,
+								borderTopWidth: 1,
+								borderTopColor: borderDark,
 							}}
 							lightColor={backgroundLight}
 							darkColor={backgroundDark}
@@ -480,11 +480,10 @@ export default function HomeScreen() {
 							<ThemedText
 								style={{
 									paddingHorizontal: 10,
-									backgroundColor: bim,
-									borderRadius: 50,
+									fontWeight: fontWeight['heading.one']
 								}}
-								lightColor={whiteLight}
-								darkColor={whiteDark}
+								lightColor={headerText}
+								darkColor={headerText}
 							>
 								{formatAmount(router.amount)}
 							</ThemedText>
