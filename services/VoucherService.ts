@@ -103,6 +103,38 @@ export async function fetchVoucherHotspots(routerId: string, token?: string) {
 	);
 }
 
+export interface GenerateVouchersPayload {
+	/** How many vouchers to create (1–100). */
+	numberOfUsers: number;
+	/** RADIUS profile/group name the vouchers get. */
+	profile: string;
+	/** Hotspot server name on the router the vouchers belong to. */
+	hotspotServer: string;
+}
+
+/**
+ * `POST /vouchers/{routerId}/generate` — the bulk generator behind the web's
+ * "Generate Bulk Vouchers" form. Returns `data.users` for the created batch.
+ */
+export async function generateVouchers(
+	routerId: string,
+	{ numberOfUsers, profile, hotspotServer }: GenerateVouchersPayload,
+	token?: string
+) {
+	return apiFetch(
+		`${apiBaseUrl || ''}/vouchers/${encodeURIComponent(routerId)}/generate`,
+		{
+			method: 'POST',
+			headers: buildHeaders(token),
+			body: JSON.stringify({
+				number_of_users: numberOfUsers,
+				profile,
+				hotspot_server: hotspotServer,
+			}),
+		}
+	);
+}
+
 /** `POST /vouchers/users/{username}/disable` */
 export async function disableVoucherUser(username: string, token?: string) {
 	return apiFetch(
@@ -151,6 +183,7 @@ export default {
 	fetchVouchers,
 	fetchVoucherRouters,
 	fetchVoucherHotspots,
+	generateVouchers,
 	disableVoucherUser,
 	enableVoucherUser,
 	resetVoucherUser,

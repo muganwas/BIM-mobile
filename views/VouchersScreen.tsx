@@ -50,6 +50,7 @@ import {
 } from 'react-native';
 
 import VoucherQrPreview from '@/views/VoucherQrPreview';
+import GenerateVouchersOverlay from '@/views/GenerateVouchersOverlay';
 
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 400;
@@ -332,7 +333,7 @@ export default function VouchersScreen() {
 	const [stats, setStats] = useState<VoucherListStats>({});
 	const [routerStats, setRouterStats] = useState<VoucherRouterStats[]>([]);
 	const [routers, setRouters] = useState<{ id: string; name: string }[]>([]);
-	const [profiles, setProfiles] = useState<string[]>([]);
+	const [profileList, setProfileList] = useState<SharedRadiusProfile[]>([]);
 	const [page, setPage] = useState(1);
 	const [lastPage, setLastPage] = useState(1);
 	const [total, setTotal] = useState(0);
@@ -343,12 +344,14 @@ export default function VouchersScreen() {
 	const [selectMode, setSelectMode] = useState(false);
 	const [selected, setSelected] = useState<Voucher[]>([]);
 	const [showQr, setShowQr] = useState(false);
+	const [showGenerate, setShowGenerate] = useState(false);
 	const isFocused = useIsFocused();
 
 	const hotspotsCache = useRef<Record<string, string>>({});
 	const requestIdRef = useRef(0);
 	const promptFadeAnim = useAnimatedValue(0);
 	const qrFadeAnim = useAnimatedValue(0);
+	const generateFadeAnim = useAnimatedValue(0);
 	const [showPrompt, setShowPrompt] = useState(false);
 	const [promptTitle, setPromptTitle] = useState('');
 	const [promptMessage, setPromptMessage] = useState('');
@@ -448,7 +451,7 @@ export default function VouchersScreen() {
 				const body = await profilesRes.json();
 				const list =
 					getApiData<{ profiles?: SharedRadiusProfile[] }>(body)?.profiles ?? [];
-				setProfiles(list.map((profile) => profile.display_name || profile.name));
+				setProfileList(list);
 			}
 		} catch (e) {
 			console.error('[VouchersScreen] loadFilters failed', e);
@@ -519,9 +522,13 @@ export default function VouchersScreen() {
 		setRouterFilter((current) => (current === key ? '' : key));
 	}, []);
 
+	const profileLabels = useMemo(
+		() => profileList.map((profile) => profile.display_name || profile.name),
+		[profileList]
+	);
 	const profileOptions = useMemo(
-		() => [t.allProfiles, ...profiles],
-		[profiles, t.allProfiles]
+		() => [t.allProfiles, ...profileLabels],
+		[profileLabels, t.allProfiles]
 	);
 	const originOptions = useMemo(
 		() => [t.allOrigins, t.manualOnly, t.autoOnly],
@@ -623,15 +630,20 @@ export default function VouchersScreen() {
 	}, []);
 
 	const handleGenerate = useCallback(() => {
-		if (!routerFilter) {
-			ShowAlert(t.selectRouterFirst, 'Error');
-			return;
-		}
-		navigation.push({
-			pathname: '/(authenticated)/routers/vouchers/[vRId]',
-			params: { vRId: routerFilter },
-		});
-	}, [navigation, routerFilter, t.selectRouterFirst]);
+		Animated.timing(generateFadeAnim, {
+			toValue: 1,
+			duration: 200,
+			useNativeDriver: true,
+		}).start(() => setShowGenerate(true));
+	}, [generateFadeAnim]);
+
+	const closeGenerate = useCallback(() => {
+		Animated.timing(generateFadeAnim, {
+			toValue: 0,
+			duration: 200,
+			useNativeDriver: true,
+		}).start(() => setShowGenerate(false));
+	}, [generateFadeAnim]);
 
 	const handlePrint = useCallback(() => {
 		if (selected.length === 0) {
@@ -1099,6 +1111,19 @@ export default function VouchersScreen() {
 				fadeAnim={qrFadeAnim}
 				vouchers={selected}
 				onClose={closeQr}
+			/>
+
+			<GenerateVouchersOverlay
+				visible={showGenerate}
+				fadeAnim={generateFadeAnim}
+				authToken={authToken ?? undefined}
+				routers={routers}
+				profiles={profileList}
+				initialRouterId={routerFilter}
+				onClose={closeGenerate}
+				onGenerated={() => {
+					void handleRefresh();
+				}}
 			/>
 		</>
 	);

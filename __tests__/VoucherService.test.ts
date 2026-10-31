@@ -61,6 +61,23 @@ describe('VoucherService', () => {
 		expect(call[1].method).toBe('GET');
 	});
 
+	test('generateVouchers posts the bulk generator payload', async () => {
+		await VoucherService.generateVouchers(
+			'router-1',
+			{ numberOfUsers: 25, profile: 'DAILY_1000', hotspotServer: 'BIM' },
+			'token'
+		);
+		const call = (mockApiFetch.mock.calls[0] as any[]) || [];
+		expect(call[0]).toBe('https://api.example/vouchers/router-1/generate');
+		expect(call[1].method).toBe('POST');
+		expect(call[1].headers.Authorization).toContain('Bearer');
+		expect(JSON.parse(call[1].body)).toEqual({
+			number_of_users: 25,
+			profile: 'DAILY_1000',
+			hotspot_server: 'BIM',
+		});
+	});
+
 	test('voucher actions target the username scoped endpoints', async () => {
 		await VoucherService.disableVoucherUser('12345', 'token');
 		await VoucherService.enableVoucherUser('12345', 'token');

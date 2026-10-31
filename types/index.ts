@@ -735,6 +735,20 @@ export type GetVoucherHotspotsResponse = ApiEnvelope<{
 	hotspots?: Hotspot[];
 }>;
 
+/** One voucher created by `POST /vouchers/{routerId}/generate`. */
+export interface GeneratedVoucher {
+	username: string;
+	profile?: string;
+	profile_display?: string;
+	hotspot_server?: string;
+	router_name?: string;
+}
+
+/** `POST /vouchers/{routerId}/generate` */
+export type GetGeneratedVouchersResponse = ApiEnvelope<{
+	users?: GeneratedVoucher[];
+}>;
+
 /** `GET /routers/{router}/hosts` */
 export type GetRouterHostsResponse = ApiEnvelope<{
 	router?: ApiRouter;
